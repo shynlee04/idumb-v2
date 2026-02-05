@@ -1,0 +1,101 @@
+{
+  "mode": "yolo",
+  "depth": "comprehensive",
+  "parallelization": true,
+  "commit_docs": true,
+  "model_profile": "quality",
+  "workflow": {
+    "research": true,
+    "plan_check": true,
+    "verifier": true
+  },
+  "micro_milestones": {
+    "enabled": true,
+    "source": "/Users/apple/Documents/coding-projects/idumb/.qoder/plans/MICRO-MILESTONE-ARCHITECTURE-2026-02-05.md",
+    "trial_sequence": [
+      {
+        "id": "T1",
+        "name": "Stop Hook Tool Manipulation",
+        "mechanism": "tool.execute.before",
+        "frequency": "HIGHEST",
+        "risk": "MEDIUM",
+        "pass_criteria": ["P1.1", "P1.2", "P1.3", "P1.4"]
+      },
+      {
+        "id": "T2",
+        "name": "Inner Cycle Delegation",
+        "mechanism": "tool.execute.before on task",
+        "frequency": "HIGH",
+        "risk": "MEDIUM",
+        "pass_criteria": ["P2.1", "P2.2", "P2.3", "P2.4"]
+      },
+      {
+        "id": "T3",
+        "name": "Compact Hook + Last Message",
+        "mechanism": "experimental.session.compacting + experimental.text.complete",
+        "frequency": "HIGH",
+        "risk": "LOW",
+        "pass_criteria": ["P3.1", "P3.2", "P3.3", "P3.4"]
+      },
+      {
+        "id": "T4",
+        "name": "Sub-task Background Tracking",
+        "mechanism": "tool.execute.after + event hooks",
+        "frequency": "MEDIUM",
+        "risk": "LOW",
+        "pass_criteria": ["P4.1", "P4.2", "P4.3", "P4.4"]
+      },
+      {
+        "id": "T5",
+        "name": "Compact Message Hierarchy",
+        "mechanism": "experimental.chat.messages.transform",
+        "frequency": "UNKNOWN",
+        "risk": "HIGH",
+        "pass_criteria": ["P5.1", "P5.2", "P5.3", "P5.4"]
+      },
+      {
+        "id": "T6",
+        "name": "User Prompt Transform",
+        "mechanism": "experimental.chat.messages.transform",
+        "frequency": "UNKNOWN",
+        "risk": "MEDIUM",
+        "pass_criteria": ["P6.1", "P6.2", "P6.3", "P6.4"]
+      },
+      {
+        "id": "T7",
+        "name": "Force Delegation + 3-Level TODO",
+        "mechanism": "Custom tools + tool.execute.before",
+        "frequency": "CONFIDENT",
+        "risk": "LOW",
+        "pass_criteria": ["P7.1", "P7.2", "P7.3", "P7.4"]
+      },
+      {
+        "id": "T8",
+        "name": "Auto-run + Export + State",
+        "mechanism": "event hooks + custom tools + file persistence",
+        "frequency": "SAFE",
+        "risk": "HIGH",
+        "pass_criteria": ["P8.1", "P8.2", "P8.3", "P8.4"]
+      }
+    ],
+    "pivot_boundary": {
+      "efficiency_threshold": 0.8,
+      "fallback": "fork_opencode"
+    }
+  },
+  "quality_gates": {
+    "typescript_errors": 0,
+    "lint_errors": 0,
+    "test_coverage": 100,
+    "schema_validation": true,
+    "contracts_first": true
+  },
+  "models": {
+    "researcher": "opus",
+    "synthesizer": "sonnet",
+    "roadmapper": "opus",
+    "planner": "sonnet",
+    "plan_checker": "opus",
+    "verifier": "opus"
+  }
+}
