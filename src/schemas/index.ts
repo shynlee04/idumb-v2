@@ -79,3 +79,30 @@ export {
   PermissionCheckResultSchema,
   type PermissionCheckResult,
 } from "./permission.js"
+
+// Scan schemas and utilities
+export {
+  ProjectStageSchema,
+  type ProjectStage,
+  ProjectInfoSchema,
+  type ProjectInfo,
+  DetectedFrameworkSchema,
+  type DetectedFramework,
+  GapSeveritySchema,
+  type GapSeverity,
+  GapSchema,
+  type Gap,
+  DebtSignalSchema,
+  type DebtSignal,
+  ConcernSchema,
+  type Concern,
+  ConventionsSchema,
+  type Conventions,
+  DriftInfoSchema,
+  type DriftInfo,
+  DiagnosisSchema,
+  type Diagnosis,
+  ScanResultSchema,
+  type ScanResult,
+  createEmptyScanResult,
+} from "./scan.js"

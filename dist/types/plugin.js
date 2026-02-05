@@ -1,8 +1,15 @@
 /**
  * OpenCode Plugin Type Definitions
  *
- * Local type stubs for @opencode-ai/plugin
- * Based on OpenCode plugin architecture research
+ * Local tool helper using zod v3 (SDK ships zod v4).
+ * Plugin/Hooks types re-exported from SDK.
  */
-export {};
+import { z } from "zod";
+/**
+ * Local tool() helper — mirrors SDK's identity function but uses zod v3
+ */
+export function tool(input) {
+    return input;
+}
+tool.schema = z;
 //# sourceMappingURL=plugin.js.map

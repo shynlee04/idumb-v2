@@ -6,7 +6,7 @@
  */
 
 import { z } from "zod"
-import { AnchorSchema, TimestampSchema, type Anchor, type Timestamp } from "./anchor.js"
+import { AnchorSchema, TimestampSchema, type Anchor } from "./anchor.js"
 
 /**
  * History entry - records governance actions
@@ -119,9 +119,12 @@ export function addHistoryEntry(
     ...options,
   }
   
+  const MAX_HISTORY = 100
+  const newHistory = [...state.history, entry].slice(-MAX_HISTORY)
+  
   return {
     ...state,
-    history: [...state.history, entry],
+    history: newHistory,
     timestamp: state.timestamp
       ? {
           ...state.timestamp,

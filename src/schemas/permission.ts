@@ -50,36 +50,37 @@ export type PermissionDecision = z.infer<typeof PermissionDecisionSchema>
  * Tool to category mapping
  */
 export const TOOL_CATEGORIES: Record<string, ToolCategory> = {
-  // Read tools
+  // Read tools (OpenCode innate)
   read: "read",
-  read_file: "read",
-  list_dir: "read",
-  search: "read",
-  search_codebase: "read",
-  grep: "read",
+  list: "read",
   glob: "read",
+  grep: "read",
+  webfetch: "read",
+  websearch: "read",
+  codesearch: "read",
+  todoread: "read",
+  skill: "read",
   
-  // Write tools
+  // Write tools (OpenCode innate)
   write: "write",
   edit: "write",
-  create: "write",
-  delete: "write",
-  search_replace: "write",
+  todowrite: "write",
   
-  // Execute tools
+  // Execute tools (OpenCode innate)
   bash: "execute",
-  run: "execute",
-  terminal: "execute",
   
-  // Delegate tools
+  // Delegate tools (OpenCode innate)
   task: "delegate",
-  spawn: "delegate",
-  delegate: "delegate",
   
-  // Validate tools
+  // Validate tools (convention)
   test: "validate",
   verify: "validate",
-  check: "validate",
+  
+  // iDumb custom tools (read category — non-destructive)
+  idumb_status: "read",
+  idumb_anchor_list: "read",
+  idumb_anchor_add: "write",
+  idumb_init: "read",
 }
 
 /**
@@ -97,12 +98,19 @@ export const ROLE_PERMISSIONS: Record<AgentRole, ToolCategory[]> = {
 
 /**
  * Detect agent role from agent name/identifier
- * Patterns based on iDumb agent naming conventions
+ * Recognizes OpenCode innate agents (Build, Plan, General, Explore)
+ * and iDumb custom agent naming conventions
  */
 export function detectAgentRole(agentName: string): AgentRole {
   const name = agentName.toLowerCase()
   
-  // Pattern matching for role detection
+  // OpenCode innate agents
+  if (name === "build") return "builder"
+  if (name === "plan") return "researcher"
+  if (name === "general") return "builder"
+  if (name === "explore") return "researcher"
+  
+  // iDumb custom agent patterns
   if (name.includes("meta")) return "meta"
   if (name.includes("coordinator") || name.includes("supreme")) return "coordinator"
   if (name.includes("governance") || name.includes("high")) return "high-governance"
@@ -111,8 +119,8 @@ export function detectAgentRole(agentName: string): AgentRole {
   if (name.includes("builder") || name.includes("worker")) return "builder"
   if (name.includes("research") || name.includes("explorer")) return "researcher"
   
-  // Default to researcher (most restrictive read-only)
-  return "researcher"
+  // Default to meta (allow-all) for unknown agents to avoid breaking innate agents
+  return "meta"
 }
 
 /**

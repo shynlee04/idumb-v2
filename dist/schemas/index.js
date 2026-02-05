@@ -11,4 +11,6 @@ export { HistoryEntrySchema, SessionInfoSchema, PhaseSchema, StateSchema, create
 export { PermissionLevelSchema, AgentPermissionSchema, DEFAULT_PERMISSIONS, ValidationConfigSchema, CompactionConfigSchema, ConfigSchema, createDefaultConfig, getAgentPermission, isToolAllowed, mergeConfigs, } from "./config.js";
 // Permission schemas and utilities (T1)
 export { AgentRoleSchema, ToolCategorySchema, PermissionDecisionSchema, TOOL_CATEGORIES, ROLE_PERMISSIONS, detectAgentRole, getToolCategory, isToolAllowedForRole, buildDenialMessage, PermissionCheckRequestSchema, PermissionCheckResultSchema, } from "./permission.js";
+// Scan schemas and utilities
+export { ProjectStageSchema, ProjectInfoSchema, DetectedFrameworkSchema, GapSeveritySchema, GapSchema, DebtSignalSchema, ConcernSchema, ConventionsSchema, DriftInfoSchema, DiagnosisSchema, ScanResultSchema, createEmptyScanResult, } from "./scan.js";
 //# sourceMappingURL=index.js.map

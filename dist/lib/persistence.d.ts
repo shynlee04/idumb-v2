@@ -12,11 +12,26 @@ import { type State, type Config, type Anchor } from "../schemas/index.js";
 export declare const PATHS: {
     state: string;
     config: string;
+    executionMetrics: string;
+    brainContext: string;
+    scanResult: string;
+    drift: string;
+    governance: string;
+    validations: string;
+    history: string;
+    metadata: string;
+    brainSessions: string;
     anchors: string;
     sessions: string;
     signals: string;
+    modules: string;
     logs: string;
     backups: string;
+    projectOutput: string;
+    phases: string;
+    research: string;
+    roadmaps: string;
+    validationReports: string;
 };
 /**
  * Ensure directory exists
@@ -30,14 +45,6 @@ export declare function getPath(directory: string, relativePath: string): string
  * Initialize .idumb directory structure
  */
 export declare function initializeIdumbDir(directory: string): void;
-/**
- * Create backup of a file before modification
- */
-declare function createBackup(filePath: string): string | null;
-/**
- * Atomic write - write to temp file then rename
- */
-declare function atomicWrite(filePath: string, content: string): void;
 /**
  * Read and parse JSON file with schema validation
  */
@@ -97,18 +104,18 @@ declare const SessionFileSchema: z.ZodObject<{
     lastActivity: z.ZodString;
     status: z.ZodEnum<["active", "idle", "completed", "error"]>;
 }, "strip", z.ZodTypeAny, {
-    id: string;
     createdAt: string;
     status: "error" | "active" | "idle" | "completed";
+    id: string;
     depth: number;
     lastActivity: string;
     delegationChain: string[];
     parentId?: string | undefined;
     agentRole?: string | undefined;
 }, {
-    id: string;
     createdAt: string;
     status: "error" | "active" | "idle" | "completed";
+    id: string;
     depth: number;
     lastActivity: string;
     parentId?: string | undefined;
@@ -132,5 +139,5 @@ export declare function listSessions(directory: string): string[];
  * Cleanup old sessions (older than 48 hours)
  */
 export declare function cleanupOldSessions(directory: string): number;
-export { createBackup, atomicWrite, };
+export {};
 //# sourceMappingURL=persistence.d.ts.map

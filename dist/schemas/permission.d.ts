@@ -42,7 +42,8 @@ export declare const TOOL_CATEGORIES: Record<string, ToolCategory>;
 export declare const ROLE_PERMISSIONS: Record<AgentRole, ToolCategory[]>;
 /**
  * Detect agent role from agent name/identifier
- * Patterns based on iDumb agent naming conventions
+ * Recognizes OpenCode innate agents (Build, Plan, General, Explore)
+ * and iDumb custom agent naming conventions
  */
 export declare function detectAgentRole(agentName: string): AgentRole;
 /**
@@ -115,7 +116,6 @@ export declare const PermissionCheckResultSchema: z.ZodObject<{
     role: z.ZodEnum<["coordinator", "high-governance", "mid-coordinator", "validator", "builder", "researcher", "meta"]>;
     timestamp: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    role: "coordinator" | "validator" | "meta" | "high-governance" | "mid-coordinator" | "builder" | "researcher";
     decision: {
         allowed: boolean;
         reason: string;
@@ -128,8 +128,8 @@ export declare const PermissionCheckResultSchema: z.ZodObject<{
         agentName?: string | undefined;
         args?: Record<string, unknown> | undefined;
     };
+    role: "coordinator" | "validator" | "meta" | "high-governance" | "mid-coordinator" | "builder" | "researcher";
 }, {
-    role: "coordinator" | "validator" | "meta" | "high-governance" | "mid-coordinator" | "builder" | "researcher";
     decision: {
         allowed: boolean;
         reason: string;
@@ -142,6 +142,7 @@ export declare const PermissionCheckResultSchema: z.ZodObject<{
         agentName?: string | undefined;
         args?: Record<string, unknown> | undefined;
     };
+    role: "coordinator" | "validator" | "meta" | "high-governance" | "mid-coordinator" | "builder" | "researcher";
 }>;
 export type PermissionCheckResult = z.infer<typeof PermissionCheckResultSchema>;
 //# sourceMappingURL=permission.d.ts.map

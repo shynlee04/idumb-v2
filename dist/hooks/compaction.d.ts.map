@@ -1,0 +1,1 @@
+{"version":3,"file":"compaction.d.ts","sourceRoot":"","sources":["../../src/hooks/compaction.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;GAcG;AAOH;;GAEG;AACH,wBAAgB,oBAAoB,CAAC,SAAS,EAAE,MAAM,IAIlD,OAAO;IAAE,SAAS,EAAE,MAAM,CAAA;CAAE,EAC5B,QAAQ;IAAE,OAAO,EAAE,MAAM,EAAE,CAAC;IAAC,MAAM,CAAC,EAAE,MAAM,CAAA;CAAE,KAC7C,OAAO,CAAC,IAAI,CAAC,CAuEjB"}

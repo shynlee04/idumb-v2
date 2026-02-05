@@ -80,11 +80,21 @@ export const ROLE_PERMISSIONS = {
 };
 /**
  * Detect agent role from agent name/identifier
- * Patterns based on iDumb agent naming conventions
+ * Recognizes OpenCode innate agents (Build, Plan, General, Explore)
+ * and iDumb custom agent naming conventions
  */
 export function detectAgentRole(agentName) {
     const name = agentName.toLowerCase();
-    // Pattern matching for role detection
+    // OpenCode innate agents
+    if (name === "build")
+        return "builder";
+    if (name === "plan")
+        return "researcher";
+    if (name === "general")
+        return "builder";
+    if (name === "explore")
+        return "researcher";
+    // iDumb custom agent patterns
     if (name.includes("meta"))
         return "meta";
     if (name.includes("coordinator") || name.includes("supreme"))
@@ -99,8 +109,8 @@ export function detectAgentRole(agentName) {
         return "builder";
     if (name.includes("research") || name.includes("explorer"))
         return "researcher";
-    // Default to researcher (most restrictive read-only)
-    return "researcher";
+    // Default to meta (allow-all) for unknown agents to avoid breaking innate agents
+    return "meta";
 }
 /**
  * Get tool category

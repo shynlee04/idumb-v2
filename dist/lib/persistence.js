@@ -4,7 +4,7 @@
  * Atomic file operations with staleness tracking and backup.
  * All state persistence goes through here for consistency.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync, statSync, } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync, statSync, renameSync, unlinkSync, } from "fs";
 import { dirname, join, basename } from "path";
 import { z } from "zod";
 import { StateSchema, createDefaultState, ConfigSchema, createDefaultConfig, AnchorSchema, enforceTimestamp, } from "../schemas/index.js";
@@ -13,13 +13,31 @@ import { info } from "./logging.js";
  * Default paths relative to project directory
  */
 export const PATHS = {
-    state: ".idumb/state.json",
-    config: ".idumb/config.json",
+    // Brain (core state + memory)
+    state: ".idumb/brain/state.json",
+    config: ".idumb/brain/config.json",
+    executionMetrics: ".idumb/brain/execution-metrics.json",
+    brainContext: ".idumb/brain/context",
+    scanResult: ".idumb/brain/context/scan-result.json",
+    drift: ".idumb/brain/drift",
+    governance: ".idumb/brain/governance",
+    validations: ".idumb/brain/governance/validations",
+    history: ".idumb/brain/history",
+    metadata: ".idumb/brain/metadata",
+    brainSessions: ".idumb/brain/sessions",
+    // Top-level
     anchors: ".idumb/anchors",
     sessions: ".idumb/sessions",
     signals: ".idumb/signals",
-    logs: ".idumb/logs",
+    modules: ".idumb/modules",
+    logs: ".idumb/governance",
     backups: ".idumb/backups",
+    // Project output
+    projectOutput: ".idumb/project-output",
+    phases: ".idumb/project-output/phases",
+    research: ".idumb/project-output/research",
+    roadmaps: ".idumb/project-output/roadmaps",
+    validationReports: ".idumb/project-output/validations",
 };
 /**
  * Ensure directory exists
@@ -40,11 +58,22 @@ export function getPath(directory, relativePath) {
  */
 export function initializeIdumbDir(directory) {
     const dirs = [
+        PATHS.brainContext,
+        PATHS.drift,
+        PATHS.validations,
+        PATHS.history,
+        PATHS.metadata,
+        PATHS.brainSessions,
         PATHS.anchors,
         PATHS.sessions,
         PATHS.signals,
+        PATHS.modules,
         PATHS.logs,
         PATHS.backups,
+        PATHS.phases,
+        PATHS.research,
+        PATHS.roadmaps,
+        PATHS.validationReports,
     ];
     for (const dir of dirs) {
         ensureDir(getPath(directory, dir));
@@ -77,7 +106,6 @@ function atomicWrite(filePath, content) {
     ensureDir(dirname(filePath));
     writeFileSync(tempPath, content, "utf-8");
     // On POSIX, rename is atomic
-    const { renameSync } = require("fs");
     renameSync(tempPath, filePath);
 }
 /**
@@ -114,10 +142,13 @@ export function writeJson(filePath, data, options) {
  */
 export function readState(directory) {
     const statePath = getPath(directory, PATHS.state);
-    const state = readJson(statePath, StateSchema, createDefaultState());
+    const raw = readJson(statePath, StateSchema, createDefaultState());
+    // Parse again to ensure defaults are applied and type is correct
+    const state = StateSchema.parse(raw);
     // Enforce timestamp staleness on read
     if (state.timestamp) {
-        state.timestamp = enforceTimestamp(state.timestamp);
+        const enforced = enforceTimestamp(state.timestamp);
+        return { ...state, timestamp: enforced };
     }
     return state;
 }
@@ -151,7 +182,8 @@ export function stateExists(directory) {
  */
 export function readConfig(directory) {
     const configPath = getPath(directory, PATHS.config);
-    return readJson(configPath, ConfigSchema, createDefaultConfig());
+    const raw = readJson(configPath, ConfigSchema, createDefaultConfig());
+    return ConfigSchema.parse(raw);
 }
 /**
  * Write plugin config
@@ -216,7 +248,6 @@ export function deleteAnchor(directory, id) {
     if (!existsSync(anchorPath))
         return false;
     try {
-        const { unlinkSync } = require("fs");
         unlinkSync(anchorPath);
         return true;
     }
@@ -289,7 +320,6 @@ export function cleanupOldSessions(directory) {
         const stats = statSync(filePath);
         if (now - stats.mtimeMs > threshold) {
             try {
-                const { unlinkSync } = require("fs");
                 unlinkSync(filePath);
                 cleaned++;
             }
@@ -304,7 +334,7 @@ export function cleanupOldSessions(directory) {
     return cleaned;
 }
 // ============================================================================
-// EXPORTS
+// NOTE: createBackup and atomicWrite are intentionally private.
+// All writes go through writeJson() which uses atomicWrite internally.
 // ============================================================================
-export { createBackup, atomicWrite, };
 //# sourceMappingURL=persistence.js.map

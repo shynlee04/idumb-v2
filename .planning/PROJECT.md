@@ -1,7 +1,8 @@
 # iDumb v2: Intelligence Plugin for OpenCode
 
 **Created:** 2026-02-06
-**Status:** Initialized
+**Updated:** 2026-02-06
+**Status:** Phase 2C Complete — Awaiting Phase 2B Live Validation
 **Type:** Greenfield (strategic reset from v1)
 
 ---
@@ -139,83 +140,115 @@ Every phase ends with:
 - Reimagine, adapt, integrate — **no fork, no copy**
 - Document what was learned and how it was adapted
 
-**Platform Concepts to Master:**
+**Platform Concepts (Researched):**
 | Concept | OpenCode | Claude Code | iDumb Mapping |
 |---------|----------|-------------|---------------|
-| Agents | ? | ? | Permission roles |
-| Subagents | ? | ? | Delegation hierarchy |
-| Hooks | ? | ? | Interception points |
-| Tools | ? | ? | Custom governance tools |
-| Plugins | ? | ? | Core delivery mechanism |
-| Commands | ? | ? | User entry points |
-| Skills | ? | ? | Specialized knowledge |
-| Modes | ? | ? | Context switching |
+| Agents | Build, Plan, General, Explore | Single agent with tools | Permission roles (builder, researcher, meta) |
+| Subagents | General/Explore as sub | Subagents via tool use | Delegation hierarchy via tool interception |
+| Hooks | 10+ hooks (tool.before/after, compact, message transform, permission, event, config, shell.env, chat.params, chat.headers, chat.message) | Shell-based hooks (PreToolUse, PostToolUse, Notification, Stop, SubagentStop) | Interception points: tool-gate, compaction, permission |
+| Tools | Custom tools via `tool()` helper + Zod schemas | Bash, computer, MCP tools | Custom governance tools (anchor, status, TODO) |
+| Plugins | JS/TS modules exporting hooks + tools | No plugin system (hooks only) | Core delivery mechanism — single package |
+| Commands | `/` commands (slash commands) | `/` commands | User entry points (future: `/idumb` commands) |
+| Skills | `.opencode/agents/*.md` files | Not available | Agent profiles (deferred — file-based, not plugin) |
+| Modes | Agent selection (Build/Plan) | Not available | Context switching via delegation |
 
-*(To be filled by research)*
+**What LLMs See at Key Moments:**
+| Moment | What Happens | Plugin Opportunity |
+|--------|-------------|--------------------|
+| New session | System prompt + agent profile loaded | `event` hook: initialize state |
+| Mid-session tool call | Tool args sent, result returned | `tool.execute.before/after`: inject governance |
+| Auto-compaction | Session summarized, new context starts | `experimental.session.compacting`: inject anchors |
+| User cancel + new message | Previous generation stopped, new message processed | `event` hook: detect interruption, preserve state |
+| Manual compact | User triggers `/compact` | Same as auto-compaction — compact hook fires |
 
 ---
 
-## Directory Structure (Target)
+## Directory Structure (Actual — Phase 2C)
 
-```
+```text
 idumb-v2/
-├── package.json              # Single entry, npx installable
-├── tsconfig.json             # Strict TypeScript
-├── .eslintrc.json            # Zero tolerance
+├── package.json              # Single entry, @opencode-ai/plugin + zod deps
+├── tsconfig.json             # Strict TypeScript, ESM, NodeNext
 ├── src/
-│   ├── index.ts              # Plugin entry point
+│   ├── plugin.ts             # Plugin entry point (hooks + tools registered)
 │   ├── schemas/              # Zod schemas (source of truth)
-│   │   ├── registry.ts       # Schema registry
-│   │   ├── state.ts          # Governance state
-│   │   ├── anchor.ts         # Context anchors
-│   │   ├── permission.ts     # Role permissions
-│   │   └── ...
-│   ├── types/                # Auto-generated from schemas
-│   │   └── index.ts          # Re-exports inferred types
-│   ├── hooks/                # OpenCode hook implementations
-│   │   ├── tool-gate.ts      # P1: Stop hook
-│   │   ├── delegation.ts     # P2: Inner cycle
-│   │   ├── compact.ts        # P3: Compaction
-│   │   └── ...
-│   ├── tools/                # Custom governance tools
-│   │   ├── todo.ts           # P4: 3-level TODO
-│   │   ├── stale.ts          # P5: Time-to-stale
-│   │   └── ...
-│   ├── lib/                  # Shared utilities
-│   │   ├── logging.ts        # TUI-safe logging
-│   │   ├── persistence.ts    # Atomic file I/O
-│   │   └── validation.ts     # Contract validation
-│   └── contracts/            # Business contracts
-│       ├── roles.ts          # Who does what
-│       └── lifecycles.ts     # State transitions
-├── tests/                    # Trial validations
-│   ├── trial-1.test.ts       # P1 validation
-│   ├── trial-2.test.ts       # P2 validation
-│   └── ...
-├── .idumb/                   # Runtime state (gitignored)
-│   ├── state.json            # Current governance state
-│   └── logs/                 # Debug logs
-└── docs/
-    ├── CONCEPTS.md           # Platform concept mapping
-    ├── PITFALLS.md           # What to avoid
-    └── PRINCIPLES.md         # Development DOs/DONTs
+│   │   ├── index.ts          # Barrel export
+│   │   ├── state.ts          # Governance state (history capped at 100)
+│   │   ├── anchor.ts         # Context anchors (staleness, scoring, selection)
+│   │   ├── config.ts         # Plugin configuration
+│   │   ├── permission.ts     # Role permissions (actual OpenCode innate tool names)
+│   │   └── scan.ts           # ScanResult schema (project, framework, diagnosis)
+│   ├── types/
+│   │   └── plugin.ts         # SDK re-exports + local tool() helper (zod v3 compat)
+│   ├── engines/              # Deterministic analysis (no LLM)
+│   │   ├── index.ts           # Barrel export
+│   │   ├── scanner.ts         # Codebase scanner → ScanResult JSON
+│   │   └── framework-detector.ts  # GSD/BMAD/SPEC-KIT/Open-spec detection
+│   ├── hooks/
+│   │   ├── index.ts           # Barrel export
+│   │   ├── tool-gate.ts       # P1: Stop hook + after-hook fallback
+│   │   └── compaction.ts      # P3: Real anchor injection into compaction
+│   ├── tools/
+│   │   ├── index.ts           # Barrel export
+│   │   ├── anchor.ts          # idumb_anchor_add, idumb_anchor_list
+│   │   ├── status.ts          # idumb_status
+│   │   └── init.ts            # idumb_init (scaffold + scan + diagnose)
+│   └── lib/
+│       ├── index.ts           # Barrel export
+│       ├── logging.ts         # TUI-safe file logging
+│       └── persistence.ts     # Atomic file I/O, state/config/anchor CRUD, PATHS
+├── tests/
+│   ├── trial-1.ts             # P1 validation (automated)
+│   └── trial-init.ts          # Phase 2C validation (9/9 assertions)
+├── .planning/                 # Governance documents
+│   ├── PROJECT.md             # This file
+│   ├── GOVERNANCE.md          # Pitfalls, principles, DOs/DON'Ts, confidence tiers
+│   ├── PHASE-COMPLETION.md    # Phase definitions + completion criteria
+│   ├── SUCCESS-CRITERIA.md    # Real-life use cases
+│   └── config.json            # Planning configuration
+├── .idumb/                    # Runtime state + memory (gitignored)
+│   ├── brain/
+│   │   ├── state.json         # Governance state
+│   │   ├── config.json        # Plugin config
+│   │   ├── execution-metrics.json
+│   │   ├── context/           # Scan results (scan-result.json)
+│   │   ├── drift/             # Drift detection history
+│   │   ├── governance/validations/
+│   │   ├── history/           # Decision history
+│   │   ├── metadata/          # Project metadata
+│   │   └── sessions/          # Per-session brain state
+│   ├── anchors/               # Persisted anchors (one JSON per anchor)
+│   ├── sessions/              # Session JSON files
+│   ├── signals/               # Inter-agent signals
+│   ├── modules/               # Installed modules (future)
+│   ├── governance/            # Plugin logs
+│   ├── backups/               # State backups
+│   └── project-output/        # Phase outputs, research, roadmaps, validations
+├── .plugin-dev/research/      # Dev-time research artifacts (not shipped)
+└── dist/                      # Compiled JS output (21 files)
 ```
 
 ---
 
 ## Requirements
 
-### Validated
+### Validated (Phase 0-2C)
 
-*(None yet — ship to validate)*
+- [x] REQ-01: Plugin loads in OpenCode without TUI pollution
+- [x] REQ-02: Stop hook intercepts tool execution (Trial-1 PASS)
+- [x] REQ-03: Permission enforcement blocks unauthorized tools (Trial-1 PASS)
+- [x] REQ-10: Zero TypeScript/lint errors at all times
+- [x] REQ-11: All data structures have Zod schemas
+- [x] REQ-17: TOOL_CATEGORIES maps actual OpenCode innate tools (not invented names)
+- [x] REQ-18: Codebase scanner produces schema-validated JSON memory (9/9 assertions)
+- [x] REQ-19: Framework detector uses required+optional markers (no false positives)
+- [x] REQ-20: `.idumb/` tree scaffolded programmatically (16 directories)
+- [x] REQ-21: All scan output → JSON in `.idumb/brain/context/` (no .md dump)
 
-### Active
+### Active (Phase 2B+)
 
-**Core Plugin (Must Work):**
-- [ ] REQ-01: Plugin loads in OpenCode without TUI pollution
-- [ ] REQ-02: Stop hook intercepts tool execution
-- [ ] REQ-03: Permission enforcement blocks unauthorized tools
-- [ ] REQ-04: State persists across compactions via anchors
+**Core Plugin:**
+- [ ] REQ-04: State persists across compactions via anchors (awaiting live test)
 
 **Governance (Intelligence):**
 - [ ] REQ-05: Agent knows current phase/task at all times
@@ -225,13 +258,13 @@ idumb-v2/
 
 **Architecture (Quality):**
 - [ ] REQ-09: Single npx install command works
-- [ ] REQ-10: Zero TypeScript/lint errors at all times
-- [ ] REQ-11: All data structures have Zod schemas
 - [ ] REQ-12: Every phase passes validation gate
 
 **Stress Test:**
 - [ ] REQ-13: Survives 20+ compactions with correct state
 - [ ] REQ-14: 60% improvement over baseline in stress scenarios
+- [ ] REQ-15: Baseline measurement established (NO plugin)
+- [ ] REQ-16: Custom tools appear and function in OpenCode tool list
 
 ### Out of Scope
 
@@ -246,50 +279,88 @@ idumb-v2/
 
 | Decision | Rationale | Status |
 |----------|-----------|--------|
-| Plugin over fork | Lower barrier, faster iteration, ecosystem compatibility | Pending validation |
-| Stop hook as primary mechanism | Highest frequency, most control | Pending TRIAL-1 |
+| Plugin over fork | Lower barrier, faster iteration, ecosystem compatibility | **VALIDATED** — plugin loads, hooks fire |
+| Stop hook as primary mechanism | Highest frequency, most control | **VALIDATED** — Trial-1 PASS |
 | Zod for schemas | Runtime validation + type inference | Decided |
 | Contracts-first development | Prevent boundary violations, enforce quality | Decided |
-| 60% improvement bar | Measurable, ambitious but achievable | Decided |
+| 60% improvement bar | Measurable, ambitious but achievable | Decided — baseline measurement pending |
 | No fork/copy from plugins | Ethical learning, original implementation | Decided |
+| Compact replaces innate (not manual) | Compact hook fires on auto-compaction, injects anchors automatically | Decided |
+| Local tool() helper for zod v3 | SDK ships zod v4, project uses v3. Local wrapper mirrors SDK runtime. | Decided |
+| Default role = meta (allow-all) | Never break innate agents. Plugin ADDS, never RESTRICTS. | Decided |
+| Integration with GSD + SPEC-KIT | Plugin provides enforcement + traceability layers for external workflows | Decided — design pending |
+| All output → JSON in .idumb/brain/ | No .md template dump. Everything in code. Traceable, queryable. | **VALIDATED** — Phase 2C |
+| Scanner = deterministic (no LLM) | Pure filesystem analysis. No hallucination risk. Reproducible. | **VALIDATED** — 9/9 assertions |
+| Framework detector: required markers | Prevents false positives (GSD requires STATE.md, not generic PROJECT.md) | **VALIDATED** — Phase 2C |
+| TOOL_CATEGORIES = actual OpenCode tools | Map real innate tools (read, list, glob, grep, edit, write, bash, task, etc.) not invented names | **VALIDATED** — Phase 2C |
 
 ---
 
-## Research Needed
+## Research Status
 
-Before roadmap, research these dimensions:
+| Dimension | Status | Artifact |
+|-----------|--------|----------|
+| Platform Concepts Matrix | COMPLETED | Filled in this document (above) |
+| Community Plugins Study | COMPLETED | `.windsurf/plans/idumb-strategic-reboot-phase2-0de880.md` |
+| Pitfalls Catalog | COMPLETED | `.planning/GOVERNANCE.md` Part 3 |
+| Development Principles | COMPLETED | `.planning/GOVERNANCE.md` Parts 4-5 |
+| Phase Completion Criteria | COMPLETED | `.planning/PHASE-COMPLETION.md` |
+| Success Criteria (Use Cases) | COMPLETED | `.planning/SUCCESS-CRITERIA.md` |
+| Gap Analysis | COMPLETED | `.planning/GOVERNANCE.md` Part 7 |
 
-1. **Platform Concepts Matrix**
-   - OpenCode vs Claude Code: agents, hooks, tools, plugins, commands, skills
-   - What LLMs see: new thread, mid-session, compaction, cancel
-   - Subsets and custom variants of each concept
+## Integration with Meta-Frameworks
 
-2. **Community Plugins Study**
-   - 5+ plugins from OpenCode ecosystem
-   - Extract patterns (not code)
-   - Document learnings and adaptations
+### GSD (Get Shit Done) Workflow
 
-3. **Pitfalls Catalog**
-   - What breaks TUI
-   - What conflicts with innate agents
-   - What doesn't work in practice
+iDumb serves as the **enforcement layer**:
+- Research phase → plugin context injection: "you are in research"
+- Planning phase → tool interception: "read plan before executing"
+- Execution phase → atomic commit tracking against plan items
+- Validation phase → auto-run validation checks after tool execution
 
-4. **Development Principles**
-   - DOs and DONTs for plugin development
-   - Success criteria for each mechanism
-   - Pivot decision framework
+### SPEC-KIT (Specification-Driven Development)
+
+iDumb serves as the **traceability layer**:
+- Requirements → anchors → survive compaction
+- Acceptance criteria → validation hooks
+- Tech stack decisions → chain-breaking detection
+- Implementation plans → 3-level TODO delegation
+
+### Compact Command Clarification
+
+The compact hook is **NOT** for manual `/compact` commands. It:
+1. **Replaces** innate compaction behavior by injecting structured context
+2. **Fires automatically** when OpenCode triggers compaction (token limit, session length)
+3. **Selects** anchors by score (priority × freshness), budget-capped to ≤500 tokens
+4. **Does NOT** require user action — governance is always active
 
 ---
 
-## Context from v1 (Reference Only)
+## Implementation Progress
 
-The existing v2/ directory contains TRIAL-1 implementation:
-- Permission schemas and role detection
-- Tool-gate hook implementation
-- Basic state persistence
+| Phase | Status | Key Artifacts |
+|-------|--------|---------------|
+| Phase 0: Foundation | COMPLETE | `plugin.ts`, `persistence.ts`, `logging.ts`, schemas |
+| Phase 1: Stop Hook (T1) | COMPLETE | `hooks/tool-gate.ts`, `schemas/permission.ts`, `tests/trial-1.ts` |
+| Phase 2A: Custom Tools + Compaction | COMPLETE | `tools/anchor.ts`, `tools/status.ts`, `hooks/compaction.ts` |
+| Phase 2C: Scanner + Init (Intelligence) | COMPLETE | `engines/scanner.ts`, `engines/framework-detector.ts`, `schemas/scan.ts`, `tools/init.ts`, `tests/trial-init.ts` |
+| Phase 2B: Live Validation + Baseline | NOT STARTED | **CRITICAL GATE** — requires: load in OpenCode, stress test |
+| Phase C: Interactive Config | NOT STARTED | Post-scan questionnaire → config.json |
+| Phase D: Meta-Builder | NOT STARTED | Gap → build agents/commands via Task() delegation |
+| Phase 3: Inner Cycle Delegation | NOT STARTED | |
+| Phase 4: 3-Level TODO | NOT STARTED | |
+| Phase 5: Message Transform | BLOCKED | Requires: LLM read order A/B test |
+| Phase 6: Auto-run + State | NOT STARTED | |
 
-**Status:** Archived as reference. This project starts fresh with proper research and contracts-first approach. Learnings from TRIAL-1 inform but don't constrain the new architecture.
+## Governance Documents
+
+| Document | Purpose |
+|----------|---------|
+| `GOVERNANCE.md` | Pitfalls, non-negotiable principles, DOs/DON'Ts, confidence tiers, integration framework, gap analysis |
+| `PHASE-COMPLETION.md` | Phase definitions with incremental completion criteria and pivot decisions |
+| `SUCCESS-CRITERIA.md` | 4 real-life use cases exercising all plugin elements with measurement methodology |
+| `PROJECT.md` | This file — single source of truth for project state |
 
 ---
 
-*Last updated: 2026-02-06 after initialization*
+*Last updated: 2026-02-06 after Phase 2C completion (scanner + init tool) + validation audit*

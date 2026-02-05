@@ -1,157 +1,45 @@
 /**
  * OpenCode Plugin Type Definitions
  * 
- * Local type stubs for @opencode-ai/plugin
- * Based on OpenCode plugin architecture research
+ * Local tool helper using zod v3 (SDK ships zod v4).
+ * Plugin/Hooks types re-exported from SDK.
  */
 
+import { z } from "zod"
+
+export type { Plugin, PluginInput, Hooks } from "@opencode-ai/plugin"
+
 /**
- * Plugin context provided during initialization
+ * Tool execution context provided by OpenCode
  */
-export interface PluginContext {
+export interface ToolContext {
+  sessionID: string
+  messageID: string
+  agent: string
   directory: string
-  client: PluginClient
+  worktree: string
+  abort: AbortSignal
+  metadata(input: { title?: string; metadata?: Record<string, unknown> }): void
 }
 
 /**
- * Plugin client for SDK operations
- */
-export interface PluginClient {
-  app: {
-    log: (entry: LogEntry) => Promise<void>
-  }
-  session: {
-    get: (id: string) => Promise<unknown>
-    list: () => Promise<unknown[]>
-  }
-}
-
-/**
- * Log entry structure
- */
-export interface LogEntry {
-  service: string
-  level: "debug" | "info" | "warn" | "error"
-  message: string
-  extra?: Record<string, unknown>
-}
-
-/**
- * Event structure
- */
-export interface Event {
-  type: string
-  properties: Record<string, unknown>
-}
-
-/**
- * Message part
- */
-export interface Part {
-  type: string
-  text?: string
-  [key: string]: unknown
-}
-
-/**
- * Message info
- */
-export interface MessageInfo {
-  id: string
-  role: "user" | "assistant" | "system"
-  [key: string]: unknown
-}
-
-/**
- * Session message structure
- */
-export interface SessionMessage {
-  info: MessageInfo
-  parts: Part[]
-}
-
-/**
- * Permission status
- */
-export type PermissionStatus = "ask" | "deny" | "allow"
-
-/**
- * Tool definition for custom tools
+ * Tool definition shape matching SDK runtime behavior
  */
 export interface ToolDefinition {
-  name: string
   description: string
-  schema?: Record<string, unknown>
-  execute: (args: Record<string, unknown>, context: PluginContext) => Promise<unknown>
+  args: z.ZodRawShape
+  execute(args: Record<string, unknown>, context: ToolContext): Promise<string>
 }
 
 /**
- * Plugin hooks interface
+ * Local tool() helper — mirrors SDK's identity function but uses zod v3
  */
-export interface PluginHooks {
-  // Event subscription
-  event?: (input: { event: Event }) => Promise<void>
-  
-  // Tool execution hooks
-  "tool.execute.before"?: (
-    input: { tool: string; sessionID: string; callID: string },
-    output: { args: Record<string, unknown> }
-  ) => Promise<void>
-  
-  "tool.execute.after"?: (
-    input: { tool: string; sessionID: string; callID: string },
-    output: { title: string; output: string; metadata: Record<string, unknown> }
-  ) => Promise<void>
-  
-  // Permission hook
-  "permission.ask"?: (
-    input: unknown,
-    output: { status: PermissionStatus }
-  ) => Promise<void>
-  
-  // Command hook
-  "command.execute.before"?: (
-    input: { command: string; sessionID: string; arguments: string },
-    output: { parts: Part[] }
-  ) => Promise<void>
-  
-  // Chat hooks
-  "chat.message"?: (
-    input: { sessionID: string; agent?: string; model?: unknown; messageID?: string },
-    output: { message: unknown; parts: Part[] }
-  ) => Promise<void>
-  
-  "chat.params"?: (
-    input: { sessionID: string; agent: string; model: unknown },
-    output: { temperature: number; topP: number; topK: number; options: Record<string, unknown> }
-  ) => Promise<void>
-  
-  // Experimental hooks
-  "experimental.chat.messages.transform"?: (
-    input: Record<string, never>,
-    output: { messages: SessionMessage[] }
-  ) => Promise<void>
-  
-  "experimental.chat.system.transform"?: (
-    input: { sessionID?: string; model: unknown },
-    output: { system: string[] }
-  ) => Promise<void>
-  
-  "experimental.session.compacting"?: (
-    input: { sessionID: string },
-    output: { context: string[]; prompt?: string }
-  ) => Promise<void>
-  
-  "experimental.text.complete"?: (
-    input: { sessionID: string; messageID: string; partID: string },
-    output: { text: string }
-  ) => Promise<void>
-  
-  // Custom tools registration
-  tool?: Record<string, ToolDefinition>
+export function tool<Args extends z.ZodRawShape>(input: {
+  description: string
+  args: Args
+  execute(args: z.infer<z.ZodObject<Args>>, context: ToolContext): Promise<string>
+}): ToolDefinition {
+  return input as unknown as ToolDefinition
 }
 
-/**
- * Plugin type - function that returns hooks
- */
-export type Plugin = (context: PluginContext) => Promise<PluginHooks>
+tool.schema = z

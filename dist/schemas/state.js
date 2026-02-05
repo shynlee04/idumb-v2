@@ -93,9 +93,11 @@ export function addHistoryEntry(state, action, result, options) {
         result,
         ...options,
     };
+    const MAX_HISTORY = 100;
+    const newHistory = [...state.history, entry].slice(-MAX_HISTORY);
     return {
         ...state,
-        history: [...state.history, entry],
+        history: newHistory,
         timestamp: state.timestamp
             ? {
                 ...state.timestamp,

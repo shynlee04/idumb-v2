@@ -18,7 +18,7 @@
  * - T4: Sub-task Tracking - PENDING
  * - T5-T8: PENDING
  */
-import type { Plugin } from "./types/plugin.js";
+import type { Plugin } from "@opencode-ai/plugin";
 /**
  * Plugin version
  */

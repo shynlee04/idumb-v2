@@ -96,8 +96,9 @@ export function checkToolPermission(sessionId, toolName, agentName) {
     if (agentName) {
         setAgentRole(sessionId, agentName);
     }
-    // Use detected role or default to researcher (most restrictive)
-    const role = tracker.agentRole || "researcher";
+    // Use detected role or default to meta (allow-all) since SDK tool.execute.before
+    // input has no agent field — we can't detect role there. Never break innate agents.
+    const role = tracker.agentRole || "meta";
     // Check permission
     const decision = isToolAllowedForRole(role, toolName);
     // Record check

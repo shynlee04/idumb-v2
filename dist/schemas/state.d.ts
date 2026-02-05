@@ -44,16 +44,16 @@ export declare const SessionInfoSchema: z.ZodObject<{
     createdAt: z.ZodString;
     lastActivity: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    id: string;
     createdAt: string;
     status: "error" | "active" | "idle" | "completed";
+    id: string;
     depth: number;
     parentId?: string | undefined;
     agentRole?: string | undefined;
     lastActivity?: string | undefined;
 }, {
-    id: string;
     createdAt: string;
+    id: string;
     status?: "error" | "active" | "idle" | "completed" | undefined;
     parentId?: string | undefined;
     agentRole?: string | undefined;
@@ -171,16 +171,16 @@ export declare const StateSchema: z.ZodObject<{
         createdAt: z.ZodString;
         lastActivity: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        id: string;
         createdAt: string;
         status: "error" | "active" | "idle" | "completed";
+        id: string;
         depth: number;
         parentId?: string | undefined;
         agentRole?: string | undefined;
         lastActivity?: string | undefined;
     }, {
-        id: string;
         createdAt: string;
+        id: string;
         status?: "error" | "active" | "idle" | "completed" | undefined;
         parentId?: string | undefined;
         agentRole?: string | undefined;
@@ -239,9 +239,9 @@ export declare const StateSchema: z.ZodObject<{
         details?: string | undefined;
     }[];
     sessions: Record<string, {
-        id: string;
         createdAt: string;
         status: "error" | "active" | "idle" | "completed";
+        id: string;
         depth: number;
         parentId?: string | undefined;
         agentRole?: string | undefined;
@@ -296,8 +296,8 @@ export declare const StateSchema: z.ZodObject<{
         details?: string | undefined;
     }[] | undefined;
     sessions?: Record<string, {
-        id: string;
         createdAt: string;
+        id: string;
         status?: "error" | "active" | "idle" | "completed" | undefined;
         parentId?: string | undefined;
         agentRole?: string | undefined;

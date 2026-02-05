@@ -19,10 +19,12 @@
  * - T5-T8: PENDING
  */
 
-import type { Plugin } from "./types/plugin.js"
+import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger, initializeIdumbDir, readState, writeState, stateExists } from "./lib/index.js"
 import { createDefaultState, addHistoryEntry } from "./schemas/index.js"
 import { createToolGateHook, createToolGateAfterHook, setAgentRole } from "./hooks/index.js"
+import { createCompactionHook } from "./hooks/compaction.js"
+import { idumb_anchor_add, idumb_anchor_list, idumb_status, idumb_init } from "./tools/index.js"
 
 /**
  * Plugin version
@@ -37,7 +39,7 @@ export const VERSION = "2.0.0-alpha.1"
  * - Tool execution hooks (T1)
  * - Custom tools (planned)
  */
-export const IdumbPlugin: Plugin = async ({ directory, client }) => {
+export const IdumbPlugin: Plugin = async ({ directory }) => {
   const logger = createLogger(directory, "idumb-core")
   
   logger.info(`iDumb v${VERSION} initializing`, { directory })
@@ -52,9 +54,10 @@ export const IdumbPlugin: Plugin = async ({ directory, client }) => {
     logger.info("Created initial governance state")
   }
   
-  // Create T1 hooks
+  // Create hooks
   const toolGateHook = createToolGateHook(directory)
   const toolGateAfterHook = createToolGateAfterHook(directory)
+  const compactionHook = createCompactionHook(directory)
   
   return {
     // ========================================================================
@@ -92,6 +95,22 @@ export const IdumbPlugin: Plugin = async ({ directory, client }) => {
         case "session.compacted":
           logger.info(`Session compacted: ${sessionId}`)
           break
+      }
+    },
+    
+    // ========================================================================
+    // AGENT DETECTION (captures agent name for role-based permissions)
+    // ========================================================================
+    
+    /**
+     * Capture agent name from chat.message — the SDK provides agent name here
+     * but NOT in tool.execute.before. We store it so tool-gate can detect role.
+     */
+    "chat.message": async (input, _output) => {
+      const { sessionID, agent } = input
+      if (agent) {
+        setAgentRole(sessionID, agent)
+        logger.debug(`Agent detected: ${agent}`, { sessionID })
       }
     },
     
@@ -140,40 +159,25 @@ export const IdumbPlugin: Plugin = async ({ directory, client }) => {
      * Permission enforcement hook
      * Can be used to auto-deny certain permissions
      */
-    "permission.ask": async (input, output) => {
+    "permission.ask": async (input, _output) => {
       // For now, just log permission requests
       logger.debug("Permission asked", { input })
       
       // Future: Implement auto-deny based on agent role
-      // output.status = "deny"
+      // _output.status = "deny"
     },
     
     // ========================================================================
-    // COMPACTION HOOKS (TRIAL-3 - PLACEHOLDER)
+    // COMPACTION HOOKS
     // ========================================================================
     
     /**
-     * T3: Session compaction hook
+     * Session compaction hook
      * 
-     * Injects critical anchors into compaction context to survive
+     * Injects top-N anchors by score into compaction context
      */
     "experimental.session.compacting": async (input, output) => {
-      const { sessionID } = input
-      
-      logger.info(`Compaction triggered for session: ${sessionID}`)
-      
-      // TODO (T3): Implement anchor injection
-      // const anchors = loadAllAnchors(directory)
-      // const selected = selectAnchors(anchors, config.compaction.maxAnchors)
-      // output.context.push(formatAnchorsForCompaction(selected))
-      
-      // Placeholder: Add minimal context
-      output.context.push(`
-## iDumb Governance Context
-- Session: ${sessionID}
-- Plugin Version: ${VERSION}
-- Status: Active
-      `.trim())
+      await compactionHook(input, output)
     },
     
     // ========================================================================
@@ -185,27 +189,23 @@ export const IdumbPlugin: Plugin = async ({ directory, client }) => {
      * 
      * Tests where LLM pays attention (start vs end vs middle)
      */
-    "experimental.chat.messages.transform": async (input, output) => {
+    "experimental.chat.messages.transform": async (_input, _output) => {
       // TODO (T5/T6): Implement message injection experiments
       // For now, no-op to avoid breaking anything
     },
     
     // ========================================================================
-    // CUSTOM TOOLS (PLANNED)
+    // CUSTOM TOOLS
     // ========================================================================
     
     /**
-     * Custom tools registration
-     * 
-     * Planned tools:
-     * - idumb:state - Read/write governance state
-     * - idumb:anchor - Manage context anchors
-     * - idumb:validate - Run validation checks
-     * - idumb:todo - Hierarchical TODO management
+     * Custom tools callable by the LLM
      */
     tool: {
-      // Placeholder for custom tools
-      // Will be implemented in T7
+      idumb_anchor_add,
+      idumb_anchor_list,
+      idumb_status,
+      idumb_init,
     },
   }
 }
