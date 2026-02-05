@@ -1,0 +1,44 @@
+{
+  "name": "idumb-plugin-v2",
+  "version": "2.0.0-alpha.1",
+  "description": "iDumb v2 - Intelligent Delegation Using Managed Boundaries (Clean Reboot)",
+  "type": "module",
+  "main": "dist/plugin.js",
+  "types": "dist/plugin.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test:t1": "node --loader ts-node/esm tests/trial-1.ts",
+    "test:t2": "node --loader ts-node/esm tests/trial-2.ts"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "ai",
+    "governance",
+    "agents"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "opencode": {
+    "plugin": "dist/plugin.js"
+  }
+}

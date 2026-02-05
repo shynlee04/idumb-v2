@@ -1,0 +1,127 @@
+{
+  "version": "0.3.0",
+  "initialized": "2026-02-05T18:13:23.694Z",
+  "lastModified": "2026-02-05T18:13:23.694Z",
+  "user": {
+    "name": "Developer",
+    "experience": "guided",
+    "language": {
+      "communication": "english",
+      "documents": "english"
+    }
+  },
+  "status": {
+    "current": {
+      "milestone": null,
+      "phase": "init",
+      "plan": null,
+      "task": null
+    },
+    "lastValidation": null,
+    "validationsPassed": 0,
+    "driftDetected": false
+  },
+  "hierarchy": {
+    "levels": [
+      "milestone",
+      "phase",
+      "plan",
+      "task"
+    ],
+    "agents": {
+      "order": [
+        "coordinator",
+        "governance",
+        "validator",
+        "builder"
+      ],
+      "permissions": {
+        "coordinator": {
+          "delegate": true,
+          "execute": false,
+          "validate": false
+        },
+        "governance": {
+          "delegate": true,
+          "execute": false,
+          "validate": true
+        },
+        "validator": {
+          "delegate": false,
+          "execute": false,
+          "validate": true
+        },
+        "builder": {
+          "delegate": false,
+          "execute": true,
+          "validate": false
+        }
+      }
+    },
+    "enforceChain": true,
+    "blockOnChainBreak": true
+  },
+  "automation": {
+    "mode": "confirmRequired",
+    "expertSkeptic": {
+      "enabled": true,
+      "requireEvidence": true,
+      "doubleCheckDelegation": true
+    },
+    "contextFirst": {
+      "enforced": true,
+      "requiredFirstTools": [
+        "idumb-todo",
+        "idumb-state"
+      ],
+      "blockWithoutContext": true
+    },
+    "workflow": {
+      "research": true,
+      "planCheck": true,
+      "verifyAfterExecution": true,
+      "commitOnComplete": true
+    }
+  },
+  "paths": {
+    "root": ".idumb/",
+    "config": ".idumb/brain/config.json",
+    "state": ".idumb/brain/state.json",
+    "brain": ".idumb/brain/",
+    "history": ".idumb/brain/history/",
+    "context": ".idumb/brain/context/",
+    "governance": ".idumb/brain/governance/",
+    "validations": ".idumb/brain/governance/validations/",
+    "sessions": ".idumb/sessions/",
+    "drift": ".idumb/brain/drift/",
+    "metadata": ".idumb/brain/metadata/",
+    "output": ".idumb/project-output/",
+    "phases": ".idumb/project-output/phases/",
+    "roadmaps": ".idumb/project-output/roadmaps/",
+    "research": ".idumb/project-output/research/",
+    "validationReports": ".idumb/project-output/validations/",
+    "modules": ".idumb/modules/",
+    "projectCore": ".idumb/project-core/",
+    "governanceRoot": ".governance/"
+  },
+  "staleness": {
+    "warningHours": 48,
+    "criticalHours": 168,
+    "checkOnLoad": true,
+    "autoArchive": false
+  },
+  "timestamps": {
+    "enabled": true,
+    "format": "ISO8601",
+    "injectInFrontmatter": true,
+    "trackModifications": true
+  },
+  "enforcement": {
+    "mustLoadConfig": true,
+    "mustHaveState": true,
+    "mustCheckHierarchy": true,
+    "blockOnMissingArtifacts": false,
+    "requirePhaseAlignment": true,
+    "blockOnPermissionViolation": true
+  }
+}
