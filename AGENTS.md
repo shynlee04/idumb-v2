@@ -1,8 +1,8 @@
 # AGENTS.md — iDumb v2 (Ground Truth)
 
-**Version:** 2.2.0  
-**Last Updated:** 2026-02-06  
-**Status:** Phase 1b complete. Disk persistence + hook verification harness implemented and tested.
+**Version:** 2.3.0  
+**Last Updated:** 2026-02-07  
+**Status:** Level 2 (Meta-Builder) rewritten. 3-phase agent, 4 sub-agent profiles, corrected OpenCode format.
 
 ---
 
@@ -17,12 +17,11 @@
 
 ## What iDumb Is
 
-An OpenCode plugin that enforces governance on AI agents by:
-- **Blocking** file writes without an active task (tool gate)
-- **Preserving** critical context across compaction (anchor injection)
-- **Pruning** stale tool outputs to delay compaction (message transform)
+An OpenCode plugin + agent system that enforces governance on AI agents by:
+- **Level 1 (Plugin)**: Blocking file writes without an active task, preserving context across compaction, pruning stale tool outputs
+- **Level 2 (Agents)**: Meta-builder agent that initializes governance, creates sub-agent hierarchy, and enforces delegation workflows
 
-All "intelligence" is manufactured from deterministic hooks — not LLM reasoning.
+All "intelligence" is manufactured from deterministic hooks (Level 1) and structured agent prompts (Level 2) — not LLM reasoning.
 
 ---
 
@@ -35,8 +34,8 @@ v2/
 ├── src/
 │   ├── cli.ts                      # CLI entry point — npx idumb-v2 init
 │   ├── cli/
-│   │   └── deploy.ts               # Deploys agents, commands, modules to user project
-│   ├── templates.ts                # All deployable templates (OpenCode YAML frontmatter format)
+│   │   └── deploy.ts               # Deploys agents, commands, modules + sub-agent profiles to user project
+│   ├── templates.ts                # All deployable templates — meta-builder + 4 sub-agent profiles + module refs
 │   ├── index.ts                    # Plugin entry — wires 5 hooks + 4 tools
 │   ├── hooks/
 │   │   ├── index.ts                # Barrel exports
@@ -104,8 +103,9 @@ v2/
 | **Hook verification harness** | `index.ts` | Every hook logs to `hook-verification.log` with debug-level structured entries. |
 | **CLI entry point** | `cli.ts` + `bin/cli.mjs` | **NEW.** `npx idumb-v2 init` — interactive setup with prompts. E2E verified on test project. |
 | **Agent deployment** | `cli/deploy.ts` | **NEW.** Deploys meta-builder agent to `.opencode/agents/`, commands to `.opencode/commands/`, modules to `.idumb/idumb-modules/`. |
-| **Templates (OpenCode format)** | `templates.ts` | **NEW.** All agent/command templates use official OpenCode YAML frontmatter format. |
+| **Templates (OpenCode format)** | `templates.ts` | **REWRITTEN.** Meta-builder (3-phase, `permissions` plural, `tools: "*": true`), 4 sub-agent profiles (coordinator, builder, validator, skills-creator), updated agent-contract with real OpenCode format, command/workflow templates with real examples. |
 | **opencode.json auto-config** | `cli/deploy.ts` | **NEW.** CLI automatically adds plugin path to `opencode.json`. |
+| **Sub-agent profile deployment** | `cli/deploy.ts` | **NEW.** Deploys 4 reference profiles to `.idumb/idumb-modules/agents/`. |
 
 ## What Does NOT Work / Does NOT Exist Yet
 
@@ -117,8 +117,9 @@ v2/
 | Cross-session anchor migration | **Not implemented.** Anchors persist to disk but keyed by sessionID. New session = new ID. |
 | Role detection | **Not implemented.** No `chat.message` hook. No role-based permissions at runtime. |
 | Delegation tracking | **Not implemented.** Subagent hooks don't fire anyway (PP-01). |
-| Meta builder agent (runtime) | Template exists (`modules/agents/meta-builder.md`). Not yet deployed as `.opencode/agents/` file. |
-| idumb-settings command | **Not implemented.** Config editing is manual for now. |
+| Meta builder agent (runtime) | Template rewritten with 3-phase design. CLI deploys to `.opencode/agents/`. Not yet live-tested. |
+| Sub-agent hierarchy (runtime) | Profile templates deployed to `.idumb/idumb-modules/agents/`. Meta-builder creates actual agents at runtime. Not yet live-tested. |
+| idumb-settings command | Template exists (`/idumb-settings`). Routes to meta-builder agent. Not yet live-tested. |
 
 ---
 
@@ -183,7 +184,7 @@ See `STRATEGIC-PLANNING-PROMPT.md` for full details.
 | **Phase 0** | Clean slate — docs match reality | **DONE** |
 | **Phase 1** | Init + framework detection + scaffolding + config schema | **DONE** (MVP) |
 | **Phase 1b** | Disk persistence for hooks + hook verification harness | **DONE** (code complete, needs live test) |
-| **Phase 2** | Meta builder agent deployment + deep scan on brownfield | Blocked by Phase 1b |
+| **Phase 2** | Meta builder agent deployment + deep scan on brownfield | **Level 2 code complete.** Needs live test. |
 | **Phase 3** | Compaction anchor survival — live test | Blocked by Phase 2 |
 | **Phase 4** | TODO enforcement — real feature development | Blocked by Phase 3 |
 | **Phase 5** | Integration stress test — chaotic session | Blocked by Phase 4 |

@@ -18,6 +18,10 @@ import {
   MODULES_README_TEMPLATE,
   COMMAND_TEMPLATE,
   WORKFLOW_TEMPLATE,
+  SUPREME_COORDINATOR_PROFILE,
+  BUILDER_PROFILE,
+  VALIDATOR_PROFILE,
+  SKILLS_CREATOR_PROFILE,
 } from "../templates.js"
 
 export interface DeployOptions {
@@ -172,6 +176,32 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     await writeIfNew(
       join(modulesDir, "workflows", "workflow-template.md"),
       WORKFLOW_TEMPLATE,
+      force,
+      result,
+    )
+
+    // ─── Deploy Sub-Agent Profile Templates ──────────────────────
+    await writeIfNew(
+      join(modulesDir, "agents", "supreme-coordinator-profile.md"),
+      SUPREME_COORDINATOR_PROFILE,
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(modulesDir, "agents", "builder-profile.md"),
+      BUILDER_PROFILE,
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(modulesDir, "agents", "validator-profile.md"),
+      VALIDATOR_PROFILE,
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(modulesDir, "agents", "skills-creator-profile.md"),
+      SKILLS_CREATOR_PROFILE,
       force,
       result,
     )
