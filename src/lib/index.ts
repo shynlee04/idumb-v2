@@ -1,2 +1,5 @@
 export { createLogger } from "./logging.js"
 export type { Logger, LogLevel } from "./logging.js"
+export { scanProject, formatDetectionReport } from "./framework-detector.js"
+export { scaffoldProject, formatScaffoldReport } from "./scaffolder.js"
+export type { ScaffoldResult } from "./scaffolder.js"

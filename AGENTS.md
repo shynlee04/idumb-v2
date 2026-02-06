@@ -1,8 +1,8 @@
 # AGENTS.md — iDumb v2 (Ground Truth)
 
-**Version:** 2.0.0-clean.4  
+**Version:** 2.1.0  
 **Last Updated:** 2026-02-06  
-**Status:** Phase 0 complete. Ready for Phase 1 (disk persistence + live verification).
+**Status:** Phase 1 MVP complete. Init tool + framework detection + scaffolding implemented and tested.
 
 ---
 
@@ -31,36 +31,46 @@ All "intelligence" is manufactured from deterministic hooks — not LLM reasonin
 ```
 v2/
 ├── src/
-│   ├── index.ts                  # Plugin entry (106 LOC) — wires 5 hooks + 3 tools
+│   ├── index.ts                    # Plugin entry — wires 5 hooks + 4 tools
 │   ├── hooks/
-│   │   ├── index.ts              # Barrel exports
-│   │   ├── tool-gate.ts          # (148 LOC) VALIDATED — blocks write/edit without active task
-│   │   ├── compaction.ts         # (108 LOC) Unit-tested — anchor injection via output.context.push()
-│   │   ├── message-transform.ts  # (123 LOC) Unit-tested — DCP-pattern context pruning
-│   │   └── system.ts             # (69 LOC) UNVERIFIED — hook may not exist in OpenCode
+│   │   ├── index.ts                # Barrel exports
+│   │   ├── tool-gate.ts            # VALIDATED — blocks write/edit without active task
+│   │   ├── compaction.ts           # Unit-tested — anchor injection via output.context.push()
+│   │   ├── message-transform.ts    # Unit-tested — DCP-pattern context pruning
+│   │   └── system.ts               # UNVERIFIED — hook may not exist in OpenCode
 │   ├── lib/
-│   │   ├── index.ts              # Barrel exports
-│   │   └── logging.ts            # (68 LOC) TUI-safe file-based logger
+│   │   ├── index.ts                # Barrel exports
+│   │   ├── logging.ts              # TUI-safe file-based logger
+│   │   ├── framework-detector.ts   # NEW: Read-only brownfield scanner (governance + tech + gaps)
+│   │   └── scaffolder.ts           # NEW: Creates .idumb/ directory tree + config.json
 │   ├── schemas/
-│   │   ├── index.ts              # Barrel exports
-│   │   └── anchor.ts             # (103 LOC) Anchor types, scoring, staleness, budget selection
-│   └── tools/
-│       ├── index.ts              # Barrel exports
-│       ├── task.ts               # (67 LOC) create/complete/status for active task
-│       ├── anchor.ts             # (87 LOC) add/list context anchors
-│       └── status.ts             # (59 LOC) Read-only governance state display
+│   │   ├── index.ts                # Barrel exports
+│   │   ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
+│   │   └── config.ts               # NEW: IdumbConfig schema, Language, GovernanceMode, etc.
+│   ├── tools/
+│   │   ├── index.ts                # Barrel exports
+│   │   ├── task.ts                 # create/complete/status for active task
+│   │   ├── anchor.ts               # add/list context anchors
+│   │   ├── status.ts               # Read-only governance state display
+│   │   └── init.ts                 # NEW: Init tool — scan → scaffold → greeting
+│   └── modules/
+│       ├── agents/
+│       │   └── meta-builder.md     # NEW: Meta builder agent profile template
+│       └── schemas/
+│           └── agent-profile.ts    # NEW: Agent profile contract (roles, permissions, tools)
 ├── tests/
-│   ├── tool-gate.test.ts         # 10 assertions — all pass
-│   ├── compaction.test.ts        # 12 assertions — all pass
-│   └── message-transform.test.ts # 12 assertions — all pass
-├── .archive/                     # Archived planning docs from previous iterations
-├── STRATEGIC-PLANNING-PROMPT.md  # SOT for planning (952 lines, 13 parts)
-├── AGENTS.md                     # THIS FILE
+│   ├── tool-gate.test.ts           # 16 assertions — all pass
+│   ├── compaction.test.ts          # 16 assertions — all pass
+│   ├── message-transform.test.ts   # 13 assertions — all pass
+│   └── init.test.ts               # NEW: 60 assertions — all pass
+├── .archive/                       # Archived planning docs from previous iterations
+├── STRATEGIC-PLANNING-PROMPT.md    # SOT for planning (952 lines, 13 parts)
+├── AGENTS.md                       # THIS FILE
 ├── package.json
 └── tsconfig.json
 ```
 
-**Total:** 14 source files, ~860 LOC. `tsc --noEmit` clean.
+**Total:** 20 source files, ~2000 LOC. `tsc --noEmit` clean. 105/105 test assertions pass.
 
 ---
 
@@ -68,28 +78,33 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | Unit tests pass (10/10). Throws Error with BLOCK+REDIRECT+EVIDENCE. |
-| Compaction anchor injection | `hooks/compaction.ts` | Unit tests pass (12/12). Uses `output.context.push()`. Budget-capped. |
-| Message transform — prunes old tool outputs | `hooks/message-transform.ts` | Unit tests pass (12/12). Keeps last 10, truncates older. |
+| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | Unit tests pass (16/16). Throws Error with BLOCK+REDIRECT+EVIDENCE. |
+| Compaction anchor injection | `hooks/compaction.ts` | Unit tests pass (16/16). Uses `output.context.push()`. Budget-capped. |
+| Message transform — prunes old tool outputs | `hooks/message-transform.ts` | Unit tests pass (13/13). Keeps last 10, truncates older. |
 | Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness, budget-aware selection. |
 | TUI-safe file logging | `lib/logging.ts` | Zero console.log. Writes to `.opencode/idumb/logs/`. |
 | Task tool | `tools/task.ts` | create/complete/status. Sets active task for tool-gate. |
 | Anchor tool | `tools/anchor.ts` | add/list. Stores in compaction hook's in-memory Map. |
 | Status tool | `tools/status.ts` | Read-only. Shows active task + anchor summary. |
+| **Init tool** | `tools/init.ts` | **NEW.** 60/60 test assertions. Scans brownfield, scaffolds .idumb/, creates config. |
+| **Config schema** | `schemas/config.ts` | **NEW.** Language, ExperienceLevel, GovernanceMode, InstallScope, FrameworkDetection. |
+| **Framework detector** | `lib/framework-detector.ts` | **NEW.** Detects BMAD/GSD/Spec-kit, tech stack, pkg manager, gaps, conflicts. |
+| **Scaffolder** | `lib/scaffolder.ts` | **NEW.** Creates .idumb/ tree, writes config.json, non-destructive. |
+| **Agent profile schema** | `modules/schemas/agent-profile.ts` | **NEW.** Roles, permissions, tool categories. |
+| **Meta builder template** | `modules/agents/meta-builder.md` | **NEW.** Agent profile with granular bash allow/blocklist. |
 
-## What Does NOT Work / Does NOT Exist
+## What Does NOT Work / Does NOT Exist Yet
 
 | Item | Reality |
 |---|---|
-| `tools/init.ts` | **Does not exist.** No init tool. No codebase scanner. No framework detector. |
-| `lib/persistence.ts` | **Does not exist.** ALL state is in-memory Maps. Lost on restart. |
-| `schemas/permission.ts`, `config.ts`, `state.ts`, `scan.ts` | **Do not exist.** |
-| `engines/scanner.ts`, `framework-detector.ts` | **Do not exist.** |
-| Disk persistence | **None.** Session state and anchors are in-memory only. |
-| Role detection | **Not implemented.** No `chat.message` hook. No role-based permissions. |
+| `lib/persistence.ts` | **Does not exist.** Hook state (tool-gate sessions, compaction anchors) is still in-memory Maps. Lost on restart. |
+| Disk persistence for hooks | **None.** Config.json is persisted by init, but hook runtime state is ephemeral. |
+| Role detection | **Not implemented.** No `chat.message` hook. No role-based permissions at runtime. |
 | Delegation tracking | **Not implemented.** Subagent hooks don't fire anyway (PP-01). |
 | `experimental.chat.system.transform` | **Unverified.** Hook name NOT in official OpenCode docs. |
 | `experimental.chat.messages.transform` | **Unverified.** Hook name NOT in official OpenCode docs. |
+| Meta builder agent (runtime) | Template exists (`modules/agents/meta-builder.md`). Not yet deployed as `.opencode/agents/` file. |
+| idumb-settings command | **Not implemented.** Config editing is manual for now. |
 
 ---
 
@@ -112,10 +127,11 @@ v2/
 | `experimental.chat.system.transform` | **UNVERIFIED** | Injects governance directive into system prompt |
 | `experimental.chat.messages.transform` | **UNVERIFIED** | Prunes old tool outputs (DCP pattern) |
 
-## Custom Tools (3 of max 5)
+## Custom Tools (4 of max 5)
 
 | Tool | Description |
 |---|---|
+| `idumb_init` | **NEW.** Initialize iDumb — scans brownfield, detects frameworks, creates .idumb/ + config.json. The entry point. |
 | `idumb_task` | Create/complete/check active task. Required before write/edit. |
 | `idumb_anchor` | Add/list context anchors that survive compaction. |
 | `idumb_status` | Read-only governance state overview. |
@@ -139,7 +155,7 @@ v2/
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # runs all 3 test files via tsx
+npm test             # runs all 4 test files via tsx (105 assertions)
 ```
 
 ---
@@ -151,11 +167,12 @@ See `STRATEGIC-PLANNING-PROMPT.md` for full details.
 | Phase | Goal | Status |
 |---|---|---|
 | **Phase 0** | Clean slate — docs match reality | **DONE** |
-| **Phase 1** | Disk persistence + live hook verification on brownfield project | NEXT |
-| **Phase 2** | Compaction anchor survival — live test | Blocked by Phase 1 |
-| **Phase 3** | TODO enforcement — real feature development | Blocked by Phase 2 |
-| **Phase 4** | Integration stress test — chaotic session | Blocked by Phase 3 |
-| **Phase 5** | Init/meta-builder — ONLY after core proven | Blocked by Phase 4 |
+| **Phase 1** | Init + framework detection + scaffolding + config schema | **DONE** (MVP) |
+| **Phase 1b** | Disk persistence for hooks + live hook verification | NEXT |
+| **Phase 2** | Meta builder agent deployment + deep scan on brownfield | Blocked by Phase 1b |
+| **Phase 3** | Compaction anchor survival — live test | Blocked by Phase 2 |
+| **Phase 4** | TODO enforcement — real feature development | Blocked by Phase 3 |
+| **Phase 5** | Integration stress test — chaotic session | Blocked by Phase 4 |
 
 ---
 

@@ -9,7 +9,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx tests/tool-gate.test.ts && npx tsx tests/compaction.test.ts && npx tsx tests/message-transform.test.ts"
+    "test": "npx tsx tests/tool-gate.test.ts && npx tsx tests/compaction.test.ts && npx tsx tests/message-transform.test.ts && npx tsx tests/init.test.ts"
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1.1.52"

@@ -1,0 +1,239 @@
+/**
+ * idumb_init — the entry point for everything.
+ * 
+ * Orchestrates: config creation → brownfield scan → scaffold → greeting.
+ * 
+ * This tool is the first thing a user runs. It:
+ * 1. Accepts user preferences (language, experience, governance mode, scope)
+ * 2. Scans the project read-only to detect frameworks, gaps, conflicts
+ * 3. Creates .idumb/ directory tree + config.json
+ * 4. Returns a greeting with detection results + next steps
+ * 
+ * Actions: "install" (full init), "scan" (read-only scan only), "status" (check existing config)
+ */
+
+import { tool } from "@opencode-ai/plugin/tool"
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
+import { createConfig, validateConfig } from "../schemas/config.js"
+import type { Language, ExperienceLevel, GovernanceMode, InstallScope, IdumbConfig } from "../schemas/config.js"
+import { scanProject, formatDetectionReport } from "../lib/framework-detector.js"
+import { scaffoldProject, formatScaffoldReport } from "../lib/scaffolder.js"
+import { createLogger } from "../lib/logging.js"
+
+// ─── Greeting Builder ────────────────────────────────────────────────
+
+function buildGreeting(
+  config: IdumbConfig,
+  scaffoldReport: string,
+  detectionReport: string,
+): string {
+  const lang = config.user.language.communication
+  const sections: string[] = []
+
+  if (lang === "vi") {
+    sections.push("# 🧠 iDumb — Quản Trị Thông Minh Cho Agent AI\n")
+    sections.push("Xin chào! iDumb đã được cài đặt thành công.\n")
+    sections.push(`**Chế độ quản trị:** ${formatGovernanceMode(config.governance.mode, lang)}`)
+    sections.push(`**Trình độ:** ${config.user.experienceLevel}`)
+    sections.push(`**Ngôn ngữ giao tiếp:** Tiếng Việt`)
+    sections.push(`**Ngôn ngữ tài liệu:** ${config.user.language.documents === "vi" ? "Tiếng Việt" : "English"}`)
+    sections.push("")
+    sections.push(detectionReport)
+    sections.push("")
+    sections.push(scaffoldReport)
+    sections.push("")
+    sections.push(buildNextSteps(config, lang))
+  } else {
+    sections.push("# 🧠 iDumb — Intelligent Delegation Using Managed Boundaries\n")
+    sections.push("Welcome! iDumb has been installed successfully.\n")
+    sections.push(`**Governance mode:** ${formatGovernanceMode(config.governance.mode, lang)}`)
+    sections.push(`**Experience level:** ${config.user.experienceLevel}`)
+    sections.push(`**Communication language:** English`)
+    sections.push(`**Document language:** ${config.user.language.documents === "vi" ? "Vietnamese" : "English"}`)
+    sections.push("")
+    sections.push(detectionReport)
+    sections.push("")
+    sections.push(scaffoldReport)
+    sections.push("")
+    sections.push(buildNextSteps(config, lang))
+  }
+
+  return sections.join("\n")
+}
+
+function formatGovernanceMode(mode: GovernanceMode, lang: Language): string {
+  const descriptions: Record<GovernanceMode, Record<Language, string>> = {
+    balanced: {
+      en: "**Balanced** — Agents get correct choices and recommendations before stopping. Full completion allowed, governed at decision boundaries.",
+      vi: "**Cân bằng** — Agent được gợi ý lựa chọn đúng trước khi dừng. Cho phép hoàn thành toàn bộ, quản trị tại ranh giới quyết định.",
+    },
+    strict: {
+      en: "**Strict** — Incremental validation at ALL nodes. Agent must pass gate before proceeding.",
+      vi: "**Nghiêm ngặt** — Kiểm tra tại MỌI nút. Agent phải vượt qua cổng trước khi tiếp tục.",
+    },
+    autonomous: {
+      en: "**Autonomous** — AI agent decides freely. Minimal intervention, maximum freedom. Still logs everything.",
+      vi: "**Tự chủ** — Agent AI tự quyết định. Can thiệp tối thiểu, tự do tối đa. Vẫn ghi log tất cả.",
+    },
+  }
+  return descriptions[mode][lang]
+}
+
+function buildNextSteps(config: IdumbConfig, lang: Language): string {
+  const lines: string[] = []
+  const detection = config.detection
+  const hasGovernance = detection.governance.length > 0
+  const hasAgentDirs = detection.existingAgentDirs.length > 0
+
+  if (lang === "vi") {
+    lines.push("## 🚀 Bước Tiếp Theo\n")
+
+    if (hasGovernance) {
+      lines.push(`1. **Framework đã phát hiện:** ${detection.governance.join(", ")} — iDumb sẽ tích hợp với cấu trúc hiện có`)
+      lines.push("2. **Meta builder** sẽ phân tích sâu codebase để tạo agent profiles phù hợp")
+    } else {
+      lines.push("1. **Không phát hiện governance framework** — iDumb sẽ thiết lập từ đầu")
+      lines.push("2. **Meta builder** sẽ quét codebase và đề xuất cấu trúc phù hợp")
+    }
+
+    if (detection.conflicts.length > 0) {
+      lines.push(`\n⚠️ **Cần xử lý ${detection.conflicts.length} xung đột** trước khi tiếp tục`)
+    }
+
+    lines.push("\n**Lệnh tiếp theo:**")
+    lines.push("- `idumb_task create \"...\"` — Tạo task trước khi viết file")
+    lines.push("- `idumb_anchor add` — Lưu context quan trọng")
+    lines.push("- `idumb_status` — Xem trạng thái quản trị")
+  } else {
+    lines.push("## 🚀 Next Steps\n")
+
+    if (hasGovernance) {
+      lines.push(`1. **Detected framework(s):** ${detection.governance.join(", ")} — iDumb will integrate with existing structure`)
+      lines.push("2. **Meta builder** will deep-scan codebase to create matching agent profiles")
+    } else {
+      lines.push("1. **No governance framework detected** — iDumb will set up fresh governance")
+      lines.push("2. **Meta builder** will scan codebase and propose matching structure")
+    }
+
+    if (hasAgentDirs) {
+      lines.push(`3. **Existing agent dirs found:** ${detection.existingAgentDirs.join(", ")} — will coordinate, not conflict`)
+    }
+
+    if (detection.conflicts.length > 0) {
+      lines.push(`\n⚠️ **${detection.conflicts.length} conflict(s) need resolution** before proceeding`)
+    }
+
+    if (detection.gaps.length > 0) {
+      lines.push(`\n📋 **${detection.gaps.length} issue(s) detected** — see scan results above for details`)
+    }
+
+    lines.push("\n**Available commands:**")
+    lines.push("- `idumb_task create \"...\"` — Create a task before writing files")
+    lines.push("- `idumb_anchor add` — Save important context that survives compaction")
+    lines.push("- `idumb_status` — View governance state")
+  }
+
+  return lines.join("\n")
+}
+
+// ─── Tool Definition ─────────────────────────────────────────────────
+
+export const idumb_init = tool({
+  description: "Initialize iDumb governance — scans your brownfield project, detects frameworks, creates .idumb/ config and directory structure. The entry point for everything. Use action='scan' for read-only scan, action='status' to check existing config, or action='install' (default) for full setup.",
+  args: {
+    action: tool.schema.enum(["install", "scan", "status"]).optional().describe(
+      "install = full init (scan + scaffold + config), scan = read-only scan only, status = check existing config. Default: install"
+    ),
+    language: tool.schema.enum(["en", "vi"]).optional().describe(
+      "Communication language: en (English) or vi (Vietnamese). Default: en"
+    ),
+    documents_language: tool.schema.enum(["en", "vi"]).optional().describe(
+      "Language for generated documents: en or vi. Default: same as language"
+    ),
+    experience: tool.schema.enum(["beginner", "guided", "expert"]).optional().describe(
+      "User experience level. beginner = verbose guidance, guided = balanced, expert = terse. Default: guided"
+    ),
+    governance_mode: tool.schema.enum(["balanced", "strict", "autonomous"]).optional().describe(
+      "balanced = recommend before stopping, strict = validate at every node, autonomous = AI decides freely. Default: balanced"
+    ),
+    scope: tool.schema.enum(["project", "global"]).optional().describe(
+      "Installation scope: project-level or global. Default: project"
+    ),
+    force: tool.schema.boolean().optional().describe(
+      "Force overwrite existing config.json if it exists"
+    ),
+  },
+  async execute(args, context) {
+    const { directory } = context
+    const log = createLogger(directory, "idumb-init")
+    const action = args.action ?? "install"
+
+    log.info(`idumb_init: action=${action}`, { args })
+
+    try {
+      // ─── STATUS: just check existing config ──────────────
+      if (action === "status") {
+        const configPath = join(directory, ".idumb/config.json")
+        try {
+          const raw = await readFile(configPath, "utf-8")
+          const config = JSON.parse(raw) as IdumbConfig
+          const errors = validateConfig(config)
+
+          if (errors.length > 0) {
+            return `## ⚠️ Config found but has issues\n\n**Path:** \`${configPath}\`\n\n**Errors:**\n${errors.map(e => `- ${e}`).join("\n")}`
+          }
+
+          return `## ✅ iDumb is configured\n\n**Version:** ${config.version}\n**Installed:** ${config.installedAt}\n**Governance:** ${config.governance.mode}\n**Experience:** ${config.user.experienceLevel}\n**Language:** ${config.user.language.communication}\n\nRun \`idumb_init action=install force=true\` to reconfigure.`
+        } catch {
+          return "## ❌ No iDumb config found\n\nRun `idumb_init` to install."
+        }
+      }
+
+      // ─── SCAN: read-only brownfield scan ─────────────────
+      const detection = await scanProject(directory, log)
+      const lang = (args.language ?? "en") as Language
+      const detectionReport = formatDetectionReport(detection, lang)
+
+      if (action === "scan") {
+        return detectionReport
+      }
+
+      // ─── INSTALL: full init ──────────────────────────────
+      const docsLang = (args.documents_language ?? args.language ?? "en") as Language
+
+      const config = createConfig({
+        scope: (args.scope ?? "project") as InstallScope,
+        experienceLevel: (args.experience ?? "guided") as ExperienceLevel,
+        communicationLanguage: lang,
+        documentsLanguage: docsLang,
+        governanceMode: (args.governance_mode ?? "balanced") as GovernanceMode,
+        detection,
+      })
+
+      const force = args.force ?? false
+      const scaffoldResult = await scaffoldProject(directory, config, force, log)
+      const scaffoldReport = formatScaffoldReport(scaffoldResult, lang)
+
+      if (!scaffoldResult.success) {
+        return `## ❌ Installation failed\n\n${scaffoldReport}`
+      }
+
+      // Build the greeting
+      const greeting = buildGreeting(config, scaffoldReport, detectionReport)
+
+      log.info("idumb_init complete", {
+        governance: detection.governance,
+        tech: detection.tech,
+        mode: config.governance.mode,
+      })
+
+      return greeting
+
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      log.error("idumb_init failed", { error: msg })
+      return `## ❌ Init Error\n\n${msg}`
+    }
+  },
+})

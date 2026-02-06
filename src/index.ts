@@ -11,7 +11,7 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/index.js"
 import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
-import { idumb_task, idumb_anchor, idumb_status } from "./tools/index.js"
+import { idumb_task, idumb_anchor, idumb_status, idumb_init } from "./tools/index.js"
 
 const VERSION = "2.0.0-clean.4"
 
@@ -98,6 +98,7 @@ const idumb: Plugin = async ({ directory }) => {
       idumb_task,
       idumb_anchor,
       idumb_status,
+      idumb_init,
     },
   }
 }
