@@ -90,6 +90,27 @@ export function createToolGateBefore(log: Logger) {
         return
       }
 
+      // ─── Auto-inherit from task store ─────────────────────────
+      // If no session-level task but the task store has an active
+      // epic+task (e.g. bootstrap from init), auto-set it.
+      // This is the "smarter task" fix: system handles it, not LLM.
+      const store = stateManager.getTaskStore()
+      if (store.activeEpicId) {
+        const activeEpic = store.epics.find(e => e.id === store.activeEpicId)
+        if (activeEpic) {
+          const activeStoreTask = activeEpic.tasks.find(t => t.status === "active")
+          if (activeStoreTask) {
+            // Auto-set session task from store
+            stateManager.setActiveTask(sessionID, {
+              id: activeStoreTask.id,
+              name: activeStoreTask.name,
+            })
+            log.info(`AUTO-INHERIT: ${tool} allowed — inherited task "${activeStoreTask.name}" from store`, { sessionID })
+            return
+          }
+        }
+      }
+
       // Check if this is a retry of a recently blocked tool
       const lastBlock = stateManager.getLastBlock(sessionID)
       const isRetry = lastBlock !== null

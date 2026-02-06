@@ -119,6 +119,43 @@ export function createEmptyStore(): TaskStore {
     }
 }
 
+/**
+ * Creates a pre-provisioned task store for first-time init.
+ * 
+ * The meta-builder needs write access from its very first session,
+ * but tool-gate blocks writes without an active task. This creates
+ * a bootstrap epic+task that's already active, so the meta-builder
+ * can write immediately without needing to call idumb_task first.
+ * 
+ * Used by: deploy.ts (written to .idumb/brain/tasks.json during init)
+ */
+export function createBootstrapStore(): TaskStore {
+    const now = Date.now()
+    const epicId = `epic-bootstrap-${now}`
+    const taskId = `task-bootstrap-${now}`
+    return {
+        version: TASK_STORE_VERSION,
+        activeEpicId: epicId,
+        epics: [{
+            id: epicId,
+            name: "Meta Builder Initialization",
+            status: "active",
+            createdAt: now,
+            modifiedAt: now,
+            tasks: [{
+                id: taskId,
+                epicId,
+                name: "Initial System Setup",
+                status: "active",
+                assignee: "idumb-meta-builder",
+                createdAt: now,
+                modifiedAt: now,
+                subtasks: [],
+            }],
+        }],
+    }
+}
+
 // ─── Lookup Helpers ──────────────────────────────────────────────────
 
 export function findEpic(store: TaskStore, epicId: string): TaskEpic | undefined {
@@ -276,8 +313,8 @@ export function detectChainBreaks(store: TaskStore): ChainWarning[] {
                 type: "no_active_tasks",
                 epicId: epic.id,
                 message: `Epic "${epic.name}" is active but has no active tasks.${planned.length > 0
-                        ? ` ${planned.length} planned task(s) waiting. Start one with: idumb_task action=start task_id=${planned[0].id}`
-                        : " Create a task first."
+                    ? ` ${planned.length} planned task(s) waiting. Start one with: idumb_task action=start task_id=${planned[0].id}`
+                    : " Create a task first."
                     }`,
             })
         }

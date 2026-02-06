@@ -23,6 +23,7 @@ import {
   VALIDATOR_PROFILE,
   SKILLS_CREATOR_PROFILE,
 } from "../templates.js"
+import { createBootstrapStore } from "../schemas/task.js"
 
 export interface DeployOptions {
   projectDir: string
@@ -67,21 +68,21 @@ async function writeIfNew(path: string, content: string, force: boolean, result:
 function resolvePluginPath(projectDir: string): string {
   // Check if we're running from node_modules (npm install idumb-v2)
   const thisFile = new URL(import.meta.url).pathname
-  
+
   if (thisFile.includes("node_modules/idumb-v2")) {
     // Installed as dependency — use relative path
     return "./node_modules/idumb-v2"
   }
-  
+
   // Running from cloned repo or npx — use the package root
   // Go up from src/cli/deploy.js → package root
   const packageRoot = resolve(dirname(thisFile), "..", "..")
-  
+
   // If package root is inside the project, use relative path
   if (packageRoot.startsWith(projectDir)) {
     return "./" + packageRoot.slice(projectDir.length + 1)
   }
-  
+
   // Otherwise use absolute path
   return packageRoot
 }
@@ -105,7 +106,7 @@ function getOpenCodeDir(projectDir: string, scope: "project" | "global"): string
 export async function deployAll(options: DeployOptions): Promise<DeployResult> {
   const { projectDir, language, governance, experience, scope, force } = options
   const pluginPath = resolvePluginPath(projectDir)
-  
+
   const result: DeployResult = {
     deployed: [],
     skipped: [],
@@ -206,6 +207,19 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       result,
     )
 
+    // ─── Bootstrap Task Provisioning ─────────────────────────────
+    // Pre-create an active epic+task so the meta-builder can write
+    // immediately without needing to call idumb_task first.
+    // The tool-gate auto-inherits from the task store on first write.
+    const tasksPath = join(projectDir, ".idumb", "brain", "tasks.json")
+    const bootstrapStore = createBootstrapStore()
+    await writeIfNew(
+      tasksPath,
+      JSON.stringify(bootstrapStore, null, 2) + "\n",
+      force,
+      result,
+    )
+
     // ─── Update opencode.json with plugin path ──────────────────
     try {
       const configPath = scope === "global"
@@ -223,12 +237,12 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       if (!plugins.includes(pluginPath)) {
         plugins.push(pluginPath)
         config.plugin = plugins
-        
+
         // Ensure schema is set
         if (!config["$schema"]) {
           config["$schema"] = "https://opencode.ai/config.json"
         }
-        
+
         await writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
         result.opencodConfigUpdated = true
         result.deployed.push(configPath)
