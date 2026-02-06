@@ -17,6 +17,8 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import { join, dirname } from "node:path"
 import type { Anchor } from "../schemas/anchor.js"
+import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
+import { createEmptyStore, getActiveChain } from "../schemas/task.js"
 import type { Logger } from "./logging.js"
 
 // ─── State Shape ─────────────────────────────────────────────────────
@@ -31,20 +33,24 @@ interface PersistedState {
   lastSaved: string
   sessions: Record<string, SessionState>
   anchors: Record<string, Anchor[]>
+  tasks?: TaskStore  // NEW — global task hierarchy (optional for backward compat with old state files)
 }
 
-const STATE_VERSION = "1.0.0"
+const STATE_VERSION = "1.1.0"
 const DEBOUNCE_MS = 500
 const STATE_FILE = ".idumb/brain/hook-state.json"
+const TASKS_FILE = ".idumb/brain/tasks.json"
 
 // ─── StateManager ────────────────────────────────────────────────────
 
 export class StateManager {
   private sessions = new Map<string, SessionState>()
   private anchors = new Map<string, Anchor[]>()
+  private taskStore: TaskStore = createEmptyStore()
   private directory: string = ""
   private log: Logger | null = null
   private saveTimer: ReturnType<typeof setTimeout> | null = null
+  private taskSaveTimer: ReturnType<typeof setTimeout> | null = null
   private initialized = false
   private degraded = false  // true if disk I/O failed
 
@@ -90,6 +96,25 @@ export class StateManager {
       }
     }
 
+    // Load task store from separate file
+    try {
+      const tasksPath = join(directory, TASKS_FILE)
+      const tasksRaw = await readFile(tasksPath, "utf-8")
+      const loaded = JSON.parse(tasksRaw) as TaskStore
+      if (loaded.version && Array.isArray(loaded.epics)) {
+        this.taskStore = loaded
+        log.info("Task store loaded from disk", {
+          epics: loaded.epics.length,
+          activeEpicId: loaded.activeEpicId,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load task store — starting fresh", { error: msg })
+      }
+    }
+
     this.initialized = true
   }
 
@@ -124,6 +149,35 @@ export class StateManager {
     return this.getSession(sessionID).lastBlock
   }
 
+  // ─── Task Store (global, not per-session) ──────────────────────────
+
+  getTaskStore(): TaskStore {
+    return this.taskStore
+  }
+
+  setTaskStore(store: TaskStore): void {
+    this.taskStore = store
+    this.scheduleTaskSave()
+  }
+
+  /** Convenience: get active epic from task store */
+  getActiveEpic(): TaskEpic | null {
+    if (!this.taskStore.activeEpicId) return null
+    return this.taskStore.epics.find(e => e.id === this.taskStore.activeEpicId) ?? null
+  }
+
+  /** Convenience: get the active task within the active epic */
+  getSmartActiveTask(): Task | null {
+    const chain = getActiveChain(this.taskStore)
+    return chain.task
+  }
+
+  /** Set active epic ID */
+  setActiveEpicId(epicId: string | null): void {
+    this.taskStore.activeEpicId = epicId
+    this.scheduleTaskSave()
+  }
+
   // ─── Anchor State (compaction) ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
@@ -155,6 +209,20 @@ export class StateManager {
     }, DEBOUNCE_MS)
   }
 
+  /** Schedule a debounced task save. */
+  private scheduleTaskSave(): void {
+    if (this.degraded) return
+
+    if (this.taskSaveTimer) {
+      clearTimeout(this.taskSaveTimer)
+    }
+
+    this.taskSaveTimer = setTimeout(() => {
+      this.taskSaveTimer = null
+      this.saveTasksToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
   /** Write current state to disk. */
   private async saveToDisk(): Promise<void> {
     if (!this.directory) return
@@ -183,13 +251,37 @@ export class StateManager {
     }
   }
 
+  /** Write task store to separate disk file. */
+  private async saveTasksToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const tasksPath = join(this.directory, TASKS_FILE)
+
+    try {
+      await mkdir(dirname(tasksPath), { recursive: true })
+      await writeFile(tasksPath, JSON.stringify(this.taskStore, null, 2) + "\n", "utf-8")
+      this.log?.info("Task store saved to disk", {
+        epics: this.taskStore.epics.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save task store — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
   /** Force immediate save — use on shutdown/cleanup. */
   async forceSave(): Promise<void> {
     if (this.saveTimer) {
       clearTimeout(this.saveTimer)
       this.saveTimer = null
     }
+    if (this.taskSaveTimer) {
+      clearTimeout(this.taskSaveTimer)
+      this.taskSaveTimer = null
+    }
     await this.saveToDisk()
+    await this.saveTasksToDisk()
   }
 
   /** Check if persistence is degraded (disk I/O failed). */
@@ -211,6 +303,7 @@ export class StateManager {
   clear(): void {
     this.sessions.clear()
     this.anchors.clear()
+    this.taskStore = createEmptyStore()
   }
 }
 

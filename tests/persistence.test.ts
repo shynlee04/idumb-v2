@@ -238,7 +238,7 @@ function wait(ms: number): Promise<void> {
   await sm.forceSave()
 
   const raw = JSON.parse(readFileSync(join(dir, ".idumb/brain/hook-state.json"), "utf-8"))
-  assert("version: has version field", raw.version === "1.0.0")
+  assert("version: has version field", raw.version === "1.1.0")
   assert("version: has lastSaved", typeof raw.lastSaved === "string")
   assert("version: lastSaved is ISO", raw.lastSaved.includes("T"))
 }

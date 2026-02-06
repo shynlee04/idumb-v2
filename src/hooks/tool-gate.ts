@@ -36,11 +36,32 @@ function buildBlockMessage(tool: string, isRetry: boolean): string {
     ? " (ALREADY BLOCKED — do NOT retry the same tool)"
     : ""
 
+  // Include smart task state if available
+  const store = stateManager.getTaskStore()
+  const activeEpic = store.activeEpicId
+    ? store.epics.find(e => e.id === store.activeEpicId)
+    : null
+
+  const stateLines: string[] = []
+  if (activeEpic) {
+    const activeTask = activeEpic.tasks.find(t => t.status === "active")
+    if (activeTask) {
+      stateLines.push(`CURRENT STATE: Epic "${activeEpic.name}" is active with task "${activeTask.name}" but it hasn't been started in this session.`)
+      stateLines.push(`USE INSTEAD: Call "idumb_task" with action "start" and task_id="${activeTask.id}" to activate it in this session, then retry your ${tool}.`)
+    } else {
+      stateLines.push(`CURRENT STATE: Epic "${activeEpic.name}" is active, but no task is marked active.`)
+      stateLines.push(`USE INSTEAD: Call "idumb_task" with action "start" and a task_id, OR action "create_task" with a name, then retry your ${tool}.`)
+    }
+  } else {
+    stateLines.push(`CURRENT STATE: No active epic or task.`)
+    stateLines.push(`USE INSTEAD: Call "idumb_task" with action "create_epic" and a name to start, then create and start a task.`)
+  }
+
   return [
     `GOVERNANCE BLOCK: ${tool} denied${retryNote}`,
     "",
-    `WHAT: You tried to use "${tool}" but no active task exists.`,
-    `USE INSTEAD: Call the "idumb_task" tool with action "create" and a task name to create a task first, then retry your ${tool}.`,
+    `WHAT: You tried to use "${tool}" but no active task exists in this session.`,
+    ...stateLines,
     `EVIDENCE: Session has no active task. All file modifications require an active task for governance tracking.`,
   ].join("\n")
 }

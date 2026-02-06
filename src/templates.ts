@@ -419,7 +419,7 @@ permissions:
     "git diff*": allow
     "*": ask
   task:
-    "*": deny
+    "*": allow
 ---
 \`\`\`
 
