@@ -1,156 +1,102 @@
 /**
- * Anchor Schema
+ * Anchor schema — context preservation units that survive compaction.
  * 
- * Anchors are context preservation units that survive compaction.
- * They carry priority weights and staleness tracking per the plan.
+ * Plain TypeScript interfaces (DON'T #9: no Zod for internal state).
+ * 
+ * Responsibility: Define anchor structure, timestamp enforcement,
+ * priority scoring, and budget-aware selection.
+ * 
+ * Consumers: compaction hook (scoring/selection), anchor tool (CRUD)
  */
 
-import { z } from "zod"
+/** Anchor types — what kind of context this preserves */
+export type AnchorType = "decision" | "context" | "checkpoint" | "error" | "attention"
 
-/**
- * Timestamp schema - enforced on all entities per Time-to-Stale spec
- */
-export const TimestampSchema = z.object({
-  createdAt: z.string().datetime(),
-  modifiedAt: z.string().datetime(),
-  validatedAt: z.string().datetime().optional(),
-  stalenessHours: z.number().default(0),
-  isStale: z.boolean().default(false), // > 48 hours = stale
-})
+/** Priority levels with numeric weights for scoring */
+export type AnchorPriority = "critical" | "high" | "medium" | "low"
 
-export type Timestamp = z.infer<typeof TimestampSchema>
-
-/**
- * Anchor priority levels
- * - critical: Must survive compaction, always injected
- * - high: Survives compaction if budget allows
- * - medium: May be pruned under pressure
- * - low: First to be pruned
- */
-export const AnchorPrioritySchema = z.enum(["critical", "high", "medium", "low"])
-export type AnchorPriority = z.infer<typeof AnchorPrioritySchema>
-
-/**
- * Anchor type classification
- */
-export const AnchorTypeSchema = z.enum([
-  "decision",     // Key decisions that must persist
-  "context",      // General context preservation
-  "checkpoint",   // Recovery points
-  "error",        // Error context for debugging
-  "attention",    // Focus directives
-])
-export type AnchorType = z.infer<typeof AnchorTypeSchema>
-
-/**
- * Full anchor schema with all metadata
- */
-export const AnchorSchema = z.object({
-  id: z.string().uuid(),
-  type: AnchorTypeSchema,
-  content: z.string().max(2000), // Limit content size
-  priority: AnchorPrioritySchema,
-  survives_compaction: z.boolean().default(true),
-  timestamp: TimestampSchema,
-  // For attention anchors
-  focusTarget: z.string().optional(),     // Turn number or file path
-  focusReason: z.string().optional(),     // Why this needs attention
-  // For traversal
-  traversalDepth: z.number().default(0),  // 0 = direct, 1+ = related
-  entityType: z.enum(["task", "decision", "file", "agent", "phase"]).optional(),
-})
-
-export type Anchor = z.infer<typeof AnchorSchema>
-
-/**
- * Anchor collection schema
- */
-export const AnchorCollectionSchema = z.array(AnchorSchema)
-export type AnchorCollection = z.infer<typeof AnchorCollectionSchema>
-
-/**
- * Calculate staleness in hours from a timestamp
- */
-export function calculateStaleness(timestamp: Timestamp): number {
-  const lastValid = timestamp.validatedAt || timestamp.modifiedAt
-  const now = new Date()
-  const lastDate = new Date(lastValid)
-  return (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60)
+const PRIORITY_WEIGHTS: Record<AnchorPriority, number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
 }
 
-/**
- * Enforce timestamp staleness calculation
- */
-export function enforceTimestamp(timestamp: Timestamp): Timestamp {
-  const staleness = calculateStaleness(timestamp)
-  return {
-    ...timestamp,
-    stalenessHours: staleness,
-    isStale: staleness > 48,
-  }
+/** Staleness threshold in hours — anchors older than this get deprioritized */
+const STALE_HOURS = 48
+
+/** An anchor — the core unit of context preservation */
+export interface Anchor {
+  id: string
+  type: AnchorType
+  priority: AnchorPriority
+  content: string
+  createdAt: number   // Date.now() timestamp
+  modifiedAt: number
 }
 
-/**
- * Calculate anchor selection score (from micro-milestone spec)
- * Higher score = higher priority for selection
- */
-export function calculateAnchorScore(anchor: Anchor): number {
-  const priorityWeight = {
-    critical: 100,
-    high: 75,
-    medium: 50,
-    low: 25,
-  }
-  const freshnessBonus = Math.max(0, 48 - anchor.timestamp.stalenessHours)
-  const depthPenalty = anchor.traversalDepth * 10
-
-  return priorityWeight[anchor.priority] + freshnessBonus - depthPenalty
-}
-
-/**
- * Select anchors within budget, sorted by score
- */
-export function selectAnchors(anchors: Anchor[], budget: number): Anchor[] {
-  // 1. Filter stale anchors (staleness > 48 hours) unless critical
-  const fresh = anchors.filter(
-    (a) => !a.timestamp.isStale || a.priority === "critical"
-  )
-
-  // 2. Sort by composite score
-  const scored = fresh
-    .map((a) => ({
-      ...a,
-      score: calculateAnchorScore(a),
-    }))
-    .sort((a, b) => b.score - a.score)
-
-  // 3. Take top N within budget
-  return scored.slice(0, budget)
-}
-
-/**
- * Create a new anchor with proper timestamps
- */
+/** Create a new anchor with enforced timestamps */
 export function createAnchor(
   type: AnchorType,
-  content: string,
   priority: AnchorPriority,
-  options?: Partial<Anchor>
+  content: string,
 ): Anchor {
-  const now = new Date().toISOString()
-  return AnchorSchema.parse({
-    id: crypto.randomUUID(),
+  const now = Date.now()
+  return {
+    id: `anchor-${now}-${Math.random().toString(36).slice(2, 8)}`,
     type,
-    content,
     priority,
-    survives_compaction: true,
-    timestamp: {
-      createdAt: now,
-      modifiedAt: now,
-      stalenessHours: 0,
-      isStale: false,
-    },
-    traversalDepth: 0,
-    ...options,
-  })
+    content,
+    createdAt: now,
+    modifiedAt: now,
+  }
+}
+
+/** Calculate staleness in hours */
+export function stalenessHours(anchor: Anchor): number {
+  return (Date.now() - anchor.modifiedAt) / (1000 * 60 * 60)
+}
+
+/** Is this anchor stale? (>48h without update) */
+export function isStale(anchor: Anchor): boolean {
+  return stalenessHours(anchor) > STALE_HOURS
+}
+
+/**
+ * Score an anchor for selection priority.
+ * Higher = more important = selected first.
+ * 
+ * Score = priorityWeight × freshnessMultiplier
+ * Stale anchors get 0.25× multiplier (still selected if critical, but demoted)
+ */
+export function scoreAnchor(anchor: Anchor): number {
+  const weight = PRIORITY_WEIGHTS[anchor.priority]
+  const freshness = isStale(anchor) ? 0.25 : 1.0
+  return weight * freshness
+}
+
+/**
+ * Select top anchors within a character budget.
+ * Sorted by score descending. Stale anchors excluded unless critical.
+ * 
+ * Budget: enforced to prevent token waste (Pitfall 7).
+ */
+export function selectAnchors(anchors: Anchor[], budgetChars: number): Anchor[] {
+  // Exclude stale non-critical anchors (§ST-STALE: stale entities EXCLUDED, not just flagged)
+  const eligible = anchors.filter(a => !isStale(a) || a.priority === "critical")
+
+  // Sort by score descending
+  const sorted = [...eligible].sort((a, b) => scoreAnchor(b) - scoreAnchor(a))
+
+  // Select within budget
+  const selected: Anchor[] = []
+  let used = 0
+  for (const anchor of sorted) {
+    const cost = anchor.content.length + 40 // ~40 chars for type/priority label
+    if (used + cost > budgetChars) break
+    selected.push(anchor)
+    used += cost
+  }
+
+  return selected
 }

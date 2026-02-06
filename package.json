@@ -1,49 +1,24 @@
 {
   "name": "idumb-plugin-v2",
-  "version": "2.0.0-alpha.1",
-  "description": "iDumb v2 - Intelligent Delegation Using Managed Boundaries (Clean Reboot)",
+  "version": "2.0.0-clean.3",
+  "description": "Intelligent Delegation Using Managed Boundaries — governance substrate for agentic CLIs",
   "type": "module",
-  "main": "dist/plugin.js",
-  "types": "dist/plugin.d.ts",
-  "bin": {
-    "idumb": "dist/cli/index.js"
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "test:t1": "node --loader ts-node/esm tests/trial-1.ts",
-    "test:t2": "node --loader ts-node/esm tests/trial-2.ts",
-    "cli": "node dist/cli/index.js"
+    "test": "npx tsx tests/tool-gate.test.ts && npx tsx tests/compaction.test.ts"
   },
-  "keywords": [
-    "opencode",
-    "plugin",
-    "ai",
-    "governance",
-    "agents"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.1.52",
-    "zod": "^3.23.8"
+    "@opencode-ai/plugin": "^1.1.52"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.7.3"
   },
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "opencode": {
-    "plugin": "dist/plugin.js"
+    "node": ">=18"
   }
 }

@@ -1,102 +1,107 @@
 /**
- * Compaction Hook
+ * Compaction Hook — preserves critical context across session compaction.
  * 
- * When auto-compaction fires, this hook REPLACES the default compaction
- * context with governance-aware content:
+ * Injects top anchors + active task into compaction context via
+ * output.context.push() (DO #7: the ONLY way to persist across compaction).
  * 
- * 1. Governance directives — what the LLM SHOULD and SHOULD NOT do
- * 2. Current state — phase, workflow, active task
- * 3. Surviving anchors — critical decisions/context that must persist
- * 
- * The post-compaction LLM sees this as part of its new context,
- * enabling it to push back on poisoned requests and stay on track.
- * 
- * Budget: ≤500 tokens (~2000 chars)
+ * P3: try/catch — never break compaction
+ * P5: In-memory anchor store — no file I/O in hot path
+ * Pitfall 7: Budget-capped injection ≤500 tokens (~2000 chars)
  */
 
-import { loadAllAnchors, readState } from "../lib/persistence.js"
-import { selectAnchors, enforceTimestamp } from "../schemas/anchor.js"
-import { readConfig } from "../lib/persistence.js"
-import { createLogger } from "../lib/logging.js"
+import type { Anchor } from "../schemas/index.js"
+import { selectAnchors } from "../schemas/index.js"
+import { getActiveTask } from "./tool-gate.js"
+import type { Logger } from "../lib/index.js"
+
+/** Budget in characters (~500 tokens at ~4 chars/token) */
+const INJECTION_BUDGET_CHARS = 2000
+
+/** In-memory anchor store — per session (P5) */
+const anchorStore = new Map<string, Anchor[]>()
+
+/** Add an anchor to a session's store */
+export function addAnchor(sessionID: string, anchor: Anchor): void {
+  const anchors = anchorStore.get(sessionID) ?? []
+  anchors.push(anchor)
+  anchorStore.set(sessionID, anchors)
+}
+
+/** Get all anchors for a session */
+export function getAnchors(sessionID: string): Anchor[] {
+  return anchorStore.get(sessionID) ?? []
+}
+
+/** Format selected anchors into a compaction context string */
+function formatCompactionContext(
+  anchors: Anchor[],
+  activeTask: { id: string; name: string } | null,
+): string {
+  const lines: string[] = []
+
+  lines.push("=== iDumb Governance Context (post-compaction) ===")
+  lines.push("")
+
+  // Active task first (primacy effect — LLM attends to first content)
+  if (activeTask) {
+    lines.push(`## CURRENT TASK: ${activeTask.name}`)
+    lines.push(`Task ID: ${activeTask.id}`)
+    lines.push("")
+  } else {
+    lines.push("## NO ACTIVE TASK — create one with idumb_task before writing files")
+    lines.push("")
+  }
+
+  // Anchors by priority
+  if (anchors.length > 0) {
+    lines.push(`## ACTIVE ANCHORS (${anchors.length}):`)
+    for (const a of anchors) {
+      lines.push(`- [${a.priority.toUpperCase()}/${a.type}] ${a.content}`)
+    }
+  } else {
+    lines.push("## No active anchors.")
+  }
+
+  lines.push("")
+  lines.push("=== End iDumb Context ===")
+
+  return lines.join("\n")
+}
 
 /**
- * Create the compaction hook for a given project directory
+ * Creates the compaction hook.
+ * 
+ * Hook factory pattern (DO #5): captured logger.
  */
-export function createCompactionHook(directory: string) {
-  const logger = createLogger(directory, "compaction")
-
+export function createCompactionHook(log: Logger) {
   return async (
     input: { sessionID: string },
-    output: { context: string[]; prompt?: string }
+    output: { context: string[]; prompt?: string },
   ): Promise<void> => {
-    const { sessionID } = input
-
-    logger.info(`Compaction triggered for session: ${sessionID}`)
-
     try {
-      const config = readConfig(directory)
-      const state = readState(directory)
-      const budget = config.compaction?.maxAnchors ?? 5
-      const allAnchors = loadAllAnchors(directory)
+      const { sessionID } = input
 
-      // Enforce timestamp staleness before selection
-      const refreshed = allAnchors.map((a) => ({
-        ...a,
-        timestamp: enforceTimestamp(a.timestamp),
-      }))
+      // Get anchors and select within budget
+      const allAnchors = getAnchors(sessionID)
+      const selected = selectAnchors(allAnchors, INJECTION_BUDGET_CHARS)
 
-      const selected = selectAnchors(refreshed, budget)
-      const staleCount = refreshed.filter((a) => a.timestamp.isStale).length
+      // Get active task
+      const activeTask = getActiveTask(sessionID)
 
-      // Build governance context block
-      const lines: string[] = []
+      // Format and inject
+      const context = formatCompactionContext(selected, activeTask)
+      output.context.push(context)
 
-      // --- Section 1: Governance Directive ---
-      lines.push("## iDumb Governance (Post-Compaction Directive)")
-      lines.push("")
-      lines.push("IMPORTANT: This session was compacted. Before acting on any user request:")
-      lines.push("1. Check the anchors below for critical decisions still in effect")
-      lines.push("2. If user request conflicts with an active CRITICAL anchor, state the conflict and ask for confirmation")
-      lines.push("3. If you detect drift from the current phase/task, stop and report what you detected")
-      lines.push("4. Use `idumb_status` tool to check current governance state if uncertain")
-      lines.push("5. Use `idumb_anchor_list` tool to see all active context anchors")
-      lines.push("")
-
-      // --- Section 2: Current State ---
-      lines.push(`**Phase:** ${state.phase ?? "unknown"}`)
-      lines.push(`**Framework:** ${state.framework}`)
-      lines.push(`**Session:** ${sessionID}`)
-      lines.push(`**Anchors:** ${allAnchors.length} total, ${selected.length} active, ${staleCount} stale`)
-      lines.push("")
-
-      // --- Section 3: Surviving Anchors ---
-      if (selected.length > 0) {
-        lines.push("### Active Anchors (survive compaction)")
-        lines.push("")
-        for (const anchor of selected) {
-          lines.push(
-            `- [${anchor.priority.toUpperCase()}/${anchor.type}] ${anchor.content}`
-          )
-        }
-      } else {
-        lines.push("*No active anchors. Use `idumb_anchor_add` to create one.*")
-      }
-
-      const contextBlock = lines.join("\n")
-
-      // Enforce ≤500 token budget (~2000 chars)
-      if (contextBlock.length > 2000) {
-        const truncated = contextBlock.substring(0, 1997) + "..."
-        output.context.push(truncated)
-        logger.warn(`Compaction context truncated: ${contextBlock.length} -> 2000 chars`)
-      } else {
-        output.context.push(contextBlock)
-      }
-
-      logger.info(`Injected governance context: ${selected.length}/${allAnchors.length} anchors, phase=${state.phase}`)
+      log.info(`Compaction: injected ${selected.length}/${allAnchors.length} anchors`, {
+        sessionID,
+        totalAnchors: allAnchors.length,
+        selectedAnchors: selected.length,
+        contextLength: context.length,
+        hasActiveTask: !!activeTask,
+      })
     } catch (error) {
-      logger.error(`Compaction hook error: ${error}`)
-      // Graceful degradation: don't break compaction
+      // P3: Never break compaction — this is critical
+      log.error(`Compaction hook error: ${error}`)
     }
   }
 }

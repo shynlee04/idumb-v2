@@ -35,20 +35,25 @@ src/
 │   └── framework-detector.ts
 ├── hooks/              # OpenCode event handlers
 │   ├── tool-gate.ts    # T1: tool.execute.before/after
-│   └── compaction.ts   # T3: session.compacting
+│   ├── compaction.ts   # T3: session.compacting
+│   └── message-transform.ts  # ⚠️ DEAD CODE (hook doesn't exist)
 ├── schemas/            # Zod schemas (source of truth)
 │   ├── state.ts        # Governance state
 │   ├── anchor.ts       # Context anchors (staleness, scoring)
 │   ├── config.ts       # Plugin configuration
 │   ├── permission.ts   # Role-based permissions
+│   ├── agent-profile.ts # Agent profile generation
+│   ├── trajectory.ts   # ⚠️ DEAD CODE (used by message-transform)
 │   └── scan.ts         # Codebase scan results
 ├── tools/              # Custom tools for agents
 │   ├── init.ts         # idumb_init — scaffold + scan
 │   ├── anchor.ts       # idumb_anchor_add/list
-│   └── status.ts       # idumb_status
+│   ├── status.ts       # idumb_status
+│   └── agent-create.ts # idumb_agent_create — generate agent profiles
 ├── lib/                # Utilities
 │   ├── persistence.ts  # Atomic file I/O
-│   └── logging.ts      # TUI-safe file logging
+│   ├── logging.ts      # TUI-safe file logging
+│   └── path-resolver.ts # Directory resolution
 └── types/
     └── plugin.ts       # SDK type helpers (zod v3 compat)
 ```
@@ -58,10 +63,10 @@ src/
 | Priority | Mechanism | Hook | Status |
 |----------|-----------|------|--------|
 | **P1** | Stop Hook — intercept tools, enforce permissions | `tool.execute.before` | ✅ Validated |
-| **P2** | Delegation — track subagent spawning | `tool.execute.before` on `task` | ⚠️ Pivoting |
-| **P3** | Compaction — inject anchors on context reset | `experimental.session.compacting` | 🔨 Implemented |
-| **P4** | 3-Level TODO — governed task delegation | Custom tool | 📋 Planned |
-| **P5** | Message Transform — optimize LLM attention | `experimental.chat.messages.transform` | 🔬 Experimental |
+| **P2** | Delegation — track subagent spawning | `tool.execute.before` on `task` | ⚠️ Pivoting (subagent hooks broken) |
+| **P3** | Compaction — inject anchors on context reset | `experimental.session.compacting` | ✅ Implemented |
+| **P4** | 3-Level TODO — governed task delegation | `todo.updated` event | 📋 Planned |
+| **P5** | Message Transform — optimize LLM attention | ~~`experimental.chat.messages.transform`~~ | 💀 Dead (hook doesn't exist) |
 
 ## Quick Start
 
@@ -106,15 +111,22 @@ npm run test:t2
 
 ## Plugin Hooks
 
-| Hook | Purpose | Trial |
-|------|---------|-------|
-| `event` | Session lifecycle tracking (created, idle, compacted) | T8 |
-| `chat.message` | Agent name capture for role detection | T1 |
-| `tool.execute.before` | Permission enforcement, arg injection | **T1** |
-| `tool.execute.after` | Violation detection, output replacement (fallback) | T1 |
-| `experimental.session.compacting` | Anchor injection into compaction context | **T3** |
-| `experimental.chat.messages.transform` | Message position experiments | T5/T6 |
-| `permission.ask` | Permission request logging | T8 |
+### Hook Availability (Verified 2026-02-06)
+
+> ⚠️ **Critical:** Some planned hooks do not exist in OpenCode. See [TRIAL-TRACKER.md](./TRIAL-TRACKER.md) for details.
+
+| Hook | Status | Purpose | Trial |
+|------|--------|---------|-------|
+| `event` | ✅ Confirmed | Session lifecycle tracking | T8 |
+| `tool.execute.before` | ✅ Confirmed | Permission enforcement, arg injection | **T1** |
+| `tool.execute.after` | ✅ Confirmed | Violation detection, output replacement | T1 |
+| `experimental.session.compacting` | ✅ Confirmed | Anchor injection into compaction | **T3** |
+| `shell.env` | ✅ Confirmed | Environment variable injection | — |
+| `todo.updated` | ✅ New | TODO change events — enables T7 | T7 |
+| `permission.ask` | ✅ Confirmed | Permission request handling | T8 |
+| `chat.message` | ❌ Not documented | Agent detection may fail | T1 |
+| `experimental.chat.messages.transform` | ❌ Not documented | **T5/T6 dead code** | ~~T5/T6~~ |
+| `chat.params` | ❌ Not documented | T2 pivot invalidated | ~~T2~~ |
 
 ## Custom Tools
 
@@ -143,6 +155,27 @@ List all active anchors with staleness information and scores.
 ### `idumb_status`
 
 Show current governance state: version, phase, anchor count, validation count.
+
+### `idumb_agent_create`
+
+Generate an OpenCode agent profile `.md` file in `.opencode/agents/`. Creates governed agents with role-based permissions and the iDumb acting protocol (Anchor → Reason → Validate → Execute).
+
+| Arg | Type | Description |
+|-----|------|-------------|
+| `name` | string | Agent name in kebab-case (e.g., `idumb-coordinator`). Becomes filename. |
+| `description` | string | Short description (≤200 chars) |
+| `role` | `coordinator` \| `builder` \| `validator` \| `researcher` \| `meta` | Determines permissions |
+| `scope` | `meta` \| `project` \| `bridge` | Agent scope. Default: `project` |
+| `mode` | `primary` \| `subagent` | OpenCode agent mode. Default: `subagent` |
+| `model` | string (optional) | Model override (e.g., `anthropic/claude-sonnet-4-20250514`) |
+| `temperature` | number (optional) | Temperature override (0-1) |
+| `philosophy` | string (optional) | Extended instructions (≤2000 chars) |
+| `delegatesTo` | string (optional) | Comma-separated agent names for delegation |
+| `outputStyle` | `governance-report` \| `research` \| `minimal` \| `execution` | Output format. Default: `minimal` |
+
+```
+> Use idumb_agent_create to create a new coordinator agent
+```
 
 ## Permission System
 
@@ -176,10 +209,12 @@ This project uses a **micro-trial methodology** — each feature is a trial with
 | T2 | Inner Cycle Delegation | ⚠️ PIVOTING | 0/4 |
 | T3 | Compact Hook + Text Complete | 🔨 IMPLEMENTED | 2/4 |
 | T4 | Sub-task Background Tracking | ⏳ NOT STARTED | 0/4 |
-| T5 | Compact Message Hierarchy | 🔬 PLACEHOLDER | 0/4 |
-| T6 | User Prompt Transform | 🔬 PLACEHOLDER | 0/4 |
+| T5 | Compact Message Hierarchy | **💀 DEAD** | 0/4 |
+| T6 | User Prompt Transform | **💀 DEAD** | 0/4 |
 | T7 | Force Delegation + 3-Level TODO | ⏳ NOT STARTED | 0/4 |
 | T8 | Auto-run + Export + State | 🔨 PARTIAL | 1/4 |
+
+> **T5/T6 Status:** These trials relied on `experimental.chat.messages.transform` which is not documented in OpenCode. The code in `message-transform.ts` and `trajectory.ts` (~650 LOC) is dead code. All message injection pivoted to compaction hook (T3).
 
 See [`TRIAL-TRACKER.md`](./TRIAL-TRACKER.md) for detailed trial status, pivot decisions, and test logs.
 
@@ -191,11 +226,13 @@ Phase 1: Stop Hook (T1) ..................... ✅ COMPLETE
 Phase 2A: Custom Tools + Compaction .......... ✅ COMPLETE
 Phase 2C: Scanner + Init .................... ✅ COMPLETE
 Phase 2B: Live Validation + Baseline ......... ⬅️ CURRENT (critical gate)
-Phase 3: Inner Cycle Delegation (T2) ........ 📋 NEXT
-Phase 4: 3-Level TODO (T7) .................. 📋 PLANNED
-Phase 5: Message Transform (T5/T6) .......... 🔬 EXPERIMENTAL
+Phase 3: Inner Cycle Delegation (T2) ........ 📋 NEXT (pivoting)
+Phase 4: 3-Level TODO (T7) .................. 📋 PLANNED (todo.updated event)
+Phase 5: Message Transform (T5/T6) .......... 💀 DEAD (hook doesn't exist)
 Phase 6: Auto-run + State (T8) .............. 📋 PLANNED
 ```
+
+> **Pivot Note:** T5/T6 goals merged into T3. T7 enabled by `todo.updated` event.
 
 ## Success Criteria
 
@@ -249,8 +286,10 @@ This project follows a **trial-pivot** approach:
 ## Known Limitations
 
 - **Subagent hook gap:** OpenCode `tool.execute.before` does not intercept subagent tool calls ([sst/opencode#5894](https://github.com/sst/opencode/issues/5894)). This affects T2 delegation tracking.
-- **Agent detection timing:** `chat.message` may fire after the first tool call, causing a race condition where the first tool runs with default (allow-all) permissions.
+- **Agent detection timing:** `chat.message` is not documented in official OpenCode docs. First tool may run with default (allow-all) permissions.
 - **In-memory sessions:** Session tracking is lost on plugin restart. File persistence exists but is not synchronized with in-memory state.
+- **Dead code:** `message-transform.ts` and `trajectory.ts` (~650 LOC) are dead code — the `experimental.chat.messages.transform` hook they rely on doesn't exist. Will be removed in cleanup.
+- **chat.params missing:** Planned T2 pivot to use `chat.params` hook is invalid — hook not documented.
 
 ## License
 

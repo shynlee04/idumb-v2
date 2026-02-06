@@ -1,268 +1,147 @@
 /**
- * Tool Gate Hook
+ * Tool Gate — Stop Hook (tool.execute.before + after)
  * 
- * TRIAL-1: Stop Hook Tool Manipulation
+ * Intercepts tool calls, enforces governance conditions, and BLOCKS
+ * with redirect messages when conditions fail.
  * 
- * Tests:
- * - P1.1: Can throwing error block tool execution?
- * - P1.2: Is error message visible in TUI (not background text)?
- * - P1.3: Does arg modification persist to actual execution?
- * - P1.4: Do other hooks continue running (no short-circuit)?
+ * BLOCK pattern: STOP + REDIRECT + EVIDENCE (§7)
+ * - WHAT: what was denied and why
+ * - USE INSTEAD: specific alternative tool/action
+ * - EVIDENCE: governance state that triggered the block
  * 
- * PIVOT Strategy:
- * - If P1.1 fails: Use tool.execute.after output replacement
- * - If P1.2 fails: Use custom wrapper tool with pre-validation
- * - If P1.3 fails: Use idumb:validate tool requirement
+ * P3: Every path wrapped in try/catch — never break TUI
+ * P5: In-memory Maps for session state — no file I/O in hot path
+ * P6: SDK format defensive — type-check all inputs
  */
 
-import {
-  detectAgentRole,
-  isToolAllowedForRole,
-  buildDenialMessage,
-  type AgentRole,
-  type PermissionDecision,
-  type PermissionCheckResult,
-} from "../schemas/index.js"
-import { createLogger } from "../lib/index.js"
+import type { Logger } from "../lib/index.js"
 
-/**
- * Session tracker for delegation depth and agent role detection
- */
-interface SessionTracker {
-  sessionId: string
-  agentRole: AgentRole | null
-  depth: number
-  firstTool: string | null
-  delegationChain: string[]
-  permissionChecks: PermissionCheckResult[]
+/** Write tools that require an active task */
+const WRITE_TOOLS = new Set(["write", "edit"])
+
+/** Session state — in-memory only (P5) */
+interface SessionState {
+  activeTask: { id: string; name: string } | null
+  lastBlock: { tool: string; timestamp: number } | null
 }
 
-/**
- * In-memory session trackers (per plugin instance)
- */
-const sessionTrackers = new Map<string, SessionTracker>()
+/** Per-session state Map (P5: in-memory, never persisted in hooks) */
+const sessions = new Map<string, SessionState>()
 
-/**
- * Get or create session tracker
- */
-export function getSessionTracker(sessionId: string): SessionTracker {
-  let tracker = sessionTrackers.get(sessionId)
-  
-  if (!tracker) {
-    tracker = {
-      sessionId,
-      agentRole: null,
-      depth: 0,
-      firstTool: null,
-      delegationChain: [],
-      permissionChecks: [],
-    }
-    sessionTrackers.set(sessionId, tracker)
+/** Get or create session state */
+function getSession(sessionID: string): SessionState {
+  let s = sessions.get(sessionID)
+  if (!s) {
+    s = { activeTask: null, lastBlock: null }
+    sessions.set(sessionID, s)
   }
-  
-  return tracker
+  return s
+}
+
+/** Exported for task tool to update session state */
+export function setActiveTask(sessionID: string, task: { id: string; name: string } | null): void {
+  const s = getSession(sessionID)
+  s.activeTask = task
+}
+
+/** Exported for status/debug */
+export function getActiveTask(sessionID: string): { id: string; name: string } | null {
+  return getSession(sessionID).activeTask
+}
+
+/** Build the BLOCK message with REDIRECT + EVIDENCE */
+function buildBlockMessage(tool: string, isRetry: boolean): string {
+  const retryNote = isRetry
+    ? " (ALREADY BLOCKED — do NOT retry the same tool)"
+    : ""
+
+  return [
+    `GOVERNANCE BLOCK: ${tool} denied${retryNote}`,
+    "",
+    `WHAT: You tried to use "${tool}" but no active task exists.`,
+    `USE INSTEAD: Call the "idumb_task" tool with action "create" and a task name to create a task first, then retry your ${tool}.`,
+    `EVIDENCE: Session has no active task. All file modifications require an active task for governance tracking.`,
+  ].join("\n")
 }
 
 /**
- * Update session tracker with detected agent role
- */
-export function setAgentRole(sessionId: string, agentName: string): void {
-  const tracker = getSessionTracker(sessionId)
-  tracker.agentRole = detectAgentRole(agentName)
-}
-
-/**
- * Record first tool used (for context-first detection)
- */
-export function recordFirstTool(sessionId: string, toolName: string): void {
-  const tracker = getSessionTracker(sessionId)
-  if (!tracker.firstTool) {
-    tracker.firstTool = toolName
-  }
-}
-
-/**
- * Record permission check result
- */
-export function recordPermissionCheck(
-  sessionId: string,
-  request: { tool: string; agentName?: string },
-  decision: PermissionDecision,
-  role: AgentRole
-): void {
-  const tracker = getSessionTracker(sessionId)
-  tracker.permissionChecks.push({
-    request: {
-      sessionId,
-      tool: request.tool,
-      agentName: request.agentName,
-    },
-    decision,
-    role,
-    timestamp: new Date().toISOString(),
-  })
-}
-
-/**
- * Tool gate error - thrown to block tool execution
- * This tests P1.1: Can throwing error block tool execution?
- */
-export class ToolGateError extends Error {
-  public readonly role: AgentRole
-  public readonly tool: string
-  public readonly decision: PermissionDecision
-  
-  constructor(role: AgentRole, tool: string, decision: PermissionDecision) {
-    super(buildDenialMessage(role, tool, decision))
-    this.name = "ToolGateError"
-    this.role = role
-    this.tool = tool
-    this.decision = decision
-  }
-}
-
-/**
- * Check if tool is allowed for current session
- * Returns decision without throwing - caller decides action
- */
-export function checkToolPermission(
-  sessionId: string,
-  toolName: string,
-  agentName?: string
-): { allowed: boolean; role: AgentRole; decision: PermissionDecision } {
-  const tracker = getSessionTracker(sessionId)
-  
-  // Update role if agent name provided
-  if (agentName) {
-    setAgentRole(sessionId, agentName)
-  }
-  
-  // Use detected role or default to meta (allow-all) since SDK tool.execute.before
-  // input has no agent field — we can't detect role there. Never break innate agents.
-  const role = tracker.agentRole || "meta"
-  
-  // Check permission
-  const decision = isToolAllowedForRole(role, toolName)
-  
-  // Record check
-  recordPermissionCheck(sessionId, { tool: toolName, agentName }, decision, role)
-  
-  return { allowed: decision.allowed, role, decision }
-}
-
-/**
- * Main tool gate hook implementation
+ * Creates the tool.execute.before hook.
  * 
- * This is the core of TRIAL-1 - tests all 4 PASS criteria
+ * Hook factory pattern (DO #5): captured logger, returns async hook function.
  */
-export function createToolGateHook(directory: string) {
-  const logger = createLogger(directory, "tool-gate")
-  
+export function createToolGateBefore(log: Logger) {
   return async (
     input: { tool: string; sessionID: string; callID: string },
-    output: { args: Record<string, unknown> }
+    _output: { args: unknown },
   ): Promise<void> => {
-    const { tool, sessionID, callID } = input
-    
-    // Record first tool usage
-    recordFirstTool(sessionID, tool)
-    
-    logger.debug(`Tool gate check: ${tool}`, { sessionID, callID })
-    
-    // Check permission
-    const { allowed, role, decision } = checkToolPermission(sessionID, tool)
-    
-    if (!allowed) {
-      logger.info(`Tool blocked: ${tool}`, { role, reason: decision.reason })
-      
-      // P1.1 TEST: Throwing error to block tool execution
-      // If this works, the tool should not execute
-      throw new ToolGateError(role, tool, decision)
-    }
-    
-    // P1.3 TEST: Arg modification
-    // Add governance metadata to args for tracking
-    if (output.args) {
-      output.args.__idumb_checked = true
-      output.args.__idumb_role = role
-      output.args.__idumb_session = sessionID
-    }
-    
-    logger.debug(`Tool allowed: ${tool}`, { role })
-  }
-}
+    try {
+      const { tool, sessionID } = input
 
-/**
- * After hook for fallback output replacement (PIVOT for P1.1)
- * 
- * If throwing doesn't block, we modify the output instead
- */
-export function createToolGateAfterHook(directory: string) {
-  const logger = createLogger(directory, "tool-gate-after")
-  
-  // Track blocked tools that made it through
-  const blockedButExecuted = new Set<string>()
-  
-  return async (
-    input: { tool: string; sessionID: string; callID: string },
-    output: { title: string; output: string; metadata: Record<string, unknown> }
-  ): Promise<void> => {
-    const { tool, sessionID, callID } = input
-    
-    // Check if this tool should have been blocked
-    const tracker = getSessionTracker(sessionID)
-    const lastCheck = tracker.permissionChecks.slice(-1)[0]
-    
-    if (lastCheck && !lastCheck.decision.allowed && lastCheck.request.tool === tool) {
-      // Tool executed despite denial - PIVOT action
-      logger.warn(`Tool executed despite denial: ${tool}`, {
-        role: lastCheck.role,
-        reason: lastCheck.decision.reason,
-      })
-      
-      blockedButExecuted.add(callID)
-      
-      // PIVOT: Replace output with denial message
-      output.title = `GOVERNANCE VIOLATION: ${tool}`
-      output.output = `
-${buildDenialMessage(lastCheck.role, tool, lastCheck.decision)}
+      // Only gate write tools (breadth: don't over-block, start minimal)
+      if (!WRITE_TOOLS.has(tool)) return
 
----
-ORIGINAL OUTPUT (executed despite governance):
-${output.output}
----
+      const session = getSession(sessionID)
 
-This action was not permitted for the current agent role.
-`.trim()
-      
-      output.metadata = {
-        ...output.metadata,
-        __idumb_violation: true,
-        __idumb_role: lastCheck.role,
-        __idumb_pivot: "output_replacement",
+      // If there's an active task, allow the write
+      if (session.activeTask) {
+        log.debug(`ALLOW: ${tool} (task: ${session.activeTask.name})`, { sessionID })
+        return
       }
+
+      // Check if this is a retry of a recently blocked tool
+      const isRetry = session.lastBlock !== null
+        && session.lastBlock.tool === tool
+        && (Date.now() - session.lastBlock.timestamp) < 30_000
+
+      // Record this block for retry detection
+      session.lastBlock = { tool, timestamp: Date.now() }
+
+      const message = buildBlockMessage(tool, isRetry)
+      log.warn(`BLOCK: ${tool} (no active task)`, { sessionID, isRetry })
+
+      // Throw to block tool execution — error message appears in chat
+      throw new Error(message)
+    } catch (error) {
+      // Re-throw governance blocks (they're intentional)
+      if (error instanceof Error && error.message.startsWith("GOVERNANCE BLOCK:")) {
+        throw error
+      }
+      // P3: Log unexpected errors, don't block tool execution
+      log.error(`tool-gate unexpected error: ${error}`)
     }
   }
 }
 
 /**
- * Get permission check history for a session
+ * Creates the tool.execute.after hook (defense-in-depth fallback).
+ * 
+ * If tool.execute.before throw didn't block the tool (edge case),
+ * this replaces the output with the governance message.
  */
-export function getPermissionHistory(sessionId: string): PermissionCheckResult[] {
-  const tracker = sessionTrackers.get(sessionId)
-  return tracker?.permissionChecks || []
-}
+export function createToolGateAfter(log: Logger) {
+  return async (
+    input: { tool: string; sessionID: string; callID: string },
+    output: { title: string; output: string; metadata: unknown },
+  ): Promise<void> => {
+    try {
+      const { tool, sessionID } = input
 
-/**
- * Clear session tracker (for testing)
- */
-export function clearSessionTracker(sessionId: string): void {
-  sessionTrackers.delete(sessionId)
-}
+      if (!WRITE_TOOLS.has(tool)) return
 
-/**
- * Clear all session trackers (for testing)
- */
-export function clearAllSessionTrackers(): void {
-  sessionTrackers.clear()
+      const session = getSession(sessionID)
+
+      // If there's an active task, tool was legitimately allowed
+      if (session.activeTask) return
+
+      // Defense in depth: if we're here with no active task, the before-hook
+      // should have blocked. Replace output with governance message.
+      const message = buildBlockMessage(tool, true)
+      output.output = message
+      output.title = `GOVERNANCE BLOCK: ${tool} denied`
+      log.warn(`FALLBACK BLOCK: ${tool} after-hook replacing output`, { sessionID })
+    } catch (error) {
+      // P3: Never crash in after-hook
+      log.error(`tool-gate after unexpected error: ${error}`)
+    }
+  }
 }
