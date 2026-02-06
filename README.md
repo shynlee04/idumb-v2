@@ -1,66 +1,47 @@
-# iDumb v2 — Intelligent Delegation Using Managed Boundaries
+<p align="center">
+  <h1 align="center">iDumb</h1>
+  <p align="center"><strong>Intelligent Delegation Using Managed Boundaries</strong></p>
+  <p align="center">An OpenCode plugin that makes AI agents think before they write.</p>
+</p>
 
-> Governance substrate for agentic CLIs. Makes LLMs stop before breaking things.
-
-**iDumb v2** is an [OpenCode](https://opencode.ai) plugin that enforces structured governance on AI agents via tool interception, context pruning, compaction survival, and system prompt injection.
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-45%2F45-brightgreen.svg)]()
-[![OpenCode Plugin](https://img.shields.io/badge/OpenCode-Plugin-green.svg)](https://opencode.ai/docs/plugins/)
+<p align="center">
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.7-blue.svg" alt="TypeScript"></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-150%2F150-brightgreen.svg" alt="Tests"></a>
+  <a href="https://opencode.ai/docs/plugins/"><img src="https://img.shields.io/badge/OpenCode-Plugin-green.svg" alt="OpenCode Plugin"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
+</p>
 
 ---
 
-## Architecture
+## What is iDumb?
 
-```
-src/
-├── index.ts              # Plugin entry — 4 hooks + 3 tools
-├── hooks/
-│   ├── tool-gate.ts      # M1: Stop hook — blocks writes without active task
-│   ├── compaction.ts     # M3: Compaction — injects anchors after compact
-│   ├── system.ts         # M4: System prompt — always-on governance
-│   ├── message-transform.ts  # M2: Context pruning (DCP pattern)
-│   └── index.ts
-├── tools/
-│   ├── task.ts           # idumb_task — create/complete/status
-│   ├── anchor.ts         # idumb_anchor — add/list context anchors
-│   ├── status.ts         # idumb_status — governance overview
-│   └── index.ts
-├── schemas/
-│   ├── anchor.ts         # Anchor data + scoring + staleness
-│   └── index.ts
-└── lib/
-    ├── logging.ts        # TUI-safe file logging (zero console.log)
-    └── index.ts
-```
+**iDumb** is a governance layer for AI coding agents. It sits between the LLM and your codebase, enforcing simple but powerful rules:
 
-### Hooks
+1. **No writing without a task** — The agent must declare what it's doing before modifying files
+2. **Context survives compaction** — Critical decisions persist when the LLM's context window resets
+3. **Stale outputs get pruned** — Old tool results are truncated to keep the context lean
+4. **Your brownfield is understood** — On first run, iDumb scans your project and adapts
 
-| Hook | Mechanism | What it does |
-|------|-----------|-------------|
-| `tool.execute.before` | **Stop hook** | Blocks write/edit tools without active task. Throws BLOCK+REDIRECT+EVIDENCE error. |
-| `tool.execute.after` | **Defense-in-depth** | Fallback: replaces output if before-hook throw didn't block. |
-| `experimental.session.compacting` | **Compaction survival** | Injects top anchors + active task into post-compaction context. Budget ≤500 tokens. |
-| `experimental.chat.system.transform` | **System prompt** | Always-on governance directive: task + critical anchors + rules. Budget ≤200 tokens. |
-| `experimental.chat.messages.transform` | **Context pruning** | Truncates stale tool outputs (DCP pattern). Keeps last 10, truncates older. |
+All governance is deterministic. No LLM reasoning involved in enforcement.
 
-### Tools
-
-| Tool | Purpose |
-|------|---------|
-| `idumb_task` | Create/complete/status for active task. Required before file writes. |
-| `idumb_anchor` | Add/list context anchors that survive compaction. |
-| `idumb_status` | Read-only governance state overview (task + anchors + rules). |
+---
 
 ## Quick Start
 
+### Install
+
 ```bash
-npm install && npm run build && npm test  # 45/45 tests pass
+# Clone and build
+git clone https://github.com/shynlee04/idumb.git
+cd idumb/v2
+npm install
+npm run build
 ```
 
-### Install in OpenCode
+### Add to OpenCode
 
-Add to `~/.config/opencode/opencode.json`:
+Add to your OpenCode config (`~/.config/opencode/opencode.json`):
+
 ```json
 {
   "plugin": [
@@ -69,44 +50,192 @@ Add to `~/.config/opencode/opencode.json`:
 }
 ```
 
-Restart OpenCode. The plugin loads automatically.
+### Initialize
 
-### Verify
+Start an OpenCode session and run:
 
-In OpenCode, try to write a file without creating a task first:
-- **Expected**: `GOVERNANCE BLOCK` error with redirect to `idumb_task`
-- Create a task: agent calls `idumb_task` with `action: "create"`
-- Retry write: **succeeds**
+```
+idumb_init
+```
 
-## Design Principles
+iDumb will:
+- Scan your project for frameworks, tech stack, and existing governance
+- Create the `.idumb/` directory with config and governance structure
+- Present a report of what it found and recommended next steps
 
-| # | Principle | What it means |
-|---|-----------|---------------|
-| P1 | ONE THING AT A TIME | Build, validate end-to-end, then next |
-| P2 | PLATFORM NATIVE | Use `.opencode/` conventions, not custom dirs |
-| P3 | GRACEFUL DEGRADATION | try/catch everywhere, never break TUI |
-| P4 | EVIDENCE-BASED | Testable hypotheses, live validation |
-| P5 | IN-MEMORY SESSION STATE | Maps for session state, no file I/O in hooks |
-| P6 | SDK FORMAT DEFENSIVE | Check every field before access |
-| P7 | COMPOSABLE | Hook factory pattern, isolated modules |
-| P8 | TEST WITH MOCKS FIRST | 45 mock tests before live testing |
+### See it work
+
+Try writing a file without creating a task:
+
+```
+Agent: "Create hello.txt"
+→ GOVERNANCE BLOCK: write denied
+→ USE INSTEAD: Call "idumb_task" with action "create"
+```
+
+Create a task first, then the write succeeds:
+
+```
+idumb_task create "Add hello world file"
+→ Task created. You may now proceed with file writes.
+```
+
+---
+
+## Features
+
+### Tool Gate — Block writes without a task
+
+Every `write` and `edit` tool call is intercepted. If there's no active task, the call is blocked with a redirect message that tells the agent exactly what to do instead.
+
+### Framework Detection — Know your brownfield
+
+On `idumb_init`, the plugin scans your project root for:
+
+| Category | What it detects |
+|----------|----------------|
+| **Governance frameworks** | BMAD, GSD, Spec-kit, Open-spec |
+| **Tech stack** | Next.js, React, Vue, Svelte, Angular, Express, NestJS, Django, Flask, Rails, Laravel, and more |
+| **Package manager** | npm, yarn, pnpm, bun, pip, cargo, go |
+| **Existing agent dirs** | `.opencode/agents`, `.claude/agents`, `.windsurf/skills`, etc. |
+| **Monorepo** | turbo, nx, lerna, pnpm workspaces |
+| **Gaps & conflicts** | Missing deps, no README, stale configs |
+
+### Compaction Survival — Context that persists
+
+When OpenCode compacts the session (context window reset), iDumb injects your critical context anchors and active task into the post-compaction prompt. The agent remembers what matters.
+
+### Context Pruning — Stay lean
+
+Old tool outputs are automatically truncated (DCP pattern). Keeps the last 10 tool results intact, truncates older ones to 150 chars. Exempt tools (like `idumb_task`) are never pruned.
+
+### Disk Persistence — State survives restarts
+
+Session state (active tasks, anchors) is persisted to `.idumb/brain/hook-state.json` with debounced writes (500ms). If disk fails, hooks gracefully degrade to in-memory operation.
+
+### Bilingual — English & Vietnamese
+
+All output (greeting, scan report, next steps) supports English (`en`) and Vietnamese (`vi`).
+
+---
+
+## Configuration
+
+`idumb_init` accepts these parameters:
+
+| Parameter | Options | Default | Description |
+|-----------|---------|---------|-------------|
+| `action` | `install`, `scan`, `status` | `install` | Full init, read-only scan, or check existing config |
+| `language` | `en`, `vi` | `en` | Communication language |
+| `documents_language` | `en`, `vi` | same as `language` | Language for generated documents |
+| `experience` | `beginner`, `guided`, `expert` | `guided` | Verbosity level |
+| `governance_mode` | `balanced`, `strict`, `autonomous` | `balanced` | How strictly the agent is governed |
+| `scope` | `project`, `global` | `project` | Installation scope |
+| `force` | `true`, `false` | `false` | Overwrite existing config |
+
+### Governance Modes
+
+- **Balanced** — Agent gets recommendations and correct choices before stopping. Full completion allowed, governed at decision boundaries.
+- **Strict** — Incremental validation at every node. Agent must pass gate before proceeding to next task.
+- **Autonomous** — Agent decides freely. Minimal intervention, maximum freedom. Still logs everything for review.
+
+---
+
+## Architecture
+
+```
+src/
+├── index.ts                    # Plugin entry — 5 hooks + 4 tools
+├── hooks/
+│   ├── tool-gate.ts            # Blocks write/edit without active task
+│   ├── compaction.ts           # Injects anchors into post-compaction context
+│   ├── message-transform.ts    # Prunes stale tool outputs (DCP pattern)
+│   └── system.ts               # Governance directive in system prompt
+├── lib/
+│   ├── logging.ts              # TUI-safe file-based logger
+│   ├── framework-detector.ts   # Read-only brownfield scanner
+│   ├── scaffolder.ts           # Creates .idumb/ directory tree
+│   └── persistence.ts          # StateManager — disk persistence
+├── schemas/
+│   ├── anchor.ts               # Anchor types, scoring, staleness
+│   └── config.ts               # IdumbConfig schema
+├── tools/
+│   ├── init.ts                 # idumb_init — the entry point
+│   ├── task.ts                 # idumb_task — task management
+│   ├── anchor.ts               # idumb_anchor — context anchors
+│   └── status.ts               # idumb_status — governance overview
+└── modules/
+    ├── agents/meta-builder.md  # Meta builder agent profile
+    └── schemas/agent-profile.ts # Agent profile contract
+```
+
+### Plugin Hooks
+
+| Hook | What it does |
+|------|-------------|
+| `tool.execute.before` | Blocks write/edit without active task (throws error with redirect) |
+| `tool.execute.after` | Defense-in-depth fallback if before-hook didn't block |
+| `experimental.session.compacting` | Injects anchors + task into post-compaction context |
+| `experimental.chat.system.transform` | Injects governance directive into system prompt |
+| `experimental.chat.messages.transform` | Prunes old tool outputs to save tokens |
+
+### Custom Tools (4 of max 5)
+
+| Tool | Description |
+|------|-------------|
+| `idumb_init` | Initialize — scans brownfield, creates `.idumb/` config and directory structure |
+| `idumb_task` | Create/complete/check active task. Required before write/edit |
+| `idumb_anchor` | Add/list context anchors that survive compaction |
+| `idumb_status` | Read-only governance state overview |
+
+---
 
 ## Tests
 
 ```bash
-npm test  # Runs all 3 test suites
+npm test  # 150/150 assertions across 5 test files
 
 # Individual suites:
-npx tsx tests/tool-gate.test.ts       # 16/16 — block/allow/retry/fallback
-npx tsx tests/compaction.test.ts      # 16/16 — injection/budget/stale/critical
-npx tsx tests/message-transform.test.ts  # 13/13 — pruning/exempt/invalid
+npx tsx tests/tool-gate.test.ts         # 16/16 — block/allow/retry/fallback
+npx tsx tests/compaction.test.ts        # 16/16 — injection/budget/stale/critical
+npx tsx tests/message-transform.test.ts # 13/13 — pruning/exempt/invalid
+npx tsx tests/init.test.ts              # 60/60 — config/detection/scaffold/report
+npx tsx tests/persistence.test.ts       # 45/45 — round-trip/debounce/degradation
 ```
+
+---
+
+## Design Principles
+
+| Principle | What it means |
+|-----------|---------------|
+| **No hallucination** | Code matches docs. If it's not tested, it's not claimed. |
+| **TUI safety** | Zero `console.log`. File-based logging only. |
+| **Graceful degradation** | Every hook wrapped in try/catch. Never crash the host. |
+| **Schema-first** | Plain TypeScript interfaces. No runtime validation overhead. |
+| **Hook factory pattern** | Every hook = function returning async handler with captured state. |
+
+---
 
 ## Known Limitations
 
-- **Subagent hook gap**: `tool.execute.before` does not fire for subagent tool calls ([sst/opencode#5894](https://github.com/sst/opencode/issues/5894))
-- **In-memory only**: Session state lost on plugin restart (by design — P5)
-- **No role-based permissions yet**: Stop hook blocks ALL writes without task, regardless of agent role
+- **Subagent hook gap** — `tool.execute.before` does not fire for subagent tool calls
+- **SessionID per restart** — OpenCode assigns a new sessionID each session. Task/anchor state persists on disk but keys may not match across sessions.
+- **Experimental hooks unverified** — `system.transform` and `messages.transform` are not in official OpenCode docs. Verification harness is built but needs live testing.
+
+---
+
+## Contributing
+
+This is a community build. PRs welcome.
+
+```bash
+npm run typecheck    # tsc --noEmit
+npm test             # 150/150 assertions
+npm run build        # tsc → dist/
+```
+
+---
 
 ## License
 

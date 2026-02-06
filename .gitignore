@@ -4,9 +4,6 @@ node_modules/
 # Build output
 dist/
 
-# Session exports
-session-*.md
-
 # Environment
 .env
 .env.local
@@ -27,19 +24,34 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Plugin development artifacts
-.plugin-dev/
-.opencode/
-.agent/
-.agents/
-.claude/
-.qoder/
-.codex/
-.gemini/
-
 # Coverage
 coverage/
 
 # Temporary
 *.tmp
 *.bak
+session-*.md
+
+# ─── Internal planning & meta (tracked on dev, excluded from main) ───
+# These are the files used to BUILD iDumb, not part of the public package.
+# On the dev branch they are force-added. On main they are excluded.
+.planning/
+.archive/
+.claude/
+.agent/
+.agents/
+.qoder/
+.codex/
+.gemini/
+.windsurf/
+.opencode/
+.idumb/
+.plugin-dev/
+STRATEGIC-PLANNING-PROMPT.md
+TEST-CASES.md
+AGENTS.md
+CLAUDE.md
+GAP-ANALYSIS.md
+TRIAL-1-RESULTS.md
+TRIAL-TRACKER.md
+CHANGELOG.md

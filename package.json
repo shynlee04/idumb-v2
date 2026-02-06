@@ -1,16 +1,50 @@
 {
-  "name": "idumb-plugin-v2",
-  "version": "2.0.0-clean.3",
-  "description": "Intelligent Delegation Using Managed Boundaries — governance substrate for agentic CLIs",
+  "name": "idumb",
+  "version": "2.2.0",
+  "description": "Intelligent Delegation Using Managed Boundaries — an OpenCode plugin that makes AI agents think before they write",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx tests/tool-gate.test.ts && npx tsx tests/compaction.test.ts && npx tsx tests/message-transform.test.ts && npx tsx tests/init.test.ts && npx tsx tests/persistence.test.ts"
+    "test": "npx tsx tests/tool-gate.test.ts && npx tsx tests/compaction.test.ts && npx tsx tests/message-transform.test.ts && npx tsx tests/init.test.ts && npx tsx tests/persistence.test.ts",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "ai-governance",
+    "agent",
+    "llm",
+    "tool-gate",
+    "compaction",
+    "context-management"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shynlee04/idumb.git",
+    "directory": "v2"
+  },
+  "homepage": "https://github.com/shynlee04/idumb#readme",
+  "bugs": {
+    "url": "https://github.com/shynlee04/idumb/issues"
+  },
+  "author": "shynlee04",
+  "license": "MIT",
   "dependencies": {
     "@opencode-ai/plugin": "^1.1.52"
   },
