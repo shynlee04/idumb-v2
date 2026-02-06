@@ -10,10 +10,10 @@
 
 import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/index.js"
-import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook } from "./hooks/index.js"
+import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
 import { idumb_task, idumb_anchor, idumb_status } from "./tools/index.js"
 
-const VERSION = "2.0.0-clean.3"
+const VERSION = "2.0.0-clean.4"
 
 /**
  * Plugin factory following hook factory pattern (P5: captured state).
@@ -32,6 +32,7 @@ const idumb: Plugin = async ({ directory }) => {
   const toolGateAfter = createToolGateAfter(log)
   const compactionHook = createCompactionHook(log)
   const systemHook = createSystemHook(log)
+  const messageTransformHook = createMessageTransformHook(log)
 
   return {
     /**
@@ -77,6 +78,15 @@ const idumb: Plugin = async ({ directory }) => {
      */
     "experimental.chat.system.transform": async (input, output) => {
       await systemHook(input, output)
+    },
+
+    /**
+     * M2: Message transform — DCP-pattern context pruning.
+     * Truncates stale tool outputs to save tokens and delay compaction.
+     * Keeps last 10 tool results intact, truncates older ones.
+     */
+    "experimental.chat.messages.transform": async (input, output) => {
+      await messageTransformHook(input, output)
     },
 
     /**
