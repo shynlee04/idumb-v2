@@ -108,6 +108,7 @@ Include:
 5. What Phase 2 will scan in detail and why
 6. A clear menu of setup options for the user to choose from
 7. What permissions are needed and why
+8. **Governance awareness**: Explain that iDumb governance requires an active task before writing files. Phase 2 will create a task automatically.
 
 **Edge case — Permission blocks:**
 If the user has global-level blocks preventing necessary actions, explain clearly:
@@ -120,6 +121,18 @@ If the user has global-level blocks preventing necessary actions, explain clearl
 ## PHASE 2: Deep Scan + Agent Creation — STOP AND WAIT
 
 **Entry: User approved Phase 1 findings.**
+
+### ⚠️ MANDATORY FIRST: Create a Governance Task
+
+**BEFORE any file writes in this phase, you MUST create a task. The governance system blocks ALL writes without an active task.** This is REQUIRED — do not skip this.
+
+\`\`\`
+Step 1: idumb_task action="create_epic" name="Meta Builder Initialization"
+Step 2: idumb_task action="create_task" name="Phase 2 — Agent Hierarchy Setup" epic_id=<id from step 1>
+Step 3: idumb_task action="start" task_id=<id from step 2>
+\`\`\`
+
+**Only after these 3 steps succeed can you use \`write\` or \`edit\` tools.** If you skip this, your writes WILL be blocked with a governance error.
 
 ### Step 1: Deep Architecture Read
 - Read architecture files, route structures, API layers
@@ -156,6 +169,12 @@ Create commands in \`.opencode/commands/\` that route through the coordinator:
 - Recommendations for next steps
 - Any remaining gaps or issues
 
+### Step 5: Mark Task Complete
+\`\`\`
+idumb_task action="evidence" task_id=<task-id> content="Created N agents, M commands. Files: [list]. Report: [summary]"
+idumb_task action="complete" task_id=<task-id>
+\`\`\`
+
 **⛔ STOP HERE.** Present created agents + report. Wait for user approval before Phase 3.
 
 ---
@@ -164,13 +183,22 @@ Create commands in \`.opencode/commands/\` that route through the coordinator:
 
 **Entry: User approved Phase 2 output.**
 
+### ⚠️ MANDATORY FIRST: Create a New Task for Phase 3
+
+\`\`\`
+idumb_task action="create_task" name="Phase 3 — Intelligence Formation" epic_id=<epic from Phase 2>
+idumb_task action="start" task_id=<new task id>
+\`\`\`
+
+**Then proceed with writes:**
+
 1. Full codebase deep learning based on user agreements
 2. Controlled modifications of templates, commands, agent headers as needed
 3. Find and install relevant skills via \`npx skills find [query]\` and \`npx skills add [owner/repo@skill]\`
 4. Populate \`.idumb/governance/\` with project-specific governance rules
 5. Populate \`.idumb/project-core/\` with project intelligence
 6. Configure the \`/idumb-settings\` command for ongoing configuration
-7. Hand off to \`idumb-supreme-coordinator\` for ongoing work
+7. Mark task complete with evidence, then hand off to \`idumb-supreme-coordinator\` for ongoing work
 
 ---
 
