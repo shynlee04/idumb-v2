@@ -1,413 +1,170 @@
-# AGENTS.md (v2 Implementation)
+# AGENTS.md — iDumb v2 (Ground Truth)
 
-**Version:** 2.0.0-alpha.1  
+**Version:** 2.0.0-clean.4  
 **Last Updated:** 2026-02-06  
-**Status:** Active Development
+**Status:** Phase 0 complete. Ready for Phase 1 (disk persistence + live verification).
 
 ---
 
 # NON-NEGOTIABLE RULES
 
-1. **CONTEXT-FIRST**: All agents must gather context before executing. No tool execution without understanding what files exist, what phase is active, and what anchors are in effect.
-
-2. **ANTI-REPETITION**: Never create duplicate files. Check existing content first. Prefer editing over creating.
-
-3. **TUI SAFETY**: NO `console.log` in any plugin code. Use file-based logging via `lib/logging.ts`.
-
-4. **HIERARCHY ENFORCEMENT**: The chain cannot break:
-   ```
-   coordinator → governance → validator → builder
-   ```
-   Coordinators delegate. Validators validate. Only builders write files.
+1. **NO HALLUCINATION**: This file describes ONLY what exists. No features, files, or schemas that aren't implemented and tested.
+2. **TUI SAFETY**: NO `console.log` anywhere. File-based logging via `lib/logging.ts`.
+3. **CONTEXT-FIRST**: Gather context before executing. Read existing files before creating new ones.
+4. **ANTI-REPETITION**: Check before creating. Prefer editing over creating.
 
 ---
 
-## Project Overview
+## What iDumb Is
 
-iDumb v2 is a reboot of the intelligent delegation governance framework for OpenCode. This version implements a micro-trial approach with PASS criteria and PIVOT strategies for each feature.
+An OpenCode plugin that enforces governance on AI agents by:
+- **Blocking** file writes without an active task (tool gate)
+- **Preserving** critical context across compaction (anchor injection)
+- **Pruning** stale tool outputs to delay compaction (message transform)
 
-### Architecture Philosophy
-
-**Intelligence = Context Purification**
-
-Every decision boundary intercepts, purifies, and re-injects context:
-- Tool interception via `tool.execute.before`
-- Compaction survival via `experimental.session.compacting`
-- Anchor persistence with priority-weighted selection
+All "intelligence" is manufactured from deterministic hooks — not LLM reasoning.
 
 ---
 
-## Directory Structure
+## Actual Directory Structure (What Exists)
 
 ```
 v2/
 ├── src/
-│   ├── plugin.ts              # Main plugin entry point
-│   ├── types/
-│   │   └── plugin.ts          # Local tool helper (zod v3)
-│   ├── schemas/
-│   │   ├── index.ts           # Barrel exports
-│   │   ├── anchor.ts          # Context anchor schema
-│   │   ├── config.ts          # Plugin configuration
-│   │   ├── permission.ts      # Role/permission matrix
-│   │   ├── scan.ts            # Codebase scan results
-│   │   └── state.ts           # Governance state
-│   ├── lib/
-│   │   ├── index.ts           # Barrel exports
-│   │   ├── logging.ts         # TUI-safe file logging
-│   │   └── persistence.ts     # Atomic file I/O
+│   ├── index.ts                  # Plugin entry (106 LOC) — wires 5 hooks + 3 tools
 │   ├── hooks/
-│   │   ├── index.ts           # Barrel exports
-│   │   ├── tool-gate.ts       # TRIAL-1: Permission enforcement
-│   │   └── compaction.ts      # TRIAL-3: Anchor injection
-│   ├── engines/
-│   │   ├── scanner.ts         # Codebase scanner
-│   │   └── framework-detector.ts
+│   │   ├── index.ts              # Barrel exports
+│   │   ├── tool-gate.ts          # (148 LOC) VALIDATED — blocks write/edit without active task
+│   │   ├── compaction.ts         # (108 LOC) Unit-tested — anchor injection via output.context.push()
+│   │   ├── message-transform.ts  # (123 LOC) Unit-tested — DCP-pattern context pruning
+│   │   └── system.ts             # (69 LOC) UNVERIFIED — hook may not exist in OpenCode
+│   ├── lib/
+│   │   ├── index.ts              # Barrel exports
+│   │   └── logging.ts            # (68 LOC) TUI-safe file-based logger
+│   ├── schemas/
+│   │   ├── index.ts              # Barrel exports
+│   │   └── anchor.ts             # (103 LOC) Anchor types, scoring, staleness, budget selection
 │   └── tools/
-│       ├── anchor.ts          # idumb_anchor_add, idumb_anchor_list
-│       ├── status.ts          # idumb_status
-│       └── init.ts            # idumb_init
+│       ├── index.ts              # Barrel exports
+│       ├── task.ts               # (67 LOC) create/complete/status for active task
+│       ├── anchor.ts             # (87 LOC) add/list context anchors
+│       └── status.ts             # (59 LOC) Read-only governance state display
 ├── tests/
-│   └── trial-1.ts             # T1 validation
-├── .idumb/                    # Runtime state (created by plugin)
+│   ├── tool-gate.test.ts         # 10 assertions — all pass
+│   ├── compaction.test.ts        # 12 assertions — all pass
+│   └── message-transform.test.ts # 12 assertions — all pass
+├── .archive/                     # Archived planning docs from previous iterations
+├── STRATEGIC-PLANNING-PROMPT.md  # SOT for planning (952 lines, 13 parts)
+├── AGENTS.md                     # THIS FILE
 ├── package.json
-├── tsconfig.json
-└── TRIAL-1-RESULTS.md
+└── tsconfig.json
 ```
+
+**Total:** 14 source files, ~860 LOC. `tsc --noEmit` clean.
 
 ---
 
-## Installation
+## What Works (Verified)
 
-```bash
-# Navigate to v2 directory
-cd v2
+| Component | File | Evidence |
+|---|---|---|
+| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | Unit tests pass (10/10). Throws Error with BLOCK+REDIRECT+EVIDENCE. |
+| Compaction anchor injection | `hooks/compaction.ts` | Unit tests pass (12/12). Uses `output.context.push()`. Budget-capped. |
+| Message transform — prunes old tool outputs | `hooks/message-transform.ts` | Unit tests pass (12/12). Keeps last 10, truncates older. |
+| Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness, budget-aware selection. |
+| TUI-safe file logging | `lib/logging.ts` | Zero console.log. Writes to `.opencode/idumb/logs/`. |
+| Task tool | `tools/task.ts` | create/complete/status. Sets active task for tool-gate. |
+| Anchor tool | `tools/anchor.ts` | add/list. Stores in compaction hook's in-memory Map. |
+| Status tool | `tools/status.ts` | Read-only. Shows active task + anchor summary. |
 
-# Install dependencies
-npm install
+## What Does NOT Work / Does NOT Exist
 
-# Build TypeScript
-npm run build
-
-# Copy to OpenCode plugins
-cp -r dist/* ~/.config/opencode/plugins/idumb-v2/
-```
-
----
-
-## Trial Status
-
-| Trial | Description | Status | PASS |
-|-------|-------------|--------|------|
-| T1 | Stop Hook Tool Manipulation | **VALIDATED** | 3/4 |
-| T2 | Inner Cycle Delegation | PARTIAL | 0/4 |
-| T3 | Compact Hook + Text Complete | IMPLEMENTED | 2/4 |
-| T4 | Sub-task Background Tracking | NOT STARTED | 0/4 |
-| T5 | Compact Message Hierarchy | PLACEHOLDER | 0/4 |
-| T6 | User Prompt Transform | PLACEHOLDER | 0/4 |
-| T7 | Force Delegation + 3-Level TODO | NOT STARTED | 0/4 |
-| T8 | Auto-run + Export + State | PARTIAL | 1/4 |
+| Item | Reality |
+|---|---|
+| `tools/init.ts` | **Does not exist.** No init tool. No codebase scanner. No framework detector. |
+| `lib/persistence.ts` | **Does not exist.** ALL state is in-memory Maps. Lost on restart. |
+| `schemas/permission.ts`, `config.ts`, `state.ts`, `scan.ts` | **Do not exist.** |
+| `engines/scanner.ts`, `framework-detector.ts` | **Do not exist.** |
+| Disk persistence | **None.** Session state and anchors are in-memory only. |
+| Role detection | **Not implemented.** No `chat.message` hook. No role-based permissions. |
+| Delegation tracking | **Not implemented.** Subagent hooks don't fire anyway (PP-01). |
+| `experimental.chat.system.transform` | **Unverified.** Hook name NOT in official OpenCode docs. |
+| `experimental.chat.messages.transform` | **Unverified.** Hook name NOT in official OpenCode docs. |
 
 ---
 
-## Agent Roles & Permissions
+## Critical Known Issues
 
-### Role Detection
-
-Agents are classified by name pattern matching in `schemas/permission.ts`:
-
-| Agent Pattern | Role | Description |
-|---------------|------|-------------|
-| `Build`, `General` | builder | Full write access |
-| `Plan`, `Explore` | researcher | Read-only |
-| `*meta*` | meta | Full access (framework dev) |
-| `*coordinator*`, `*supreme*` | coordinator | Delegate only |
-| `*governance*`, `*high*` | high-governance | Mid-level coordination |
-| `*mid*`, `*executor*` | mid-coordinator | Phase execution |
-| `*validator*`, `*checker*` | validator | Read + validate |
-| `*builder*`, `*worker*` | builder | Write access |
-| `*research*`, `*explorer*` | researcher | Read-only |
-
-### Permission Matrix
-
-| Role | read | write | execute | delegate | validate |
-|------|------|-------|---------|----------|----------|
-| coordinator | ✅ | ❌ | ❌ | ✅ | ❌ |
-| high-governance | ✅ | ❌ | ❌ | ✅ | ❌ |
-| mid-coordinator | ✅ | ❌ | ❌ | ✅ | ❌ |
-| validator | ✅ | ❌ | ❌ | ❌ | ✅ |
-| builder | ✅ | ✅ | ✅ | ❌ | ❌ |
-| researcher | ✅ | ❌ | ❌ | ❌ | ❌ |
-| meta | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-### Tool Categories
-
-| Category | Tools |
-|----------|-------|
-| read | read, list, glob, grep, webfetch, websearch, codesearch, todoread, skill |
-| write | write, edit, todowrite |
-| execute | bash |
-| delegate | task |
-| validate | test, verify |
+1. **ALL state is in-memory** — session state (tool-gate.ts Map), anchors (compaction.ts Map) are lost on restart/reload.
+2. **Experimental hooks unverified** — `system.transform` and `messages.transform` are NOT in official OpenCode docs. Only `session.compacting` is documented.
+3. **No live testing done** — all validation is unit tests with mocks. Never installed on a real project.
 
 ---
 
-## Plugin Hooks
+## Plugin Hooks (Registered in index.ts)
 
-### Implemented Hooks
+| Hook | Status | What It Does |
+|---|---|---|
+| `event` | Works | Logs session lifecycle events |
+| `tool.execute.before` | **VALIDATED** | Blocks write/edit without active task (throws Error) |
+| `tool.execute.after` | **VALIDATED** | Defense-in-depth: replaces output if before-hook didn't block |
+| `experimental.session.compacting` | Unit-tested | Injects anchors + active task into compaction context |
+| `experimental.chat.system.transform` | **UNVERIFIED** | Injects governance directive into system prompt |
+| `experimental.chat.messages.transform` | **UNVERIFIED** | Prunes old tool outputs (DCP pattern) |
 
-```typescript
-// From plugin.ts
-{
-  // Session lifecycle
-  event: async ({ event }) => { ... },
-  
-  // Agent detection (captures agent name for role-based permissions)
-  "chat.message": async (input, output) => { ... },
-  
-  // T1: Tool permission enforcement
-  "tool.execute.before": async (input, output) => { ... },
-  "tool.execute.after": async (input, output) => { ... },
-  
-  // Permission requests
-  "permission.ask": async (input, output) => { ... },
-  
-  // T3: Compaction context injection
-  "experimental.session.compacting": async (input, output) => { ... },
-  
-  // T5/T6: Message transformation (placeholder)
-  "experimental.chat.messages.transform": async (input, output) => { ... },
-  
-  // Custom tools
-  tool: {
-    idumb_anchor_add,
-    idumb_anchor_list,
-    idumb_status,
-    idumb_init,
-  },
-}
-```
+## Custom Tools (3 of max 5)
 
----
-
-## Custom Tools
-
-### idumb_init
-
-Initialize iDumb intelligence layer. Scaffolds `.idumb/` directory, scans codebase exhaustively.
-
-**Args:**
-- `force` (boolean, optional): Re-scan even if scan-result.json exists
-
-**Returns:** Formatted scan report with project info, framework detection, gaps, debt, concerns.
-
-### idumb_anchor_add
-
-Create a context anchor that survives session compaction.
-
-**Args:**
-- `type`: `decision` | `context` | `checkpoint` | `error` | `attention`
-- `content`: String (max 2000 chars)
-- `priority`: `critical` | `high` | `medium` | `low`
-
-### idumb_anchor_list
-
-List all active context anchors with staleness info.
-
-### idumb_status
-
-Get current plugin status: version, phase, anchor count, validation count.
-
----
-
-## State Management
-
-### .idumb/brain/state.json
-
-Single source of truth for governance state:
-
-```json
-{
-  "version": "2.0.0",
-  "initialized": "ISO-8601",
-  "phase": "init|research|planning|execution|validation|completed",
-  "framework": "idumb",
-  "validationCount": 0,
-  "lastValidation": null,
-  "anchors": [],
-  "history": [],
-  "sessions": {},
-  "timestamp": {
-    "createdAt": "ISO-8601",
-    "modifiedAt": "ISO-8601",
-    "stalenessHours": 0,
-    "isStale": false
-  }
-}
-```
-
-### .idumb/brain/config.json
-
-Plugin configuration:
-
-```json
-{
-  "version": "2.0.0",
-  "governance": {
-    "mode": "strict|balanced|minimal",
-    "maxDelegationDepth": 3,
-    "requireContextFirst": true
-  },
-  "compaction": {
-    "maxAnchors": 5,
-    "budgetChars": 2000
-  },
-  "logging": {
-    "level": "debug|info|warn|error",
-    "retention": 7
-  }
-}
-```
-
----
-
-## Path Conventions
-
-```
-.idumb/
-├── brain/
-│   ├── state.json           # Governance state (SSOT)
-│   ├── config.json          # Plugin config
-│   ├── context/
-│   │   └── scan-result.json # Codebase scan
-│   ├── drift/
-│   ├── governance/
-│   │   └── validations/
-│   ├── history/
-│   ├── metadata/
-│   └── sessions/
-├── anchors/                  # Individual anchor files
-├── sessions/                 # Session tracking
-├── signals/
-├── modules/
-├── project-output/
-│   ├── phases/
-│   ├── research/
-│   ├── roadmaps/
-│   └── validations/
-└── backups/
-```
+| Tool | Description |
+|---|---|
+| `idumb_task` | Create/complete/check active task. Required before write/edit. |
+| `idumb_anchor` | Add/list context anchors that survive compaction. |
+| `idumb_status` | Read-only governance state overview. |
 
 ---
 
 ## Code Style
 
-### TypeScript
-
-- Use `@opencode-ai/plugin` SDK types
-- Local `tool()` helper for zod v3 compatibility (SDK ships v4)
-- NO console.log - use `createLogger(directory, service)`
-- Always handle errors with try-catch, return error objects
-- Atomic file writes via `writeJson()` for all persistence
-
-### Naming
-
-- Functions: `camelCase`
-- Interfaces/Types: `PascalCase`
-- Constants: `SCREAMING_SNAKE`
-- Files: `kebab-case.ts`
-
-### Schemas
-
-All data structures validated with Zod:
-- `StateSchema` - Governance state
-- `ConfigSchema` - Plugin config
-- `AnchorSchema` - Context anchors
-- `PermissionDecisionSchema` - Permission results
-- `ScanResultSchema` - Codebase scan
-
----
-
-## Testing
-
-### TRIAL-1 Validation
-
-```bash
-# Run T1 tests
-npx tsx tests/trial-1.ts
-```
-
-**PASS Criteria:**
-- P1.1: Throwing error blocks tool execution ✅
-- P1.2: Error message visible in TUI (manual) ⏳
-- P1.3: Arg modification persists to execution ✅
-- P1.4: Other hooks continue running ✅
-
-### Manual Testing
-
-1. Install plugin in OpenCode
-2. Start session with coordinator agent
-3. Attempt to use `write` tool
-4. Verify governance error appears in chat (not background)
-
----
-
-## Known Gaps
-
-See `GAP-ANALYSIS.md` for comprehensive gap analysis.
-
-**Critical:**
-1. TRIAL-2 delegation tracking not implemented
-2. Agent detection relies on `chat.message` which may fire after first tool
-3. Session tracking is in-memory only (lost on restart)
-
-**High:**
-1. No `experimental.text.complete` hook for T3 completion
-2. Pattern-based role detection is fragile
-3. Validator role missing bash-read-only permission
+- **TypeScript** with strict mode, ESM (`"type": "module"`)
+- **NO console.log** — use `createLogger(directory, service)`
+- **Hook factory pattern** — every hook = function returning async hook. Captured logger.
+- **Graceful degradation** — every hook wrapped in try/catch. Only intentional blocks throw.
+- **Plain interfaces** — no Zod for internal state (anchor.ts uses plain TS types)
+- Functions: `camelCase` | Types: `PascalCase` | Constants: `SCREAMING_SNAKE` | Files: `kebab-case.ts`
 
 ---
 
 ## Development Commands
 
 ```bash
-# Build TypeScript
-npm run build
-
-# Type check only
-npx tsc --noEmit
-
-# Run trial tests
-npx tsx tests/trial-1.ts
-
-# Watch mode (development)
-npx tsc --watch
+npm run build        # tsc
+npm run dev          # tsc --watch
+npm run typecheck    # tsc --noEmit
+npm test             # runs all 3 test files via tsx
 ```
 
 ---
 
-## Contributing
+## Roadmap (Sequential — Each Must Pass Before Next)
 
-1. Follow the micro-trial approach: implement one TRIAL at a time
-2. Each TRIAL must have PASS criteria and PIVOT strategies
-3. Validate before merging
-4. Update this AGENTS.md with any new capabilities
+See `STRATEGIC-PLANNING-PROMPT.md` for full details.
+
+| Phase | Goal | Status |
+|---|---|---|
+| **Phase 0** | Clean slate — docs match reality | **DONE** |
+| **Phase 1** | Disk persistence + live hook verification on brownfield project | NEXT |
+| **Phase 2** | Compaction anchor survival — live test | Blocked by Phase 1 |
+| **Phase 3** | TODO enforcement — real feature development | Blocked by Phase 2 |
+| **Phase 4** | Integration stress test — chaotic session | Blocked by Phase 3 |
+| **Phase 5** | Init/meta-builder — ONLY after core proven | Blocked by Phase 4 |
 
 ---
 
 ## Session Handoff
 
-When resuming work on v2:
+When resuming work:
 
-1. Check `GAP-ANALYSIS.md` for known gaps
-2. Check `TRIAL-*-RESULTS.md` files for validation status
-3. Review recent commits for context
-4. Run `idumb_status` to see current state
-
----
-
-## References
-
-- [MICRO-MILESTONE-ARCHITECTURE-2026-02-05.md](../.qoder/plans/MICRO-MILESTONE-ARCHITECTURE-2026-02-05.md) - Planning architecture
-- [iDumb_Plugin_Reboot_v2_96f02b43.md](../.qoder/plans/iDumb_Plugin_Reboot_v2_96f02b43.md) - Implementation plan
-- [GAP-ANALYSIS.md](./GAP-ANALYSIS.md) - Current gaps and recommendations
+1. Read this file (AGENTS.md) — it reflects reality
+2. Read `STRATEGIC-PLANNING-PROMPT.md` — planning SOT with pitfalls, principles, milestones
+3. Check which Phase is current (see Roadmap above)
+4. Run `npm run typecheck` before starting
+5. Run `npm test` to verify baseline
