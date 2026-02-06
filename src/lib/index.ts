@@ -41,3 +41,12 @@ export {
   listSessions,
   cleanupOldSessions,
 } from "./persistence.js"
+
+// Path Resolution
+export {
+  type ResolvedPath,
+  resolveIdumbRoot,
+  isGlobalMode,
+  resolveAgentsDir,
+  getGlobalIdumbPath,
+} from "./path-resolver.js"

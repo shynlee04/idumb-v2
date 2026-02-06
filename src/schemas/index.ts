@@ -106,3 +106,36 @@ export {
   type ScanResult,
   createEmptyScanResult,
 } from "./scan.js"
+
+// Trajectory schemas and utilities (T5/T6)
+export {
+  IntentClassificationSchema,
+  type IntentClassification,
+  TurnSummarySchema,
+  type TurnSummary,
+  WorkflowStateSchema,
+  type WorkflowState,
+  TrajectorySchema,
+  type Trajectory,
+  classifyIntent,
+  detectDrift,
+  extractKeywords,
+  summarizeContent,
+  synthesizeIntent,
+  createTrajectory,
+} from "./trajectory.js"
+
+// Agent profile schemas and utilities
+export {
+  AgentScopeSchema,
+  type AgentScope,
+  AgentProfileRoleSchema,
+  type AgentProfileRole,
+  OutputStyleSchema,
+  type OutputStyle,
+  AgentProfileInputSchema,
+  type AgentProfileInput,
+  generateFrontmatter,
+  generateProfileBody,
+  generateAgentProfile,
+} from "./agent-profile.js"

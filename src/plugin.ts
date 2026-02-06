@@ -22,9 +22,9 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger, initializeIdumbDir, readState, writeState, stateExists } from "./lib/index.js"
 import { createDefaultState, addHistoryEntry } from "./schemas/index.js"
-import { createToolGateHook, createToolGateAfterHook, setAgentRole } from "./hooks/index.js"
+import { createToolGateHook, createToolGateAfterHook, setAgentRole, createMessageTransformHook } from "./hooks/index.js"
 import { createCompactionHook } from "./hooks/compaction.js"
-import { idumb_anchor_add, idumb_anchor_list, idumb_status, idumb_init } from "./tools/index.js"
+import { idumb_anchor_add, idumb_anchor_list, idumb_status, idumb_init, idumb_agent_create } from "./tools/index.js"
 
 /**
  * Plugin version
@@ -58,6 +58,7 @@ export const IdumbPlugin: Plugin = async ({ directory }) => {
   const toolGateHook = createToolGateHook(directory)
   const toolGateAfterHook = createToolGateAfterHook(directory)
   const compactionHook = createCompactionHook(directory)
+  const messageTransformHook = createMessageTransformHook(directory)
   
   return {
     // ========================================================================
@@ -181,17 +182,23 @@ export const IdumbPlugin: Plugin = async ({ directory }) => {
     },
     
     // ========================================================================
-    // MESSAGE TRANSFORM HOOKS (TRIAL-5/6 - PLACEHOLDER)
+    // MESSAGE TRANSFORM HOOKS (TRIAL-5/6)
     // ========================================================================
     
     /**
      * T5/T6: Message transformation hook
      * 
-     * Tests where LLM pays attention (start vs end vs middle)
+     * Reads last 4 turns, classifies intent, detects drift,
+     * injects governance anchor (role reminder + intent synthesis)
+     * before the last user message.
      */
-    "experimental.chat.messages.transform": async (_input, _output) => {
-      // TODO (T5/T6): Implement message injection experiments
-      // For now, no-op to avoid breaking anything
+    "experimental.chat.messages.transform": async (input, output) => {
+      try {
+        await messageTransformHook(input, output)
+      } catch (error) {
+        // Graceful degradation: never break message delivery
+        logger.error(`message.transform error: ${error}`)
+      }
     },
     
     // ========================================================================
@@ -206,6 +213,7 @@ export const IdumbPlugin: Plugin = async ({ directory }) => {
       idumb_anchor_list,
       idumb_status,
       idumb_init,
+      idumb_agent_create,
     },
   }
 }

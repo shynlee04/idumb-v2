@@ -5,13 +5,17 @@
   "type": "module",
   "main": "dist/plugin.js",
   "types": "dist/plugin.d.ts",
+  "bin": {
+    "idumb": "dist/cli/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "test:t1": "node --loader ts-node/esm tests/trial-1.ts",
-    "test:t2": "node --loader ts-node/esm tests/trial-2.ts"
+    "test:t2": "node --loader ts-node/esm tests/trial-2.ts",
+    "cli": "node dist/cli/index.js"
   },
   "keywords": [
     "opencode",

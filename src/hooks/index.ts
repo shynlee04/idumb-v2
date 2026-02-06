@@ -18,3 +18,9 @@ export {
   clearSessionTracker,
   clearAllSessionTrackers,
 } from "./tool-gate.js"
+
+// Compaction (T3)
+export { createCompactionHook } from "./compaction.js"
+
+// Message Transform (T5/T6)
+export { createMessageTransformHook } from "./message-transform.js"
