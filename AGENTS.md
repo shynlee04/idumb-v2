@@ -30,7 +30,13 @@ All "intelligence" is manufactured from deterministic hooks — not LLM reasonin
 
 ```
 v2/
+├── bin/
+│   └── cli.mjs                     # Shebang wrapper for npx idumb-v2
 ├── src/
+│   ├── cli.ts                      # CLI entry point — npx idumb-v2 init
+│   ├── cli/
+│   │   └── deploy.ts               # Deploys agents, commands, modules to user project
+│   ├── templates.ts                # All deployable templates (OpenCode YAML frontmatter format)
 │   ├── index.ts                    # Plugin entry — wires 5 hooks + 4 tools
 │   ├── hooks/
 │   │   ├── index.ts                # Barrel exports
@@ -43,28 +49,28 @@ v2/
 │   │   ├── logging.ts              # TUI-safe file-based logger
 │   │   ├── framework-detector.ts   # Read-only brownfield scanner (governance + tech + gaps)
 │   │   ├── scaffolder.ts           # Creates .idumb/ directory tree + config.json
-│   │   └── persistence.ts          # NEW: StateManager — disk persistence for hook state
+│   │   └── persistence.ts          # StateManager — disk persistence for hook state
 │   ├── schemas/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
-│   │   └── config.ts               # NEW: IdumbConfig schema, Language, GovernanceMode, etc.
+│   │   └── config.ts               # IdumbConfig schema, Language, GovernanceMode, etc.
 │   ├── tools/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── task.ts                 # create/complete/status for active task
 │   │   ├── anchor.ts               # add/list context anchors
 │   │   ├── status.ts               # Read-only governance state display
-│   │   └── init.ts                 # NEW: Init tool — scan → scaffold → greeting
+│   │   └── init.ts                 # Init tool — scan → scaffold → greeting (plugin side)
 │   └── modules/
 │       ├── agents/
-│       │   └── meta-builder.md     # NEW: Meta builder agent profile template
+│       │   └── meta-builder.md     # Meta builder agent profile template (reference copy)
 │       └── schemas/
-│           └── agent-profile.ts    # NEW: Agent profile contract (roles, permissions, tools)
+│           └── agent-profile.ts    # Agent profile contract (roles, permissions, tools)
 ├── tests/
 │   ├── tool-gate.test.ts           # 16 assertions — all pass
 │   ├── compaction.test.ts          # 16 assertions — all pass
 │   ├── message-transform.test.ts   # 13 assertions — all pass
 │   ├── init.test.ts                # 60 assertions — all pass
-│   └── persistence.test.ts         # NEW: 45 assertions — all pass
+│   └── persistence.test.ts         # 45 assertions — all pass
 ├── .archive/                       # Archived planning docs from previous iterations
 ├── STRATEGIC-PLANNING-PROMPT.md    # SOT for planning (952 lines, 13 parts)
 ├── AGENTS.md                       # THIS FILE
@@ -72,7 +78,7 @@ v2/
 └── tsconfig.json
 ```
 
-**Total:** 22 source files, ~2400 LOC. `tsc --noEmit` clean. 150/150 test assertions pass.
+**Total:** 26 source files, ~3200 LOC. `tsc --noEmit` clean. 150/150 test assertions pass.
 
 ---
 
@@ -95,7 +101,11 @@ v2/
 | **Agent profile schema** | `modules/schemas/agent-profile.ts` | **NEW.** Roles, permissions, tool categories. |
 | **Meta builder template** | `modules/agents/meta-builder.md` | **NEW.** Agent profile with granular bash allow/blocklist. |
 | **StateManager** | `lib/persistence.ts` | **NEW.** 45/45 test assertions. Singleton, debounced save, graceful degradation. |
-| **Hook verification harness** | `index.ts` | **NEW.** Every hook logs to `hook-verification.log` with debug-level structured entries. |
+| **Hook verification harness** | `index.ts` | Every hook logs to `hook-verification.log` with debug-level structured entries. |
+| **CLI entry point** | `cli.ts` + `bin/cli.mjs` | **NEW.** `npx idumb-v2 init` — interactive setup with prompts. E2E verified on test project. |
+| **Agent deployment** | `cli/deploy.ts` | **NEW.** Deploys meta-builder agent to `.opencode/agents/`, commands to `.opencode/commands/`, modules to `.idumb/idumb-modules/`. |
+| **Templates (OpenCode format)** | `templates.ts` | **NEW.** All agent/command templates use official OpenCode YAML frontmatter format. |
+| **opencode.json auto-config** | `cli/deploy.ts` | **NEW.** CLI automatically adds plugin path to `opencode.json`. |
 
 ## What Does NOT Work / Does NOT Exist Yet
 

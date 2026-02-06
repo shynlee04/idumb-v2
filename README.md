@@ -28,56 +28,73 @@ All governance is deterministic. No LLM reasoning involved in enforcement.
 
 ## Quick Start
 
-### Install
+### 1. Initialize in your project
 
 ```bash
-git clone https://github.com/shynlee04/idumb-v2.git
-cd idumb-v2
+cd your-project
+npx idumb-v2 init
 ```
 
-Install dependencies with your preferred package manager:
+The interactive CLI will ask you:
+
+| Prompt | Options | Default |
+|--------|---------|---------|
+| **Scope** | project / global | project |
+| **Language** | English / Tiếng Việt | English |
+| **Document language** | English / Tiếng Việt | same as above |
+| **Experience** | beginner / guided / expert | guided |
+| **Governance** | balanced / strict / autonomous | balanced |
+
+Or use defaults without prompts:
 
 ```bash
-npm install        # npm
-pnpm install       # pnpm
-yarn install       # yarn
-bun install        # bun
+npx idumb-v2 init -y
 ```
 
-Build the plugin:
+### What it deploys
+
+```
+your-project/
+├── .idumb/                              # Governance data
+│   ├── config.json                      # Your settings
+│   ├── idumb-modules/                   # Templates the meta-builder reads
+│   │   ├── schemas/agent-contract.md    # Agent creation contract
+│   │   ├── commands/command-template.md # Command reference
+│   │   └── workflows/workflow-template.md
+│   ├── anchors/                         # Context anchors
+│   ├── brain/                           # Hook state persistence
+│   └── ...
+├── .opencode/
+│   ├── agents/
+│   │   └── idumb-meta-builder.md        # Meta Builder agent (primary)
+│   └── commands/
+│       ├── idumb-init.md                # /idumb-init command
+│       ├── idumb-settings.md            # /idumb-settings command
+│       └── idumb-status.md              # /idumb-status command
+└── opencode.json                        # Plugin path auto-configured
+```
+
+### 2. Start OpenCode
 
 ```bash
-npm run build      # or: pnpm build / yarn build / bun run build
+opencode
 ```
 
-### Add to OpenCode
+The Meta Builder agent is immediately available:
+- Press **Tab** to switch to the `idumb-meta-builder` agent
+- Or run `/idumb-init` to start the guided setup
 
-Add to your OpenCode config (`~/.config/opencode/opencode.json`):
+### 3. The Meta Builder runs 3 phases
 
-```json
-{
-  "plugin": [
-    "/path/to/idumb-v2"
-  ]
-}
-```
+**Phase 1 — Greeting (read-only):** Scans your project, detects frameworks and tech stack, reports gaps and conflicts, asks permission to proceed.
 
-### Initialize
+**Phase 2 — Deep Scan:** Maps architecture, dependencies, and patterns. Produces a project intelligence report.
 
-Start an OpenCode session and run:
+**Phase 3 — Setup (with permission):** Creates the agent team (`idumb-supreme-coordinator`, `idumb-builder`, `idumb-validator`, `idumb-skills-creator`), commands, and workflows under `.opencode/`.
 
-```
-idumb_init
-```
+### 4. Governance is active
 
-iDumb will:
-- Scan your project for frameworks, tech stack, and existing governance
-- Create the `.idumb/` directory with config and governance structure
-- Present a report of what it found and recommended next steps
-
-### See it work
-
-Try writing a file without creating a task:
+Once the plugin loads, the tool gate enforces task-first writing:
 
 ```
 Agent: "Create hello.txt"
@@ -85,11 +102,26 @@ Agent: "Create hello.txt"
 → USE INSTEAD: Call "idumb_task" with action "create"
 ```
 
-Create a task first, then the write succeeds:
+Create a task first, then writes succeed:
 
 ```
 idumb_task create "Add hello world file"
 → Task created. You may now proceed with file writes.
+```
+
+### Alternative: Clone and build from source
+
+```bash
+git clone https://github.com/shynlee04/idumb-v2.git
+cd idumb-v2
+npm install && npm run build    # or: pnpm install && pnpm build
+```
+
+Then run init in your target project:
+
+```bash
+cd /path/to/your-project
+npx idumb-v2 init
 ```
 
 ---
@@ -156,7 +188,13 @@ All output (greeting, scan report, next steps) supports English (`en`) and Vietn
 ## Architecture
 
 ```
+bin/
+└── cli.mjs                     # Shebang wrapper for npx
 src/
+├── cli.ts                      # CLI entry point (npx idumb-v2 init)
+├── cli/
+│   └── deploy.ts               # Agent + command + module deployment
+├── templates.ts                # All deployable templates (OpenCode format)
 ├── index.ts                    # Plugin entry — 5 hooks + 4 tools
 ├── hooks/
 │   ├── tool-gate.ts            # Blocks write/edit without active task
@@ -172,12 +210,12 @@ src/
 │   ├── anchor.ts               # Anchor types, scoring, staleness
 │   └── config.ts               # IdumbConfig schema
 ├── tools/
-│   ├── init.ts                 # idumb_init — the entry point
+│   ├── init.ts                 # idumb_init — the plugin tool
 │   ├── task.ts                 # idumb_task — task management
 │   ├── anchor.ts               # idumb_anchor — context anchors
 │   └── status.ts               # idumb_status — governance overview
 └── modules/
-    ├── agents/meta-builder.md  # Meta builder agent profile
+    ├── agents/meta-builder.md  # Meta builder agent profile (reference)
     └── schemas/agent-profile.ts # Agent profile contract
 ```
 

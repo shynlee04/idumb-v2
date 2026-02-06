@@ -5,6 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "idumb-v2": "./bin/cli.mjs"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -13,6 +16,7 @@
   },
   "files": [
     "dist",
+    "bin",
     "src",
     "README.md",
     "LICENSE"
