@@ -1,5 +1,5 @@
 {
-  "name": "idumb",
+  "name": "idumb-v2",
   "version": "2.2.0",
   "description": "Intelligent Delegation Using Managed Boundaries — an OpenCode plugin that makes AI agents think before they write",
   "type": "module",
@@ -21,7 +21,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx tests/tool-gate.test.ts && npx tsx tests/compaction.test.ts && npx tsx tests/message-transform.test.ts && npx tsx tests/init.test.ts && npx tsx tests/persistence.test.ts",
+    "test": "tsx tests/tool-gate.test.ts && tsx tests/compaction.test.ts && tsx tests/message-transform.test.ts && tsx tests/init.test.ts && tsx tests/persistence.test.ts",
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "keywords": [
@@ -36,12 +36,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/shynlee04/idumb.git",
-    "directory": "v2"
+    "url": "https://github.com/shynlee04/idumb-v2.git"
   },
-  "homepage": "https://github.com/shynlee04/idumb#readme",
+  "homepage": "https://github.com/shynlee04/idumb-v2#readme",
   "bugs": {
-    "url": "https://github.com/shynlee04/idumb/issues"
+    "url": "https://github.com/shynlee04/idumb-v2/issues"
   },
   "author": "shynlee04",
   "license": "MIT",

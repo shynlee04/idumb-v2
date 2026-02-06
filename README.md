@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">iDumb</h1>
+  <h1 align="center">iDumb v2</h1>
   <p align="center"><strong>Intelligent Delegation Using Managed Boundaries</strong></p>
   <p align="center">An OpenCode plugin that makes AI agents think before they write.</p>
 </p>
@@ -31,11 +31,23 @@ All governance is deterministic. No LLM reasoning involved in enforcement.
 ### Install
 
 ```bash
-# Clone and build
-git clone https://github.com/shynlee04/idumb.git
-cd idumb/v2
-npm install
-npm run build
+git clone https://github.com/shynlee04/idumb-v2.git
+cd idumb-v2
+```
+
+Install dependencies with your preferred package manager:
+
+```bash
+npm install        # npm
+pnpm install       # pnpm
+yarn install       # yarn
+bun install        # bun
+```
+
+Build the plugin:
+
+```bash
+npm run build      # or: pnpm build / yarn build / bun run build
 ```
 
 ### Add to OpenCode
@@ -45,7 +57,7 @@ Add to your OpenCode config (`~/.config/opencode/opencode.json`):
 ```json
 {
   "plugin": [
-    "/path/to/idumb/v2"
+    "/path/to/idumb-v2"
   ]
 }
 ```
@@ -193,9 +205,15 @@ src/
 ## Tests
 
 ```bash
-npm test  # 150/150 assertions across 5 test files
+npm test               # 150/150 assertions across 5 test files
+pnpm test              # same — works with any package manager
+yarn test              # same
+bun run test           # same
+```
 
-# Individual suites:
+Individual suites:
+
+```bash
 npx tsx tests/tool-gate.test.ts         # 16/16 — block/allow/retry/fallback
 npx tsx tests/compaction.test.ts        # 16/16 — injection/budget/stale/critical
 npx tsx tests/message-transform.test.ts # 13/13 — pruning/exempt/invalid
@@ -230,9 +248,10 @@ npx tsx tests/persistence.test.ts       # 45/45 — round-trip/debounce/degradat
 This is a community build. PRs welcome.
 
 ```bash
-npm run typecheck    # tsc --noEmit
-npm test             # 150/150 assertions
-npm run build        # tsc → dist/
+# Verify before submitting (works with npm, pnpm, yarn, or bun)
+npm run typecheck    # tsc --noEmit — zero errors required
+npm test             # 150/150 assertions — all must pass
+npm run build        # tsc → dist/ — clean compile
 ```
 
 ---
