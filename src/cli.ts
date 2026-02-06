@@ -145,17 +145,17 @@ async function main(): Promise<void> {
   if (command === "--help" || command === "-h") {
     banner()
     print(`  ${C.bold}Usage:${C.reset}`)
-    print(`    npx idumb-v2 init       ${C.dim}Initialize iDumb in current project${C.reset}`)
-    print(`    npx idumb-v2 init -f    ${C.dim}Force overwrite existing config${C.reset}`)
-    print(`    npx idumb-v2 init -y    ${C.dim}Use defaults (non-interactive)${C.reset}`)
-    print(`    npx idumb-v2 --help     ${C.dim}Show this help${C.reset}`)
+    print(`    idumb-v2 init       ${C.dim}Initialize iDumb in current project${C.reset}`)
+    print(`    idumb-v2 init -f    ${C.dim}Force overwrite existing config${C.reset}`)
+    print(`    idumb-v2 init -y    ${C.dim}Use defaults (non-interactive)${C.reset}`)
+    print(`    idumb-v2 --help     ${C.dim}Show this help${C.reset}`)
     print("")
     process.exit(0)
   }
 
   if (command !== "init") {
     print(`${C.red}  Unknown command: ${command}${C.reset}`)
-    print(`  Run ${C.cyan}npx idumb-v2 --help${C.reset} for usage.`)
+    print(`  Run ${C.cyan}idumb-v2 --help${C.reset} for usage.`)
     process.exit(1)
   }
 

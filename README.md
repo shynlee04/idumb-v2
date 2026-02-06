@@ -28,11 +28,26 @@ All governance is deterministic. No LLM reasoning involved in enforcement.
 
 ## Quick Start
 
-### 1. Initialize in your project
+### 1. Clone and build
 
 ```bash
-cd your-project
-npx idumb-v2 init
+git clone https://github.com/shynlee04/idumb-v2.git
+cd idumb-v2
+npm install
+npm run build
+npm link
+```
+
+> **Note:** `npm link` creates a global `idumb-v2` command on your machine.
+> This is required because the package is not yet published to npm.
+> Use `sudo npm link` if you get a permissions error.
+> For pnpm: `pnpm link --global`. For yarn: `yarn link`.
+
+### 2. Initialize in your project
+
+```bash
+cd /path/to/your-project
+idumb-v2 init
 ```
 
 The interactive CLI will ask you:
@@ -45,10 +60,10 @@ The interactive CLI will ask you:
 | **Experience** | beginner / guided / expert | guided |
 | **Governance** | balanced / strict / autonomous | balanced |
 
-Or use defaults without prompts:
+Or skip prompts with defaults:
 
 ```bash
-npx idumb-v2 init -y
+idumb-v2 init -y
 ```
 
 ### What it deploys
@@ -74,7 +89,7 @@ your-project/
 └── opencode.json                        # Plugin path auto-configured
 ```
 
-### 2. Start OpenCode
+### 3. Start OpenCode
 
 ```bash
 opencode
@@ -84,7 +99,7 @@ The Meta Builder agent is immediately available:
 - Press **Tab** to switch to the `idumb-meta-builder` agent
 - Or run `/idumb-init` to start the guided setup
 
-### 3. The Meta Builder runs 3 phases
+### 4. The Meta Builder runs 3 phases
 
 **Phase 1 — Greeting (read-only):** Scans your project, detects frameworks and tech stack, reports gaps and conflicts, asks permission to proceed.
 
@@ -92,7 +107,7 @@ The Meta Builder agent is immediately available:
 
 **Phase 3 — Setup (with permission):** Creates the agent team (`idumb-supreme-coordinator`, `idumb-builder`, `idumb-validator`, `idumb-skills-creator`), commands, and workflows under `.opencode/`.
 
-### 4. Governance is active
+### 5. Governance is active
 
 Once the plugin loads, the tool gate enforces task-first writing:
 
@@ -109,20 +124,16 @@ idumb_task create "Add hello world file"
 → Task created. You may now proceed with file writes.
 ```
 
-### Alternative: Clone and build from source
+### When npm publish happens
 
-```bash
-git clone https://github.com/shynlee04/idumb-v2.git
-cd idumb-v2
-npm install && npm run build    # or: pnpm install && pnpm build
-```
-
-Then run init in your target project:
+Once the package is on npm, you'll be able to skip the clone/build/link steps:
 
 ```bash
 cd /path/to/your-project
 npx idumb-v2 init
 ```
+
+This is not available yet.
 
 ---
 
