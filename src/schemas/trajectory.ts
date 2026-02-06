@@ -1,4 +1,19 @@
 /**
+ * ⚠️ DEPRECATED: 2026-02-06
+ * 
+ * THIS FILE IS DEAD CODE — DO NOT USE
+ * 
+ * This schema supports the message-transform hook which relies on
+ * `experimental.chat.messages.transform` — a hook that is NOT documented
+ * in official OpenCode plugin docs.
+ * 
+ * Intent classification and trajectory tracking can be repurposed for
+ * the compaction hook in the future.
+ * 
+ * See: TRIAL-TRACKER.md for details on T5/T6 pivot
+ * 
+ * --- ORIGINAL DOCS BELOW (FOR REFERENCE) ---
+ * 
  * Trajectory Schema
  * 
  * Conversation trajectory tracking for the message transform hook (T5/T6).

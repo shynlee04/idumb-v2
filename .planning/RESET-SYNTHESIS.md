@@ -373,6 +373,7 @@ WHAT SURVIVES:
 | 8 | Don't build N features before validating feature 1 | Current v2 has 8 features, 0 live-validated — this is the core problem |
 | 9 | Don't use Zod schemas for everything | DCP uses plain interfaces, subtask2 uses plain types — Zod adds bundle size and complexity |
 | 10 | Don't create .md agents/commands/skills programmatically from plugins | They're static config — generating them creates maintenance burden and potential conflicts |
+| 11 | **Don't rely on prompts to make agents use custom tools** | If a tool only works when "reminded" via prompt/instruction, the tool description is ineffective — this is the **hollow tool trap**. Tools must be selected NATURALLY based on description alone. |
 
 ### 4.4 Pitfalls Registry
 
@@ -388,6 +389,7 @@ WHAT SURVIVES:
 | PF-08 | **Bun bundling breaks** | `readFileSync` with `__dirname` fails | Runtime error on plugin load | Use codegen (DCP pattern) or inline strings |
 | PF-09 | **Plugin load order conflict** | Another plugin modifies messages before/after ours | Unexpected message state in hook | Don't depend on message ordering; be idempotent |
 | PF-10 | **State file corruption** | Concurrent writes to same JSON file | Garbled JSON, plugin crashes on next read | Use in-memory Maps; file persistence only on session end |
+| PF-11 | **Hollow tool trap** | Custom tool only used when agent is "reminded" via prompt | Remove reminder → tool never called | Tool description must be self-sufficient; test in fresh session with NO instructions |
 
 ---
 

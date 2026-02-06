@@ -5,17 +5,39 @@
 
 ---
 
+## ⚠️ CRITICAL: Hook Availability (Verified 2026-02-06)
+
+From official OpenCode docs — some planned hooks **DO NOT EXIST**:
+
+| Hook | Status | Impact |
+|------|--------|--------|
+| `tool.execute.before` | ✅ CONFIRMED | T1 works |
+| `tool.execute.after` | ✅ CONFIRMED | T1 fallback works |
+| `experimental.session.compacting` | ✅ CONFIRMED | T3 works |
+| `shell.env` | ✅ CONFIRMED | New capability |
+| `todo.updated` event | ✅ NEW | T7 can use this! |
+| `chat.message` | ❌ NOT DOCUMENTED | Agent detection may fail |
+| `experimental.chat.messages.transform` | ❌ NOT DOCUMENTED | **T5/T6 DEAD CODE** |
+| `chat.params` | ❌ NOT DOCUMENTED | T2 pivot invalidated |
+
+**Action Required:**
+1. Remove or flag `message-transform.ts` and `trajectory.ts` as dead code
+2. Pivot T5/T6 to use compaction hook only
+3. Re-evaluate T2 agent detection approach
+
+---
+
 ## Quick Status
 
 | Trial | Name | Status | PASS | Pivot? | Next Action |
 |-------|------|--------|------|--------|-------------|
 | **T1** | Stop Hook Tool Manipulation | **VALIDATED** | 3/4 | No | P1.2 manual TUI test |
-| **T2** | Inner Cycle Delegation | PARTIAL | 0/4 | **YES** — subagent hooks broken | Implement `chat.params` hook + forced reads |
+| **T2** | Inner Cycle Delegation | PARTIAL | 0/4 | **YES** — subagent hooks + chat.params broken | Agent detection via event only |
 | **T3** | Compact Hook + Text Complete | IMPLEMENTED | 2/4 | Pending | Live compaction test |
 | **T4** | Sub-task Background Tracking | NOT STARTED | 0/4 | — | Blocked on T2 |
-| **T5** | Compact Message Hierarchy | PLACEHOLDER | 0/4 | — | Blocked on A/B test data |
-| **T6** | User Prompt Transform | PLACEHOLDER | 0/4 | — | Blocked on A/B test data |
-| **T7** | Force Delegation + 3-Level TODO | NOT STARTED | 0/4 | — | Design schema after T2 |
+| **T5** | Compact Message Hierarchy | **DEAD** | 0/4 | **YES** — hook doesn't exist | Use compaction hook only |
+| **T6** | User Prompt Transform | **DEAD** | 0/4 | **YES** — hook doesn't exist | Use compaction hook only |
+| **T7** | Force Delegation + 3-Level TODO | NOT STARTED | 0/4 | — | Use `todo.updated` event |
 | **T8** | Auto-run + Export + State | PARTIAL | 1/4 | — | After T3 live validation |
 
 ---
@@ -98,10 +120,15 @@ OpenCode GitHub issue [#5894](https://github.com/sst/opencode/issues/5894) confi
 
 | Criteria | Description | Result | Evidence |
 |----------|-------------|--------|----------|
-| P5.1 | A/B test determines optimal injection position | **BLOCKED** | Need empirical data |
-| P5.2 | Hierarchy message shows: work, cycles, drift, anchors | **BLOCKED** | Depends on P5.1 |
+| P5.1 | A/B test determines optimal injection position | **DEAD** | Hook doesn't exist |
+| P5.2 | Hierarchy message shows: work, cycles, drift, anchors | **DEAD** | Hook doesn't exist |
 
-**Status:** Blocked on A/B test. Need to determine if LLM attends to start vs end of injected context.
+**⚠️ PIVOT REQUIRED:**
+- `experimental.chat.messages.transform` hook is NOT in official OpenCode docs
+- `message-transform.ts` and `trajectory.ts` are DEAD CODE (~650 LOC)
+- **New approach:** Use compaction hook for ALL context injection
+
+**Status:** DEAD — pivot to compaction-only approach
 
 ---
 
@@ -111,10 +138,14 @@ OpenCode GitHub issue [#5894](https://github.com/sst/opencode/issues/5894) confi
 
 | Criteria | Description | Result | Evidence |
 |----------|-------------|--------|----------|
-| P6.1 | User prompt transformation implemented | **BLOCKED** | — |
-| P6.2 | Transformation improves task completion | **BLOCKED** | Needs A/B comparison |
+| P6.1 | User prompt transformation implemented | **DEAD** | Hook doesn't exist |
+| P6.2 | Transformation improves task completion | **DEAD** | Hook doesn't exist |
 
-**Status:** Blocked on T5 results.
+**⚠️ PIVOT REQUIRED:**
+- Same as T5 — `experimental.chat.messages.transform` doesn't exist
+- **New approach:** All governance injection via compaction hook
+
+**Status:** DEAD — merge T5/T6 goals into T3 (compaction hook)
 
 ---
 
@@ -129,7 +160,12 @@ OpenCode GitHub issue [#5894](https://github.com/sst/opencode/issues/5894) confi
 | P7.3 | Delegation metadata required | **NOT STARTED** | — |
 | P7.4 | TODO serves as agent ↔ user communication | **NOT STARTED** | — |
 
-**Status:** Design schema after T2 pivot resolves.
+**✅ NEW CAPABILITY DISCOVERED:**
+- `todo.updated` event is documented in official OpenCode docs!
+- Can intercept native TODO changes without replacing tool
+- **New approach:** Listen to `todo.updated` event, enrich with governance metadata
+
+**Status:** Ready to implement after Knot-0 validation
 
 ---
 

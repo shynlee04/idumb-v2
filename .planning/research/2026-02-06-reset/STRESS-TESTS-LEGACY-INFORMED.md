@@ -204,42 +204,61 @@ export const createSmartTasks = tool({
 })
 ```
 
+**⚠️ THE HOLLOW TOOL TRAP:**
+```
+Tool + Prompt reminder → Agent uses tool → FAIL (prompt-dependent)
+Tool + NO prompt      → Agent uses tool → PASS (natural selection)
+```
+
+If a custom tool only gets selected when there's a reminder/instruction in the prompt or agent profile, the tool is **hollow**. The governance depends on prompt engineering, not tool design. This is fragile because:
+- New agents won't know to use the tools
+- Compaction may lose the "use X tool" instruction  
+- Different models may ignore the instruction
+- The tool description itself is ineffective
+
 ### The Test
 
 **Setup:**
 1. Register ONE custom tool: `idumb_status`
 2. Clear, specific description: "Get current iDumb governance state including phase, anchors, and chain status"
+3. **NO instructions** in agent profiles about using this tool
+4. **NO system prompt** mentioning iDumb tools
 
 **Action:**
-1. Ask agent: "What is the current governance state?"
-2. Watch which tool is called
+1. Fresh session — no prior context
+2. Ask agent: "What is the current governance state?"
+3. Watch which tool is called
 
 **Expected (PASS):**
-- Agent calls `idumb_status`
+- Agent calls `idumb_status` NATURALLY
 - Uses its output in response
+- Tool description alone was sufficient
 
 **Anti-pattern (FAIL):**
 - Agent tries to read files directly
 - Agent hallucinates state
 - Agent uses different tool
+- **Tool only works when prompted** "use idumb_status"
 
 **Measurement:**
 ```
-idumb_status called → PASS
+idumb_status called WITHOUT prompt → PASS
+idumb_status called WITH prompt → HOLLOW (false positive)
 Any other tool for this query → FAIL
 
-Run 10 times with variations:
+Run 10 times with variations (NO reminders):
 - "Show me the governance state"
 - "What phase are we in?"
 - "List active anchors"
 
-Need >60% correct tool selection
+Need >60% NATURAL selection (not prompted)
 ```
 
 **Pivot Trigger:**
 - If <40% selection → tool description unclear, improve
 - If description doesn't help → tool name too long/unclear
 - If still fails → LLM tool selection broken for plugins, use different approach
+- **If only works with prompt** → tool is hollow, description is ineffective
 
 ---
 

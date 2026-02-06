@@ -1,4 +1,19 @@
 /**
+ * ⚠️ DEPRECATED: 2026-02-06
+ * 
+ * THIS FILE IS DEAD CODE — DO NOT USE
+ * 
+ * The `experimental.chat.messages.transform` hook this relies on is NOT
+ * documented in official OpenCode plugin docs (Feb 5, 2026). The hook
+ * likely does not exist.
+ * 
+ * This file will be removed in the next cleanup. All message injection
+ * should use `experimental.session.compacting` instead.
+ * 
+ * See: TRIAL-TRACKER.md for details on T5/T6 pivot
+ * 
+ * --- ORIGINAL DOCS BELOW (FOR REFERENCE) ---
+ * 
  * Message Transform Hook (T5/T6)
  * 
  * Intercepts messages BEFORE they reach the LLM context window via
