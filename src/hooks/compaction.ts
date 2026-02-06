@@ -13,23 +13,19 @@ import type { Anchor } from "../schemas/index.js"
 import { selectAnchors } from "../schemas/index.js"
 import { getActiveTask } from "./tool-gate.js"
 import type { Logger } from "../lib/index.js"
+import { stateManager } from "../lib/persistence.js"
 
 /** Budget in characters (~500 tokens at ~4 chars/token) */
 const INJECTION_BUDGET_CHARS = 2000
 
-/** In-memory anchor store — per session (P5) */
-const anchorStore = new Map<string, Anchor[]>()
-
-/** Add an anchor to a session's store */
+/** Add an anchor to a session's store — delegates to StateManager */
 export function addAnchor(sessionID: string, anchor: Anchor): void {
-  const anchors = anchorStore.get(sessionID) ?? []
-  anchors.push(anchor)
-  anchorStore.set(sessionID, anchors)
+  stateManager.addAnchor(sessionID, anchor)
 }
 
-/** Get all anchors for a session */
+/** Get all anchors for a session — delegates to StateManager */
 export function getAnchors(sessionID: string): Anchor[] {
-  return anchorStore.get(sessionID) ?? []
+  return stateManager.getAnchors(sessionID)
 }
 
 /** Format selected anchors into a compaction context string */

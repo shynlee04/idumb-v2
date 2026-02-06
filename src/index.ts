@@ -10,10 +10,11 @@
 
 import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/index.js"
+import { stateManager } from "./lib/persistence.js"
 import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
 import { idumb_task, idumb_anchor, idumb_status, idumb_init } from "./tools/index.js"
 
-const VERSION = "2.0.0-clean.4"
+const VERSION = "2.1.0"
 
 /**
  * Plugin factory following hook factory pattern (P5: captured state).
@@ -24,8 +25,20 @@ const VERSION = "2.0.0-clean.4"
  */
 const idumb: Plugin = async ({ directory }) => {
   const log = createLogger(directory, "idumb-core")
+  const verifyLog = createLogger(directory, "hook-verification", "debug")
 
   log.info(`iDumb v${VERSION} loaded`, { directory })
+
+  // Initialize StateManager — loads persisted state from disk
+  try {
+    await stateManager.init(directory, log)
+    log.info("StateManager initialized", {
+      degraded: stateManager.isDegraded(),
+    })
+  } catch (err) {
+    log.error(`StateManager init failed: ${err}`, { directory })
+    // P3: Continue with in-memory state
+  }
 
   // Create hook instances with captured logger (DO #5: hook factory pattern)
   const toolGateBefore = createToolGateBefore(log)
@@ -51,6 +64,7 @@ const idumb: Plugin = async ({ directory }) => {
      * Throws Error with BLOCK+REDIRECT+EVIDENCE message.
      */
     "tool.execute.before": async (input, output) => {
+      verifyLog.debug("HOOK FIRED: tool.execute.before", { tool: input.tool, sessionID: input.sessionID })
       await toolGateBefore(input, output)
     },
 
@@ -59,6 +73,7 @@ const idumb: Plugin = async ({ directory }) => {
      * If before-hook throw didn't block, replace output with governance message.
      */
     "tool.execute.after": async (input, output) => {
+      verifyLog.debug("HOOK FIRED: tool.execute.after", { tool: input.tool, sessionID: input.sessionID })
       await toolGateAfter(input, output)
     },
 
@@ -68,6 +83,7 @@ const idumb: Plugin = async ({ directory }) => {
      * Budget-capped ≤500 tokens (Pitfall 7).
      */
     "experimental.session.compacting": async (input, output) => {
+      verifyLog.info("HOOK FIRED: experimental.session.compacting", { sessionID: input.sessionID })
       await compactionHook(input, output)
     },
 
@@ -77,6 +93,7 @@ const idumb: Plugin = async ({ directory }) => {
      * Budget: ≤200 tokens. ADD, not REPLACE.
      */
     "experimental.chat.system.transform": async (input, output) => {
+      verifyLog.info("HOOK FIRED: experimental.chat.system.transform", { inputKeys: Object.keys(input) })
       await systemHook(input, output)
     },
 
@@ -86,6 +103,7 @@ const idumb: Plugin = async ({ directory }) => {
      * Keeps last 10 tool results intact, truncates older ones.
      */
     "experimental.chat.messages.transform": async (input, output) => {
+      verifyLog.info("HOOK FIRED: experimental.chat.messages.transform", { inputKeys: Object.keys(input) })
       await messageTransformHook(input, output)
     },
 

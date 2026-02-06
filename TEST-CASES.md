@@ -246,25 +246,238 @@ idumb_init action=scan
 
 ---
 
-## Phase 1b Test Cases (Next — requires live plugin installation)
+## Phase 1b Test Cases — Persistence + Live Hook Verification
 
-These cannot be run until the plugin is built and installed in OpenCode:
+---
 
-- **TC-11:** Tool gate blocks `write` without `idumb_task create` first
-- **TC-12:** Compaction hook fires and injects anchors into post-compaction context
-- **TC-13:** Which experimental hooks (`system.transform`, `messages.transform`) actually fire
-- **TC-14:** Log file at `.opencode/idumb/logs/` shows hook activity
+## Test Case 11: Tool Gate Blocks Write Without Task (Live)
+
+### Setup
+Plugin is built and installed in OpenCode. Start a fresh session.
+
+### When I use
+Ask the agent: "Create a file called test.txt with hello world"
+
+### I expect
+1. The agent attempts to call the `write` tool
+2. `tool.execute.before` hook fires and throws `GOVERNANCE BLOCK: write denied`
+3. The block message includes: `USE INSTEAD: Call the "idumb_task" tool with action "create"`
+4. The agent redirects and calls `idumb_task create "..."` first
+5. After task creation, retry succeeds
+
+### It proves
+- `tool.execute.before` fires in live OpenCode
+- The block+redirect pattern works — agent self-corrects
+- Governance is enforced without crashing the TUI
+
+### Verification
+Check `.opencode/idumb/logs/hook-verification.log` for:
+```
+HOOK FIRED: tool.execute.before {"tool":"write"...}
+```
+
+---
+
+## Test Case 12: Compaction Preserves Anchors (Live)
+
+### Setup
+Plugin installed. Start a session, add anchors, then trigger compaction (long session or manual).
+
+### When I use
+1. `idumb_task create "Test compaction"`
+2. `idumb_anchor add type=decision priority=critical content="Always use PostgreSQL"`
+3. Continue working until session compacts (or trigger manually)
+
+### I expect
+1. Post-compaction context includes: `## CURRENT TASK: Test compaction`
+2. Post-compaction context includes: `[CRITICAL/decision] Always use PostgreSQL`
+3. Agent retains awareness of the task and anchor after compaction
+
+### It proves
+- `experimental.session.compacting` fires in live OpenCode
+- `output.context.push()` actually injects into post-compaction prompt
+- Critical context survives the compaction boundary
+
+### Verification
+Check `.opencode/idumb/logs/hook-verification.log` for:
+```
+HOOK FIRED: experimental.session.compacting {"sessionID":"..."}
+```
+
+---
+
+## Test Case 13: Experimental Hooks — System + Messages Transform (Live)
+
+### Setup
+Plugin installed. Start any session.
+
+### When I use
+1. Send any message to the agent
+2. Let the agent respond and use tools
+
+### I expect
+**If hooks exist:**
+1. `.opencode/idumb/logs/hook-verification.log` contains:
+   - `HOOK FIRED: experimental.chat.system.transform`
+   - `HOOK FIRED: experimental.chat.messages.transform`
+2. System prompt includes governance directive
+3. Old tool outputs get truncated after 10+ tool calls
+
+**If hooks DON'T exist:**
+1. No log entries for these hooks
+2. Plugin still works normally (P3 graceful degradation)
+3. Update AGENTS.md to mark these as CONFIRMED NON-EXISTENT
+
+### It proves
+- Whether `experimental.chat.system.transform` exists in OpenCode
+- Whether `experimental.chat.messages.transform` exists in OpenCode
+- This resolves the #1 uncertainty from Phase 0
+
+### Verification
+```bash
+cat .opencode/idumb/logs/hook-verification.log | grep "system.transform"
+cat .opencode/idumb/logs/hook-verification.log | grep "messages.transform"
+```
+
+---
+
+## Test Case 14: Hook Verification Log Shows All Activity (Live)
+
+### Setup
+Plugin installed. Run a typical coding session.
+
+### When I use
+1. Start session
+2. Try to write without task (should block)
+3. Create task
+4. Write a file
+5. Add an anchor
+6. Check status
+
+### I expect
+`.opencode/idumb/logs/hook-verification.log` contains chronological entries for:
+- `HOOK FIRED: tool.execute.before` (multiple times)
+- `HOOK FIRED: tool.execute.after` (multiple times)
+- Optional: `HOOK FIRED: experimental.session.compacting`
+- Optional: `HOOK FIRED: experimental.chat.system.transform`
+- Optional: `HOOK FIRED: experimental.chat.messages.transform`
+
+### It proves
+- The verification harness works end-to-end
+- Every registered hook is instrumented
+- We can definitively answer which hooks fire and which don't
+
+---
+
+## Test Case 15: Persistence Survives Restart
+
+### Setup
+Plugin installed with disk persistence enabled.
+
+### When I use
+1. `idumb_task create "persistent task"`
+2. Verify: `idumb_task status` → shows "persistent task"
+3. **Restart OpenCode** (close and reopen)
+4. `idumb_task status`
+
+### I expect
+1. Before restart: task shows as active
+2. After restart: task STILL shows as active
+3. `.idumb/brain/hook-state.json` contains the task data
+
+### It proves
+- StateManager writes hook state to `.idumb/brain/hook-state.json`
+- StateManager loads state on plugin init (`stateManager.init(directory)`)
+- Session continuity across OpenCode restarts
+- **This is the core Phase 1b deliverable**
+
+### Failure modes
+- If task is lost → check if `.idumb/brain/hook-state.json` was written
+- If file exists but task missing → check sessionID mismatch (new session = new ID)
+
+---
+
+## Test Case 16: Anchor Persistence Across Sessions
+
+### Setup
+Plugin installed. Two separate sessions.
+
+### When I use
+1. Session 1: `idumb_anchor add type=decision priority=critical content="API uses REST not GraphQL"`
+2. Session 1: Close session
+3. Session 2: Start new session
+4. Session 2: `idumb_status`
+
+### I expect
+1. `.idumb/brain/hook-state.json` contains the anchor from Session 1
+2. Status shows the anchor is loadable
+3. If sessionID changed (new session), anchor is under old sessionID key
+
+### It proves
+- Anchors persist to disk
+- Anchors survive session boundaries
+- StateManager correctly serializes/deserializes Anchor objects (with timestamps, types, priorities)
+
+### Important note
+Anchors are keyed by sessionID. A new OpenCode session gets a new sessionID. The persistence proves the DATA survives, but the hook currently only reads anchors for the CURRENT sessionID. Phase 2 may need cross-session anchor migration.
+
+---
+
+## Test Case 17: Debounced Save — No I/O Storm
+
+### Setup
+Plugin installed. Rapid tool usage.
+
+### When I use
+1. Ask agent to make 10 rapid file edits in sequence (e.g., "add 10 functions to utils.ts")
+2. Each edit triggers `tool.execute.before` → state mutation → save schedule
+
+### I expect
+1. `.opencode/idumb/logs/idumb-core.log` shows "State saved to disk" entries
+2. Number of "State saved" entries is MUCH less than number of tool calls (debounced)
+3. Plugin remains responsive — no lag between edits
+
+### It proves
+- Debounced save (500ms) coalesces rapid mutations
+- No I/O storm under heavy tool usage
+- Performance is acceptable for real-world sessions
+
+---
+
+## Test Case 18: Graceful Degradation — Read-Only Filesystem
+
+### Setup
+Plugin installed. `.idumb/brain/` is read-only (or `.idumb/` doesn't exist).
+
+### When I use
+1. Start OpenCode session with plugin
+2. Try `idumb_task create "test"`
+
+### I expect
+1. Task creation works (in-memory)
+2. `.opencode/idumb/logs/idumb-core.log` shows: "Failed to save state to disk — degrading to in-memory only"
+3. Plugin continues to function normally
+4. `stateManager.isDegraded() === true`
+
+### It proves
+- P3 principle: graceful degradation, never crash
+- Hooks work even without disk persistence
+- User gets warned but not blocked
 
 ---
 
 ## How to Run These Tests
 
-1. Build the plugin: `npm run build`
-2. Install in your project's OpenCode config
-3. Start an OpenCode session
-4. Call `idumb_init` with the parameters shown above
-5. Verify the output matches expectations
-6. Check `.idumb/config.json` for correct values
-7. Check `.idumb/` directory tree for correct structure
+### Unit tests (automated — run anytime)
+```bash
+npm test    # 150/150 assertions across 5 test files
+```
 
-All unit tests can be run independently: `npm test` (105/105 assertions)
+### Live tests (manual — requires OpenCode)
+1. Build: `npm run build`
+2. Install in your project's OpenCode plugin config
+3. Start OpenCode session
+4. Run through TC-11 to TC-18 in order
+5. Check logs: `cat .opencode/idumb/logs/hook-verification.log`
+6. Check state: `cat .idumb/brain/hook-state.json`
+7. Record results in TRIAL-TRACKER.md

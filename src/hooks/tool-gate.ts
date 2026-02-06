@@ -15,38 +15,19 @@
  */
 
 import type { Logger } from "../lib/index.js"
+import { stateManager } from "../lib/persistence.js"
 
 /** Write tools that require an active task */
 const WRITE_TOOLS = new Set(["write", "edit"])
 
-/** Session state — in-memory only (P5) */
-interface SessionState {
-  activeTask: { id: string; name: string } | null
-  lastBlock: { tool: string; timestamp: number } | null
-}
-
-/** Per-session state Map (P5: in-memory, never persisted in hooks) */
-const sessions = new Map<string, SessionState>()
-
-/** Get or create session state */
-function getSession(sessionID: string): SessionState {
-  let s = sessions.get(sessionID)
-  if (!s) {
-    s = { activeTask: null, lastBlock: null }
-    sessions.set(sessionID, s)
-  }
-  return s
-}
-
-/** Exported for task tool to update session state */
+/** Exported for task tool to update session state — delegates to StateManager */
 export function setActiveTask(sessionID: string, task: { id: string; name: string } | null): void {
-  const s = getSession(sessionID)
-  s.activeTask = task
+  stateManager.setActiveTask(sessionID, task)
 }
 
-/** Exported for status/debug */
+/** Exported for status/debug — delegates to StateManager */
 export function getActiveTask(sessionID: string): { id: string; name: string } | null {
-  return getSession(sessionID).activeTask
+  return stateManager.getActiveTask(sessionID)
 }
 
 /** Build the BLOCK message with REDIRECT + EVIDENCE */
@@ -80,21 +61,22 @@ export function createToolGateBefore(log: Logger) {
       // Only gate write tools (breadth: don't over-block, start minimal)
       if (!WRITE_TOOLS.has(tool)) return
 
-      const session = getSession(sessionID)
+      const activeTask = stateManager.getActiveTask(sessionID)
 
       // If there's an active task, allow the write
-      if (session.activeTask) {
-        log.debug(`ALLOW: ${tool} (task: ${session.activeTask.name})`, { sessionID })
+      if (activeTask) {
+        log.debug(`ALLOW: ${tool} (task: ${activeTask.name})`, { sessionID })
         return
       }
 
       // Check if this is a retry of a recently blocked tool
-      const isRetry = session.lastBlock !== null
-        && session.lastBlock.tool === tool
-        && (Date.now() - session.lastBlock.timestamp) < 30_000
+      const lastBlock = stateManager.getLastBlock(sessionID)
+      const isRetry = lastBlock !== null
+        && lastBlock.tool === tool
+        && (Date.now() - lastBlock.timestamp) < 30_000
 
       // Record this block for retry detection
-      session.lastBlock = { tool, timestamp: Date.now() }
+      stateManager.setLastBlock(sessionID, { tool, timestamp: Date.now() })
 
       const message = buildBlockMessage(tool, isRetry)
       log.warn(`BLOCK: ${tool} (no active task)`, { sessionID, isRetry })
@@ -128,10 +110,8 @@ export function createToolGateAfter(log: Logger) {
 
       if (!WRITE_TOOLS.has(tool)) return
 
-      const session = getSession(sessionID)
-
       // If there's an active task, tool was legitimately allowed
-      if (session.activeTask) return
+      if (stateManager.getActiveTask(sessionID)) return
 
       // Defense in depth: if we're here with no active task, the before-hook
       // should have blocked. Replace output with governance message.

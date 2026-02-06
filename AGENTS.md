@@ -1,8 +1,8 @@
 # AGENTS.md — iDumb v2 (Ground Truth)
 
-**Version:** 2.1.0  
+**Version:** 2.2.0  
 **Last Updated:** 2026-02-06  
-**Status:** Phase 1 MVP complete. Init tool + framework detection + scaffolding implemented and tested.
+**Status:** Phase 1b complete. Disk persistence + hook verification harness implemented and tested.
 
 ---
 
@@ -41,8 +41,9 @@ v2/
 │   ├── lib/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── logging.ts              # TUI-safe file-based logger
-│   │   ├── framework-detector.ts   # NEW: Read-only brownfield scanner (governance + tech + gaps)
-│   │   └── scaffolder.ts           # NEW: Creates .idumb/ directory tree + config.json
+│   │   ├── framework-detector.ts   # Read-only brownfield scanner (governance + tech + gaps)
+│   │   ├── scaffolder.ts           # Creates .idumb/ directory tree + config.json
+│   │   └── persistence.ts          # NEW: StateManager — disk persistence for hook state
 │   ├── schemas/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
@@ -62,7 +63,8 @@ v2/
 │   ├── tool-gate.test.ts           # 16 assertions — all pass
 │   ├── compaction.test.ts          # 16 assertions — all pass
 │   ├── message-transform.test.ts   # 13 assertions — all pass
-│   └── init.test.ts               # NEW: 60 assertions — all pass
+│   ├── init.test.ts                # 60 assertions — all pass
+│   └── persistence.test.ts         # NEW: 45 assertions — all pass
 ├── .archive/                       # Archived planning docs from previous iterations
 ├── STRATEGIC-PLANNING-PROMPT.md    # SOT for planning (952 lines, 13 parts)
 ├── AGENTS.md                       # THIS FILE
@@ -70,7 +72,7 @@ v2/
 └── tsconfig.json
 ```
 
-**Total:** 20 source files, ~2000 LOC. `tsc --noEmit` clean. 105/105 test assertions pass.
+**Total:** 22 source files, ~2400 LOC. `tsc --noEmit` clean. 150/150 test assertions pass.
 
 ---
 
@@ -78,13 +80,13 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | Unit tests pass (16/16). Throws Error with BLOCK+REDIRECT+EVIDENCE. |
-| Compaction anchor injection | `hooks/compaction.ts` | Unit tests pass (16/16). Uses `output.context.push()`. Budget-capped. |
+| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | Unit tests pass (16/16). Delegates state to StateManager. |
+| Compaction anchor injection | `hooks/compaction.ts` | Unit tests pass (16/16). Delegates anchors to StateManager. |
 | Message transform — prunes old tool outputs | `hooks/message-transform.ts` | Unit tests pass (13/13). Keeps last 10, truncates older. |
 | Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness, budget-aware selection. |
 | TUI-safe file logging | `lib/logging.ts` | Zero console.log. Writes to `.opencode/idumb/logs/`. |
 | Task tool | `tools/task.ts` | create/complete/status. Sets active task for tool-gate. |
-| Anchor tool | `tools/anchor.ts` | add/list. Stores in compaction hook's in-memory Map. |
+| Anchor tool | `tools/anchor.ts` | add/list. Stores via StateManager (persisted to disk). |
 | Status tool | `tools/status.ts` | Read-only. Shows active task + anchor summary. |
 | **Init tool** | `tools/init.ts` | **NEW.** 60/60 test assertions. Scans brownfield, scaffolds .idumb/, creates config. |
 | **Config schema** | `schemas/config.ts` | **NEW.** Language, ExperienceLevel, GovernanceMode, InstallScope, FrameworkDetection. |
@@ -92,17 +94,19 @@ v2/
 | **Scaffolder** | `lib/scaffolder.ts` | **NEW.** Creates .idumb/ tree, writes config.json, non-destructive. |
 | **Agent profile schema** | `modules/schemas/agent-profile.ts` | **NEW.** Roles, permissions, tool categories. |
 | **Meta builder template** | `modules/agents/meta-builder.md` | **NEW.** Agent profile with granular bash allow/blocklist. |
+| **StateManager** | `lib/persistence.ts` | **NEW.** 45/45 test assertions. Singleton, debounced save, graceful degradation. |
+| **Hook verification harness** | `index.ts` | **NEW.** Every hook logs to `hook-verification.log` with debug-level structured entries. |
 
 ## What Does NOT Work / Does NOT Exist Yet
 
 | Item | Reality |
 |---|---|
-| `lib/persistence.ts` | **Does not exist.** Hook state (tool-gate sessions, compaction anchors) is still in-memory Maps. Lost on restart. |
-| Disk persistence for hooks | **None.** Config.json is persisted by init, but hook runtime state is ephemeral. |
+| Live hook verification | **Not yet tested.** Verification harness built, but plugin never installed on real project. |
+| `experimental.chat.system.transform` | **Unverified.** Hook name NOT in official OpenCode docs. Harness will detect if it fires. |
+| `experimental.chat.messages.transform` | **Unverified.** Hook name NOT in official OpenCode docs. Harness will detect if it fires. |
+| Cross-session anchor migration | **Not implemented.** Anchors persist to disk but keyed by sessionID. New session = new ID. |
 | Role detection | **Not implemented.** No `chat.message` hook. No role-based permissions at runtime. |
 | Delegation tracking | **Not implemented.** Subagent hooks don't fire anyway (PP-01). |
-| `experimental.chat.system.transform` | **Unverified.** Hook name NOT in official OpenCode docs. |
-| `experimental.chat.messages.transform` | **Unverified.** Hook name NOT in official OpenCode docs. |
 | Meta builder agent (runtime) | Template exists (`modules/agents/meta-builder.md`). Not yet deployed as `.opencode/agents/` file. |
 | idumb-settings command | **Not implemented.** Config editing is manual for now. |
 
@@ -110,9 +114,9 @@ v2/
 
 ## Critical Known Issues
 
-1. **ALL state is in-memory** — session state (tool-gate.ts Map), anchors (compaction.ts Map) are lost on restart/reload.
-2. **Experimental hooks unverified** — `system.transform` and `messages.transform` are NOT in official OpenCode docs. Only `session.compacting` is documented.
-3. **No live testing done** — all validation is unit tests with mocks. Never installed on a real project.
+1. **Experimental hooks unverified** — `system.transform` and `messages.transform` are NOT in official OpenCode docs. Verification harness ready but needs live test.
+2. **No live testing done** — all validation is unit tests with mocks. Never installed on a real project. TC-11 to TC-18 ready in TEST-CASES.md.
+3. **SessionID mismatch on restart** — StateManager persists state, but OpenCode assigns new sessionID per session. Task/anchor state survives on disk but may not auto-attach to new session.
 
 ---
 
@@ -155,7 +159,7 @@ v2/
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # runs all 4 test files via tsx (105 assertions)
+npm test             # runs all 5 test files via tsx (150 assertions)
 ```
 
 ---
@@ -168,7 +172,7 @@ See `STRATEGIC-PLANNING-PROMPT.md` for full details.
 |---|---|---|
 | **Phase 0** | Clean slate — docs match reality | **DONE** |
 | **Phase 1** | Init + framework detection + scaffolding + config schema | **DONE** (MVP) |
-| **Phase 1b** | Disk persistence for hooks + live hook verification | NEXT |
+| **Phase 1b** | Disk persistence for hooks + hook verification harness | **DONE** (code complete, needs live test) |
 | **Phase 2** | Meta builder agent deployment + deep scan on brownfield | Blocked by Phase 1b |
 | **Phase 3** | Compaction anchor survival — live test | Blocked by Phase 2 |
 | **Phase 4** | TODO enforcement — real feature development | Blocked by Phase 3 |
