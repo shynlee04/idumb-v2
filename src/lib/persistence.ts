@@ -18,7 +18,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises"
 import { join, dirname } from "node:path"
 import type { Anchor } from "../schemas/anchor.js"
 import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
-import { createEmptyStore, getActiveChain } from "../schemas/task.js"
+import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/task.js"
 import type { Logger } from "./logging.js"
 
 // ─── State Shape ─────────────────────────────────────────────────────
@@ -26,6 +26,7 @@ import type { Logger } from "./logging.js"
 interface SessionState {
   activeTask: { id: string; name: string } | null
   lastBlock: { tool: string; timestamp: number } | null
+  capturedAgent: string | null  // n3: agent name from chat.params hook
 }
 
 interface PersistedState {
@@ -102,10 +103,11 @@ export class StateManager {
       const tasksRaw = await readFile(tasksPath, "utf-8")
       const loaded = JSON.parse(tasksRaw) as TaskStore
       if (loaded.version && Array.isArray(loaded.epics)) {
-        this.taskStore = loaded
+        this.taskStore = migrateTaskStore(loaded)
         log.info("Task store loaded from disk", {
           epics: loaded.epics.length,
           activeEpicId: loaded.activeEpicId,
+          migrated: loaded.version !== this.taskStore.version,
         })
       }
     } catch (err) {
@@ -123,7 +125,7 @@ export class StateManager {
   getSession(sessionID: string): SessionState {
     let s = this.sessions.get(sessionID)
     if (!s) {
-      s = { activeTask: null, lastBlock: null }
+      s = { activeTask: null, lastBlock: null, capturedAgent: null }
       this.sessions.set(sessionID, s)
     }
     return s
@@ -147,6 +149,20 @@ export class StateManager {
 
   getLastBlock(sessionID: string): { tool: string; timestamp: number } | null {
     return this.getSession(sessionID).lastBlock
+  }
+
+  // ─── Agent Identity (n3: chat.params hook) ─────────────────────────
+
+  /** Store the agent name captured from chat.params hook */
+  setCapturedAgent(sessionID: string, agent: string): void {
+    const s = this.getSession(sessionID)
+    s.capturedAgent = agent
+    this.scheduleSave()
+  }
+
+  /** Get the captured agent name for this session */
+  getCapturedAgent(sessionID: string): string | null {
+    return this.getSession(sessionID).capturedAgent
   }
 
   // ─── Task Store (global, not per-session) ──────────────────────────

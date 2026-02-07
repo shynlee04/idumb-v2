@@ -1,8 +1,8 @@
 # AGENTS.md — iDumb v2 (Ground Truth)
 
-**Version:** 3.0.0  
+**Version:** 4.0.0  
 **Last Updated:** 2026-02-07  
-**Status:** Phase 0 COMPLETE (Smart TODO rewrite). Phase 1b planning in progress.
+**Status:** Phase 0 COMPLETE. Phase 1b-β tools implemented. Phase α2 foundation fixes DONE.
 
 ---
 
@@ -37,7 +37,7 @@ v2/
 │   ├── cli/
 │   │   └── deploy.ts               # Deploys agents, commands, modules + sub-agent profiles
 │   ├── templates.ts                # All deployable templates — meta-builder + 4 sub-agents
-│   ├── index.ts                    # Plugin entry — wires 5 hooks + 4 tools
+│   ├── index.ts                    # Plugin entry — wires 6 hooks + 5 tools
 │   ├── hooks/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── tool-gate.ts            # VALIDATED — blocks write/edit without active task
@@ -54,13 +54,18 @@ v2/
 │   │   ├── index.ts                # Barrel exports (15 functions + 7 types from task.ts)
 │   │   ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
 │   │   ├── config.ts               # IdumbConfig schema, Language, GovernanceMode, etc.
-│   │   └── task.ts                 # Smart TODO schema — Epic/Task/Subtask types, CRUD helpers
+│   │   └── task.ts                 # Smart TODO schema — Epic/Task/Subtask + WorkStream categories
+│   ├── schemas/
+│   │   ├── brain.ts               # Brain entry schema — knowledge persistence
+│   │   ├── project-map.ts         # Project map schema — directory/file mapping
+│   │   └── codemap.ts             # Code map schema — symbol extraction
 │   ├── tools/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── task.ts                 # 12 actions + 6 edge-case mechanisms (Smart TODO)
 │   │   ├── anchor.ts               # add/list context anchors
-│   │   ├── status.ts               # Read-only governance state with hierarchy tree
-│   │   └── init.ts                 # Init tool — scan → scaffold → greeting
+│   │   ├── init.ts                 # Init tool — scan → scaffold → greeting
+│   │   ├── scan.ts                 # Project scanner — framework detection, structure analysis
+│   │   └── codemap.ts              # Code mapper — symbol extraction, TODO scanning
 │   └── modules/
 │       ├── agents/
 │       │   └── meta-builder.md     # Meta builder agent profile template
@@ -119,11 +124,11 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| **Task schema** | `schemas/task.ts` | 418 LOC. Epic/Task/Subtask types, CRUD helpers, chain detection. |
-| **Task tool** | `tools/task.ts` | 624 LOC. 12 actions, 6 edge-case mechanisms, backward compat bridge. |
+| **Task schema** | `schemas/task.ts` | ~530 LOC. Epic/Task/Subtask types, WorkStream categories, governance levels, CRUD helpers, chain detection, v1→v2 migration. |
+| **Task tool** | `tools/task.ts` | ~690 LOC. 12 actions, 6 edge-case mechanisms, category-aware epic creation. |
 | **Task tests** | `tests/task.test.ts` | 54 assertions across 10 groups. |
-| **Status tool (enhanced)** | `tools/status.ts` | Shows hierarchy tree, chain warnings, session vs smart task state. |
-| **Persistence (TaskStore)** | `lib/persistence.ts` | Separate `tasks.json` file. Load/save/debounce. |
+| **Status (merged into task)** | `tools/task.ts` | `action=status` shows hierarchy tree, chain warnings, WorkStream category/governance. |
+| **Persistence (TaskStore)** | `lib/persistence.ts` | Separate `tasks.json`. Auto-migration v1→v2. Agent identity capture. |
 | **Barrel exports** | `schemas/index.ts` | 15 functions + 7 types re-exported. |
 
 ### Smart TODO: 12 Actions
@@ -148,8 +153,8 @@ v2/
 | Live hook verification | **Not yet tested.** Verification harness built, never installed in real OpenCode. |
 | `experimental.chat.system.transform` | **Unverified.** Registered but not confirmed firing. |
 | `experimental.chat.messages.transform` | **Unverified.** Registered but SDK input is `{}` (empty!). |
-| `chat.params` hook | **NOT REGISTERED.** Available in SDK with mandatory `agent` field. Needed for α-1. |
-| `chat.message` hook | **NOT REGISTERED.** Available with optional `agent` field. |
+| `chat.params` hook | **REGISTERED (n3 α2-1).** Captures `agent` field. Auto-assigns to active task. |
+| `chat.message` hook | **NOT REGISTERED.** Available with optional `agent?` field. |
 | Cross-session anchor migration | **Not implemented.** Anchors keyed by sessionID. |
 | Role detection | **Race condition.** Defaults to `meta` (allow-all) before first chat.message. |
 | Delegation tracking | **Not implemented.** PP-01: subagent hooks don't fire. |
@@ -180,12 +185,12 @@ v2/
 | `experimental.session.compacting` | Unit-tested | Injects anchors + active task into compaction context |
 | `experimental.chat.system.transform` | **UNVERIFIED** | Injects governance directive into system prompt |
 | `experimental.chat.messages.transform` | **UNVERIFIED** | Prunes old tool outputs (DCP pattern) |
+| `chat.params` | **REGISTERED** | Captures agent name, auto-assigns to active task |
 
 ### Hooks Available but NOT Registered (from SDK)
 
 | Hook | Why It Matters |
 |---|---|
-| `chat.params` | **Mandatory `agent` field.** Fires BEFORE `tool.execute.before`. Solves role detection race. |
 | `chat.message` | Optional `agent?` field. Session lifecycle awareness. |
 | `command.execute.before` | Could intercept `/idumb-*` commands programmatically. |
 | `experimental.text.complete` | Inject governance into text completions. |
@@ -193,16 +198,17 @@ v2/
 | `config` | React to config changes. |
 | `shell.env` | Set environment variables for bash commands. |
 
-## Custom Tools (4 of max 5)
+## Custom Tools (5 of max 5)
 
 | Tool | Description |
 |---|---|
-| `idumb_init` | Initialize iDumb — scans brownfield, detects frameworks, creates .idumb/ + config.json. |
-| `idumb_task` | 12 actions across 3-level hierarchy (Epic→Task→Subtask). Required before write/edit. |
+| `idumb_task` | 12 actions across 3-level hierarchy. Category-aware epic creation. Required before write/edit. |
 | `idumb_anchor` | Add/list context anchors that survive compaction. |
-| `idumb_status` | Read-only governance state with hierarchy tree + chain warnings. |
+| `idumb_init` | Initialize iDumb — scans brownfield, detects frameworks, creates .idumb/ + config.json. |
+| `idumb_scan` | Project scanner — deep framework detection, structure analysis, project map generation. |
+| `idumb_codemap` | Code mapper — symbol extraction, TODO/FIXME scanning, inconsistency detection. |
 
-**Slot 5 reserved for:** `idumb_brain` (Phase 1b-ε). If a 6th is needed, merge `idumb_status` into `idumb_task action=status`.
+**All 5 tool slots filled.** `idumb_brain` planned to replace `idumb_init` in Phase γ2.
 
 ---
 
@@ -241,7 +247,10 @@ npx idumb-v2 init
 
 | Phase 1b Task | Integrates With | How |
 |---|---|---|
-| α-1: Register `chat.params` | `index.ts` | New hook, captures agent name for role detection |
+| α2-1: Register `chat.params` | `index.ts` | **DONE.** Captures agent name, auto-assigns to active task. |
+| α2-2/3: WorkStream categories | `schemas/task.ts` | **DONE.** 6 categories, governance levels, category defaults. |
+| α2-4/5: Category-aware epic creation | `tools/task.ts` | **DONE.** `category` param on create_epic. |
+| α2-7: TaskStore migration v1→v2 | `schemas/task.ts` + `persistence.ts` | **DONE.** Auto-migration on load. |
 | β-1/β-2: Intercept todowrite/todoread | `tool-gate.ts` → coordinator | Coordinator already uses todowrite — transparently redirected to Smart TODO |
 | β-3: Auto-assign agent | `persistence.ts` + `task.ts` | Agent name from `chat.params` → task.assignee |
 | γ-4: Validator profile enhancement | `templates.ts` VALIDATOR_PROFILE | Already exists — enhance with validation loop protocol |
@@ -279,12 +288,11 @@ See `STRATEGIC-PLANNING-PROMPT.md` for full details.
 | Phase | Goal | Status |
 |---|---|---|
 | **Phase 0** | Smart TODO rewrite — 12 actions, 6 mechanisms, 3-level hierarchy | **DONE** ✅ |
-| **Phase 1b-α** | Foundation hardening — hook verification, role detection fix | **NEXT** |
-| **Phase 1b-β** | Smart Task integration — TODO interception, agent auto-assign | Blocked by α |
-| **Phase 1b-γ** | Validation loop — self-check, evidence quality, max 3 loops | Blocked by α |
-| **Phase 1b-δ** | Delegation intelligence — disk tracking, hierarchy enforcement | Blocked by β+γ |
-| **Phase 1b-ε** | Brain / wiki — knowledge persistence, auto-populate | Blocked by β+δ |
-| **Phase 1b-ζ** | Interactive dashboard — Vite-powered visualization | Stretch goal |
+| **Phase 1b-β** | Entity schemas + scan/codemap tools | **DONE** ✅ |
+| **Phase α2** | Foundation fixes — WorkStream categories, chat.params, AGENTS.md | **DONE** ✅ |
+| **Phase δ2** | Delegation schema + action | **NEXT** |
+| **Phase γ2** | Brain tool (replace idumb_init) | Blocked by δ2 |
+| **Phase ζ2** | Interactive dashboard — Vite+React visualization | Stretch goal |
 
 ---
 

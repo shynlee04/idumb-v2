@@ -108,6 +108,35 @@ const idumb: Plugin = async ({ directory }) => {
     },
 
     /**
+     * n3 α2-1: Agent identity capture.
+     * Fires on every chat turn — captures the agent name from input.agent.
+     * Used for: auto-assignee on tasks, delegation chain tracking.
+     */
+    "chat.params": async (input, _output) => {
+      try {
+        const { sessionID, agent } = input
+        verifyLog.info("HOOK FIRED: chat.params", { sessionID, agent })
+
+        if (agent) {
+          stateManager.setCapturedAgent(sessionID, agent)
+          log.info(`Agent captured: ${agent}`, { sessionID })
+
+          // Auto-assign agent to active task if not already assigned
+          const activeTask = stateManager.getSmartActiveTask()
+          if (activeTask && !activeTask.assignee) {
+            activeTask.assignee = agent
+            const store = stateManager.getTaskStore()
+            stateManager.setTaskStore(store) // trigger save
+            log.info(`Auto-assigned ${agent} to task "${activeTask.name}"`, { sessionID })
+          }
+        }
+      } catch (err) {
+        // P3: Never crash on hook
+        log.error(`chat.params hook error: ${err}`)
+      }
+    },
+
+    /**
      * Custom tools — max 5 for Phase 0 (Pitfall 5: tool menu explosion).
      * μ1: idumb_task — create/complete/status for active task
      * μ2: idumb_anchor — add/list context anchors that survive compaction

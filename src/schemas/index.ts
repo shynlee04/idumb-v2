@@ -7,10 +7,13 @@ export {
     findEpic, findTask, findSubtask, findParentTask, findParentEpic,
     getActiveChain, validateCompletion, findOrphanTasks, findStaleTasks,
     detectChainBreaks, formatTaskTree, buildGovernanceReminder,
+    migrateTaskStore,
     TASK_STORE_VERSION, SESSION_STALE_MS,
+    CATEGORY_DEFAULTS, CATEGORY_SKIP_SUBTASKS,
 } from "./task.js"
 export type {
     EpicStatus, TaskStatus, SubtaskStatus,
+    WorkStreamCategory, GovernanceLevel, CreateEpicOptions,
     Subtask, Task, TaskEpic, TaskStore,
     ActiveChain, ValidationResult, ChainWarning,
 } from "./task.js"

@@ -1,3 +1,22 @@
+# Phase α2: Foundation Fixes — Walkthrough
+
+## Goal
+Eliminate the rigid Epic-only hierarchy, add agent identity capture, and fix stale documentation.
+
+## Changes Made
+
+### 1. WorkStream Categories + Governance Levels
+**Files:** [task.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts), [index.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/index.ts)
+
+- Added [WorkStreamCategory](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#26-33): `development` | `research` | `governance` | `maintenance` | `spec-kit` | `ad-hoc`
+- Added [GovernanceLevel](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#35-36): `strict` | `balanced` | `minimal`
+- `CATEGORY_DEFAULTS` maps each category → default governance level
+- `CATEGORY_SKIP_SUBTASKS` controls whether subtasks can be skipped per category
+- [TaskEpic](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#46-54) now has `category` and `governanceLevel` fields
+- [createEpic()](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#120-134) accepts [CreateEpicOptions](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#115-119) with optional `category` and `governanceLevel`
+
+```diff:task.ts
+===
 /**
  * Task schema — 3-level governance-aware TODO hierarchy.
  *
@@ -526,3 +545,43 @@ export function migrateTaskStore(store: TaskStore): TaskStore {
     store.version = TASK_STORE_VERSION
     return store
 }
+```
+
+### 2. Category-Aware Epic Creation
+**File:** [task.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/tools/task.ts)
+
+- `create_epic` action accepts optional `category` parameter
+- Response includes category and governance level
+- Default: `development` / `strict`
+
+### 3. Agent Identity via `chat.params`
+**File:** [index.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/index.ts), [persistence.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/lib/persistence.ts)
+
+- Registered `chat.params` hook — captures `input.agent` on every turn
+- Added `capturedAgent` to [SessionState](file:///Users/apple/Documents/coding-projects/idumb/v2/src/lib/persistence.ts#26-30), with [setCapturedAgent()](file:///Users/apple/Documents/coding-projects/idumb/v2/src/lib/persistence.ts#156-162)/[getCapturedAgent()](file:///Users/apple/Documents/coding-projects/idumb/v2/src/lib/persistence.ts#163-167)
+- Auto-assigns agent to active task if no assignee set
+
+### 4. TaskStore v1→v2 Migration
+**File:** [task.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts), [persistence.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/lib/persistence.ts)
+
+- [migrateTaskStore()](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#505-529) upgrades v1.0.0 stores: adds `category="development"`, `governanceLevel="strict"` to existing epics
+- Called automatically in `StateManager.init()` when loading from disk
+- Idempotent — safe on already-migrated stores
+
+### 5. AGENTS.md v4.0.0
+**File:** [AGENTS.md](file:///Users/apple/Documents/coding-projects/idumb/v2/AGENTS.md)
+
+- Removed stale [status.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/tools/status.ts) reference (merged into [tools/task.ts](file:///Users/apple/Documents/coding-projects/idumb/v2/src/tools/task.ts))
+- Added `idumb_scan` and `idumb_codemap` to tool list (5/5 slots filled)
+- Marked `chat.params` as REGISTERED
+- Updated roadmap: Phase α2 DONE, Phase δ2 NEXT
+- Updated integration points table
+
+## Verification
+
+| Check | Result |
+|---|---|
+| `tsc --noEmit` | ✅ Clean |
+| `npm test` | ✅ 204/204 pass (6 test suites) |
+| Backward compat | ✅ [createEpic("name")](file:///Users/apple/Documents/coding-projects/idumb/v2/src/schemas/task.ts#120-134) still works (defaults to development/strict) |
+| Migration | ✅ v1 stores auto-upgraded on load |

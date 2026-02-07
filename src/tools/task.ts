@@ -108,6 +108,12 @@ export const idumb_task = tool({
     branch_name: tool.schema.string().optional().describe(
       "Git branch name (for: branch — future use)"
     ),
+    category: tool.schema.enum([
+      "development", "research", "governance",
+      "maintenance", "spec-kit", "ad-hoc",
+    ]).optional().describe(
+      "Work stream category (for: create_epic). Controls governance strictness and required artifacts. Default: development"
+    ),
   },
   async execute(args, context) {
     const { action } = args
@@ -117,7 +123,7 @@ export const idumb_task = tool({
       // ─── CREATE EPIC ─────────────────────────────────────────────
       case "create_epic": {
         if (!args.name) {
-          return "ERROR: 'name' is required for create_epic.\nExample: idumb_task action=create_epic name='Build authentication feature'"
+          return "ERROR: 'name' is required for create_epic.\nExample: idumb_task action=create_epic name='Build authentication feature'\nOptional: category='development'|'research'|'governance'|'maintenance'|'spec-kit'|'ad-hoc'"
         }
 
         // Warn if there's already an active epic
@@ -125,7 +131,9 @@ export const idumb_task = tool({
           ? findEpic(store, store.activeEpicId)
           : null
 
-        const epic = createEpic(args.name)
+        const epic = createEpic(args.name, {
+          category: args.category as any,
+        })
         store.epics.push(epic)
         store.activeEpicId = epic.id
         commitStore(store)
@@ -138,6 +146,7 @@ export const idumb_task = tool({
           `Epic created and set as active.`,
           `  ID: ${epic.id}`,
           `  Name: ${epic.name}`,
+          `  Category: ${epic.category} (governance: ${epic.governanceLevel})`,
           warning,
           `Next: Create tasks within this epic:`,
           `  idumb_task action=create_task name='Task description'`,
