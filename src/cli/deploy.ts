@@ -11,6 +11,12 @@ import { join, dirname, resolve } from "node:path"
 import type { Language, GovernanceMode, ExperienceLevel } from "../schemas/config.js"
 import {
   getMetaBuilderAgent,
+  getSupremeCoordinatorAgent,
+  getBuilderAgent,
+  getValidatorAgent,
+  getSkillsCreatorAgent,
+  getResearchSynthesizerAgent,
+  getPlannerAgent,
   getInitCommand,
   getSettingsCommand,
   getStatusCommand,
@@ -216,6 +222,46 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     await writeIfNew(
       join(agentsDir, "idumb-meta-builder.md"),
       metaBuilderContent,
+      force,
+      result,
+    )
+
+    // ─── Deploy Sub-Agent Team (all auto-deployed on install) ────
+    const agentConfig = { language, governance, experience }
+
+    await writeIfNew(
+      join(agentsDir, "idumb-supreme-coordinator.md"),
+      getSupremeCoordinatorAgent(agentConfig),
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(agentsDir, "idumb-builder.md"),
+      getBuilderAgent(agentConfig),
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(agentsDir, "idumb-validator.md"),
+      getValidatorAgent(agentConfig),
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(agentsDir, "idumb-skills-creator.md"),
+      getSkillsCreatorAgent(agentConfig),
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(agentsDir, "idumb-research-synthesizer.md"),
+      getResearchSynthesizerAgent(agentConfig),
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(agentsDir, "idumb-planner.md"),
+      getPlannerAgent(agentConfig),
       force,
       result,
     )
