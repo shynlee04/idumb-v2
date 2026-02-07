@@ -1,0 +1,1245 @@
+{
+  "version": "1.0.0",
+  "scannedAt": 1770449516005,
+  "scanDurationMs": 167,
+  "projectRoot": "/Users/apple/Documents/coding-projects/idumb/v2",
+  "frameworks": [
+    {
+      "name": "react",
+      "category": "frontend",
+      "confidence": 80
+    },
+    {
+      "name": "express",
+      "category": "backend",
+      "confidence": 80
+    },
+    {
+      "name": "typescript",
+      "category": "other",
+      "confidence": 80
+    }
+  ],
+  "languages": [
+    {
+      "name": "mjs",
+      "category": "language",
+      "confidence": 55
+    },
+    {
+      "name": "ts",
+      "category": "language",
+      "confidence": 95
+    },
+    {
+      "name": "tsx",
+      "category": "language",
+      "confidence": 60
+    }
+  ],
+  "directories": [
+    {
+      "path": "bin",
+      "fileCount": 1,
+      "totalSizeBytes": 45,
+      "isSource": true,
+      "extensions": [
+        ".mjs"
+      ]
+    },
+    {
+      "path": "tests",
+      "fileCount": 8,
+      "totalSizeBytes": 74468,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "planning/research/2026-02-06-reset",
+      "fileCount": 13,
+      "totalSizeBytes": 72991,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based",
+      "fileCount": 10,
+      "totalSizeBytes": 225742,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/codebase",
+      "fileCount": 7,
+      "totalSizeBytes": 56079,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/meta",
+      "fileCount": 1,
+      "totalSizeBytes": 911486,
+      "isSource": false,
+      "extensions": [
+        ".json"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference",
+      "fileCount": 3,
+      "totalSizeBytes": 68874,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System",
+      "fileCount": 7,
+      "totalSizeBytes": 165259,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System",
+      "fileCount": 5,
+      "totalSizeBytes": 114171,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System",
+      "fileCount": 5,
+      "totalSizeBytes": 98193,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System",
+      "fileCount": 6,
+      "totalSizeBytes": 120760,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Templates and Standards",
+      "fileCount": 1,
+      "totalSizeBytes": 22582,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management",
+      "fileCount": 6,
+      "totalSizeBytes": 120674,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System",
+      "fileCount": 5,
+      "totalSizeBytes": 96343,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System",
+      "fileCount": 7,
+      "totalSizeBytes": 117392,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System",
+      "fileCount": 11,
+      "totalSizeBytes": 216002,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System",
+      "fileCount": 8,
+      "totalSizeBytes": 184277,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview",
+      "fileCount": 8,
+      "totalSizeBytes": 144978,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content",
+      "fileCount": 3,
+      "totalSizeBytes": 62944,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/MASTER-ACTION-PLAN",
+      "fileCount": 1,
+      "totalSizeBytes": 11498,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning",
+      "fileCount": 7,
+      "totalSizeBytes": 291346,
+      "isSource": false,
+      "extensions": [
+        ".md",
+        ".json"
+      ]
+    },
+    {
+      "path": "src/tools",
+      "fileCount": 11,
+      "totalSizeBytes": 186118,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/cli",
+      "fileCount": 2,
+      "totalSizeBytes": 20391,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/schemas",
+      "fileCount": 8,
+      "totalSizeBytes": 67133,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend/src/styles",
+      "fileCount": 1,
+      "totalSizeBytes": 2203,
+      "isSource": false,
+      "extensions": [
+        ".css"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend/src",
+      "fileCount": 2,
+      "totalSizeBytes": 2257,
+      "isSource": true,
+      "extensions": [
+        ".tsx"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend",
+      "fileCount": 4,
+      "totalSizeBytes": 2124,
+      "isSource": true,
+      "extensions": [
+        ".json",
+        ".html",
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/backend",
+      "fileCount": 1,
+      "totalSizeBytes": 16198,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/shared",
+      "fileCount": 2,
+      "totalSizeBytes": 6021,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/hooks",
+      "fileCount": 5,
+      "totalSizeBytes": 21069,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/lib",
+      "fileCount": 9,
+      "totalSizeBytes": 101879,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/modules/agents",
+      "fileCount": 1,
+      "totalSizeBytes": 4379,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "src/modules/schemas",
+      "fileCount": 1,
+      "totalSizeBytes": 2720,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src",
+      "fileCount": 4,
+      "totalSizeBytes": 108051,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "LICENSE",
+      "type": "license",
+      "sizeBytes": 1066,
+      "lastModified": 1770397965203,
+      "firstLine": "MIT License"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "type": "changelog",
+      "sizeBytes": 3323,
+      "lastModified": 1770404561818,
+      "firstLine": "# Changelog"
+    },
+    {
+      "path": "session-ses_3c9b.md",
+      "type": "documentation",
+      "sizeBytes": 74185,
+      "lastModified": 1770437405389,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, Phase 1 greeting approval"
+    },
+    {
+      "path": "TRIAL-TRACKER.md",
+      "type": "documentation",
+      "sizeBytes": 8998,
+      "lastModified": 1770404561823,
+      "firstLine": "# Trial Tracker"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/STACK.md",
+      "type": "documentation",
+      "sizeBytes": 3079,
+      "lastModified": 1770404561809,
+      "firstLine": "# Technology Stack Recommendation (Pivot 1: OpenCode Plugin)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/PRINCIPLES.md",
+      "type": "documentation",
+      "sizeBytes": 1518,
+      "lastModified": 1770404561809,
+      "firstLine": "# Non-Negotiable Development Principles (iDumb Reset)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 3190,
+      "lastModified": 1770404561806,
+      "firstLine": "# Architecture Patterns for iDumb (OpenCode Plugin First)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/PITFALLS.md",
+      "type": "documentation",
+      "sizeBytes": 4002,
+      "lastModified": 1770404561808,
+      "firstLine": "# Pitfalls for Meta-Governance Plugins (OpenCode / Claude Code)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/ECOSYSTEM-PLUGINS.md",
+      "type": "documentation",
+      "sizeBytes": 5031,
+      "lastModified": 1770404561807,
+      "firstLine": "# OpenCode Ecosystem Plugin Study (Selected 6)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/STRESS-TESTS-LEGACY-INFORMED.md",
+      "type": "documentation",
+      "sizeBytes": 10921,
+      "lastModified": 1770404561810,
+      "firstLine": "# Stress Tests: Legacy-Informed Design"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/SUMMARY.md",
+      "type": "documentation",
+      "sizeBytes": 11083,
+      "lastModified": 1770404561812,
+      "firstLine": "# Research Summary: iDumb Strategic Reset (Meta-Governance for Agentic CLIs)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/LEGACY-FLAWS-ANALYSIS.md",
+      "type": "documentation",
+      "sizeBytes": 10134,
+      "lastModified": 1770404561808,
+      "firstLine": "# Legacy iDumb Plugin: Flaw Analysis"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/VALIDATION-RESULTS.md",
+      "type": "documentation",
+      "sizeBytes": 6799,
+      "lastModified": 1770404561813,
+      "firstLine": "# Research Validation Results"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/STRESS-TESTS.md",
+      "type": "documentation",
+      "sizeBytes": 2344,
+      "lastModified": 1770404561811,
+      "firstLine": "# Stress Tests: Poisoned Context + Compaction + Delegation"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/COMPARISON-opencode-vs-claude-code.md",
+      "type": "documentation",
+      "sizeBytes": 5774,
+      "lastModified": 1770404561806,
+      "firstLine": "# Comparison: OpenCode vs Claude Code (Concepts, Terminology, Leverage Points)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/FEATURES.md",
+      "type": "documentation",
+      "sizeBytes": 2682,
+      "lastModified": 1770404561807,
+      "firstLine": "# Feature Landscape (Meta-Governance for Agentic CLIs)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/V2-VIOLATION-CHECK.md",
+      "type": "documentation",
+      "sizeBytes": 6434,
+      "lastModified": 1770404561812,
+      "firstLine": "# V2 Codebase Violation Check"
+    },
+    {
+      "path": "planning/SUCCESS-CRITERIA.md",
+      "type": "documentation",
+      "sizeBytes": 11004,
+      "lastModified": 1770404561725,
+      "firstLine": "# Success Criteria: Real-Life Use Cases"
+    },
+    {
+      "path": "planning/this-is-when-run-init-a-terrible-experiencea.md",
+      "type": "documentation",
+      "sizeBytes": 188440,
+      "lastModified": 1770405472431,
+      "firstLine": "# Project scan and tech stack detection"
+    },
+    {
+      "path": "planning/GOVERNANCE.md",
+      "type": "documentation",
+      "sizeBytes": 18443,
+      "lastModified": 1770404561722,
+      "firstLine": "# iDumb Governance Framework"
+    },
+    {
+      "path": "planning/RESET-SYNTHESIS.md",
+      "type": "documentation",
+      "sizeBytes": 41306,
+      "lastModified": 1770404561725,
+      "firstLine": "# iDumb Meta Framework — Strategic Reset Synthesis"
+    },
+    {
+      "path": "planning/PROJECT.md",
+      "type": "documentation",
+      "sizeBytes": 17921,
+      "lastModified": 1770404561724,
+      "firstLine": "# iDumb v2: Intelligence Plugin for OpenCode"
+    },
+    {
+      "path": "planning/PHASE-COMPLETION.md",
+      "type": "documentation",
+      "sizeBytes": 11323,
+      "lastModified": 1770404561723,
+      "firstLine": "# Phase Completion Definitions (Incremental)"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n3-1.md",
+      "type": "documentation",
+      "sizeBytes": 7897,
+      "lastModified": 1770431730671,
+      "firstLine": "# Delegation Skills, Commands & Schema — Phase δ2"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n3.md",
+      "type": "documentation",
+      "sizeBytes": 25815,
+      "lastModified": 1770428911262,
+      "firstLine": "# Phase 1b Master Plan n3 — Deep Verification, Hierarchy Redesign & GUI Prototype"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n2.md",
+      "type": "documentation",
+      "sizeBytes": 32624,
+      "lastModified": 1770427567542,
+      "firstLine": "# Phase 1b Master Plan v3 — Entity-Driven Intelligence Architecture"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n3-2.md",
+      "type": "documentation",
+      "sizeBytes": 1720,
+      "lastModified": 1770434194847,
+      "firstLine": "# Phase δ2.5 — Tool Discoverability + Agent Scoping"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n3.md",
+      "type": "documentation",
+      "sizeBytes": 23274,
+      "lastModified": 1770429602097,
+      "firstLine": "# Phase α2: Foundation Fixes — Walkthrough"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n1.md",
+      "type": "documentation",
+      "sizeBytes": 36100,
+      "lastModified": 1770419593216,
+      "firstLine": "# Phase 1b Master Plan — Integration & Intelligence"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n5.md",
+      "type": "documentation",
+      "sizeBytes": 42917,
+      "lastModified": 1770441863626,
+      "firstLine": "# Phase 1b Master Plan n5 — Agent Ecosystem Integration"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n4.md",
+      "type": "documentation",
+      "sizeBytes": 47302,
+      "lastModified": 1770441203867,
+      "firstLine": "# Phase 1b Master Plan n4 — Entity-Driven Intelligence Tools"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n3-2.md",
+      "type": "documentation",
+      "sizeBytes": 3407,
+      "lastModified": 1770434123468,
+      "firstLine": "# Phase δ2.5 — Tool Discoverability + Agent Scoping + Delegation Awareness"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n2.md",
+      "type": "documentation",
+      "sizeBytes": 4686,
+      "lastModified": 1770427817338,
+      "firstLine": "# Phase 1b-β Walkthrough — Scan + CodeMap Showcase"
+    },
+    {
+      "path": "planning/codebase/STACK.md",
+      "type": "documentation",
+      "sizeBytes": 3828,
+      "lastModified": 1770404561728,
+      "firstLine": "# Technology Stack"
+    },
+    {
+      "path": "planning/codebase/ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 7340,
+      "lastModified": 1770404561726,
+      "firstLine": "# Architecture"
+    },
+    {
+      "path": "planning/codebase/STRUCTURE.md",
+      "type": "documentation",
+      "sizeBytes": 10142,
+      "lastModified": 1770404561729,
+      "firstLine": "# Codebase Structure"
+    },
+    {
+      "path": "planning/codebase/CONVENTIONS.md",
+      "type": "documentation",
+      "sizeBytes": 8479,
+      "lastModified": 1770404561727,
+      "firstLine": "# Coding Conventions"
+    },
+    {
+      "path": "planning/codebase/INTEGRATIONS.md",
+      "type": "documentation",
+      "sizeBytes": 7490,
+      "lastModified": 1770404561728,
+      "firstLine": "# External Integrations"
+    },
+    {
+      "path": "planning/codebase/TESTING.md",
+      "type": "documentation",
+      "sizeBytes": 8879,
+      "lastModified": 1770404561730,
+      "firstLine": "# Testing Patterns"
+    },
+    {
+      "path": "planning/codebase/CONCERNS.md",
+      "type": "documentation",
+      "sizeBytes": 9921,
+      "lastModified": 1770404561727,
+      "firstLine": "# Codebase Concerns"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference/Event System.md",
+      "type": "documentation",
+      "sizeBytes": 18606,
+      "lastModified": 1770404561734,
+      "firstLine": "# Event System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference/Data Models.md",
+      "type": "documentation",
+      "sizeBytes": 28966,
+      "lastModified": 1770404561733,
+      "firstLine": "# Data Models"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference/API Reference.md",
+      "type": "api",
+      "sizeBytes": 21302,
+      "lastModified": 1770404561732,
+      "firstLine": "# API Reference"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Testing Guide.md",
+      "type": "documentation",
+      "sizeBytes": 16093,
+      "lastModified": 1770404561785,
+      "firstLine": "# Testing Guide"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Skill Development Guide.md",
+      "type": "documentation",
+      "sizeBytes": 21688,
+      "lastModified": 1770404561772,
+      "firstLine": "# Skill Development Guide"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Governance Skills.md",
+      "type": "documentation",
+      "sizeBytes": 21618,
+      "lastModified": 1770404561770,
+      "firstLine": "# Governance Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Validation Skills.md",
+      "type": "documentation",
+      "sizeBytes": 23862,
+      "lastModified": 1770404561774,
+      "firstLine": "# Validation Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Support Skills.md",
+      "type": "documentation",
+      "sizeBytes": 19661,
+      "lastModified": 1770404561773,
+      "firstLine": "# Support Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Skill System.md",
+      "type": "documentation",
+      "sizeBytes": 30603,
+      "lastModified": 1770404561772,
+      "firstLine": "# Skill System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Meta Framework Skills.md",
+      "type": "documentation",
+      "sizeBytes": 20704,
+      "lastModified": 1770404561770,
+      "firstLine": "# Meta Framework Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Skill Architecture Overview.md",
+      "type": "documentation",
+      "sizeBytes": 27123,
+      "lastModified": 1770404561771,
+      "firstLine": "# Skill Architecture Overview"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Security System.md",
+      "type": "documentation",
+      "sizeBytes": 18157,
+      "lastModified": 1770404561768,
+      "firstLine": "# Security System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Validation Utilities.md",
+      "type": "documentation",
+      "sizeBytes": 24618,
+      "lastModified": 1770404561769,
+      "firstLine": "# Validation Utilities"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Security Policies.md",
+      "type": "documentation",
+      "sizeBytes": 23026,
+      "lastModified": 1770404561767,
+      "firstLine": "# Security Policies"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Threat Models and Mitigations.md",
+      "type": "documentation",
+      "sizeBytes": 23505,
+      "lastModified": 1770404561768,
+      "firstLine": "# Threat Models and Mitigations"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Monitoring and Auditing.md",
+      "type": "documentation",
+      "sizeBytes": 24865,
+      "lastModified": 1770404561766,
+      "firstLine": "# Monitoring and Auditing"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Prerequisite Validation.md",
+      "type": "documentation",
+      "sizeBytes": 18254,
+      "lastModified": 1770404561766,
+      "firstLine": "# Prerequisite Validation"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Permission Auditing.md",
+      "type": "documentation",
+      "sizeBytes": 20279,
+      "lastModified": 1770404561764,
+      "firstLine": "# Permission Auditing"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Chain Enforcement.md",
+      "type": "documentation",
+      "sizeBytes": 22463,
+      "lastModified": 1770404561763,
+      "firstLine": "# Chain Enforcement"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Deny Rules Configuration.md",
+      "type": "documentation",
+      "sizeBytes": 18532,
+      "lastModified": 1770404561763,
+      "firstLine": "# Deny Rules Configuration"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Permission System.md",
+      "type": "documentation",
+      "sizeBytes": 18665,
+      "lastModified": 1770404561765,
+      "firstLine": "# Permission System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Project Management Commands.md",
+      "type": "documentation",
+      "sizeBytes": 20309,
+      "lastModified": 1770404561750,
+      "firstLine": "# Project Management Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Command Architecture.md",
+      "type": "documentation",
+      "sizeBytes": 19759,
+      "lastModified": 1770404561748,
+      "firstLine": "# Command Architecture"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Command System.md",
+      "type": "documentation",
+      "sizeBytes": 19827,
+      "lastModified": 1770404561749,
+      "firstLine": "# Command System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Workflow Commands.md",
+      "type": "documentation",
+      "sizeBytes": 18947,
+      "lastModified": 1770404561751,
+      "firstLine": "# Workflow Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Specialized Commands.md",
+      "type": "documentation",
+      "sizeBytes": 22799,
+      "lastModified": 1770404561750,
+      "firstLine": "# Specialized Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Core Commands.md",
+      "type": "documentation",
+      "sizeBytes": 19119,
+      "lastModified": 1770404561749,
+      "firstLine": "# Core Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Templates and Standards/Templates and Standards.md",
+      "type": "documentation",
+      "sizeBytes": 22582,
+      "lastModified": 1770404561784,
+      "firstLine": "# Templates and Standards"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/State Management.md",
+      "type": "documentation",
+      "sizeBytes": 22624,
+      "lastModified": 1770404561777,
+      "firstLine": "# State Management"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/State Operations.md",
+      "type": "documentation",
+      "sizeBytes": 19632,
+      "lastModified": 1770404561778,
+      "firstLine": "# State Operations"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/Session Tracking.md",
+      "type": "documentation",
+      "sizeBytes": 15814,
+      "lastModified": 1770404561776,
+      "firstLine": "# Session Tracking"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/State Architecture.md",
+      "type": "documentation",
+      "sizeBytes": 21909,
+      "lastModified": 1770404561776,
+      "firstLine": "# State Architecture"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/Context Preservation.md",
+      "type": "documentation",
+      "sizeBytes": 22631,
+      "lastModified": 1770404561775,
+      "firstLine": "# Context Preservation"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/Checkpoint System.md",
+      "type": "documentation",
+      "sizeBytes": 18064,
+      "lastModified": 1770404561775,
+      "firstLine": "# Checkpoint System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Getting Started.md",
+      "type": "documentation",
+      "sizeBytes": 11475,
+      "lastModified": 1770404561762,
+      "firstLine": "# Getting Started"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Model Profiles.md",
+      "type": "documentation",
+      "sizeBytes": 13443,
+      "lastModified": 1770404561754,
+      "firstLine": "# Model Profiles"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Configuration Management.md",
+      "type": "documentation",
+      "sizeBytes": 24013,
+      "lastModified": 1770404561752,
+      "firstLine": "# Configuration Management"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Completion Definitions.md",
+      "type": "documentation",
+      "sizeBytes": 20781,
+      "lastModified": 1770404561752,
+      "firstLine": "# Completion Definitions"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Configuration System.md",
+      "type": "documentation",
+      "sizeBytes": 21287,
+      "lastModified": 1770404561753,
+      "firstLine": "# Configuration System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Permission Deny Rules.md",
+      "type": "documentation",
+      "sizeBytes": 16819,
+      "lastModified": 1770404561754,
+      "firstLine": "# Permission Deny Rules"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Mid Coordinator.md",
+      "type": "documentation",
+      "sizeBytes": 15977,
+      "lastModified": 1770404561747,
+      "firstLine": "# Mid Coordinator"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/High Governance.md",
+      "type": "documentation",
+      "sizeBytes": 16081,
+      "lastModified": 1770404561745,
+      "firstLine": "# High Governance"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Supreme Coordinator.md",
+      "type": "documentation",
+      "sizeBytes": 22530,
+      "lastModified": 1770404561747,
+      "firstLine": "# Supreme Coordinator"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Agent Hierarchy.md",
+      "type": "documentation",
+      "sizeBytes": 17304,
+      "lastModified": 1770404561744,
+      "firstLine": "# Agent Hierarchy"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Agent System.md",
+      "type": "documentation",
+      "sizeBytes": 16755,
+      "lastModified": 1770404561744,
+      "firstLine": "# Agent System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Builder Agent.md",
+      "type": "documentation",
+      "sizeBytes": 14171,
+      "lastModified": 1770404561745,
+      "firstLine": "# Builder Agent"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Low Validator.md",
+      "type": "documentation",
+      "sizeBytes": 14574,
+      "lastModified": 1770404561746,
+      "firstLine": "# Low Validator"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Brainstorm Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 13355,
+      "lastModified": 1770404561792,
+      "firstLine": "# Brainstorm Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Research Platforms Script.md",
+      "type": "documentation",
+      "sizeBytes": 15378,
+      "lastModified": 1770404561794,
+      "firstLine": "# Research Platforms Script"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Validate Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 19480,
+      "lastModified": 1770404561796,
+      "firstLine": "# Validate Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Workflow Architecture.md",
+      "type": "documentation",
+      "sizeBytes": 19178,
+      "lastModified": 1770404561797,
+      "firstLine": "# Workflow Architecture"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Workflow System.md",
+      "type": "documentation",
+      "sizeBytes": 23888,
+      "lastModified": 1770404561798,
+      "firstLine": "# Workflow System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Init Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 14716,
+      "lastModified": 1770404561793,
+      "firstLine": "# Init Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Execute Phase Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 22890,
+      "lastModified": 1770404561792,
+      "firstLine": "# Execute Phase Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Research Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 20862,
+      "lastModified": 1770404561795,
+      "firstLine": "# Research Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Plan Phase Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 18519,
+      "lastModified": 1770404561793,
+      "firstLine": "# Plan Phase Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Roadmap Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 15718,
+      "lastModified": 1770404561795,
+      "firstLine": "# Roadmap Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Workflow Customization.md",
+      "type": "documentation",
+      "sizeBytes": 32018,
+      "lastModified": 1770404561797,
+      "firstLine": "# Workflow Customization"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Troubleshooting Guide.md",
+      "type": "documentation",
+      "sizeBytes": 35376,
+      "lastModified": 1770404561791,
+      "firstLine": "# Troubleshooting Guide"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Validation Tool.md",
+      "type": "documentation",
+      "sizeBytes": 20542,
+      "lastModified": 1770404561790,
+      "firstLine": "# Validation Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/State Management Tool.md",
+      "type": "documentation",
+      "sizeBytes": 16196,
+      "lastModified": 1770404561788,
+      "firstLine": "# State Management Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Tool System.md",
+      "type": "documentation",
+      "sizeBytes": 32595,
+      "lastModified": 1770404561789,
+      "firstLine": "# Tool System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Performance Tool.md",
+      "type": "documentation",
+      "sizeBytes": 16049,
+      "lastModified": 1770404561787,
+      "firstLine": "# Performance Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Configuration Tool.md",
+      "type": "documentation",
+      "sizeBytes": 15770,
+      "lastModified": 1770404561786,
+      "firstLine": "# Configuration Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Orchestration Tool.md",
+      "type": "documentation",
+      "sizeBytes": 23298,
+      "lastModified": 1770404561787,
+      "firstLine": "# Orchestration Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Utility Tools.md",
+      "type": "documentation",
+      "sizeBytes": 40130,
+      "lastModified": 1770404561790,
+      "firstLine": "# Utility Tools"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Security Tool.md",
+      "type": "documentation",
+      "sizeBytes": 19697,
+      "lastModified": 1770404561788,
+      "firstLine": "# Security Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/State Management.md",
+      "type": "documentation",
+      "sizeBytes": 20963,
+      "lastModified": 1770404561760,
+      "firstLine": "# State Management"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Building With Agents Framework.md",
+      "type": "agents",
+      "sizeBytes": 15784,
+      "lastModified": 1770404561756,
+      "firstLine": "# Building With Agents Framework"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Agent Hierarchy.md",
+      "type": "documentation",
+      "sizeBytes": 18475,
+      "lastModified": 1770404561755,
+      "firstLine": "# Agent Hierarchy"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Permission System.md",
+      "type": "documentation",
+      "sizeBytes": 16482,
+      "lastModified": 1770404561759,
+      "firstLine": "# Permission System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Workflow Orchestration.md",
+      "type": "documentation",
+      "sizeBytes": 15503,
+      "lastModified": 1770404561761,
+      "firstLine": "# Workflow Orchestration"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Framework Overview.md",
+      "type": "documentation",
+      "sizeBytes": 18979,
+      "lastModified": 1770404561757,
+      "firstLine": "# Framework Overview"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Architecture Overview.md",
+      "type": "documentation",
+      "sizeBytes": 22669,
+      "lastModified": 1770404561756,
+      "firstLine": "# Architecture Overview"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/OpenCode Plugin Integration.md",
+      "type": "documentation",
+      "sizeBytes": 16123,
+      "lastModified": 1770404561758,
+      "firstLine": "# OpenCode Plugin Integration"
+    },
+    {
+      "path": "planning/MASTER-ACTION-PLAN/MASTER-PLAN-2026-02-07.md",
+      "type": "documentation",
+      "sizeBytes": 11498,
+      "lastModified": 1770414683544,
+      "firstLine": "# Phase 0: Smart TODO Tool — Implementation Plan"
+    },
+    {
+      "path": "README.md",
+      "type": "readme",
+      "sizeBytes": 19935,
+      "lastModified": 1770445909833,
+      "firstLine": "<p align=\"center\">"
+    },
+    {
+      "path": "n-3-2-1e.md",
+      "type": "documentation",
+      "sizeBytes": 178261,
+      "lastModified": 1770434813183,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, phase 1 greeting"
+    },
+    {
+      "path": "STRATEGIC-PLANNING-PROMPT.md",
+      "type": "documentation",
+      "sizeBytes": 47318,
+      "lastModified": 1770404561821,
+      "firstLine": "# iDumb v3 — Strategic Planning Prompt (Source of Truth)"
+    },
+    {
+      "path": "GAP-ANALYSIS.md",
+      "type": "documentation",
+      "sizeBytes": 11645,
+      "lastModified": 1770404561820,
+      "firstLine": "# iDumb v2 Plugin Gap Analysis"
+    },
+    {
+      "path": "TRIAL-1-RESULTS.md",
+      "type": "documentation",
+      "sizeBytes": 4709,
+      "lastModified": 1770404561822,
+      "firstLine": "# TRIAL-1 Validation Results"
+    },
+    {
+      "path": "AGENTS.md",
+      "type": "agents",
+      "sizeBytes": 22301,
+      "lastModified": 1770448596110,
+      "firstLine": "# AGENTS.md — iDumb v2 (Ground Truth)"
+    },
+    {
+      "path": "session-deldegation-tools-init-run.md",
+      "type": "documentation",
+      "sizeBytes": 183157,
+      "lastModified": 1770417917710,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, Phase 1 greeting"
+    },
+    {
+      "path": "TEST-CASES.md",
+      "type": "documentation",
+      "sizeBytes": 14426,
+      "lastModified": 1770404561821,
+      "firstLine": "# iDumb v2 — Real-Life Test Cases"
+    },
+    {
+      "path": "CLAUDE.md",
+      "type": "documentation",
+      "sizeBytes": 15720,
+      "lastModified": 1770404561819,
+      "firstLine": "# CLAUDE.md"
+    },
+    {
+      "path": "src/modules/agents/meta-builder.md",
+      "type": "documentation",
+      "sizeBytes": 4379,
+      "lastModified": 1770396178411,
+      "firstLine": "# iDumb Meta Builder Agent"
+    }
+  ],
+  "stats": {
+    "totalFiles": 193,
+    "totalDirs": 34,
+    "totalSizeBytes": 4526628,
+    "sourceFiles": 55,
+    "testFiles": 8,
+    "configFiles": 8,
+    "documentFiles": 126
+  },
+  "lastFullScanAt": 1770449516172
+}

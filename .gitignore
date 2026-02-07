@@ -35,17 +35,6 @@ session-*.md
 # ─── Internal planning & meta (tracked on dev, excluded from main) ───
 # These are the files used to BUILD iDumb, not part of the public package.
 # On the dev branch they are force-added. On main they are excluded.
-.planning/
-.archive/
-.claude/
-.agent/
-.agents/
-.qoder/
-.codex/
-.gemini/
-.windsurf/
-.opencode/
-.idumb/
 .plugin-dev/
 STRATEGIC-PLANNING-PROMPT.md
 TEST-CASES.md

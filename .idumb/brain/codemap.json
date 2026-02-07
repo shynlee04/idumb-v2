@@ -1,0 +1,4259 @@
+{
+  "version": "1.0.0",
+  "scannedAt": 1770449516338,
+  "scanDurationMs": 54,
+  "projectRoot": "/Users/apple/Documents/coding-projects/idumb/v2",
+  "files": [
+    {
+      "path": "bin/cli.mjs",
+      "language": "mjs",
+      "sizeBytes": 45,
+      "lastModified": 1770402263819,
+      "items": [],
+      "importPaths": [],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 3,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "tests/tool-gate.test.ts",
+      "language": "ts",
+      "sizeBytes": 4447,
+      "lastModified": 1770351224604,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 29,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        },
+        {
+          "name": "test1_writeBlockedWithoutTask",
+          "type": "function",
+          "line": 39,
+          "exported": false,
+          "signature": "async function test1_writeBlockedWithoutTask(): Promise<void> {"
+        },
+        {
+          "name": "test2_writeAllowedWithTask",
+          "type": "function",
+          "line": 58,
+          "exported": false,
+          "signature": "async function test2_writeAllowedWithTask(): Promise<void> {"
+        },
+        {
+          "name": "test3_editBlockedWithoutTask",
+          "type": "function",
+          "line": 73,
+          "exported": false,
+          "signature": "async function test3_editBlockedWithoutTask(): Promise<void> {"
+        },
+        {
+          "name": "test4_nonWriteToolAlwaysAllowed",
+          "type": "function",
+          "line": 87,
+          "exported": false,
+          "signature": "async function test4_nonWriteToolAlwaysAllowed(): Promise<void> {"
+        },
+        {
+          "name": "test5_retryDetection",
+          "type": "function",
+          "line": 101,
+          "exported": false,
+          "signature": "async function test5_retryDetection(): Promise<void> {"
+        },
+        {
+          "name": "test6_afterHookFallback",
+          "type": "function",
+          "line": 116,
+          "exported": false,
+          "signature": "async function test6_afterHookFallback(): Promise<void> {"
+        },
+        {
+          "name": "main",
+          "type": "function",
+          "line": 127,
+          "exported": false,
+          "signature": "async function main(): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "../src/hooks/index.js",
+        "../src/lib/index.js",
+        "node:fs",
+        "node:path",
+        "node:os"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 145,
+      "functionCount": 8,
+      "classCount": 0
+    },
+    {
+      "path": "tests/smoke-code-quality.ts",
+      "language": "ts",
+      "sizeBytes": 1921,
+      "lastModified": 1770447257280,
+      "items": [
+        {
+          "name": "main",
+          "type": "function",
+          "line": 14,
+          "exported": false,
+          "signature": "async function main() {"
+        }
+      ],
+      "importPaths": [
+        "../src/lib/code-quality.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 54,
+      "functionCount": 1,
+      "classCount": 0
+    },
+    {
+      "path": "tests/init.test.ts",
+      "language": "ts",
+      "sizeBytes": 11335,
+      "lastModified": 1770396106779,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 34,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        }
+      ],
+      "importPaths": [
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../src/schemas/config.js",
+        "../src/lib/framework-detector.js",
+        "../src/lib/scaffolder.js",
+        "../src/lib/index.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 247,
+      "functionCount": 1,
+      "classCount": 0
+    },
+    {
+      "path": "tests/persistence.test.ts",
+      "language": "ts",
+      "sizeBytes": 12256,
+      "lastModified": 1770415167412,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 34,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        },
+        {
+          "name": "wait",
+          "type": "function",
+          "line": 45,
+          "exported": false,
+          "signature": "function wait(ms: number): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../src/lib/persistence.js",
+        "../src/lib/index.js",
+        "../src/schemas/anchor.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 320,
+      "functionCount": 2,
+      "classCount": 0
+    },
+    {
+      "path": "tests/compaction.test.ts",
+      "language": "ts",
+      "sizeBytes": 5386,
+      "lastModified": 1770351224606,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 31,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        },
+        {
+          "name": "test1_emptyAnchorsNoBreak",
+          "type": "function",
+          "line": 40,
+          "exported": false,
+          "signature": "async function test1_emptyAnchorsNoBreak(): Promise<void> {"
+        },
+        {
+          "name": "test2_anchorInjected",
+          "type": "function",
+          "line": 49,
+          "exported": false,
+          "signature": "async function test2_anchorInjected(): Promise<void> {"
+        },
+        {
+          "name": "test3_activeTaskInContext",
+          "type": "function",
+          "line": 61,
+          "exported": false,
+          "signature": "async function test3_activeTaskInContext(): Promise<void> {"
+        },
+        {
+          "name": "test4_budgetEnforced",
+          "type": "function",
+          "line": 75,
+          "exported": false,
+          "signature": "async function test4_budgetEnforced(): Promise<void> {"
+        },
+        {
+          "name": "test5_staleAnchorsExcluded",
+          "type": "function",
+          "line": 91,
+          "exported": false,
+          "signature": "async function test5_staleAnchorsExcluded(): Promise<void> {"
+        },
+        {
+          "name": "test6_staleCriticalStillIncluded",
+          "type": "function",
+          "line": 111,
+          "exported": false,
+          "signature": "async function test6_staleCriticalStillIncluded(): Promise<void> {"
+        },
+        {
+          "name": "main",
+          "type": "function",
+          "line": 123,
+          "exported": false,
+          "signature": "async function main(): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "../src/hooks/compaction.js",
+        "../src/schemas/index.js",
+        "../src/hooks/index.js",
+        "../src/lib/index.js",
+        "node:fs",
+        "node:path",
+        "node:os"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 139,
+      "functionCount": 8,
+      "classCount": 0
+    },
+    {
+      "path": "tests/task.test.ts",
+      "language": "ts",
+      "sizeBytes": 17787,
+      "lastModified": 1770415243370,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 38,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        },
+        {
+          "name": "wait",
+          "type": "function",
+          "line": 48,
+          "exported": false,
+          "signature": "function wait(ms: number): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../src/schemas/task.js",
+        "../src/lib/persistence.js",
+        "../src/lib/index.js"
+      ],
+      "exportNames": [],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "Tool — Epic→Task→Subtask Hierarchy",
+          "file": "tests/task.test.ts",
+          "line": 2
+        }
+      ],
+      "lineCount": 397,
+      "functionCount": 2,
+      "classCount": 0
+    },
+    {
+      "path": "tests/delegation.test.ts",
+      "language": "ts",
+      "sizeBytes": 14805,
+      "lastModified": 1770431425837,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 40,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        }
+      ],
+      "importPaths": [
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../src/schemas/delegation.js",
+        "../src/lib/persistence.js",
+        "../src/lib/index.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 312,
+      "functionCount": 1,
+      "classCount": 0
+    },
+    {
+      "path": "tests/message-transform.test.ts",
+      "language": "ts",
+      "sizeBytes": 6531,
+      "lastModified": 1770351984218,
+      "items": [
+        {
+          "name": "assert",
+          "type": "function",
+          "line": 27,
+          "exported": false,
+          "signature": "function assert(name: string, condition: boolean): void {"
+        },
+        {
+          "name": "mockToolPart",
+          "type": "function",
+          "line": 37,
+          "exported": false,
+          "signature": "function mockToolPart(tool: string, output: string, startTime: number): Record<string, unknown> {"
+        },
+        {
+          "name": "mockTextPart",
+          "type": "function",
+          "line": 57,
+          "exported": false,
+          "signature": "function mockTextPart(text: string): Record<string, unknown> {"
+        },
+        {
+          "name": "test1_noPruningWhenFewTools",
+          "type": "function",
+          "line": 67,
+          "exported": false,
+          "signature": "async function test1_noPruningWhenFewTools(): Promise<void> {"
+        },
+        {
+          "name": "test2_oldToolsTruncated",
+          "type": "function",
+          "line": 87,
+          "exported": false,
+          "signature": "async function test2_oldToolsTruncated(): Promise<void> {"
+        },
+        {
+          "name": "test3_exemptToolsNotPruned",
+          "type": "function",
+          "line": 110,
+          "exported": false,
+          "signature": "async function test3_exemptToolsNotPruned(): Promise<void> {"
+        },
+        {
+          "name": "test4_emptyMessagesNoBreak",
+          "type": "function",
+          "line": 134,
+          "exported": false,
+          "signature": "async function test4_emptyMessagesNoBreak(): Promise<void> {"
+        },
+        {
+          "name": "test5_invalidPartsNoBreak",
+          "type": "function",
+          "line": 145,
+          "exported": false,
+          "signature": "async function test5_invalidPartsNoBreak(): Promise<void> {"
+        },
+        {
+          "name": "test6_textPartsUntouched",
+          "type": "function",
+          "line": 162,
+          "exported": false,
+          "signature": "async function test6_textPartsUntouched(): Promise<void> {"
+        },
+        {
+          "name": "main",
+          "type": "function",
+          "line": 183,
+          "exported": false,
+          "signature": "async function main(): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "../src/hooks/index.js",
+        "../src/lib/index.js",
+        "node:fs",
+        "node:path",
+        "node:os"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 199,
+      "functionCount": 10,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/read.ts",
+      "language": "ts",
+      "sizeBytes": 22442,
+      "lastModified": 1770440415515,
+      "items": [
+        {
+          "name": "ResolvedEntity",
+          "type": "type",
+          "line": 30,
+          "exported": false,
+          "signature": "type ResolvedEntity,"
+        },
+        {
+          "name": "GovernanceSnapshot",
+          "type": "type",
+          "line": 39,
+          "exported": false,
+          "signature": "type GovernanceSnapshot,"
+        },
+        {
+          "name": "idumb_read",
+          "type": "constant",
+          "line": 57,
+          "exported": true,
+          "signature": "export const idumb_read = tool({"
+        },
+        {
+          "name": "handleContent",
+          "type": "function",
+          "line": 138,
+          "exported": false,
+          "signature": "function handleContent("
+        },
+        {
+          "name": "handleOutline",
+          "type": "function",
+          "line": 205,
+          "exported": false,
+          "signature": "function handleOutline("
+        },
+        {
+          "name": "handleTraverse",
+          "type": "function",
+          "line": 292,
+          "exported": false,
+          "signature": "function handleTraverse("
+        },
+        {
+          "name": "traverseHop",
+          "type": "function",
+          "line": 346,
+          "exported": false,
+          "signature": "function traverseHop("
+        },
+        {
+          "name": "handleComments",
+          "type": "function",
+          "line": 407,
+          "exported": false,
+          "signature": "function handleComments("
+        },
+        {
+          "name": "handleChainCheck",
+          "type": "function",
+          "line": 511,
+          "exported": false,
+          "signature": "function handleChainCheck("
+        },
+        {
+          "name": "extractInlineIntelligence",
+          "type": "function",
+          "line": 544,
+          "exported": false,
+          "signature": "function extractInlineIntelligence("
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "fs",
+        "path",
+        "../lib/entity-resolver.js",
+        "../lib/chain-validator.js",
+        "../lib/state-reader.js",
+        "../lib/logging.js"
+      ],
+      "exportNames": [
+        "idumb_read"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "s, stale refs, broken chains)",
+          "file": "src/tools/read.ts",
+          "line": 8
+        },
+        {
+          "marker": "TODO",
+          "content": "s + FIXMEs with entity context",
+          "file": "src/tools/read.ts",
+          "line": 15
+        },
+        {
+          "marker": "TODO",
+          "content": "patterns from markdown",
+          "file": "src/tools/read.ts",
+          "line": 490
+        }
+      ],
+      "lineCount": 569,
+      "functionCount": 7,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/status.ts",
+      "language": "ts",
+      "sizeBytes": 3349,
+      "lastModified": 1770415143462,
+      "items": [
+        {
+          "name": "idumb_status",
+          "type": "constant",
+          "line": 20,
+          "exported": true,
+          "signature": "export const idumb_status = tool({"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "../hooks/index.js",
+        "../hooks/compaction.js",
+        "../schemas/anchor.js",
+        "../lib/persistence.js",
+        "../schemas/task.js"
+      ],
+      "exportNames": [
+        "idumb_status"
+      ],
+      "comments": [],
+      "lineCount": 84,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/init.ts",
+      "language": "ts",
+      "sizeBytes": 13999,
+      "lastModified": 1770447209061,
+      "items": [
+        {
+          "name": "buildGreeting",
+          "type": "function",
+          "line": 26,
+          "exported": false,
+          "signature": "function buildGreeting("
+        },
+        {
+          "name": "formatGovernanceMode",
+          "type": "function",
+          "line": 98,
+          "exported": false,
+          "signature": "function formatGovernanceMode(mode: GovernanceMode, lang: Language): string {"
+        },
+        {
+          "name": "buildNextSteps",
+          "type": "function",
+          "line": 120,
+          "exported": false,
+          "signature": "function buildNextSteps(config: IdumbConfig, lang: Language): string {"
+        },
+        {
+          "name": "idumb_init",
+          "type": "constant",
+          "line": 186,
+          "exported": true,
+          "signature": "export const idumb_init = tool({"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "node:fs/promises",
+        "node:path",
+        "../schemas/config.js",
+        "../lib/framework-detector.js",
+        "../lib/scaffolder.js",
+        "../lib/logging.js"
+      ],
+      "exportNames": [
+        "idumb_init"
+      ],
+      "comments": [],
+      "lineCount": 284,
+      "functionCount": 3,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/webfetch.ts",
+      "language": "ts",
+      "sizeBytes": 16883,
+      "lastModified": 1770441044908,
+      "items": [
+        {
+          "name": "idumb_webfetch",
+          "type": "constant",
+          "line": 49,
+          "exported": true,
+          "signature": "export const idumb_webfetch = tool({"
+        },
+        {
+          "name": "urlToCacheKey",
+          "type": "function",
+          "line": 302,
+          "exported": false,
+          "signature": "function urlToCacheKey(url: string): string {"
+        },
+        {
+          "name": "classifyContent",
+          "type": "function",
+          "line": 312,
+          "exported": false,
+          "signature": "function classifyContent(url: string, contentType: string, _body: string): string {"
+        },
+        {
+          "name": "writeAuditEntry",
+          "type": "function",
+          "line": 349,
+          "exported": false,
+          "signature": "function writeAuditEntry(projectDir: string, entry: Record<string, unknown>): void {"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "fs",
+        "path",
+        "../lib/state-reader.js",
+        "../lib/logging.js"
+      ],
+      "exportNames": [
+        "idumb_webfetch"
+      ],
+      "comments": [],
+      "lineCount": 366,
+      "functionCount": 3,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/scan.ts",
+      "language": "ts",
+      "sizeBytes": 18943,
+      "lastModified": 1770427352637,
+      "items": [
+        {
+          "name": "detectDocType",
+          "type": "function",
+          "line": 77,
+          "exported": false,
+          "signature": "function detectDocType(filename: string): DocumentType | null {"
+        },
+        {
+          "name": "isTestFile",
+          "type": "function",
+          "line": 88,
+          "exported": false,
+          "signature": "function isTestFile(relPath: string): boolean {"
+        },
+        {
+          "name": "walkDirectory",
+          "type": "function",
+          "line": 94,
+          "exported": false,
+          "signature": "async function walkDirectory("
+        },
+        {
+          "name": "loadProjectMap",
+          "type": "function",
+          "line": 183,
+          "exported": false,
+          "signature": "async function loadProjectMap(projectRoot: string): Promise<ProjectMap | null> {"
+        },
+        {
+          "name": "saveProjectMap",
+          "type": "function",
+          "line": 193,
+          "exported": false,
+          "signature": "async function saveProjectMap(projectRoot: string, map: ProjectMap): Promise<void> {"
+        },
+        {
+          "name": "mapToProjectFrameworks",
+          "type": "function",
+          "line": 200,
+          "exported": false,
+          "signature": "function mapToProjectFrameworks("
+        },
+        {
+          "name": "idumb_scan",
+          "type": "constant",
+          "line": 225,
+          "exported": true,
+          "signature": "export const idumb_scan = tool({"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "node:fs/promises",
+        "node:path",
+        "../lib/framework-detector.js",
+        "../lib/logging.js",
+        "../schemas/project-map.js"
+      ],
+      "exportNames": [
+        "idumb_scan"
+      ],
+      "comments": [],
+      "lineCount": 446,
+      "functionCount": 6,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/codemap.ts",
+      "language": "ts",
+      "sizeBytes": 22928,
+      "lastModified": 1770427363497,
+      "items": [
+        {
+          "name": "extractCodeItems",
+          "type": "function",
+          "line": 59,
+          "exported": false,
+          "signature": "function extractCodeItems(content: string, ext: string): CodeItem[] {"
+        },
+        {
+          "name": "extractImports",
+          "type": "function",
+          "line": 130,
+          "exported": false,
+          "signature": "function extractImports(content: string): string[] {"
+        },
+        {
+          "name": "extractExportNames",
+          "type": "function",
+          "line": 141,
+          "exported": false,
+          "signature": "function extractExportNames(content: string): string[] {"
+        },
+        {
+          "name": "extractComments",
+          "type": "function",
+          "line": 152,
+          "exported": false,
+          "signature": "function extractComments(content: string, filePath: string): CodeComment[] {"
+        },
+        {
+          "name": "detectInconsistencies",
+          "type": "function",
+          "line": 181,
+          "exported": false,
+          "signature": "function detectInconsistencies(files: FileMapEntry[]): Inconsistency[] {"
+        },
+        {
+          "name": "scanSourceFiles",
+          "type": "function",
+          "line": 235,
+          "exported": false,
+          "signature": "async function scanSourceFiles("
+        },
+        {
+          "name": "loadCodeMap",
+          "type": "function",
+          "line": 294,
+          "exported": false,
+          "signature": "async function loadCodeMap(projectRoot: string): Promise<CodeMapStore | null> {"
+        },
+        {
+          "name": "saveCodeMap",
+          "type": "function",
+          "line": 303,
+          "exported": false,
+          "signature": "async function saveCodeMap(projectRoot: string, store: CodeMapStore): Promise<void> {"
+        },
+        {
+          "name": "idumb_codemap",
+          "type": "constant",
+          "line": 311,
+          "exported": true,
+          "signature": "export const idumb_codemap = tool({"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "node:fs/promises",
+        "node:path",
+        "../lib/logging.js",
+        "../schemas/codemap.js"
+      ],
+      "exportNames": [
+        "idumb_codemap"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "/FIXME/HACK comments only (fast)",
+          "file": "src/tools/codemap.ts",
+          "line": 8
+        },
+        {
+          "marker": "TODO",
+          "content": "S ONLY ───────────────────────────────────────────",
+          "file": "src/tools/codemap.ts",
+          "line": 370
+        }
+      ],
+      "lineCount": 522,
+      "functionCount": 8,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/bash.ts",
+      "language": "ts",
+      "sizeBytes": 17479,
+      "lastModified": 1770441072309,
+      "items": [
+        {
+          "name": "idumb_bash",
+          "type": "constant",
+          "line": 127,
+          "exported": true,
+          "signature": "export const idumb_bash = tool({"
+        },
+        {
+          "name": "detectPurpose",
+          "type": "function",
+          "line": 343,
+          "exported": false,
+          "signature": "function detectPurpose(command: string): string {"
+        },
+        {
+          "name": "checkDestructive",
+          "type": "function",
+          "line": 356,
+          "exported": false,
+          "signature": "function checkDestructive(command: string): string | null {"
+        },
+        {
+          "name": "truncateOutput",
+          "type": "function",
+          "line": 368,
+          "exported": false,
+          "signature": "function truncateOutput(output: string): string {"
+        },
+        {
+          "name": "getPurposeExamples",
+          "type": "function",
+          "line": 378,
+          "exported": false,
+          "signature": "function getPurposeExamples(purpose: string): string[] {"
+        },
+        {
+          "name": "captureEvidence",
+          "type": "function",
+          "line": 414,
+          "exported": false,
+          "signature": "function captureEvidence("
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "child_process",
+        "fs",
+        "path",
+        "../lib/state-reader.js",
+        "../lib/logging.js"
+      ],
+      "exportNames": [
+        "idumb_bash"
+      ],
+      "comments": [],
+      "lineCount": 439,
+      "functionCount": 5,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/anchor.ts",
+      "language": "ts",
+      "sizeBytes": 3363,
+      "lastModified": 1770351224579,
+      "items": [
+        {
+          "name": "idumb_anchor",
+          "type": "constant",
+          "line": 18,
+          "exported": true,
+          "signature": "export const idumb_anchor = tool({"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "../schemas/index.js",
+        "../hooks/compaction.js"
+      ],
+      "exportNames": [
+        "idumb_anchor"
+      ],
+      "comments": [],
+      "lineCount": 87,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/index.ts",
+      "language": "ts",
+      "sizeBytes": 205,
+      "lastModified": 1770427314676,
+      "items": [],
+      "importPaths": [
+        "./task.js",
+        "./anchor.js",
+        "./init.js",
+        "./scan.js",
+        "./codemap.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 6,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/write.ts",
+      "language": "ts",
+      "sizeBytes": 32877,
+      "lastModified": 1770440865161,
+      "items": [
+        {
+          "name": "ResolvedEntity",
+          "type": "type",
+          "line": 37,
+          "exported": false,
+          "signature": "type ResolvedEntity,"
+        },
+        {
+          "name": "GovernanceSnapshot",
+          "type": "type",
+          "line": 47,
+          "exported": false,
+          "signature": "type GovernanceSnapshot,"
+        },
+        {
+          "name": "idumb_write",
+          "type": "constant",
+          "line": 61,
+          "exported": true,
+          "signature": "export const idumb_write = tool({"
+        },
+        {
+          "name": "Log",
+          "type": "type",
+          "line": 215,
+          "exported": false,
+          "signature": "type Log = ReturnType<typeof createLogger>"
+        },
+        {
+          "name": "handleCreate",
+          "type": "function",
+          "line": 219,
+          "exported": false,
+          "signature": "function handleCreate("
+        },
+        {
+          "name": "handleOverwrite",
+          "type": "function",
+          "line": 279,
+          "exported": false,
+          "signature": "function handleOverwrite("
+        },
+        {
+          "name": "handleAppend",
+          "type": "function",
+          "line": 343,
+          "exported": false,
+          "signature": "function handleAppend("
+        },
+        {
+          "name": "handleUpdateSection",
+          "type": "function",
+          "line": 389,
+          "exported": false,
+          "signature": "function handleUpdateSection("
+        },
+        {
+          "name": "handleLifecycle",
+          "type": "function",
+          "line": 501,
+          "exported": false,
+          "signature": "function handleLifecycle("
+        },
+        {
+          "name": "createBackup",
+          "type": "function",
+          "line": 631,
+          "exported": false,
+          "signature": "function createBackup(absPath: string, projectDir: string): string {"
+        },
+        {
+          "name": "writeAuditEntry",
+          "type": "function",
+          "line": 649,
+          "exported": false,
+          "signature": "function writeAuditEntry(projectDir: string, entry: Record<string, unknown>): void {"
+        },
+        {
+          "name": "validateContent",
+          "type": "function",
+          "line": 672,
+          "exported": false,
+          "signature": "function validateContent(entity: ResolvedEntity, content: string): {"
+        },
+        {
+          "name": "updateStatusInFile",
+          "type": "function",
+          "line": 752,
+          "exported": false,
+          "signature": "function updateStatusInFile(absPath: string, status: string, _context: string): void {"
+        },
+        {
+          "name": "buildSuccessOutput",
+          "type": "function",
+          "line": 782,
+          "exported": false,
+          "signature": "function buildSuccessOutput("
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "fs",
+        "path",
+        "../lib/entity-resolver.js",
+        "../lib/chain-validator.js",
+        "../lib/state-reader.js",
+        "../lib/logging.js"
+      ],
+      "exportNames": [
+        "idumb_write"
+      ],
+      "comments": [],
+      "lineCount": 819,
+      "functionCount": 10,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools/task.ts",
+      "language": "ts",
+      "sizeBytes": 33650,
+      "lastModified": 1770432909628,
+      "items": [
+        {
+          "name": "commitStore",
+          "type": "function",
+          "line": 41,
+          "exported": false,
+          "signature": "function commitStore(store: TaskStore): void {"
+        },
+        {
+          "name": "identifyTarget",
+          "type": "function",
+          "line": 46,
+          "exported": false,
+          "signature": "function identifyTarget(store: TaskStore, targetId: string): \"epic\" | \"task\" | \"subtask\" | null {"
+        },
+        {
+          "name": "staleWarnings",
+          "type": "function",
+          "line": 54,
+          "exported": false,
+          "signature": "function staleWarnings(store: TaskStore): string {"
+        },
+        {
+          "name": "responseFooter",
+          "type": "function",
+          "line": 69,
+          "exported": false,
+          "signature": "function responseFooter(store: TaskStore): string {"
+        },
+        {
+          "name": "idumb_task",
+          "type": "constant",
+          "line": 86,
+          "exported": true,
+          "signature": "export const idumb_task = tool({"
+        }
+      ],
+      "importPaths": [
+        "@opencode-ai/plugin/tool",
+        "../lib/persistence.js",
+        "../hooks/index.js",
+        "../hooks/compaction.js",
+        "../schemas/anchor.js",
+        "../schemas/task.js",
+        "../schemas/delegation.js"
+      ],
+      "exportNames": [
+        "idumb_task"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "tool.",
+          "file": "src/tools/task.ts",
+          "line": 2
+        }
+      ],
+      "lineCount": 827,
+      "functionCount": 4,
+      "classCount": 0
+    },
+    {
+      "path": "src/cli.ts",
+      "language": "ts",
+      "sizeBytes": 18665,
+      "lastModified": 1770447153321,
+      "items": [
+        {
+          "name": "print",
+          "type": "function",
+          "line": 49,
+          "exported": false,
+          "signature": "function print(msg: string): void {"
+        },
+        {
+          "name": "banner",
+          "type": "function",
+          "line": 53,
+          "exported": false,
+          "signature": "function banner(): void {"
+        },
+        {
+          "name": "divider",
+          "type": "function",
+          "line": 61,
+          "exported": false,
+          "signature": "function divider(): void {"
+        },
+        {
+          "name": "PromptChoice",
+          "type": "interface",
+          "line": 67,
+          "exported": false,
+          "signature": "interface PromptChoice<T extends string> {"
+        },
+        {
+          "name": "promptChoice",
+          "type": "function",
+          "line": 73,
+          "exported": false,
+          "signature": "async function promptChoice<T extends string>("
+        },
+        {
+          "name": "runPrompts",
+          "type": "function",
+          "line": 106,
+          "exported": false,
+          "signature": "async function runPrompts(rl: ReturnType<typeof createInterface>): Promise<{"
+        },
+        {
+          "name": "main",
+          "type": "function",
+          "line": 162,
+          "exported": false,
+          "signature": "async function main(): Promise<void> {"
+        },
+        {
+          "name": "bar10",
+          "type": "function",
+          "line": 250,
+          "exported": false,
+          "signature": "const bar10 = (v: number, max: number) => {"
+        }
+      ],
+      "importPaths": [
+        "node:readline/promises",
+        "node:process",
+        "node:path",
+        "./schemas/config.js",
+        "./lib/framework-detector.js",
+        "./lib/scaffolder.js",
+        "./lib/logging.js",
+        "./cli/deploy.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 432,
+      "functionCount": 7,
+      "classCount": 0
+    },
+    {
+      "path": "src/templates.ts",
+      "language": "ts",
+      "sizeBytes": 81195,
+      "lastModified": 1770448227695,
+      "items": [
+        {
+          "name": "getMetaBuilderAgent",
+          "type": "function",
+          "line": 22,
+          "exported": true,
+          "signature": "export function getMetaBuilderAgent(config: {"
+        },
+        {
+          "name": "getInitCommand",
+          "type": "function",
+          "line": 398,
+          "exported": true,
+          "signature": "export function getInitCommand(language: Language): string {"
+        },
+        {
+          "name": "getSettingsCommand",
+          "type": "function",
+          "line": 421,
+          "exported": true,
+          "signature": "export function getSettingsCommand(language: Language): string {"
+        },
+        {
+          "name": "getStatusCommand",
+          "type": "function",
+          "line": 448,
+          "exported": true,
+          "signature": "export function getStatusCommand(language: Language): string {"
+        },
+        {
+          "name": "SUPREME_COORDINATOR_PROFILE",
+          "type": "constant",
+          "line": 476,
+          "exported": true,
+          "signature": "export const SUPREME_COORDINATOR_PROFILE = `# Supreme Coordinator — Reference Profile"
+        },
+        {
+          "name": "BUILDER_PROFILE",
+          "type": "constant",
+          "line": 576,
+          "exported": true,
+          "signature": "export const BUILDER_PROFILE = `# Builder — Reference Profile"
+        },
+        {
+          "name": "VALIDATOR_PROFILE",
+          "type": "constant",
+          "line": 668,
+          "exported": true,
+          "signature": "export const VALIDATOR_PROFILE = `# Validator — Reference Profile"
+        },
+        {
+          "name": "SKILLS_CREATOR_PROFILE",
+          "type": "constant",
+          "line": 763,
+          "exported": true,
+          "signature": "export const SKILLS_CREATOR_PROFILE = `# Skills Creator — Reference Profile"
+        },
+        {
+          "name": "RESEARCH_SYNTHESIZER_PROFILE",
+          "type": "constant",
+          "line": 863,
+          "exported": true,
+          "signature": "export const RESEARCH_SYNTHESIZER_PROFILE = `# Research Synthesizer — Reference Profile"
+        },
+        {
+          "name": "PLANNER_PROFILE",
+          "type": "constant",
+          "line": 919,
+          "exported": true,
+          "signature": "export const PLANNER_PROFILE = `# Planner — Reference Profile"
+        },
+        {
+          "name": "getSupremeCoordinatorAgent",
+          "type": "function",
+          "line": 981,
+          "exported": true,
+          "signature": "export function getSupremeCoordinatorAgent(config: {"
+        },
+        {
+          "name": "getBuilderAgent",
+          "type": "function",
+          "line": 1083,
+          "exported": true,
+          "signature": "export function getBuilderAgent(config: {"
+        },
+        {
+          "name": "getValidatorAgent",
+          "type": "function",
+          "line": 1177,
+          "exported": true,
+          "signature": "export function getValidatorAgent(config: {"
+        },
+        {
+          "name": "getSkillsCreatorAgent",
+          "type": "function",
+          "line": 1266,
+          "exported": true,
+          "signature": "export function getSkillsCreatorAgent(config: {"
+        },
+        {
+          "name": "getResearchSynthesizerAgent",
+          "type": "function",
+          "line": 1345,
+          "exported": true,
+          "signature": "export function getResearchSynthesizerAgent(config: {"
+        },
+        {
+          "name": "getPlannerAgent",
+          "type": "function",
+          "line": 1422,
+          "exported": true,
+          "signature": "export function getPlannerAgent(config: {"
+        },
+        {
+          "name": "AGENT_CONTRACT_TEMPLATE",
+          "type": "constant",
+          "line": 1504,
+          "exported": true,
+          "signature": "export const AGENT_CONTRACT_TEMPLATE = `# iDumb Agent Contract"
+        },
+        {
+          "name": "MODULES_README_TEMPLATE",
+          "type": "constant",
+          "line": 1603,
+          "exported": true,
+          "signature": "export const MODULES_README_TEMPLATE = `# iDumb Modules"
+        },
+        {
+          "name": "COMMAND_TEMPLATE",
+          "type": "constant",
+          "line": 1636,
+          "exported": true,
+          "signature": "export const COMMAND_TEMPLATE = `# Command Template"
+        },
+        {
+          "name": "WORKFLOW_TEMPLATE",
+          "type": "constant",
+          "line": 1706,
+          "exported": true,
+          "signature": "export const WORKFLOW_TEMPLATE = `# Workflow Template"
+        },
+        {
+          "name": "DELEGATION_SKILL_TEMPLATE",
+          "type": "constant",
+          "line": 1766,
+          "exported": true,
+          "signature": "export const DELEGATION_SKILL_TEMPLATE = `# Delegation Protocol"
+        },
+        {
+          "name": "GOVERNANCE_SKILL_TEMPLATE",
+          "type": "constant",
+          "line": 1935,
+          "exported": true,
+          "signature": "export const GOVERNANCE_SKILL_TEMPLATE = `# Governance Protocol"
+        },
+        {
+          "name": "getDelegateCommand",
+          "type": "function",
+          "line": 2136,
+          "exported": true,
+          "signature": "export function getDelegateCommand(language: Language): string {"
+        }
+      ],
+      "importPaths": [
+        "./schemas/config.js"
+      ],
+      "exportNames": [
+        "getMetaBuilderAgent",
+        "getInitCommand",
+        "getSettingsCommand",
+        "getStatusCommand",
+        "SUPREME_COORDINATOR_PROFILE",
+        "BUILDER_PROFILE",
+        "VALIDATOR_PROFILE",
+        "SKILLS_CREATOR_PROFILE",
+        "RESEARCH_SYNTHESIZER_PROFILE",
+        "PLANNER_PROFILE",
+        "getSupremeCoordinatorAgent",
+        "getBuilderAgent",
+        "getValidatorAgent",
+        "getSkillsCreatorAgent",
+        "getResearchSynthesizerAgent",
+        "getPlannerAgent",
+        "AGENT_CONTRACT_TEMPLATE",
+        "MODULES_README_TEMPLATE",
+        "COMMAND_TEMPLATE",
+        "WORKFLOW_TEMPLATE",
+        "DELEGATION_SKILL_TEMPLATE",
+        "GOVERNANCE_SKILL_TEMPLATE",
+        "getDelegateCommand"
+      ],
+      "comments": [
+        {
+          "marker": "NOTE",
+          "content": "plural!",
+          "file": "src/templates.ts",
+          "line": 1530
+        }
+      ],
+      "lineCount": 2178,
+      "functionCount": 11,
+      "classCount": 0
+    },
+    {
+      "path": "src/cli/dashboard.ts",
+      "language": "ts",
+      "sizeBytes": 6137,
+      "lastModified": 1770441678016,
+      "items": [
+        {
+          "name": "print",
+          "type": "function",
+          "line": 36,
+          "exported": false,
+          "signature": "function print(msg: string): void {"
+        },
+        {
+          "name": "DashboardConfig",
+          "type": "interface",
+          "line": 42,
+          "exported": false,
+          "signature": "interface DashboardConfig {"
+        },
+        {
+          "name": "parseArgs",
+          "type": "function",
+          "line": 49,
+          "exported": false,
+          "signature": "function parseArgs(args: string[]): DashboardConfig {"
+        },
+        {
+          "name": "startBackend",
+          "type": "function",
+          "line": 82,
+          "exported": false,
+          "signature": "async function startBackend(config: DashboardConfig): Promise<void> {"
+        },
+        {
+          "name": "startFrontend",
+          "type": "function",
+          "line": 90,
+          "exported": false,
+          "signature": "function startFrontend(config: DashboardConfig): Promise<void> {"
+        },
+        {
+          "name": "startDashboard",
+          "type": "function",
+          "line": 133,
+          "exported": true,
+          "signature": "export async function startDashboard(_projectDir: string, args: string[]): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "node:path",
+        "node:fs",
+        "node:child_process",
+        "node:process",
+        "node:url"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 185,
+      "functionCount": 5,
+      "classCount": 0
+    },
+    {
+      "path": "src/cli/deploy.ts",
+      "language": "ts",
+      "sizeBytes": 14254,
+      "lastModified": 1770448242969,
+      "items": [
+        {
+          "name": "DeployOptions",
+          "type": "interface",
+          "line": 39,
+          "exported": true,
+          "signature": "export interface DeployOptions {"
+        },
+        {
+          "name": "DeployResult",
+          "type": "interface",
+          "line": 48,
+          "exported": true,
+          "signature": "export interface DeployResult {"
+        },
+        {
+          "name": "PluginResolutionMethod",
+          "type": "type",
+          "line": 58,
+          "exported": false,
+          "signature": "type PluginResolutionMethod = \"npm\" | \"local-dev\" | \"npx-fallback\""
+        },
+        {
+          "name": "PluginResolution",
+          "type": "interface",
+          "line": 60,
+          "exported": false,
+          "signature": "interface PluginResolution {"
+        },
+        {
+          "name": "exists",
+          "type": "function",
+          "line": 66,
+          "exported": false,
+          "signature": "async function exists(path: string): Promise<boolean> {"
+        },
+        {
+          "name": "writeIfNew",
+          "type": "function",
+          "line": 75,
+          "exported": false,
+          "signature": "async function writeIfNew(path: string, content: string, force: boolean, result: DeployResult): Promise<void> {"
+        },
+        {
+          "name": "resolvePluginPath",
+          "type": "function",
+          "line": 100,
+          "exported": false,
+          "signature": "async function resolvePluginPath(projectDir: string): Promise<PluginResolution> {"
+        },
+        {
+          "name": "cleanStalePluginPaths",
+          "type": "function",
+          "line": 166,
+          "exported": false,
+          "signature": "function cleanStalePluginPaths(plugins: string[]): string[] {"
+        },
+        {
+          "name": "getOpenCodeDir",
+          "type": "function",
+          "line": 181,
+          "exported": false,
+          "signature": "function getOpenCodeDir(projectDir: string, scope: \"project\" | \"global\"): string {"
+        },
+        {
+          "name": "deployAll",
+          "type": "function",
+          "line": 192,
+          "exported": true,
+          "signature": "export async function deployAll(options: DeployOptions): Promise<DeployResult> {"
+        }
+      ],
+      "importPaths": [
+        "node:fs/promises",
+        "node:path",
+        "../schemas/config.js",
+        "../templates.js",
+        "../schemas/task.js"
+      ],
+      "exportNames": [
+        "DeployOptions",
+        "DeployResult"
+      ],
+      "comments": [
+        {
+          "marker": "WARN",
+          "content": "the user — this path may not survive.",
+          "file": "src/cli/deploy.ts",
+          "line": 137
+        }
+      ],
+      "lineCount": 450,
+      "functionCount": 6,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/delegation.ts",
+      "language": "ts",
+      "sizeBytes": 13186,
+      "lastModified": 1770431186544,
+      "items": [
+        {
+          "name": "DELEGATION_STORE_VERSION",
+          "type": "constant",
+          "line": 19,
+          "exported": true,
+          "signature": "export const DELEGATION_STORE_VERSION = \"1.0.0\""
+        },
+        {
+          "name": "MAX_DELEGATION_DEPTH",
+          "type": "constant",
+          "line": 20,
+          "exported": true,
+          "signature": "export const MAX_DELEGATION_DEPTH = 3"
+        },
+        {
+          "name": "DELEGATION_EXPIRY_MS",
+          "type": "constant",
+          "line": 21,
+          "exported": true,
+          "signature": "export const DELEGATION_EXPIRY_MS = 30 * 60 * 1000  // 30 minutes"
+        },
+        {
+          "name": "DelegationStatus",
+          "type": "type",
+          "line": 25,
+          "exported": true,
+          "signature": "export type DelegationStatus ="
+        },
+        {
+          "name": "DelegationResult",
+          "type": "interface",
+          "line": 32,
+          "exported": true,
+          "signature": "export interface DelegationResult {"
+        },
+        {
+          "name": "DelegationRecord",
+          "type": "interface",
+          "line": 39,
+          "exported": true,
+          "signature": "export interface DelegationRecord {"
+        },
+        {
+          "name": "DelegationStore",
+          "type": "interface",
+          "line": 64,
+          "exported": true,
+          "signature": "export interface DelegationStore {"
+        },
+        {
+          "name": "createEmptyDelegationStore",
+          "type": "function",
+          "line": 100,
+          "exported": true,
+          "signature": "export function createEmptyDelegationStore(): DelegationStore {"
+        },
+        {
+          "name": "CreateDelegationOptions",
+          "type": "interface",
+          "line": 107,
+          "exported": true,
+          "signature": "export interface CreateDelegationOptions {"
+        },
+        {
+          "name": "createDelegation",
+          "type": "function",
+          "line": 118,
+          "exported": true,
+          "signature": "export function createDelegation(opts: CreateDelegationOptions): DelegationRecord {"
+        },
+        {
+          "name": "findDelegation",
+          "type": "function",
+          "line": 142,
+          "exported": true,
+          "signature": "export function findDelegation(store: DelegationStore, id: string): DelegationRecord | undefined {"
+        },
+        {
+          "name": "findDelegationsForTask",
+          "type": "function",
+          "line": 146,
+          "exported": true,
+          "signature": "export function findDelegationsForTask(store: DelegationStore, taskId: string): DelegationRecord[] {"
+        },
+        {
+          "name": "findDelegationsFromAgent",
+          "type": "function",
+          "line": 150,
+          "exported": true,
+          "signature": "export function findDelegationsFromAgent(store: DelegationStore, agent: string): DelegationRecord[] {"
+        },
+        {
+          "name": "findDelegationsToAgent",
+          "type": "function",
+          "line": 154,
+          "exported": true,
+          "signature": "export function findDelegationsToAgent(store: DelegationStore, agent: string): DelegationRecord[] {"
+        },
+        {
+          "name": "findActiveDelegations",
+          "type": "function",
+          "line": 158,
+          "exported": true,
+          "signature": "export function findActiveDelegations(store: DelegationStore): DelegationRecord[] {"
+        },
+        {
+          "name": "DelegationValidation",
+          "type": "interface",
+          "line": 164,
+          "exported": true,
+          "signature": "export interface DelegationValidation {"
+        },
+        {
+          "name": "validateDelegation",
+          "type": "function",
+          "line": 178,
+          "exported": true,
+          "signature": "export function validateDelegation("
+        },
+        {
+          "name": "getDelegationDepth",
+          "type": "function",
+          "line": 231,
+          "exported": true,
+          "signature": "export function getDelegationDepth(store: DelegationStore, taskId: string): number {"
+        },
+        {
+          "name": "acceptDelegation",
+          "type": "function",
+          "line": 240,
+          "exported": true,
+          "signature": "export function acceptDelegation(record: DelegationRecord): void {"
+        },
+        {
+          "name": "completeDelegation",
+          "type": "function",
+          "line": 244,
+          "exported": true,
+          "signature": "export function completeDelegation(record: DelegationRecord, result: DelegationResult): void {"
+        },
+        {
+          "name": "rejectDelegation",
+          "type": "function",
+          "line": 250,
+          "exported": true,
+          "signature": "export function rejectDelegation(record: DelegationRecord): void {"
+        },
+        {
+          "name": "expireStaleDelegations",
+          "type": "function",
+          "line": 259,
+          "exported": true,
+          "signature": "export function expireStaleDelegations(store: DelegationStore): number {"
+        },
+        {
+          "name": "formatDelegationRecord",
+          "type": "function",
+          "line": 276,
+          "exported": true,
+          "signature": "export function formatDelegationRecord(d: DelegationRecord): string {"
+        },
+        {
+          "name": "formatDelegationStore",
+          "type": "function",
+          "line": 294,
+          "exported": true,
+          "signature": "export function formatDelegationStore(store: DelegationStore): string {"
+        },
+        {
+          "name": "buildDelegationInstruction",
+          "type": "function",
+          "line": 332,
+          "exported": true,
+          "signature": "export function buildDelegationInstruction(record: DelegationRecord): string {"
+        }
+      ],
+      "importPaths": [
+        "./task.js"
+      ],
+      "exportNames": [
+        "DELEGATION_STORE_VERSION",
+        "MAX_DELEGATION_DEPTH",
+        "DELEGATION_EXPIRY_MS",
+        "DelegationStatus",
+        "DelegationResult",
+        "DelegationRecord",
+        "DelegationStore",
+        "createEmptyDelegationStore",
+        "CreateDelegationOptions",
+        "createDelegation",
+        "findDelegation",
+        "findDelegationsForTask",
+        "findDelegationsFromAgent",
+        "findDelegationsToAgent",
+        "findActiveDelegations",
+        "DelegationValidation",
+        "validateDelegation",
+        "getDelegationDepth",
+        "acceptDelegation",
+        "completeDelegation",
+        "rejectDelegation",
+        "expireStaleDelegations",
+        "formatDelegationRecord",
+        "formatDelegationStore",
+        "buildDelegationInstruction"
+      ],
+      "comments": [],
+      "lineCount": 361,
+      "functionCount": 16,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/brain.ts",
+      "language": "ts",
+      "sizeBytes": 6162,
+      "lastModified": 1770427032789,
+      "items": [
+        {
+          "name": "BrainEntryType",
+          "type": "type",
+          "line": 16,
+          "exported": true,
+          "signature": "export type BrainEntryType ="
+        },
+        {
+          "name": "BrainSource",
+          "type": "type",
+          "line": 26,
+          "exported": true,
+          "signature": "export type BrainSource ="
+        },
+        {
+          "name": "BrainEntry",
+          "type": "interface",
+          "line": 37,
+          "exported": true,
+          "signature": "export interface BrainEntry {"
+        },
+        {
+          "name": "BRAIN_STORE_VERSION",
+          "type": "constant",
+          "line": 66,
+          "exported": true,
+          "signature": "export const BRAIN_STORE_VERSION = \"1.0.0\""
+        },
+        {
+          "name": "BrainStore",
+          "type": "interface",
+          "line": 68,
+          "exported": true,
+          "signature": "export interface BrainStore {"
+        },
+        {
+          "name": "createBrainEntry",
+          "type": "function",
+          "line": 80,
+          "exported": true,
+          "signature": "export function createBrainEntry(opts: {"
+        },
+        {
+          "name": "createBrainStore",
+          "type": "function",
+          "line": 111,
+          "exported": true,
+          "signature": "export function createBrainStore(): BrainStore {"
+        },
+        {
+          "name": "effectiveConfidence",
+          "type": "function",
+          "line": 123,
+          "exported": true,
+          "signature": "export function effectiveConfidence(entry: BrainEntry): number {"
+        },
+        {
+          "name": "isBrainEntryStale",
+          "type": "function",
+          "line": 133,
+          "exported": true,
+          "signature": "export function isBrainEntryStale(entry: BrainEntry): boolean {"
+        },
+        {
+          "name": "queryBrain",
+          "type": "function",
+          "line": 138,
+          "exported": true,
+          "signature": "export function queryBrain(store: BrainStore, topic: string): BrainEntry[] {"
+        },
+        {
+          "name": "formatBrainEntries",
+          "type": "function",
+          "line": 165,
+          "exported": true,
+          "signature": "export function formatBrainEntries(entries: BrainEntry[]): string {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "BrainEntryType",
+        "BrainSource",
+        "BrainEntry",
+        "BRAIN_STORE_VERSION",
+        "BrainStore",
+        "createBrainEntry",
+        "createBrainStore",
+        "effectiveConfidence",
+        "isBrainEntryStale",
+        "queryBrain",
+        "formatBrainEntries"
+      ],
+      "comments": [],
+      "lineCount": 184,
+      "functionCount": 6,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/codemap.ts",
+      "language": "ts",
+      "sizeBytes": 7709,
+      "lastModified": 1770427088211,
+      "items": [
+        {
+          "name": "CodeItemType",
+          "type": "type",
+          "line": 16,
+          "exported": true,
+          "signature": "export type CodeItemType ="
+        },
+        {
+          "name": "CodeItem",
+          "type": "interface",
+          "line": 27,
+          "exported": true,
+          "signature": "export interface CodeItem {"
+        },
+        {
+          "name": "CommentMarker",
+          "type": "type",
+          "line": 37,
+          "exported": true,
+          "signature": "export type CommentMarker ="
+        },
+        {
+          "name": "CodeComment",
+          "type": "interface",
+          "line": 46,
+          "exported": true,
+          "signature": "export interface CodeComment {"
+        },
+        {
+          "name": "FileMapEntry",
+          "type": "interface",
+          "line": 56,
+          "exported": true,
+          "signature": "export interface FileMapEntry {"
+        },
+        {
+          "name": "InconsistencyType",
+          "type": "type",
+          "line": 78,
+          "exported": true,
+          "signature": "export type InconsistencyType ="
+        },
+        {
+          "name": "Inconsistency",
+          "type": "interface",
+          "line": 85,
+          "exported": true,
+          "signature": "export interface Inconsistency {"
+        },
+        {
+          "name": "CODEMAP_VERSION",
+          "type": "constant",
+          "line": 94,
+          "exported": true,
+          "signature": "export const CODEMAP_VERSION = \"1.0.0\""
+        },
+        {
+          "name": "CodeMapStore",
+          "type": "interface",
+          "line": 96,
+          "exported": true,
+          "signature": "export interface CodeMapStore {"
+        },
+        {
+          "name": "createCodeMapStore",
+          "type": "function",
+          "line": 119,
+          "exported": true,
+          "signature": "export function createCodeMapStore(projectRoot: string): CodeMapStore {"
+        },
+        {
+          "name": "formatCodeMapSummary",
+          "type": "function",
+          "line": 143,
+          "exported": true,
+          "signature": "export function formatCodeMapSummary(store: CodeMapStore): string {"
+        },
+        {
+          "name": "formatTodoList",
+          "type": "function",
+          "line": 212,
+          "exported": true,
+          "signature": "export function formatTodoList(store: CodeMapStore): string {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "CodeItemType",
+        "CodeItem",
+        "CommentMarker",
+        "CodeComment",
+        "FileMapEntry",
+        "InconsistencyType",
+        "Inconsistency",
+        "CODEMAP_VERSION",
+        "CodeMapStore",
+        "createCodeMapStore",
+        "formatCodeMapSummary",
+        "formatTodoList"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "/FIXME/HACK comment extraction",
+          "file": "src/schemas/codemap.ts",
+          "line": 9
+        },
+        {
+          "marker": "TODO",
+          "content": "s + FIXMEs",
+          "file": "src/schemas/codemap.ts",
+          "line": 168
+        }
+      ],
+      "lineCount": 236,
+      "functionCount": 3,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/anchor.ts",
+      "language": "ts",
+      "sizeBytes": 2998,
+      "lastModified": 1770351224584,
+      "items": [
+        {
+          "name": "AnchorType",
+          "type": "type",
+          "line": 13,
+          "exported": true,
+          "signature": "export type AnchorType = \"decision\" | \"context\" | \"checkpoint\" | \"error\" | \"attention\""
+        },
+        {
+          "name": "AnchorPriority",
+          "type": "type",
+          "line": 16,
+          "exported": true,
+          "signature": "export type AnchorPriority = \"critical\" | \"high\" | \"medium\" | \"low\""
+        },
+        {
+          "name": "Anchor",
+          "type": "interface",
+          "line": 29,
+          "exported": true,
+          "signature": "export interface Anchor {"
+        },
+        {
+          "name": "createAnchor",
+          "type": "function",
+          "line": 39,
+          "exported": true,
+          "signature": "export function createAnchor("
+        },
+        {
+          "name": "stalenessHours",
+          "type": "function",
+          "line": 56,
+          "exported": true,
+          "signature": "export function stalenessHours(anchor: Anchor): number {"
+        },
+        {
+          "name": "isStale",
+          "type": "function",
+          "line": 61,
+          "exported": true,
+          "signature": "export function isStale(anchor: Anchor): boolean {"
+        },
+        {
+          "name": "scoreAnchor",
+          "type": "function",
+          "line": 72,
+          "exported": true,
+          "signature": "export function scoreAnchor(anchor: Anchor): number {"
+        },
+        {
+          "name": "selectAnchors",
+          "type": "function",
+          "line": 84,
+          "exported": true,
+          "signature": "export function selectAnchors(anchors: Anchor[], budgetChars: number): Anchor[] {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "AnchorType",
+        "AnchorPriority",
+        "Anchor",
+        "createAnchor",
+        "stalenessHours",
+        "isStale",
+        "scoreAnchor",
+        "selectAnchors"
+      ],
+      "comments": [],
+      "lineCount": 103,
+      "functionCount": 5,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/index.ts",
+      "language": "ts",
+      "sizeBytes": 2868,
+      "lastModified": 1770431220328,
+      "items": [],
+      "importPaths": [
+        "./anchor.js",
+        "./config.js",
+        "./task.js",
+        "./brain.js",
+        "./project-map.js",
+        "./codemap.js",
+        "./delegation.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 65,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/config.ts",
+      "language": "ts",
+      "sizeBytes": 8669,
+      "lastModified": 1770446960239,
+      "items": [
+        {
+          "name": "Language",
+          "type": "type",
+          "line": 15,
+          "exported": true,
+          "signature": "export type Language = \"en\" | \"vi\""
+        },
+        {
+          "name": "InstallScope",
+          "type": "type",
+          "line": 18,
+          "exported": true,
+          "signature": "export type InstallScope = \"project\" | \"global\""
+        },
+        {
+          "name": "ExperienceLevel",
+          "type": "type",
+          "line": 21,
+          "exported": true,
+          "signature": "export type ExperienceLevel = \"beginner\" | \"guided\" | \"expert\""
+        },
+        {
+          "name": "GovernanceMode",
+          "type": "type",
+          "line": 42,
+          "exported": true,
+          "signature": "export type GovernanceMode = \"balanced\" | \"strict\" | \"autonomous\" | \"retard\""
+        },
+        {
+          "name": "GovernanceFramework",
+          "type": "type",
+          "line": 47,
+          "exported": true,
+          "signature": "export type GovernanceFramework = \"bmad\" | \"gsd\" | \"spec-kit\" | \"open-spec\" | \"custom\" | \"none\""
+        },
+        {
+          "name": "TechFramework",
+          "type": "type",
+          "line": 50,
+          "exported": true,
+          "signature": "export type TechFramework ="
+        },
+        {
+          "name": "CodeSmell",
+          "type": "interface",
+          "line": 58,
+          "exported": true,
+          "signature": "export interface CodeSmell {"
+        },
+        {
+          "name": "CodeQualityReport",
+          "type": "interface",
+          "line": 68,
+          "exported": true,
+          "signature": "export interface CodeQualityReport {"
+        },
+        {
+          "name": "FrameworkDetection",
+          "type": "interface",
+          "line": 88,
+          "exported": true,
+          "signature": "export interface FrameworkDetection {"
+        },
+        {
+          "name": "IdumbConfig",
+          "type": "interface",
+          "line": 103,
+          "exported": true,
+          "signature": "export interface IdumbConfig {"
+        },
+        {
+          "name": "CONFIG_VERSION",
+          "type": "constant",
+          "line": 139,
+          "exported": true,
+          "signature": "export const CONFIG_VERSION = \"1.0.0\""
+        },
+        {
+          "name": "DEFAULT_PATHS",
+          "type": "constant",
+          "line": 141,
+          "exported": true,
+          "signature": "export const DEFAULT_PATHS: IdumbConfig[\"paths\"] = {"
+        },
+        {
+          "name": "DEFAULT_DETECTION",
+          "type": "constant",
+          "line": 154,
+          "exported": true,
+          "signature": "export const DEFAULT_DETECTION: FrameworkDetection = {"
+        },
+        {
+          "name": "createConfig",
+          "type": "function",
+          "line": 166,
+          "exported": true,
+          "signature": "export function createConfig(overrides: {"
+        },
+        {
+          "name": "validateConfig",
+          "type": "function",
+          "line": 195,
+          "exported": true,
+          "signature": "export function validateConfig(config: unknown): string[] {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "Language",
+        "InstallScope",
+        "ExperienceLevel",
+        "GovernanceMode",
+        "GovernanceFramework",
+        "TechFramework",
+        "CodeSmell",
+        "CodeQualityReport",
+        "FrameworkDetection",
+        "IdumbConfig",
+        "CONFIG_VERSION",
+        "DEFAULT_PATHS",
+        "DEFAULT_DETECTION",
+        "createConfig",
+        "validateConfig"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "/FIXME/HACK density",
+          "file": "src/schemas/config.ts",
+          "line": 81
+        }
+      ],
+      "lineCount": 220,
+      "functionCount": 2,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/project-map.ts",
+      "language": "ts",
+      "sizeBytes": 5884,
+      "lastModified": 1770427086217,
+      "items": [
+        {
+          "name": "FrameworkCategory",
+          "type": "type",
+          "line": 16,
+          "exported": true,
+          "signature": "export type FrameworkCategory ="
+        },
+        {
+          "name": "FrameworkDetection",
+          "type": "interface",
+          "line": 28,
+          "exported": true,
+          "signature": "export interface FrameworkDetection {"
+        },
+        {
+          "name": "DocumentType",
+          "type": "type",
+          "line": 38,
+          "exported": true,
+          "signature": "export type DocumentType ="
+        },
+        {
+          "name": "DocumentEntry",
+          "type": "interface",
+          "line": 50,
+          "exported": true,
+          "signature": "export interface DocumentEntry {"
+        },
+        {
+          "name": "DirectoryEntry",
+          "type": "interface",
+          "line": 60,
+          "exported": true,
+          "signature": "export interface DirectoryEntry {"
+        },
+        {
+          "name": "PROJECT_MAP_VERSION",
+          "type": "constant",
+          "line": 70,
+          "exported": true,
+          "signature": "export const PROJECT_MAP_VERSION = \"1.0.0\""
+        },
+        {
+          "name": "ProjectMap",
+          "type": "interface",
+          "line": 72,
+          "exported": true,
+          "signature": "export interface ProjectMap {"
+        },
+        {
+          "name": "createProjectMap",
+          "type": "function",
+          "line": 108,
+          "exported": true,
+          "signature": "export function createProjectMap(projectRoot: string): ProjectMap {"
+        },
+        {
+          "name": "formatProjectMap",
+          "type": "function",
+          "line": 134,
+          "exported": true,
+          "signature": "export function formatProjectMap(map: ProjectMap): string {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "FrameworkCategory",
+        "FrameworkDetection",
+        "DocumentType",
+        "DocumentEntry",
+        "DirectoryEntry",
+        "PROJECT_MAP_VERSION",
+        "ProjectMap",
+        "createProjectMap",
+        "formatProjectMap"
+      ],
+      "comments": [],
+      "lineCount": 188,
+      "functionCount": 2,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/task.ts",
+      "language": "ts",
+      "sizeBytes": 19657,
+      "lastModified": 1770431218369,
+      "items": [
+        {
+          "name": "EpicStatus",
+          "type": "type",
+          "line": 19,
+          "exported": true,
+          "signature": "export type EpicStatus = \"planned\" | \"active\" | \"completed\" | \"deferred\" | \"abandoned\""
+        },
+        {
+          "name": "TaskStatus",
+          "type": "type",
+          "line": 20,
+          "exported": true,
+          "signature": "export type TaskStatus = \"planned\" | \"active\" | \"completed\" | \"blocked\" | \"deferred\""
+        },
+        {
+          "name": "SubtaskStatus",
+          "type": "type",
+          "line": 21,
+          "exported": true,
+          "signature": "export type SubtaskStatus = \"pending\" | \"done\" | \"skipped\""
+        },
+        {
+          "name": "WorkStreamCategory",
+          "type": "type",
+          "line": 26,
+          "exported": true,
+          "signature": "export type WorkStreamCategory ="
+        },
+        {
+          "name": "GovernanceLevel",
+          "type": "type",
+          "line": 35,
+          "exported": true,
+          "signature": "export type GovernanceLevel = \"strict\" | \"balanced\" | \"minimal\""
+        },
+        {
+          "name": "CATEGORY_DEFAULTS",
+          "type": "constant",
+          "line": 38,
+          "exported": true,
+          "signature": "export const CATEGORY_DEFAULTS: Record<WorkStreamCategory, GovernanceLevel> = {"
+        },
+        {
+          "name": "CATEGORY_SKIP_SUBTASKS",
+          "type": "constant",
+          "line": 48,
+          "exported": true,
+          "signature": "export const CATEGORY_SKIP_SUBTASKS: Record<WorkStreamCategory, boolean> = {"
+        },
+        {
+          "name": "Subtask",
+          "type": "interface",
+          "line": 59,
+          "exported": true,
+          "signature": "export interface Subtask {"
+        },
+        {
+          "name": "Task",
+          "type": "interface",
+          "line": 68,
+          "exported": true,
+          "signature": "export interface Task {"
+        },
+        {
+          "name": "TaskEpic",
+          "type": "interface",
+          "line": 82,
+          "exported": true,
+          "signature": "export interface TaskEpic {"
+        },
+        {
+          "name": "TaskStore",
+          "type": "interface",
+          "line": 94,
+          "exported": true,
+          "signature": "export interface TaskStore {"
+        },
+        {
+          "name": "TASK_STORE_VERSION",
+          "type": "constant",
+          "line": 102,
+          "exported": true,
+          "signature": "export const TASK_STORE_VERSION = \"2.0.0\""
+        },
+        {
+          "name": "SESSION_STALE_MS",
+          "type": "constant",
+          "line": 108,
+          "exported": true,
+          "signature": "export const SESSION_STALE_MS = 30 * 60 * 1000"
+        },
+        {
+          "name": "uniqueId",
+          "type": "function",
+          "line": 113,
+          "exported": false,
+          "signature": "function uniqueId(prefix: string): string {"
+        },
+        {
+          "name": "CreateEpicOptions",
+          "type": "interface",
+          "line": 117,
+          "exported": true,
+          "signature": "export interface CreateEpicOptions {"
+        },
+        {
+          "name": "createEpic",
+          "type": "function",
+          "line": 122,
+          "exported": true,
+          "signature": "export function createEpic(name: string, opts: CreateEpicOptions = {}): TaskEpic {"
+        },
+        {
+          "name": "createTask",
+          "type": "function",
+          "line": 137,
+          "exported": true,
+          "signature": "export function createTask(epicId: string, name: string): Task {"
+        },
+        {
+          "name": "createSubtask",
+          "type": "function",
+          "line": 150,
+          "exported": true,
+          "signature": "export function createSubtask(taskId: string, name: string): Subtask {"
+        },
+        {
+          "name": "createEmptyStore",
+          "type": "function",
+          "line": 160,
+          "exported": true,
+          "signature": "export function createEmptyStore(): TaskStore {"
+        },
+        {
+          "name": "createBootstrapStore",
+          "type": "function",
+          "line": 178,
+          "exported": true,
+          "signature": "export function createBootstrapStore(): TaskStore {"
+        },
+        {
+          "name": "findEpic",
+          "type": "function",
+          "line": 209,
+          "exported": true,
+          "signature": "export function findEpic(store: TaskStore, epicId: string): TaskEpic | undefined {"
+        },
+        {
+          "name": "findTask",
+          "type": "function",
+          "line": 213,
+          "exported": true,
+          "signature": "export function findTask(store: TaskStore, taskId: string): Task | undefined {"
+        },
+        {
+          "name": "findSubtask",
+          "type": "function",
+          "line": 221,
+          "exported": true,
+          "signature": "export function findSubtask(store: TaskStore, subtaskId: string): Subtask | undefined {"
+        },
+        {
+          "name": "findParentTask",
+          "type": "function",
+          "line": 232,
+          "exported": true,
+          "signature": "export function findParentTask(store: TaskStore, subtaskId: string): Task | undefined {"
+        },
+        {
+          "name": "findParentEpic",
+          "type": "function",
+          "line": 242,
+          "exported": true,
+          "signature": "export function findParentEpic(store: TaskStore, taskId: string): TaskEpic | undefined {"
+        },
+        {
+          "name": "ActiveChain",
+          "type": "interface",
+          "line": 248,
+          "exported": true,
+          "signature": "export interface ActiveChain {"
+        },
+        {
+          "name": "getActiveChain",
+          "type": "function",
+          "line": 255,
+          "exported": true,
+          "signature": "export function getActiveChain(store: TaskStore): ActiveChain {"
+        },
+        {
+          "name": "ValidationResult",
+          "type": "interface",
+          "line": 272,
+          "exported": true,
+          "signature": "export interface ValidationResult {"
+        },
+        {
+          "name": "validateCompletion",
+          "type": "function",
+          "line": 278,
+          "exported": true,
+          "signature": "export function validateCompletion(task: Task, evidence?: string): ValidationResult {"
+        },
+        {
+          "name": "findOrphanTasks",
+          "type": "function",
+          "line": 309,
+          "exported": true,
+          "signature": "export function findOrphanTasks(store: TaskStore): Task[] {"
+        },
+        {
+          "name": "findStaleTasks",
+          "type": "function",
+          "line": 323,
+          "exported": true,
+          "signature": "export function findStaleTasks(store: TaskStore, thresholdMs: number = STALE_THRESHOLD_MS): Task[] {"
+        },
+        {
+          "name": "ChainWarning",
+          "type": "interface",
+          "line": 342,
+          "exported": true,
+          "signature": "export interface ChainWarning {"
+        },
+        {
+          "name": "detectChainBreaks",
+          "type": "function",
+          "line": 350,
+          "exported": true,
+          "signature": "export function detectChainBreaks(store: TaskStore): ChainWarning[] {"
+        },
+        {
+          "name": "formatTaskTree",
+          "type": "function",
+          "line": 428,
+          "exported": true,
+          "signature": "export function formatTaskTree(store: TaskStore): string {"
+        },
+        {
+          "name": "buildGovernanceReminder",
+          "type": "function",
+          "line": 469,
+          "exported": true,
+          "signature": "export function buildGovernanceReminder(store: TaskStore): string {"
+        },
+        {
+          "name": "migrateTaskStore",
+          "type": "function",
+          "line": 514,
+          "exported": true,
+          "signature": "export function migrateTaskStore(store: TaskStore): TaskStore {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "EpicStatus",
+        "TaskStatus",
+        "SubtaskStatus",
+        "WorkStreamCategory",
+        "GovernanceLevel",
+        "CATEGORY_DEFAULTS",
+        "CATEGORY_SKIP_SUBTASKS",
+        "Subtask",
+        "Task",
+        "TaskEpic",
+        "TaskStore",
+        "TASK_STORE_VERSION",
+        "SESSION_STALE_MS",
+        "CreateEpicOptions",
+        "createEpic",
+        "createTask",
+        "createSubtask",
+        "createEmptyStore",
+        "createBootstrapStore",
+        "findEpic",
+        "findTask",
+        "findSubtask",
+        "findParentTask",
+        "findParentEpic",
+        "ActiveChain",
+        "getActiveChain",
+        "ValidationResult",
+        "validateCompletion",
+        "findOrphanTasks",
+        "findStaleTasks",
+        "ChainWarning",
+        "detectChainBreaks",
+        "formatTaskTree",
+        "buildGovernanceReminder",
+        "migrateTaskStore"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "hierarchy.",
+          "file": "src/schemas/task.ts",
+          "line": 2
+        }
+      ],
+      "lineCount": 531,
+      "functionCount": 19,
+      "classCount": 0
+    },
+    {
+      "path": "src/dashboard/frontend/vite.config.ts",
+      "language": "ts",
+      "sizeBytes": 877,
+      "lastModified": 1770442034302,
+      "items": [],
+      "importPaths": [
+        "vite",
+        "@vitejs/plugin-react",
+        "path",
+        "url"
+      ],
+      "exportNames": [
+        "defineConfig"
+      ],
+      "comments": [],
+      "lineCount": 42,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/dashboard/frontend/src/App.tsx",
+      "language": "tsx",
+      "sizeBytes": 1893,
+      "lastModified": 1770441232067,
+      "items": [
+        {
+          "name": "App",
+          "type": "function",
+          "line": 23,
+          "exported": false,
+          "signature": "function App() {"
+        }
+      ],
+      "importPaths": [
+        "react",
+        "@tanstack/react-query",
+        "./components/layout/DashboardLayout",
+        "./components/panels/TaskHierarchyPanel",
+        "./components/panels/PlanningArtifactsPanel",
+        "./components/panels/BrainKnowledgePanel",
+        "./components/panels/DelegationChainPanel"
+      ],
+      "exportNames": [
+        "App"
+      ],
+      "comments": [],
+      "lineCount": 67,
+      "functionCount": 1,
+      "classCount": 0
+    },
+    {
+      "path": "src/dashboard/frontend/src/main.tsx",
+      "language": "tsx",
+      "sizeBytes": 364,
+      "lastModified": 1770441223001,
+      "items": [],
+      "importPaths": [
+        "react",
+        "react-dom/client",
+        "./App",
+        "./styles/globals.css"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 20,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/dashboard/backend/server.ts",
+      "language": "ts",
+      "sizeBytes": 16198,
+      "lastModified": 1770442542116,
+      "items": [
+        {
+          "name": "DashboardConfig",
+          "type": "interface",
+          "line": 29,
+          "exported": false,
+          "signature": "interface DashboardConfig {"
+        },
+        {
+          "name": "getGovernanceState",
+          "type": "function",
+          "line": 55,
+          "exported": false,
+          "signature": "function getGovernanceState(projectDir: string) {"
+        },
+        {
+          "name": "getPlanningArtifacts",
+          "type": "function",
+          "line": 62,
+          "exported": false,
+          "signature": "function getPlanningArtifacts(projectDir: string) {"
+        },
+        {
+          "name": "getCommentsStorePath",
+          "type": "function",
+          "line": 260,
+          "exported": false,
+          "signature": "function getCommentsStorePath(projectDir: string): string {"
+        },
+        {
+          "name": "loadCommentsStore",
+          "type": "function",
+          "line": 267,
+          "exported": false,
+          "signature": "function loadCommentsStore(projectDir: string) {"
+        },
+        {
+          "name": "saveCommentsStore",
+          "type": "function",
+          "line": 291,
+          "exported": false,
+          "signature": "function saveCommentsStore(projectDir: string, store: unknown): void {"
+        },
+        {
+          "name": "setupWebSocket",
+          "type": "function",
+          "line": 420,
+          "exported": false,
+          "signature": "function setupWebSocket(server: ReturnType<typeof createHttpServer>) {"
+        },
+        {
+          "name": "broadcastUpdate",
+          "type": "function",
+          "line": 443,
+          "exported": true,
+          "signature": "export function broadcastUpdate(type: string, data: unknown) {"
+        },
+        {
+          "name": "setupFileWatcher",
+          "type": "function",
+          "line": 459,
+          "exported": false,
+          "signature": "function setupFileWatcher(projectDir: string) {"
+        },
+        {
+          "name": "startServer",
+          "type": "function",
+          "line": 491,
+          "exported": true,
+          "signature": "export async function startServer(config: DashboardConfig): Promise<void> {"
+        },
+        {
+          "name": "stopServer",
+          "type": "function",
+          "line": 525,
+          "exported": true,
+          "signature": "export async function stopServer(): Promise<void> {"
+        }
+      ],
+      "importPaths": [
+        "http",
+        "path",
+        "express",
+        "cors",
+        "fs",
+        "crypto",
+        "../../lib/state-reader.js",
+        "ws",
+        "chokidar"
+      ],
+      "exportNames": [
+        "broadcastUpdate"
+      ],
+      "comments": [],
+      "lineCount": 564,
+      "functionCount": 10,
+      "classCount": 0
+    },
+    {
+      "path": "src/dashboard/shared/comments-types.ts",
+      "language": "ts",
+      "sizeBytes": 735,
+      "lastModified": 1770442171140,
+      "items": [
+        {
+          "name": "CommentsStore",
+          "type": "interface",
+          "line": 5,
+          "exported": true,
+          "signature": "export interface CommentsStore {"
+        },
+        {
+          "name": "CommentEntry",
+          "type": "interface",
+          "line": 11,
+          "exported": true,
+          "signature": "export interface CommentEntry {"
+        },
+        {
+          "name": "CommentReply",
+          "type": "interface",
+          "line": 25,
+          "exported": true,
+          "signature": "export interface CommentReply {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "CommentsStore",
+        "CommentEntry",
+        "CommentReply"
+      ],
+      "comments": [],
+      "lineCount": 32,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/dashboard/shared/types.ts",
+      "language": "ts",
+      "sizeBytes": 5286,
+      "lastModified": 1770442138984,
+      "items": [
+        {
+          "name": "EpicStatus",
+          "type": "type",
+          "line": 7,
+          "exported": true,
+          "signature": "export type EpicStatus = \"planned\" | \"active\" | \"completed\" | \"deferred\" | \"abandoned\""
+        },
+        {
+          "name": "TaskStatus",
+          "type": "type",
+          "line": 8,
+          "exported": true,
+          "signature": "export type TaskStatus = \"planned\" | \"active\" | \"completed\" | \"blocked\" | \"deferred\""
+        },
+        {
+          "name": "SubtaskStatus",
+          "type": "type",
+          "line": 9,
+          "exported": true,
+          "signature": "export type SubtaskStatus = \"pending\" | \"done\" | \"skipped\""
+        },
+        {
+          "name": "WorkStreamCategory",
+          "type": "type",
+          "line": 11,
+          "exported": true,
+          "signature": "export type WorkStreamCategory ="
+        },
+        {
+          "name": "GovernanceLevel",
+          "type": "type",
+          "line": 19,
+          "exported": true,
+          "signature": "export type GovernanceLevel = \"strict\" | \"balanced\" | \"minimal\""
+        },
+        {
+          "name": "Subtask",
+          "type": "interface",
+          "line": 21,
+          "exported": true,
+          "signature": "export interface Subtask {"
+        },
+        {
+          "name": "Task",
+          "type": "interface",
+          "line": 30,
+          "exported": true,
+          "signature": "export interface Task {"
+        },
+        {
+          "name": "TaskEpic",
+          "type": "interface",
+          "line": 44,
+          "exported": true,
+          "signature": "export interface TaskEpic {"
+        },
+        {
+          "name": "TaskStore",
+          "type": "interface",
+          "line": 55,
+          "exported": true,
+          "signature": "export interface TaskStore {"
+        },
+        {
+          "name": "BrainEntryType",
+          "type": "type",
+          "line": 63,
+          "exported": true,
+          "signature": "export type BrainEntryType ="
+        },
+        {
+          "name": "BrainSource",
+          "type": "type",
+          "line": 73,
+          "exported": true,
+          "signature": "export type BrainSource ="
+        },
+        {
+          "name": "BrainEntry",
+          "type": "interface",
+          "line": 82,
+          "exported": true,
+          "signature": "export interface BrainEntry {"
+        },
+        {
+          "name": "BrainStore",
+          "type": "interface",
+          "line": 101,
+          "exported": true,
+          "signature": "export interface BrainStore {"
+        },
+        {
+          "name": "DelegationStatus",
+          "type": "type",
+          "line": 110,
+          "exported": true,
+          "signature": "export type DelegationStatus ="
+        },
+        {
+          "name": "DelegationResult",
+          "type": "interface",
+          "line": 117,
+          "exported": true,
+          "signature": "export interface DelegationResult {"
+        },
+        {
+          "name": "DelegationRecord",
+          "type": "interface",
+          "line": 124,
+          "exported": true,
+          "signature": "export interface DelegationRecord {"
+        },
+        {
+          "name": "DelegationStore",
+          "type": "interface",
+          "line": 141,
+          "exported": true,
+          "signature": "export interface DelegationStore {"
+        },
+        {
+          "name": "TasksResponse",
+          "type": "interface",
+          "line": 148,
+          "exported": true,
+          "signature": "export interface TasksResponse {"
+        },
+        {
+          "name": "BrainResponse",
+          "type": "interface",
+          "line": 155,
+          "exported": true,
+          "signature": "export interface BrainResponse {"
+        },
+        {
+          "name": "DelegationsResponse",
+          "type": "interface",
+          "line": 160,
+          "exported": true,
+          "signature": "export interface DelegationsResponse {"
+        },
+        {
+          "name": "ArtifactsResponse",
+          "type": "interface",
+          "line": 164,
+          "exported": true,
+          "signature": "export interface ArtifactsResponse {"
+        },
+        {
+          "name": "ArtifactContentResponse",
+          "type": "interface",
+          "line": 173,
+          "exported": true,
+          "signature": "export interface ArtifactContentResponse {"
+        },
+        {
+          "name": "ArtifactMetadata",
+          "type": "interface",
+          "line": 180,
+          "exported": true,
+          "signature": "export interface ArtifactMetadata {"
+        },
+        {
+          "name": "ArtifactComment",
+          "type": "interface",
+          "line": 191,
+          "exported": true,
+          "signature": "export interface ArtifactComment {"
+        },
+        {
+          "name": "CommentsResponse",
+          "type": "interface",
+          "line": 201,
+          "exported": true,
+          "signature": "export interface CommentsResponse {"
+        },
+        {
+          "name": "CreateCommentRequest",
+          "type": "interface",
+          "line": 205,
+          "exported": true,
+          "signature": "export interface CreateCommentRequest {"
+        },
+        {
+          "name": "WebSocketMessage",
+          "type": "interface",
+          "line": 213,
+          "exported": true,
+          "signature": "export interface WebSocketMessage {"
+        },
+        {
+          "name": "FileChangedData",
+          "type": "interface",
+          "line": 219,
+          "exported": true,
+          "signature": "export interface FileChangedData {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "EpicStatus",
+        "TaskStatus",
+        "SubtaskStatus",
+        "WorkStreamCategory",
+        "GovernanceLevel",
+        "Subtask",
+        "Task",
+        "TaskEpic",
+        "TaskStore",
+        "BrainEntryType",
+        "BrainSource",
+        "BrainEntry",
+        "BrainStore",
+        "DelegationStatus",
+        "DelegationResult",
+        "DelegationRecord",
+        "DelegationStore",
+        "TasksResponse",
+        "BrainResponse",
+        "DelegationsResponse",
+        "ArtifactsResponse",
+        "ArtifactContentResponse",
+        "ArtifactMetadata",
+        "ArtifactComment",
+        "CommentsResponse",
+        "CreateCommentRequest",
+        "WebSocketMessage",
+        "FileChangedData"
+      ],
+      "comments": [],
+      "lineCount": 222,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/hooks/tool-gate.ts",
+      "language": "ts",
+      "sizeBytes": 11639,
+      "lastModified": 1770442472524,
+      "items": [
+        {
+          "name": "AgentToolRule",
+          "type": "interface",
+          "line": 33,
+          "exported": false,
+          "signature": "interface AgentToolRule {"
+        },
+        {
+          "name": "buildAgentScopeBlock",
+          "type": "function",
+          "line": 76,
+          "exported": false,
+          "signature": "function buildAgentScopeBlock(agent: string, tool: string, action?: string): string {"
+        },
+        {
+          "name": "setActiveTask",
+          "type": "function",
+          "line": 91,
+          "exported": true,
+          "signature": "export function setActiveTask(sessionID: string, task: { id: string; name: string } | null): void {"
+        },
+        {
+          "name": "getActiveTask",
+          "type": "function",
+          "line": 96,
+          "exported": true,
+          "signature": "export function getActiveTask(sessionID: string): { id: string; name: string } | null {"
+        },
+        {
+          "name": "buildBlockMessage",
+          "type": "function",
+          "line": 101,
+          "exported": false,
+          "signature": "function buildBlockMessage(tool: string, isRetry: boolean): string {"
+        },
+        {
+          "name": "createToolGateBefore",
+          "type": "function",
+          "line": 141,
+          "exported": true,
+          "signature": "export function createToolGateBefore(log: Logger) {"
+        },
+        {
+          "name": "createToolGateAfter",
+          "type": "function",
+          "line": 240,
+          "exported": true,
+          "signature": "export function createToolGateAfter(log: Logger) {"
+        }
+      ],
+      "importPaths": [
+        "../lib/index.js",
+        "../lib/persistence.js"
+      ],
+      "exportNames": [
+        "setActiveTask",
+        "getActiveTask",
+        "createToolGateBefore",
+        "createToolGateAfter"
+      ],
+      "comments": [],
+      "lineCount": 282,
+      "functionCount": 6,
+      "classCount": 0
+    },
+    {
+      "path": "src/hooks/compaction.ts",
+      "language": "ts",
+      "sizeBytes": 3217,
+      "lastModified": 1770397101435,
+      "items": [
+        {
+          "name": "addAnchor",
+          "type": "function",
+          "line": 22,
+          "exported": true,
+          "signature": "export function addAnchor(sessionID: string, anchor: Anchor): void {"
+        },
+        {
+          "name": "getAnchors",
+          "type": "function",
+          "line": 27,
+          "exported": true,
+          "signature": "export function getAnchors(sessionID: string): Anchor[] {"
+        },
+        {
+          "name": "formatCompactionContext",
+          "type": "function",
+          "line": 32,
+          "exported": false,
+          "signature": "function formatCompactionContext("
+        },
+        {
+          "name": "createCompactionHook",
+          "type": "function",
+          "line": 72,
+          "exported": true,
+          "signature": "export function createCompactionHook(log: Logger) {"
+        }
+      ],
+      "importPaths": [
+        "../schemas/index.js",
+        "./tool-gate.js",
+        "../lib/index.js",
+        "../lib/persistence.js"
+      ],
+      "exportNames": [
+        "addAnchor",
+        "getAnchors",
+        "createCompactionHook"
+      ],
+      "comments": [],
+      "lineCount": 104,
+      "functionCount": 4,
+      "classCount": 0
+    },
+    {
+      "path": "src/hooks/message-transform.ts",
+      "language": "ts",
+      "sizeBytes": 3803,
+      "lastModified": 1770427320762,
+      "items": [
+        {
+          "name": "ToolRef",
+          "type": "interface",
+          "line": 33,
+          "exported": false,
+          "signature": "interface ToolRef {"
+        },
+        {
+          "name": "createMessageTransformHook",
+          "type": "function",
+          "line": 45,
+          "exported": true,
+          "signature": "export function createMessageTransformHook(log: Logger) {"
+        }
+      ],
+      "importPaths": [
+        "../lib/index.js"
+      ],
+      "exportNames": [
+        "createMessageTransformHook"
+      ],
+      "comments": [],
+      "lineCount": 124,
+      "functionCount": 1,
+      "classCount": 0
+    },
+    {
+      "path": "src/hooks/index.ts",
+      "language": "ts",
+      "sizeBytes": 298,
+      "lastModified": 1770351906569,
+      "items": [],
+      "importPaths": [
+        "./tool-gate.js",
+        "./compaction.js",
+        "./system.js",
+        "./message-transform.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 5,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/hooks/system.ts",
+      "language": "ts",
+      "sizeBytes": 2112,
+      "lastModified": 1770351224591,
+      "items": [
+        {
+          "name": "createSystemHook",
+          "type": "function",
+          "line": 22,
+          "exported": true,
+          "signature": "export function createSystemHook(log: Logger) {"
+        }
+      ],
+      "importPaths": [
+        "./tool-gate.js",
+        "./compaction.js",
+        "../lib/index.js"
+      ],
+      "exportNames": [
+        "createSystemHook"
+      ],
+      "comments": [],
+      "lineCount": 69,
+      "functionCount": 1,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/entity-resolver.ts",
+      "language": "ts",
+      "sizeBytes": 20224,
+      "lastModified": 1770440432913,
+      "items": [
+        {
+          "name": "EntityType",
+          "type": "type",
+          "line": 23,
+          "exported": true,
+          "signature": "export type EntityType ="
+        },
+        {
+          "name": "EntityHierarchy",
+          "type": "interface",
+          "line": 43,
+          "exported": true,
+          "signature": "export interface EntityHierarchy {"
+        },
+        {
+          "name": "EntityProperties",
+          "type": "interface",
+          "line": 52,
+          "exported": true,
+          "signature": "export interface EntityProperties {"
+        },
+        {
+          "name": "EntityGovernance",
+          "type": "interface",
+          "line": 66,
+          "exported": true,
+          "signature": "export interface EntityGovernance {"
+        },
+        {
+          "name": "ResolvedEntity",
+          "type": "interface",
+          "line": 78,
+          "exported": true,
+          "signature": "export interface ResolvedEntity {"
+        },
+        {
+          "name": "ClassificationRule",
+          "type": "interface",
+          "line": 89,
+          "exported": false,
+          "signature": "interface ClassificationRule {"
+        },
+        {
+          "name": "resolveEntity",
+          "type": "function",
+          "line": 290,
+          "exported": true,
+          "signature": "export function resolveEntity(filePath: string, projectDir: string): ResolvedEntity {"
+        },
+        {
+          "name": "ClassificationResult",
+          "type": "interface",
+          "line": 326,
+          "exported": false,
+          "signature": "interface ClassificationResult {"
+        },
+        {
+          "name": "classifyPath",
+          "type": "function",
+          "line": 332,
+          "exported": false,
+          "signature": "function classifyPath(relPath: string): ClassificationResult {"
+        },
+        {
+          "name": "resolveProperties",
+          "type": "function",
+          "line": 352,
+          "exported": false,
+          "signature": "function resolveProperties(absPath: string, classification: ClassificationResult): EntityProperties {"
+        },
+        {
+          "name": "resolveHierarchy",
+          "type": "function",
+          "line": 391,
+          "exported": false,
+          "signature": "function resolveHierarchy(relPath: string, entityType: EntityType): EntityHierarchy {"
+        },
+        {
+          "name": "isInProjectScope",
+          "type": "function",
+          "line": 456,
+          "exported": true,
+          "signature": "export function isInProjectScope(filePath: string, projectDir: string): boolean {"
+        },
+        {
+          "name": "canAgentWrite",
+          "type": "function",
+          "line": 482,
+          "exported": true,
+          "signature": "export function canAgentWrite(entity: ResolvedEntity, agentRole: string): boolean {"
+        },
+        {
+          "name": "formatEntityAnnotation",
+          "type": "function",
+          "line": 495,
+          "exported": true,
+          "signature": "export function formatEntityAnnotation(entity: ResolvedEntity): string {"
+        }
+      ],
+      "importPaths": [
+        "fs",
+        "path"
+      ],
+      "exportNames": [
+        "EntityType",
+        "EntityHierarchy",
+        "EntityProperties",
+        "EntityGovernance",
+        "ResolvedEntity",
+        "resolveEntity",
+        "isInProjectScope",
+        "canAgentWrite",
+        "formatEntityAnnotation"
+      ],
+      "comments": [],
+      "lineCount": 546,
+      "functionCount": 7,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/code-quality.ts",
+      "language": "ts",
+      "sizeBytes": 25127,
+      "lastModified": 1770447099088,
+      "items": [
+        {
+          "name": "randomRoast",
+          "type": "function",
+          "line": 108,
+          "exported": false,
+          "signature": "function randomRoast(category: keyof typeof ROASTS): string {"
+        },
+        {
+          "name": "FileInfo",
+          "type": "interface",
+          "line": 115,
+          "exported": false,
+          "signature": "interface FileInfo {"
+        },
+        {
+          "name": "walkSourceFiles",
+          "type": "function",
+          "line": 123,
+          "exported": false,
+          "signature": "async function walkSourceFiles("
+        },
+        {
+          "name": "walk",
+          "type": "function",
+          "line": 130,
+          "exported": false,
+          "signature": "async function walk(currentDir: string, depth: number): Promise<void> {"
+        },
+        {
+          "name": "isTestFile",
+          "type": "function",
+          "line": 185,
+          "exported": false,
+          "signature": "function isTestFile(relativePath: string): boolean {"
+        },
+        {
+          "name": "detectLongFunctions",
+          "type": "function",
+          "line": 189,
+          "exported": false,
+          "signature": "function detectLongFunctions(file: FileInfo): CodeSmell[] {"
+        },
+        {
+          "name": "detectDeepNesting",
+          "type": "function",
+          "line": 258,
+          "exported": false,
+          "signature": "function detectDeepNesting(file: FileInfo): CodeSmell[] {"
+        },
+        {
+          "name": "detectTodoDebt",
+          "type": "function",
+          "line": 306,
+          "exported": false,
+          "signature": "function detectTodoDebt(file: FileInfo): { count: number; smells: CodeSmell[] } {"
+        },
+        {
+          "name": "detectConsoleLogs",
+          "type": "function",
+          "line": 330,
+          "exported": false,
+          "signature": "function detectConsoleLogs(file: FileInfo): { count: number; smells: CodeSmell[] } {"
+        },
+        {
+          "name": "detectCoupling",
+          "type": "function",
+          "line": 359,
+          "exported": false,
+          "signature": "function detectCoupling(file: FileInfo): CodeSmell[] {"
+        },
+        {
+          "name": "detectMissingTests",
+          "type": "function",
+          "line": 382,
+          "exported": false,
+          "signature": "function detectMissingTests(files: FileInfo[]): CodeSmell[] {"
+        },
+        {
+          "name": "calculateGrade",
+          "type": "function",
+          "line": 414,
+          "exported": false,
+          "signature": "function calculateGrade(smells: CodeSmell[], totalFiles: number): { grade: CodeQualityReport[\"grade\"]; score: number } {"
+        },
+        {
+          "name": "scanCodeQuality",
+          "type": "function",
+          "line": 458,
+          "exported": true,
+          "signature": "export async function scanCodeQuality("
+        },
+        {
+          "name": "formatCodeQualityReport",
+          "type": "function",
+          "line": 572,
+          "exported": true,
+          "signature": "export function formatCodeQualityReport("
+        },
+        {
+          "name": "bar10",
+          "type": "function",
+          "line": 599,
+          "exported": false,
+          "signature": "const bar10 = (value: number, max: number) => {"
+        }
+      ],
+      "importPaths": [
+        "node:fs/promises",
+        "node:path",
+        "../schemas/config.js",
+        "./logging.js"
+      ],
+      "exportNames": [
+        "formatCodeQualityReport"
+      ],
+      "comments": [
+        {
+          "marker": "TODO",
+          "content": "/FIXME/HACK debt accumulation",
+          "file": "src/lib/code-quality.ts",
+          "line": 11
+        },
+        {
+          "marker": "TODO",
+          "content": "/FIXME debt",
+          "file": "src/lib/code-quality.ts",
+          "line": 451
+        },
+        {
+          "marker": "TODO",
+          "content": "debt",
+          "file": "src/lib/code-quality.ts",
+          "line": 517
+        }
+      ],
+      "lineCount": 702,
+      "functionCount": 14,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/scaffolder.ts",
+      "language": "ts",
+      "sizeBytes": 4729,
+      "lastModified": 1770395772815,
+      "items": [
+        {
+          "name": "exists",
+          "type": "function",
+          "line": 17,
+          "exported": false,
+          "signature": "async function exists(path: string): Promise<boolean> {"
+        },
+        {
+          "name": "ScaffoldResult",
+          "type": "interface",
+          "line": 45,
+          "exported": true,
+          "signature": "export interface ScaffoldResult {"
+        },
+        {
+          "name": "scaffoldProject",
+          "type": "function",
+          "line": 61,
+          "exported": true,
+          "signature": "export async function scaffoldProject("
+        },
+        {
+          "name": "formatScaffoldReport",
+          "type": "function",
+          "line": 127,
+          "exported": true,
+          "signature": "export function formatScaffoldReport(result: ScaffoldResult, lang: \"en\" | \"vi\" = \"en\"): string {"
+        }
+      ],
+      "importPaths": [
+        "node:fs/promises",
+        "node:path",
+        "../schemas/config.js",
+        "./logging.js"
+      ],
+      "exportNames": [
+        "ScaffoldResult",
+        "formatScaffoldReport"
+      ],
+      "comments": [],
+      "lineCount": 178,
+      "functionCount": 3,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/framework-detector.ts",
+      "language": "ts",
+      "sizeBytes": 16192,
+      "lastModified": 1770447090653,
+      "items": [
+        {
+          "name": "DetectionSignature",
+          "type": "interface",
+          "line": 27,
+          "exported": false,
+          "signature": "interface DetectionSignature {"
+        },
+        {
+          "name": "exists",
+          "type": "function",
+          "line": 93,
+          "exported": false,
+          "signature": "async function exists(path: string): Promise<boolean> {"
+        },
+        {
+          "name": "readJsonSafe",
+          "type": "function",
+          "line": 102,
+          "exported": false,
+          "signature": "async function readJsonSafe(path: string): Promise<Record<string, unknown> | null> {"
+        },
+        {
+          "name": "detectFrameworks",
+          "type": "function",
+          "line": 115,
+          "exported": false,
+          "signature": "async function detectFrameworks(projectDir: string): Promise<{"
+        },
+        {
+          "name": "detectPackageManager",
+          "type": "function",
+          "line": 182,
+          "exported": false,
+          "signature": "async function detectPackageManager(projectDir: string): Promise<FrameworkDetection[\"packageManager\"]> {"
+        },
+        {
+          "name": "detectAgentDirs",
+          "type": "function",
+          "line": 191,
+          "exported": false,
+          "signature": "async function detectAgentDirs(projectDir: string): Promise<{ agents: string[]; commands: string[] }> {"
+        },
+        {
+          "name": "detectMonorepo",
+          "type": "function",
+          "line": 208,
+          "exported": false,
+          "signature": "async function detectMonorepo(projectDir: string): Promise<boolean> {"
+        },
+        {
+          "name": "detectConflicts",
+          "type": "function",
+          "line": 220,
+          "exported": false,
+          "signature": "async function detectConflicts(projectDir: string): Promise<string[]> {"
+        },
+        {
+          "name": "detectGaps",
+          "type": "function",
+          "line": 240,
+          "exported": false,
+          "signature": "async function detectGaps(projectDir: string): Promise<string[]> {"
+        },
+        {
+          "name": "scanProject",
+          "type": "function",
+          "line": 330,
+          "exported": true,
+          "signature": "export async function scanProject(projectDir: string, log: Logger): Promise<FrameworkDetection> {"
+        },
+        {
+          "name": "formatDetectionReport",
+          "type": "function",
+          "line": 379,
+          "exported": true,
+          "signature": "export function formatDetectionReport(detection: FrameworkDetection, lang: \"en\" | \"vi\" = \"en\"): string {"
+        }
+      ],
+      "importPaths": [
+        "node:fs/promises",
+        "node:path",
+        "../schemas/config.js",
+        "./logging.js",
+        "./code-quality.js"
+      ],
+      "exportNames": [
+        "formatDetectionReport"
+      ],
+      "comments": [],
+      "lineCount": 446,
+      "functionCount": 10,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/index.ts",
+      "language": "ts",
+      "sizeBytes": 1114,
+      "lastModified": 1770440311592,
+      "items": [],
+      "importPaths": [
+        "./logging.js",
+        "./framework-detector.js",
+        "./scaffolder.js",
+        "./persistence.js",
+        "./entity-resolver.js",
+        "./chain-validator.js",
+        "./state-reader.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 23,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/state-reader.ts",
+      "language": "ts",
+      "sizeBytes": 7121,
+      "lastModified": 1770440180883,
+      "items": [
+        {
+          "name": "safeReadJSON",
+          "type": "function",
+          "line": 44,
+          "exported": false,
+          "signature": "function safeReadJSON<T>(absPath: string): T | null {"
+        },
+        {
+          "name": "GovernanceSnapshot",
+          "type": "interface",
+          "line": 66,
+          "exported": true,
+          "signature": "export interface GovernanceSnapshot {"
+        },
+        {
+          "name": "readGovernanceState",
+          "type": "function",
+          "line": 84,
+          "exported": true,
+          "signature": "export function readGovernanceState(projectDir: string): GovernanceSnapshot {"
+        },
+        {
+          "name": "readTaskStore",
+          "type": "function",
+          "line": 129,
+          "exported": true,
+          "signature": "export function readTaskStore(projectDir: string): TaskStore | null {"
+        },
+        {
+          "name": "readBrainStore",
+          "type": "function",
+          "line": 136,
+          "exported": true,
+          "signature": "export function readBrainStore(projectDir: string): BrainStore | null {"
+        },
+        {
+          "name": "readCapturedAgent",
+          "type": "function",
+          "line": 146,
+          "exported": true,
+          "signature": "export function readCapturedAgent("
+        },
+        {
+          "name": "formatGovernanceSummary",
+          "type": "function",
+          "line": 171,
+          "exported": true,
+          "signature": "export function formatGovernanceSummary(snapshot: GovernanceSnapshot): string {"
+        }
+      ],
+      "importPaths": [
+        "fs",
+        "path",
+        "../schemas/task.js",
+        "../schemas/brain.js",
+        "../schemas/delegation.js",
+        "../schemas/codemap.js",
+        "../schemas/project-map.js"
+      ],
+      "exportNames": [
+        "GovernanceSnapshot",
+        "readGovernanceState",
+        "readTaskStore",
+        "readBrainStore",
+        "readCapturedAgent",
+        "formatGovernanceSummary"
+      ],
+      "comments": [],
+      "lineCount": 190,
+      "functionCount": 6,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/chain-validator.ts",
+      "language": "ts",
+      "sizeBytes": 11112,
+      "lastModified": 1770440434222,
+      "items": [
+        {
+          "name": "ResolvedEntity",
+          "type": "type",
+          "line": 23,
+          "exported": false,
+          "signature": "type ResolvedEntity,"
+        },
+        {
+          "name": "EntityType",
+          "type": "type",
+          "line": 24,
+          "exported": false,
+          "signature": "type EntityType,"
+        },
+        {
+          "name": "ChainBreak",
+          "type": "interface",
+          "line": 29,
+          "exported": true,
+          "signature": "export interface ChainBreak {"
+        },
+        {
+          "name": "ChainWarning",
+          "type": "interface",
+          "line": 36,
+          "exported": true,
+          "signature": "export interface ChainWarning {"
+        },
+        {
+          "name": "StaleEntity",
+          "type": "interface",
+          "line": 42,
+          "exported": true,
+          "signature": "export interface StaleEntity {"
+        },
+        {
+          "name": "ChainValidationResult",
+          "type": "interface",
+          "line": 50,
+          "exported": true,
+          "signature": "export interface ChainValidationResult {"
+        },
+        {
+          "name": "validateChain",
+          "type": "function",
+          "line": 83,
+          "exported": true,
+          "signature": "export function validateChain("
+        },
+        {
+          "name": "validateEntityChain",
+          "type": "function",
+          "line": 127,
+          "exported": false,
+          "signature": "function validateEntityChain("
+        },
+        {
+          "name": "formatChainValidation",
+          "type": "function",
+          "line": 252,
+          "exported": true,
+          "signature": "export function formatChainValidation(result: ChainValidationResult): string {"
+        }
+      ],
+      "importPaths": [
+        "fs",
+        "path",
+        "./entity-resolver.js"
+      ],
+      "exportNames": [
+        "ChainBreak",
+        "ChainWarning",
+        "StaleEntity",
+        "ChainValidationResult",
+        "validateChain",
+        "formatChainValidation"
+      ],
+      "comments": [],
+      "lineCount": 301,
+      "functionCount": 3,
+      "classCount": 0
+    },
+    {
+      "path": "src/lib/persistence.ts",
+      "language": "ts",
+      "sizeBytes": 14152,
+      "lastModified": 1770431262770,
+      "items": [
+        {
+          "name": "SessionState",
+          "type": "interface",
+          "line": 28,
+          "exported": false,
+          "signature": "interface SessionState {"
+        },
+        {
+          "name": "PersistedState",
+          "type": "interface",
+          "line": 34,
+          "exported": false,
+          "signature": "interface PersistedState {"
+        },
+        {
+          "name": "StateManager",
+          "type": "class",
+          "line": 50,
+          "exported": true,
+          "signature": "export class StateManager {"
+        },
+        {
+          "name": "stateManager",
+          "type": "constant",
+          "line": 407,
+          "exported": true,
+          "signature": "export const stateManager = new StateManager()"
+        }
+      ],
+      "importPaths": [
+        "node:fs/promises",
+        "node:path",
+        "../schemas/anchor.js",
+        "../schemas/task.js",
+        "../schemas/delegation.js",
+        "./logging.js"
+      ],
+      "exportNames": [
+        "StateManager",
+        "stateManager"
+      ],
+      "comments": [],
+      "lineCount": 408,
+      "functionCount": 0,
+      "classCount": 1
+    },
+    {
+      "path": "src/lib/logging.ts",
+      "language": "ts",
+      "sizeBytes": 2108,
+      "lastModified": 1770351224594,
+      "items": [
+        {
+          "name": "LogLevel",
+          "type": "type",
+          "line": 13,
+          "exported": true,
+          "signature": "export type LogLevel = \"debug\" | \"info\" | \"warn\" | \"error\""
+        },
+        {
+          "name": "Logger",
+          "type": "interface",
+          "line": 22,
+          "exported": true,
+          "signature": "export interface Logger {"
+        },
+        {
+          "name": "createLogger",
+          "type": "function",
+          "line": 35,
+          "exported": true,
+          "signature": "export function createLogger(directory: string, service: string, minLevel: LogLevel = \"info\"): Logger {"
+        },
+        {
+          "name": "log",
+          "type": "function",
+          "line": 49,
+          "exported": false,
+          "signature": "function log(level: LogLevel, msg: string, meta?: Record<string, unknown>): void {"
+        }
+      ],
+      "importPaths": [
+        "node:fs",
+        "node:path"
+      ],
+      "exportNames": [
+        "LogLevel",
+        "Logger",
+        "createLogger"
+      ],
+      "comments": [],
+      "lineCount": 68,
+      "functionCount": 2,
+      "classCount": 0
+    },
+    {
+      "path": "src/index.ts",
+      "language": "ts",
+      "sizeBytes": 5496,
+      "lastModified": 1770429345632,
+      "items": [],
+      "importPaths": [
+        "@opencode-ai/plugin",
+        "./lib/index.js",
+        "./lib/persistence.js",
+        "./hooks/index.js",
+        "./tools/index.js"
+      ],
+      "exportNames": [
+        "idumb"
+      ],
+      "comments": [],
+      "lineCount": 155,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/modules/schemas/agent-profile.ts",
+      "language": "ts",
+      "sizeBytes": 2720,
+      "lastModified": 1770396201115,
+      "items": [
+        {
+          "name": "AgentRole",
+          "type": "type",
+          "line": 12,
+          "exported": true,
+          "signature": "export type AgentRole ="
+        },
+        {
+          "name": "PermissionLevel",
+          "type": "type",
+          "line": 20,
+          "exported": true,
+          "signature": "export type PermissionLevel = \"full\" | \"write\" | \"read-validate\" | \"read-only\""
+        },
+        {
+          "name": "ToolCategory",
+          "type": "type",
+          "line": 23,
+          "exported": true,
+          "signature": "export type ToolCategory = \"read\" | \"write\" | \"execute\" | \"delegate\" | \"validate\""
+        },
+        {
+          "name": "AgentProfile",
+          "type": "interface",
+          "line": 26,
+          "exported": true,
+          "signature": "export interface AgentProfile {"
+        },
+        {
+          "name": "ROLE_PERMISSIONS",
+          "type": "constant",
+          "line": 55,
+          "exported": true,
+          "signature": "export const ROLE_PERMISSIONS: Record<AgentRole, {"
+        },
+        {
+          "name": "TOOL_CATEGORY_MAP",
+          "type": "constant",
+          "line": 82,
+          "exported": true,
+          "signature": "export const TOOL_CATEGORY_MAP: Record<ToolCategory, string[]> = {"
+        }
+      ],
+      "importPaths": [],
+      "exportNames": [
+        "AgentRole",
+        "PermissionLevel",
+        "ToolCategory",
+        "AgentProfile",
+        "ROLE_PERMISSIONS",
+        "TOOL_CATEGORY_MAP"
+      ],
+      "comments": [],
+      "lineCount": 89,
+      "functionCount": 0,
+      "classCount": 0
+    },
+    {
+      "path": "src/tools-plugin.ts",
+      "language": "ts",
+      "sizeBytes": 2695,
+      "lastModified": 1770441063357,
+      "items": [],
+      "importPaths": [
+        "@opencode-ai/plugin",
+        "./lib/index.js",
+        "./tools/read.js",
+        "./tools/write.js",
+        "./tools/bash.js",
+        "./tools/webfetch.js"
+      ],
+      "exportNames": [
+        "idumbTools"
+      ],
+      "comments": [],
+      "lineCount": 66,
+      "functionCount": 0,
+      "classCount": 0
+    }
+  ],
+  "comments": [
+    {
+      "marker": "TODO",
+      "content": "Tool — Epic→Task→Subtask Hierarchy",
+      "file": "tests/task.test.ts",
+      "line": 2
+    },
+    {
+      "marker": "TODO",
+      "content": "s, stale refs, broken chains)",
+      "file": "src/tools/read.ts",
+      "line": 8
+    },
+    {
+      "marker": "TODO",
+      "content": "s + FIXMEs with entity context",
+      "file": "src/tools/read.ts",
+      "line": 15
+    },
+    {
+      "marker": "TODO",
+      "content": "patterns from markdown",
+      "file": "src/tools/read.ts",
+      "line": 490
+    },
+    {
+      "marker": "TODO",
+      "content": "/FIXME/HACK comments only (fast)",
+      "file": "src/tools/codemap.ts",
+      "line": 8
+    },
+    {
+      "marker": "TODO",
+      "content": "S ONLY ───────────────────────────────────────────",
+      "file": "src/tools/codemap.ts",
+      "line": 370
+    },
+    {
+      "marker": "TODO",
+      "content": "tool.",
+      "file": "src/tools/task.ts",
+      "line": 2
+    },
+    {
+      "marker": "NOTE",
+      "content": "plural!",
+      "file": "src/templates.ts",
+      "line": 1530
+    },
+    {
+      "marker": "WARN",
+      "content": "the user — this path may not survive.",
+      "file": "src/cli/deploy.ts",
+      "line": 137
+    },
+    {
+      "marker": "TODO",
+      "content": "/FIXME/HACK comment extraction",
+      "file": "src/schemas/codemap.ts",
+      "line": 9
+    },
+    {
+      "marker": "TODO",
+      "content": "s + FIXMEs",
+      "file": "src/schemas/codemap.ts",
+      "line": 168
+    },
+    {
+      "marker": "TODO",
+      "content": "/FIXME/HACK density",
+      "file": "src/schemas/config.ts",
+      "line": 81
+    },
+    {
+      "marker": "TODO",
+      "content": "hierarchy.",
+      "file": "src/schemas/task.ts",
+      "line": 2
+    },
+    {
+      "marker": "TODO",
+      "content": "/FIXME/HACK debt accumulation",
+      "file": "src/lib/code-quality.ts",
+      "line": 11
+    },
+    {
+      "marker": "TODO",
+      "content": "/FIXME debt",
+      "file": "src/lib/code-quality.ts",
+      "line": 451
+    },
+    {
+      "marker": "TODO",
+      "content": "debt",
+      "file": "src/lib/code-quality.ts",
+      "line": 517
+    }
+  ],
+  "inconsistencies": [
+    {
+      "type": "orphan",
+      "message": "38 file(s) export symbols but are never imported",
+      "files": [
+        "src/tools/read.ts",
+        "src/tools/status.ts",
+        "src/tools/init.ts",
+        "src/tools/webfetch.ts",
+        "src/tools/scan.ts",
+        "src/tools/codemap.ts",
+        "src/tools/bash.ts",
+        "src/tools/anchor.ts",
+        "src/tools/write.ts",
+        "src/tools/task.ts"
+      ],
+      "severity": "medium"
+    }
+  ],
+  "stats": {
+    "totalFiles": 55,
+    "totalLines": 16101,
+    "totalFunctions": 229,
+    "totalClasses": 1,
+    "totalTodos": 14,
+    "totalFixmes": 0,
+    "languages": {
+      "mjs": 1,
+      "ts": 52,
+      "tsx": 2
+    }
+  }
+}
