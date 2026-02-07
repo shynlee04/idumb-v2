@@ -390,10 +390,17 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       const cleanedPlugins = cleanStalePluginPaths(existingPlugins)
       cleanedPlugins.push(resolution.path)
 
-      // Resolve Plugin B path: same resolution method, subpath export
-      const pluginBPath = resolution.path.endsWith(PLUGIN_PACKAGE_NAME)
-        ? `${resolution.path}/tools-plugin`
-        : `${resolution.path.replace(/\/?$/, "/tools-plugin")}`
+      // Resolve Plugin B path:
+      //   npm resolution → subpath export works: "idumb-v2/tools-plugin"
+      //   local-dev/npx → must use actual dist path: "/abs/path/dist/tools-plugin.js"
+      let pluginBPath: string
+      if (resolution.method === "npm") {
+        // Subpath exports resolve via package.json "exports" field
+        pluginBPath = `${resolution.path}/tools-plugin`
+      } else {
+        // Absolute/relative path — must point to actual built file
+        pluginBPath = `${resolution.path.replace(/\/?$/, "/dist/tools-plugin.js")}`
+      }
       cleanedPlugins.push(pluginBPath)
 
       config.plugin = cleanedPlugins
