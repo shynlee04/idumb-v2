@@ -14,7 +14,7 @@ import { stateManager } from "./lib/persistence.js"
 import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
 import { idumb_task, idumb_anchor, idumb_init, idumb_scan, idumb_codemap } from "./tools/index.js"
 
-const VERSION = "2.1.0"
+const VERSION = "2.2.0"
 
 /**
  * Plugin factory following hook factory pattern (P5: captured state).
