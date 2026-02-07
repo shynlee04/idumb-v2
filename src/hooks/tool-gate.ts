@@ -38,21 +38,37 @@ interface AgentToolRule {
 }
 
 const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
+  // Meta-builder is unrestricted for Plugin A tools — it's the primary orchestrator.
+  // But it should NOT use idumb_write/idumb_bash/idumb_webfetch (delegate instead).
+  // Those restrictions are enforced by the tools' self-governance + system prompt.
+
   "idumb-supreme-coordinator": {
-    blockedTools: new Set(["idumb_init"]),
-    blockedActions: new Set([]),  // Can delegate, can create epics — it's the coordinator
+    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash", "idumb_webfetch"]),
+    blockedActions: new Set(["create_epic"]),  // Only meta-builder creates epics
   },
   "idumb-validator": {
-    blockedTools: new Set(["idumb_init"]),
-    blockedActions: new Set(["delegate", "create_epic"]),
+    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_webfetch"]),
+    blockedActions: new Set(["delegate", "create_epic"]),  // Leaf node — cannot delegate
   },
   "idumb-builder": {
-    blockedTools: new Set(["idumb_init"]),
-    blockedActions: new Set(["create_epic"]),
+    blockedTools: new Set(["idumb_init", "idumb_webfetch"]),
+    blockedActions: new Set(["create_epic"]),  // Can delegate to validator
   },
   "idumb-skills-creator": {
     blockedTools: new Set(["idumb_init"]),
-    blockedActions: new Set(["delegate", "create_epic"]),
+    blockedActions: new Set(["delegate", "create_epic"]),  // Leaf node
+  },
+  "idumb-research-synthesizer": {
+    blockedTools: new Set(["idumb_init", "idumb_bash"]),
+    blockedActions: new Set(["delegate", "create_epic"]),  // Leaf node
+  },
+  "idumb-planner": {
+    blockedTools: new Set(["idumb_init", "idumb_bash"]),
+    blockedActions: new Set(["create_epic"]),  // Can delegate to researcher
+  },
+  "idumb-roadmapper": {
+    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash"]),
+    blockedActions: new Set(["delegate", "create_epic"]),  // Read-only + research
   },
 }
 

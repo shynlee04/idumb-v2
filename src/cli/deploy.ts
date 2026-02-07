@@ -337,14 +337,23 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
         config = JSON.parse(raw) as Record<string, unknown>
       }
 
-      // Clean stale idumb-v2 entries, then add fresh path
+      // Clean stale idumb-v2 entries, then add fresh paths
+      // Plugin A: governance + intelligence (main package entry)
+      // Plugin B: entity-aware tools (subpath export: idumb-v2/tools-plugin)
       const existingPlugins = (config.plugin as string[] | undefined) ?? []
       const cleanedPlugins = cleanStalePluginPaths(existingPlugins)
       cleanedPlugins.push(resolution.path)
+
+      // Resolve Plugin B path: same resolution method, subpath export
+      const pluginBPath = resolution.path.endsWith(PLUGIN_PACKAGE_NAME)
+        ? `${resolution.path}/tools-plugin`
+        : `${resolution.path.replace(/\/?$/, "/tools-plugin")}`
+      cleanedPlugins.push(pluginBPath)
+
       config.plugin = cleanedPlugins
 
       // Log stale entries that were removed
-      const removedCount = existingPlugins.length - (cleanedPlugins.length - 1)
+      const removedCount = existingPlugins.length - (cleanedPlugins.length - 2)
       if (removedCount > 0) {
         result.warnings.push(
           `Removed ${removedCount} stale idumb-v2 plugin path(s) from opencode.json`
