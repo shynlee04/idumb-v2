@@ -10,13 +10,9 @@ import { mkdir, writeFile, stat, readFile } from "node:fs/promises"
 import { join, dirname, resolve } from "node:path"
 import type { Language, GovernanceMode, ExperienceLevel } from "../schemas/config.js"
 import {
-  getMetaBuilderAgent,
-  getSupremeCoordinatorAgent,
-  getBuilderAgent,
-  getValidatorAgent,
-  getSkillsCreatorAgent,
-  getResearchSynthesizerAgent,
-  getPlannerAgent,
+  getCoordinatorAgent,
+  getInvestigatorAgent,
+  getExecutorAgent,
   getInitCommand,
   getSettingsCommand,
   getStatusCommand,
@@ -25,12 +21,9 @@ import {
   MODULES_README_TEMPLATE,
   COMMAND_TEMPLATE,
   WORKFLOW_TEMPLATE,
-  SUPREME_COORDINATOR_PROFILE,
-  BUILDER_PROFILE,
-  VALIDATOR_PROFILE,
-  SKILLS_CREATOR_PROFILE,
-  RESEARCH_SYNTHESIZER_PROFILE,
-  PLANNER_PROFILE,
+  COORDINATOR_PROFILE,
+  INVESTIGATOR_PROFILE,
+  EXECUTOR_PROFILE,
   DELEGATION_SKILL_TEMPLATE,
   GOVERNANCE_SKILL_TEMPLATE,
 } from "../templates.js"
@@ -214,56 +207,33 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
   const modulesDir = join(projectDir, ".idumb", "idumb-modules")
 
   try {
-    // ─── Deploy Meta Builder Agent ──────────────────────────────
-    const metaBuilderContent = getMetaBuilderAgent({
-      language,
-      governance,
-      experience,
+    // ─── Deploy 3-Agent Team (all auto-deployed on install) ──────
+    const agentConfig = { language, governance, experience }
+
+    // Coordinator — top-level orchestrator (Level 0)
+    const coordinatorContent = getCoordinatorAgent({
+      ...agentConfig,
       pluginPath: resolution.path,
     })
     await writeIfNew(
-      join(agentsDir, "idumb-meta-builder.md"),
-      metaBuilderContent,
-      force,
-      result,
-    )
-
-    // ─── Deploy Sub-Agent Team (all auto-deployed on install) ────
-    const agentConfig = { language, governance, experience }
-
-    await writeIfNew(
       join(agentsDir, "idumb-supreme-coordinator.md"),
-      getSupremeCoordinatorAgent(agentConfig),
+      coordinatorContent,
       force,
       result,
     )
+
+    // Investigator — research, analysis, planning (Level 1)
     await writeIfNew(
-      join(agentsDir, "idumb-builder.md"),
-      getBuilderAgent(agentConfig),
+      join(agentsDir, "idumb-investigator.md"),
+      getInvestigatorAgent(agentConfig),
       force,
       result,
     )
+
+    // Executor — code implementation, builds, tests (Level 1)
     await writeIfNew(
-      join(agentsDir, "idumb-validator.md"),
-      getValidatorAgent(agentConfig),
-      force,
-      result,
-    )
-    await writeIfNew(
-      join(agentsDir, "idumb-skills-creator.md"),
-      getSkillsCreatorAgent(agentConfig),
-      force,
-      result,
-    )
-    await writeIfNew(
-      join(agentsDir, "idumb-research-synthesizer.md"),
-      getResearchSynthesizerAgent(agentConfig),
-      force,
-      result,
-    )
-    await writeIfNew(
-      join(agentsDir, "idumb-planner.md"),
-      getPlannerAgent(agentConfig),
+      join(agentsDir, "idumb-executor.md"),
+      getExecutorAgent(agentConfig),
       force,
       result,
     )
@@ -320,40 +290,22 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       result,
     )
 
-    // ─── Deploy Sub-Agent Profile Templates ──────────────────────
+    // ─── Deploy Agent Profile Templates (reference docs) ─────────
     await writeIfNew(
-      join(modulesDir, "agents", "supreme-coordinator-profile.md"),
-      SUPREME_COORDINATOR_PROFILE,
+      join(modulesDir, "agents", "coordinator-profile.md"),
+      COORDINATOR_PROFILE,
       force,
       result,
     )
     await writeIfNew(
-      join(modulesDir, "agents", "builder-profile.md"),
-      BUILDER_PROFILE,
+      join(modulesDir, "agents", "investigator-profile.md"),
+      INVESTIGATOR_PROFILE,
       force,
       result,
     )
     await writeIfNew(
-      join(modulesDir, "agents", "validator-profile.md"),
-      VALIDATOR_PROFILE,
-      force,
-      result,
-    )
-    await writeIfNew(
-      join(modulesDir, "agents", "skills-creator-profile.md"),
-      SKILLS_CREATOR_PROFILE,
-      force,
-      result,
-    )
-    await writeIfNew(
-      join(modulesDir, "agents", "research-synthesizer-profile.md"),
-      RESEARCH_SYNTHESIZER_PROFILE,
-      force,
-      result,
-    )
-    await writeIfNew(
-      join(modulesDir, "agents", "planner-profile.md"),
-      PLANNER_PROFILE,
+      join(modulesDir, "agents", "executor-profile.md"),
+      EXECUTOR_PROFILE,
       force,
       result,
     )

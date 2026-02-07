@@ -103,7 +103,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/brain\/tasks\.json$/,
         entityType: "task-store",
         governance: {
-            canWrite: ["idumb-supreme-coordinator", "idumb-meta-builder", "idumb-builder"],
+            canWrite: ["idumb-supreme-coordinator", "idumb-executor"],
             requiresActiveTask: false,  // Tasks are managed by idumb_task tool
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -114,7 +114,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/brain\/delegations\.json$/,
         entityType: "delegation-store",
         governance: {
-            canWrite: ["idumb-supreme-coordinator", "idumb-meta-builder"],
+            canWrite: ["idumb-supreme-coordinator"],
             requiresActiveTask: false,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -124,7 +124,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/brain\/project-map\.json$/,
         entityType: "project-map",
         governance: {
-            canWrite: ["idumb-meta-builder", "idumb-supreme-coordinator"],
+            canWrite: ["idumb-supreme-coordinator", "idumb-investigator"],
             requiresActiveTask: false,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -134,7 +134,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/brain\/codemap\.json$/,
         entityType: "codemap",
         governance: {
-            canWrite: ["idumb-meta-builder", "idumb-builder"],
+            canWrite: ["idumb-investigator"],
             requiresActiveTask: false,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -155,7 +155,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/brain\/knowledge/,
         entityType: "brain-entry",
         governance: {
-            canWrite: ["idumb-supreme-coordinator", "idumb-meta-builder", "idumb-builder"],
+            canWrite: ["idumb-investigator"],
             requiresActiveTask: false,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -168,7 +168,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/config\.json$/,
         entityType: "governance-config",
         governance: {
-            canWrite: ["idumb-meta-builder"],
+            canWrite: ["idumb-supreme-coordinator"],
             requiresActiveTask: false,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -179,7 +179,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.idumb\/idumb-modules\//,
         entityType: "template",
         governance: {
-            canWrite: ["idumb-meta-builder"],
+            canWrite: ["idumb-supreme-coordinator"],
             requiresActiveTask: true,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -191,7 +191,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /\.opencode\/agents\/.*\.md$/,
         entityType: "agent-profile",
         governance: {
-            canWrite: ["idumb-meta-builder"],
+            canWrite: ["idumb-supreme-coordinator"],
             requiresActiveTask: true,
             requiresChainIntegrity: true,
             triggersUpstreamUpdate: false,
@@ -204,7 +204,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /planning\/|plans?\//i,
         entityType: "planning-artifact",
         governance: {
-            canWrite: ["idumb-supreme-coordinator", "idumb-builder", "idumb-meta-builder"],
+            canWrite: ["idumb-executor", "idumb-investigator"],
             requiresActiveTask: true,
             requiresChainIntegrity: true,
             triggersUpstreamUpdate: true,
@@ -217,7 +217,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /src\/schemas\/.*\.ts$/,
         entityType: "schema",
         governance: {
-            canWrite: ["idumb-builder"],
+            canWrite: ["idumb-executor"],
             requiresActiveTask: true,
             requiresChainIntegrity: true,
             triggersUpstreamUpdate: true,
@@ -227,7 +227,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /src\/.*\.ts$/,
         entityType: "source-code",
         governance: {
-            canWrite: ["idumb-builder"],
+            canWrite: ["idumb-executor"],
             requiresActiveTask: true,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -237,7 +237,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /tests?\/.*\.(ts|js)$/,
         entityType: "test",
         governance: {
-            canWrite: ["idumb-builder", "idumb-validator"],
+            canWrite: ["idumb-executor"],
             requiresActiveTask: true,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
@@ -249,7 +249,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         pattern: /^(package\.json|tsconfig\.json|opencode\.json)$/,
         entityType: "config-file",
         governance: {
-            canWrite: ["idumb-builder", "idumb-meta-builder"],
+            canWrite: ["idumb-executor"],
             requiresActiveTask: true,
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,

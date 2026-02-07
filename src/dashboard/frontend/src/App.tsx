@@ -4,11 +4,11 @@
 
 import { useState, useEffect } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import DashboardLayout from "./components/layout/DashboardLayout"
-import TaskHierarchyPanel from "./components/panels/TaskHierarchyPanel"
-import PlanningArtifactsPanel from "./components/panels/PlanningArtifactsPanel"
-import BrainKnowledgePanel from "./components/panels/BrainKnowledgePanel"
-import DelegationChainPanel from "./components/panels/DelegationChainPanel"
+import { DashboardLayout } from "./components/layout/DashboardLayout"
+import { TaskHierarchyPanel } from "./components/panels/TaskHierarchyPanel"
+import { PlanningArtifactsPanel } from "./components/panels/PlanningArtifactsPanel"
+import { BrainKnowledgePanel } from "./components/panels/BrainKnowledgePanel"
+import { DelegationChainPanel } from "./components/panels/DelegationChainPanel"
 
 // Create React Query client
 const queryClient = new QueryClient({

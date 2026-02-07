@@ -70,14 +70,17 @@ export interface DelegationStore {
 
 /**
  * Hierarchy levels — lower number = higher authority.
- * Cannot delegate UP (builder cannot delegate to coordinator).
+ * Cannot delegate UP (executor cannot delegate to coordinator).
+ *
+ * 3-agent model:
+ *   coordinator (0) — governance-only, delegates everything
+ *   investigator (1) — context gathering, research, analysis
+ *   executor (1) — precision writes, schema-validated implementation
  */
 const AGENT_HIERARCHY: Record<string, number> = {
     "idumb-supreme-coordinator": 0,
-    "idumb-meta-builder": 1,
-    "idumb-builder": 2,
-    "idumb-validator": 2,
-    "idumb-skills-creator": 2,
+    "idumb-investigator": 1,
+    "idumb-executor": 1,
 }
 
 /**
@@ -85,12 +88,12 @@ const AGENT_HIERARCHY: Record<string, number> = {
  * Which agents can handle which WorkStream categories.
  */
 const CATEGORY_AGENT_MATRIX: Record<WorkStreamCategory, string[]> = {
-    "development": ["idumb-builder"],
-    "research": ["idumb-meta-builder", "idumb-skills-creator"],
-    "governance": ["idumb-validator", "idumb-supreme-coordinator"],
-    "maintenance": ["idumb-builder", "idumb-validator"],
-    "spec-kit": ["idumb-meta-builder", "idumb-skills-creator"],
-    "ad-hoc": ["idumb-builder", "idumb-meta-builder", "idumb-validator", "idumb-skills-creator"],
+    "development": ["idumb-executor"],
+    "research": ["idumb-investigator"],
+    "governance": ["idumb-supreme-coordinator"],
+    "maintenance": ["idumb-executor", "idumb-investigator"],
+    "spec-kit": ["idumb-investigator"],
+    "ad-hoc": ["idumb-executor", "idumb-investigator"],
 }
 
 // ─── Factory Functions ───────────────────────────────────────────────

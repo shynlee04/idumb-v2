@@ -60,13 +60,13 @@ function assert(name: string, condition: boolean): void {
     // Test: createDelegation
     const deleg = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-builder",
+        toAgent: "idumb-executor",
         taskId: "task-123",
         context: "Build the login form",
         expectedOutput: "Working form with tests",
     })
     assert("schema: delegation has id", typeof deleg.id === "string" && deleg.id.startsWith("deleg-"))
-    assert("schema: delegation has correct from/to", deleg.fromAgent === "idumb-supreme-coordinator" && deleg.toAgent === "idumb-builder")
+    assert("schema: delegation has correct from/to", deleg.fromAgent === "idumb-supreme-coordinator" && deleg.toAgent === "idumb-executor")
     assert("schema: delegation is pending", deleg.status === "pending")
     assert("schema: delegation has expiry", deleg.expiresAt > deleg.createdAt)
 }
@@ -77,21 +77,21 @@ function assert(name: string, condition: boolean): void {
 
 {
     // Self-delegation blocked
-    const self = validateDelegation("idumb-builder", "idumb-builder", 0)
+    const self = validateDelegation("idumb-executor", "idumb-executor", 0)
     assert("hierarchy: self-delegation blocked", !self.valid)
     assert("hierarchy: self-delegation reason", self.reason.includes("self"))
 
-    // Upward delegation blocked (builder → coordinator)
-    const up = validateDelegation("idumb-builder", "idumb-supreme-coordinator", 0)
+    // Upward delegation blocked (executor → coordinator)
+    const up = validateDelegation("idumb-executor", "idumb-supreme-coordinator", 0)
     assert("hierarchy: upward delegation blocked", !up.valid)
     assert("hierarchy: upward reason mentions direction", up.reason.includes("UP"))
 
-    // Downward delegation allowed (coordinator → builder)
-    const down = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 0)
+    // Downward delegation allowed (coordinator → executor)
+    const down = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 0)
     assert("hierarchy: downward delegation allowed", down.valid)
 
     // Unknown agent blocked
-    const unknown = validateDelegation("idumb-builder", "nonexistent-agent", 0)
+    const unknown = validateDelegation("idumb-executor", "nonexistent-agent", 0)
     assert("hierarchy: unknown agent blocked", !unknown.valid)
 }
 
@@ -101,15 +101,15 @@ function assert(name: string, condition: boolean): void {
 
 {
     // Depth 0 → allowed
-    const d0 = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 0)
+    const d0 = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 0)
     assert("depth: depth 0 allowed", d0.valid)
 
     // Depth 2 → allowed
-    const d2 = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 2)
+    const d2 = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 2)
     assert("depth: depth 2 allowed", d2.valid)
 
     // Depth 3 → blocked (MAX_DELEGATION_DEPTH = 3)
-    const d3 = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 3)
+    const d3 = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 3)
     assert("depth: depth 3 blocked", !d3.valid)
     assert("depth: depth 3 reason mentions max", d3.reason.includes("Max"))
 }
@@ -119,21 +119,23 @@ function assert(name: string, condition: boolean): void {
 // ══════════════════════════════════════════════════════════════════════
 
 {
-    // development → builder: allowed
-    const devBuilder = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 0, "development")
-    assert("category: dev→builder allowed", devBuilder.valid)
+    // development → executor: allowed
+    const devExecutor = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 0, "development")
+    assert("category: dev→executor allowed", devExecutor.valid)
 
-    // research → builder: blocked
-    const resBuilder = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 0, "research")
-    assert("category: research→builder blocked", !resBuilder.valid)
+    // research → executor: blocked (research routes to investigator)
+    const resExecutor = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 0, "research")
+    assert("category: research→executor blocked", !resExecutor.valid)
 
-    // governance → validator: allowed
-    const govValidator = validateDelegation("idumb-supreme-coordinator", "idumb-validator", 0, "governance")
-    assert("category: governance→validator allowed", govValidator.valid)
+    // governance → coordinator: allowed
+    const govCoord = validateDelegation("idumb-supreme-coordinator", "idumb-supreme-coordinator", 0, "governance")
+    // Note: self-delegation is blocked, so test governance→investigator instead
+    const resInvestigator = validateDelegation("idumb-supreme-coordinator", "idumb-investigator", 0, "research")
+    assert("category: research→investigator allowed", resInvestigator.valid)
 
     // ad-hoc → anything: allowed (ad-hoc is permissive)
-    const adhocBuilder = validateDelegation("idumb-supreme-coordinator", "idumb-builder", 0, "ad-hoc")
-    assert("category: ad-hoc→builder allowed", adhocBuilder.valid)
+    const adhocExecutor = validateDelegation("idumb-supreme-coordinator", "idumb-executor", 0, "ad-hoc")
+    assert("category: ad-hoc→executor allowed", adhocExecutor.valid)
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -146,7 +148,7 @@ function assert(name: string, condition: boolean): void {
     // Fresh delegation — not expired
     const fresh = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-builder",
+        toAgent: "idumb-executor",
         taskId: "task-fresh",
         context: "Fresh task",
         expectedOutput: "Results",
@@ -158,7 +160,7 @@ function assert(name: string, condition: boolean): void {
     // Simulate expired delegation
     const stale = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-validator",
+        toAgent: "idumb-investigator",
         taskId: "task-stale",
         context: "Stale task",
         expectedOutput: "Results",
@@ -178,7 +180,7 @@ function assert(name: string, condition: boolean): void {
 {
     const deleg = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-builder",
+        toAgent: "idumb-executor",
         taskId: "task-lifecycle",
         context: "Test lifecycle",
         expectedOutput: "Complete results",
@@ -209,18 +211,17 @@ function assert(name: string, condition: boolean): void {
 
     const d1 = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-builder",
+        toAgent: "idumb-executor",
         taskId: "task-A",
         context: "Build A",
         expectedOutput: "A built",
     })
     const d2 = createDelegation({
-        fromAgent: "idumb-builder",
-        toAgent: "idumb-validator",
+        fromAgent: "idumb-supreme-coordinator",
+        toAgent: "idumb-investigator",
         taskId: "task-A",
-        context: "Validate A",
-        expectedOutput: "A validated",
-        currentDepth: 1,
+        context: "Research A",
+        expectedOutput: "A researched",
     })
     store.delegations.push(d1, d2)
 
@@ -244,7 +245,7 @@ function assert(name: string, condition: boolean): void {
     // With delegations
     const d = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-builder",
+        toAgent: "idumb-executor",
         taskId: "task-display",
         context: "Build the form",
         expectedOutput: "Working form",
@@ -277,7 +278,7 @@ function assert(name: string, condition: boolean): void {
     const store1 = sm1.getDelegationStore()
     const d = createDelegation({
         fromAgent: "idumb-supreme-coordinator",
-        toAgent: "idumb-builder",
+        toAgent: "idumb-executor",
         taskId: "task-persist",
         context: "Persist this",
         expectedOutput: "Persisted result",

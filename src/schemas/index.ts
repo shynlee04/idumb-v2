@@ -62,3 +62,25 @@ export type {
     DelegationStore, DelegationValidation, CreateDelegationOptions,
 } from "./delegation.js"
 
+// ─── Planning Registry Schema ────────────────────────────────────────
+export {
+    createPlanningRegistry, createPlanningArtifact, createArtifactSection,
+    createArtifactChain, createOutlierEntry,
+    computeContentHash, parseMarkdownSections, parseSectionsFromMarkdown,
+    resolveChainHead, getChainHistory, addToChain,
+    isArtifactStaleByChainPosition, findStaleArtifacts, findStaleSections, isArtifactHealthy,
+    supersedSection, markSectionStale, markSectionInvalid, detectSectionDrift,
+    linkTaskToArtifact, linkDelegationToSections, linkBrainEntryToArtifact,
+    findPendingOutliers, acceptOutlier, rejectOutlier,
+    findArtifactByPath, findArtifactById, findArtifactsByType, findArtifactsByChain,
+    extractIterationPattern, detectArtifactType,
+    formatRegistrySummary, formatArtifactDetail,
+    PLANNING_REGISTRY_VERSION,
+} from "./planning-registry.js"
+export type {
+    DocumentTier, ArtifactType, SectionStatus, ArtifactStatus,
+    ArtifactSection, PlanningArtifact, ArtifactChain,
+    OutlierReason, OutlierAction, OutlierEntry,
+    PlanningRegistry,
+} from "./planning-registry.js"
+

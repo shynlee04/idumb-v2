@@ -2,8 +2,9 @@
  * Dashboard Layout — Resizable 3-column panel layout
  */
 
-import { ReactNode, useRef, useState, useCallback } from "react"
-import { Panel } from "./Panel"
+import { ReactNode, useRef, useState, useCallback, useEffect } from "react"
+
+
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -13,14 +14,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen w-screen flex-col bg-background">
       {/* Header */}
-      <header className="flex h-14 items-center justify-between border-b px-4">
+      <header className="flex h-14 items-center justify-between border-b px-4" style={{ background: 'var(--surface-elevated)', borderImage: 'linear-gradient(to right, var(--primary), var(--info), var(--success)) 1' }}>
         <div className="flex items-center gap-2">
           <span className="text-xl">🧠</span>
-          <h1 className="font-semibold">iDumb Dashboard</h1>
+          <h1 className="font-bold" style={{ letterSpacing: '-0.02em' }}>iDumb Dashboard</h1>
+          <span className="text-xs text-muted-foreground font-mono" style={{ opacity: 0.5 }}>v2</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
+            <span className="h-2 w-2 rounded-full bg-green-500" style={{ boxShadow: '0 0 6px #34d399' }} />
             Connected
           </span>
         </div>

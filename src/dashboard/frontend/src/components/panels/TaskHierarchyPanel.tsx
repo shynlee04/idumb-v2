@@ -67,21 +67,28 @@ function SubtaskItem({ subtask }: { subtask: Subtask }) {
 
 // Task Item Component
 function TaskItem({ task, expanded, onToggle }: { task: Task; expanded: boolean; onToggle: () => void }) {
-  const completedSubtasks = task.subtasks.filter(s => s.status === "done").length
-  const totalSubtasks = task.subtasks.length
+  const completedSubtasks = task.subtasks?.filter(s => s.status === "done").length ?? 0
+  const totalSubtasks = task.subtasks?.length ?? 0
+
+  // Safely extract assignee name — can be string or object
+  const assigneeName = task.assignee
+    ? typeof task.assignee === "string"
+      ? task.assignee
+      : (task.assignee as { name?: string }).name ?? "assigned"
+    : null
 
   return (
     <div className="border-l-2 border-muted pl-2">
       <div
-        className="flex cursor-pointer items-center gap-2 py-1.5 hover:bg-muted/50 rounded"
+        className="flex cursor-pointer items-center gap-2 py-1 rounded"
         onClick={onToggle}
       >
         {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         {getStatusIcon(task.status)}
         <span className="flex-1 text-sm font-medium">{task.name}</span>
-        {task.assignee && (
-          <span className="text-xs rounded bg-primary/10 px-1.5 py-0.5 text-primary">
-            {task.assignee}
+        {assigneeName && (
+          <span className="text-xs rounded bg-primary px-2 py-1 text-primary-foreground">
+            {assigneeName}
           </span>
         )}
         {totalSubtasks > 0 && (
@@ -93,7 +100,7 @@ function TaskItem({ task, expanded, onToggle }: { task: Task; expanded: boolean;
 
       {expanded && (
         <div className="mt-1">
-          {task.subtasks.map((subtask) => (
+          {(task.subtasks ?? []).map((subtask) => (
             <SubtaskItem key={subtask.id} subtask={subtask} />
           ))}
           {totalSubtasks === 0 && (
