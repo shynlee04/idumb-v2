@@ -234,6 +234,23 @@ export function createToolGateAfter(log: Logger) {
       // If there's an active task, tool was legitimately allowed
       if (stateManager.getActiveTask(sessionID)) return
 
+      // ─── Auto-inherit from task store (mirror before-hook logic) ──
+      const store = stateManager.getTaskStore()
+      if (store.activeEpicId) {
+        const activeEpic = store.epics.find(e => e.id === store.activeEpicId)
+        if (activeEpic) {
+          const activeStoreTask = activeEpic.tasks.find(t => t.status === "active")
+          if (activeStoreTask) {
+            stateManager.setActiveTask(sessionID, {
+              id: activeStoreTask.id,
+              name: activeStoreTask.name,
+            })
+            log.info(`AUTO-INHERIT (after): inherited task "${activeStoreTask.name}" from store`, { sessionID })
+            return
+          }
+        }
+      }
+
       // Defense in depth: if we're here with no active task, the before-hook
       // should have blocked. Replace output with governance message.
       const message = buildBlockMessage(tool, true)
