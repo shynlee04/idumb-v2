@@ -4,5 +4,6 @@
       "Bash(npm run typecheck:*)",
       "Bash(npm run build:*)"
     ]
-  }
+  },
+  "outputStyle": "critical-code-reviewer"
 }

@@ -2,477 +2,196 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# NON-NEGOTIABLE RULES
-- All agents must work by gathering context first, knowing which workflow **MUST FIND SKILL** to adapt the best selection for Complex, multi-step, recurring, or, domain-specific tasks. There is **NO TOLERANCE** for agents that start execute tasks without proper context gathering, and planning.
-- Update this CLAUDE.md iteratively, and be the single-source-of-truth, at all time for all agents.
-- Never make changes to the core plugin without first consulting `.planning/GOVERNANCE.md` and `.planning/PROJECT.md`
-- Always validate that changes align with the current phase completion criteria in `.planning/PHASE-COMPLETION.md`
-- Zero TypeScript errors and zero lint errors are non-negotiable at all times
+## NON-NEGOTIABLE RULES
+
+- Never make changes to the core plugin without first reading `AGENTS.md` (ground truth for what exists)
+- Zero TypeScript errors (`npm run typecheck`) and zero test failures (`npm test`) at all times
+- All source code lives in `src/`. Files outside `src/` indicate structure debt
+- NO `console.log` anywhere — it breaks TUI rendering. Use `createLogger()` from `lib/logging.ts`
+- Zod schemas define ALL data structures. Define schema first, derive types with `z.infer<>`
 
 ## Project Overview
 
-iDumb v2 (Intelligent Delegation Using Managed Boundaries) is a **clean reboot** of the iDumb governance framework. This is a greenfield project that provides structured infrastructure at the tool level so that LLM agents exhibit intelligent behavior — defined as: always knowing what to do, when to stop, and how to recover.
+iDumb v2 is an OpenCode plugin that enforces governance on AI agents — blocking file writes without an active task, preserving context across compaction, and pruning stale tool outputs. It's distributed as an npm package with a CLI (`idumb-v2 init`) that deploys 3 agents + hooks + tools into any project.
 
-**Version:** 2.0.0-alpha.1 | **Last Updated:** 2026-02-06 | **Current Phase:** Phase 2A Complete
+**Ground truth for features, file tree, roadmap, and what does/doesn't work:** `AGENTS.md`
 
-### What This Plugin Does
+## Commands
 
-iDumb provides **structured infrastructure** (hooks, tools, schemas, state persistence) that removes obstacles preventing LLMs from working correctly. It does NOT replace LLM reasoning with rule-based logic.
+```bash
+# Build
+npm run build          # tsc → dist/
 
-**Core Mechanism:** Intercept tools before execution → inject governance context (current phase, task, anchors, delegation hierarchy) → enforce permissions → persist state across compactions.
+# Watch mode
+npm run dev            # tsc --watch
 
-**The Hypothesis:** If agents always have access to current phase/task, relevant anchors, and delegation hierarchy, they will make correct judgments, detect drift, and self-correct.
+# Type check (no emit)
+npm run typecheck      # tsc --noEmit — must be zero errors
+
+# Run ALL tests (8 suites, 294 assertions, sequential chain)
+npm test
+
+# Run a single test file
+npx tsx tests/tool-gate.test.ts
+npx tsx tests/compaction.test.ts
+npx tsx tests/message-transform.test.ts
+npx tsx tests/init.test.ts
+npx tsx tests/persistence.test.ts
+npx tsx tests/task.test.ts
+npx tsx tests/delegation.test.ts
+npx tsx tests/planning-registry.test.ts
+
+# Link for local development
+npm link
+
+# CLI (after linking)
+idumb-v2 init          # Interactive setup
+idumb-v2 init -y       # Non-interactive defaults
+```
+
+**Important:** `npm test` chains 8 `tsx` commands with `&&`. If an early suite fails, later suites don't run. When debugging, run the failing suite individually.
 
 ## Architecture
 
-### Clean Separation: Engines, Tools, Hooks
+### Plugin Entry Points
 
-The plugin follows a strict separation pattern:
+Two exports serve different integration paths:
+
+- **`src/index.ts`** — Main plugin export. Wires 6 event hooks + 5 custom tools into OpenCode's plugin system. This is the `"main"` entry in package.json.
+- **`src/tools-plugin.ts`** — Separate tool registration export (`"./tools-plugin"` in package.json exports). Used when tools need to be registered independently of hooks.
+
+### Hook Factory Pattern
+
+Every hook follows the same pattern: a factory function that captures a logger and returns an async handler. All hooks are wrapped in try/catch for graceful degradation — a crashing hook must never take down the host.
+
+```
+createToolGateBefore(log) → async (input, output) => { ... }
+```
+
+Hooks are created in `src/index.ts` and wired to OpenCode event names. The factory pattern ensures each hook has isolated state and logging.
+
+### Data Flow
+
+```
+Tool invocation → tool.execute.before (gate: has active task?)
+                    ↓ blocked? → throw Error with governance message
+                    ↓ allowed? → tool runs
+                → tool.execute.after (defense-in-depth fallback)
+
+Session compacting → experimental.session.compacting
+                    → injects anchors + active task into post-compaction context
+                    → budget-capped ≤500 tokens
+
+Chat turn → chat.params (captures agent name, auto-assigns to active task)
+          → experimental.chat.messages.transform (DCP-pattern: prunes stale tool outputs)
+```
+
+### Source Layout
 
 ```
 src/
-├── engines/          # Business logic (no OpenCode dependencies)
-│   ├── framework-detector.ts  # Detects GSD, BMAD, or custom frameworks
-│   ├── scanner.ts            # Scans project structure
-│   └── index.ts
-├── tools/            # OpenCode tool wrappers (expose engines)
-│   ├── init.ts               # idumb_init tool
-│   ├── anchor.ts             # idumb_anchor_add, idumb_anchor_list
-│   ├── status.ts             # idumb_status
-│   └── index.ts
-├── hooks/            # OpenCode event handlers
-│   ├── tool-gate.ts          # tool.execute.before/after (P1 mechanism)
-│   ├── compaction.ts         # experimental.session.compacting (P3 mechanism)
-│   └── index.ts
-├── schemas/          # Zod schemas (source of truth)
-│   ├── state.ts              # Governance state
-│   ├── config.ts             # Plugin configuration
-│   ├── permission.ts         # Role permissions
-│   ├── anchor.ts             # Context anchors
-│   └── scan.ts               # Scan results
-├── lib/              # Shared utilities
-│   ├── persistence.ts        # Atomic file I/O
-│   ├── logging.ts            # TUI-safe file logging
-│   └── index.ts
-└── plugin.ts         # Plugin entry point
+├── index.ts              # Plugin entry: hooks + tools wiring
+├── tools-plugin.ts       # Separate tool registration export
+├── cli.ts                # CLI entry for `npx idumb-v2`
+├── cli/deploy.ts         # Deploys agents/commands/modules to target project
+├── templates.ts          # Agent markdown templates (1510 LOC — splitting planned)
+├── hooks/                # 4 event handlers (tool-gate, compaction, message-transform, system)
+├── tools/                # 11 tool implementations (~5000 LOC)
+├── lib/                  # Shared utilities (logging, persistence, code-quality, etc.)
+└── schemas/              # Zod schemas — source of truth for all data structures
 ```
 
-### Plugin Integration Points
+Key architectural boundaries:
+- **hooks/** only import from **lib/** and **schemas/** — never from tools
+- **tools/** import from **lib/** and **schemas/** — never from hooks
+- **schemas/** are pure data definitions with helper functions — no side effects
+- **lib/persistence.ts** owns all disk I/O: `StateManager` (singleton) + `TaskStore`
 
-| Hook | Purpose | Priority |
-|------|---------|----------|
-| `tool.execute.before` | Intercept all tool calls, inject governance, enforce permissions | P1 (Critical) |
-| `tool.execute.after` | Log tool execution, update state | P1 (Critical) |
-| `experimental.session.compacting` | Inject anchors into compaction summary | P3 (High) |
+### Schema-Driven Development
 
-### Custom Tools
-
-| Tool | Purpose | Exports |
-|------|---------|---------|
-| `idumb_init` | Initialize governance state, detect framework | `initialize` |
-| `idumb_anchor_add` | Add context anchor (survives compaction) | `add` |
-| `idumb_anchor_list` | List all anchors | `list` |
-| `idumb_status` | Show current governance state | `show` |
-
-## Setup & Installation
-
-### Development Workflow
-
-```bash
-# Build the plugin
-npm run build
-
-# Watch mode for development
-npm run dev
-
-# Type check without emitting
-npm run typecheck
-
-# Run validation trials
-npm run test:t1  # Trial 1: Stop hook + permission enforcement
-npm run test:t2  # Trial 2: Anchor persistence (future)
-```
-
-### Installation
-
-**Current (Development):**
-```bash
-# The plugin is registered in package.json
-# OpenCode automatically loads it from node_modules
-# After building: npm run build
-```
-
-**Future (Production):**
-```bash
-# Single-command install from npm (planned)
-npx idumb-plugin
-```
-
-### Verification
-
-After installation, verify:
-1. No TUI pollution (ZERO console.log output)
-2. Plugin loads without errors
-3. Custom tools appear in OpenCode tool list
-4. `.idumb/brain/state.json` and `config.json` created
-
-## Development Workflow
-
-### Type Safety (Non-Negotiable)
-
-- **Zero TypeScript errors** at all times
-- **Zero lint errors** at all times
-- Strict mode enabled in `tsconfig.json`
-- All types explicit (no `any`)
-- Zod schemas define ALL data structures
-
-### Contracts-First Development
-
-1. Define Zod schema first
-2. Generate TypeScript types from schema
-3. Implement logic
-4. Validate with schema
-
-Example:
-```typescript
-// 1. Schema
-import { z } from 'zod';
-
-export const AnchorSchema = z.object({
-  id: z.string(),
-  type: z.enum(['decision', 'context', 'checkpoint']),
-  content: z.string(),
-  priority: z.enum(['critical', 'high', 'normal']),
-  createdAt: z.string(),
-  staleAt: z.string().optional(),
-});
-
-// 2. Type
-export type Anchor = z.infer<typeof AnchorSchema>;
-
-// 3. Implementation
-export async function addAnchor(data: Anchor): Promise<void> {
-  AnchorSchema.parse(data); // Validate
-  await persistAnchor(data);
-}
-```
-
-### Phase Gates
-
-Every phase ends with:
-- [ ] All tests passing
-- [ ] Zero TypeScript errors
-- [ ] Zero lint errors
-- [ ] Schema validation passing
-- [ ] Documentation updated
-
-See `.planning/PHASE-COMPLETION.md` for detailed phase definitions.
-
-### Testing Strategy
-
-**Rule:** Test features in a SEPARATE worktree, not the project being developed.
-
-```bash
-# Create worktree for stress testing
-git worktree add ../idumb-stress-test -b stress-test
-
-# Run stress test in separate worktree
-cd ../idumb-stress-test
-# Test plugin with aggressive context pollution
-```
-
-## API Documentation
-
-### Custom Tools API
-
-#### idumb_init
-
-Initialize governance state for the current project.
+All data structures are defined as Zod schemas in `src/schemas/`. Types are derived, not hand-written:
 
 ```typescript
-// Usage in agent
-await initialize({
-  framework: 'gsd', // or 'bmad', 'custom', 'none'
-  projectName: 'my-project'
-});
+// Schema definition (schemas/task.ts)
+export const SmartTaskSchema = z.object({ ... })
 
-// Creates:
-// - .idumb/brain/state.json
-// - .idumb/brain/config.json
-// - Detects framework if not specified
+// Type derivation
+export type SmartTask = z.infer<typeof SmartTaskSchema>
 ```
 
-#### idumb_anchor_add
+Key schemas: `task.ts` (Epic→Task→Subtask hierarchy), `delegation.ts` (3-agent permissions), `planning-registry.ts` (artifact tracking), `anchor.ts` (compaction-surviving context), `config.ts` (user settings).
 
-Add a context anchor that survives compaction.
+### 3-Agent System
 
+The plugin deploys exactly 3 agents (markdown files to `.opencode/agents/`):
+
+| Agent | Role | Write Permission |
+|-------|------|-----------------|
+| `supreme-coordinator` | Orchestrator — delegates, never writes code | No |
+| `investigator` | Research, analysis, planning | Brain entries only |
+| `executor` | Code implementation, builds, tests | Full write access |
+
+Agent templates live in `src/templates.ts`. Delegation routing is defined in `schemas/delegation.ts`. Write permissions are enforced by `lib/entity-resolver.ts`.
+
+### Persistence
+
+Runtime state lives in `.idumb/brain/` (created by `idumb-v2 init`):
+- `state.json` — governance state (phase, anchors, validation count)
+- `config.json` — user settings (language, governance mode, experience level)
+- `tasks.json` — hierarchical task store (Epic→Task→Subtask)
+
+`StateManager` in `lib/persistence.ts` is a singleton that handles all disk I/O with debounced writes.
+
+## Testing
+
+Tests use a minimal hand-rolled test harness (no framework). Each test file exports nothing — it runs assertions on import via `tsx`.
+
+Pattern for every test file:
 ```typescript
-// Usage in agent
-await add({
-  type: 'decision', // 'decision' | 'context' | 'checkpoint'
-  content: 'Switched from OAuth2 to SAML for enterprise SSO',
-  priority: 'critical', // 'critical' | 'high' | 'normal'
-  ttl: 60 * 60 * 1000 // Time-to-live in ms (optional)
-});
+// tests/example.test.ts
+import { ... } from "../src/schemas/example.js"
+
+let passed = 0, failed = 0
+function assert(condition: boolean, name: string) { ... }
+
+// Tests
+assert(someFunction() === expected, "description")
+
+// Summary
+console.log(`Results: ${passed}/${passed + failed} passed, ${failed} failed`)
+if (failed > 0) process.exit(1)
 ```
 
-#### idumb_status
+**Smoke test:** `tests/smoke-code-quality.ts` runs the code quality scanner against the project's own source — not included in `npm test`.
 
-Show current governance state.
+## Code Style
 
-```typescript
-// Usage in agent
-const status = await show();
-// Returns:
-// {
-//   version: '0.3.1',
-//   framework: 'gsd',
-//   phase: 'planning',
-//   anchors: [...],
-//   history: [...]
-// }
-```
+- ESM only (`"type": "module"` in package.json)
+- All imports use `.js` extension (NodeNext module resolution)
+- Functions: `camelCase` | Types: `PascalCase` | Constants: `SCREAMING_SNAKE` | Files: `kebab-case.ts`
+- Barrel exports via `index.ts` in each directory
+- Zod for external data validation, plain interfaces for internal state
+- Target 300-500 LOC per file. Files >500 LOC are flagged (see AGENTS.md for current violations)
 
-### Hook Integration Points
+## Key Dependencies
 
-#### tool.execute.before (Stop Hook)
+- `@opencode-ai/plugin` — OpenCode plugin SDK (provides `Plugin` type, `tool()` wrapper). Also re-exports `zod` — do NOT install zod separately.
+- `chokidar` — File watching for dashboard
+- `express` + `ws` — Dashboard backend (dev dependency territory, but listed as deps)
+- `tsx` — Test runner (dev dependency)
 
-```typescript
-// Hook signature
-export async function toolExecuteBefore(
-  context: ToolExecuteContext
-): Promise<ToolExecuteBeforeResult> {
+## Known Issues
 
-  const { toolName, toolArgs, agent } = context;
+- `src/index.ts` has `VERSION = "2.1.0"` hardcoded while `package.json` is at `2.2.0` — version string drift
+- `system.ts` hook is registered but **unverified** in live OpenCode — may not fire
+- `experimental.chat.system.transform` and `experimental.chat.messages.transform` are registered but **unverified** in live OpenCode
+- Dashboard exists but is not integrated into the main CLI workflow
+- `templates.ts` at 1510 LOC is the largest file and needs splitting into per-agent modules
 
-  // Check permissions
-  const permitted = checkPermissions(agent.role, toolName);
+## Session Handoff
 
-  if (!permitted) {
-    return {
-      allowed: false,
-      reason: `Agent ${agent.role} not permitted to use ${toolName}`
-    };
-  }
-
-  // Inject governance context
-  const state = await loadState();
-  injectContext({
-    phase: state.phase,
-    currentTask: state.currentTask,
-    relevantAnchors: selectRelevantAnchors(toolArgs)
-  });
-
-  return { allowed: true };
-}
-```
-
-#### experimental.session.compacting
-
-```typescript
-// Hook signature
-export async function sessionCompacting(
-  context: SessionCompactingContext
-): Promise<void> {
-
-  const { summary } = context;
-
-  // Select high-priority, fresh anchors
-  const anchors = await loadAnchors();
-  const selected = selectAnchorsByScore(anchors, {
-    maxTokens: 500,
-    minPriority: 'high'
-  });
-
-  // Inject into summary
-  summary.addSection('## iDumb Governance Context');
-  summary.addSection(formatAnchors(selected));
-}
-```
-
-## File Structure
-
-```
-idumb-v2/
-├── package.json              # Plugin manifest (@opencode-ai/plugin)
-├── tsconfig.json             # Strict TypeScript config
-├── CLAUDE.md                 # This file
-├── src/                      # Source code
-│   ├── plugin.ts             # Plugin entry point
-│   ├── engines/              # Business logic
-│   ├── tools/                # OpenCode tool wrappers
-│   ├── hooks/                # Event handlers
-│   ├── schemas/              # Zod schemas
-│   ├── lib/                  # Utilities
-│   └── types/                # TypeScript types
-├── tests/                    # Validation trials
-│   └── trial-1.ts            # P1: Stop hook validation
-├── dist/                     # Compiled output (gitignored)
-├── .planning/                # Governance documents
-│   ├── PROJECT.md            # Project overview (SINGLE SOURCE OF TRUTH)
-│   ├── GOVERNANCE.md         # Pitfalls, principles, DOs/DON'Ts
-│   ├── PHASE-COMPLETION.md   # Phase definitions + gates
-│   ├── SUCCESS-CRITERIA.md   # Real-life use cases
-│   └── config.json           # Planning configuration
-├── .idumb/                   # Runtime state (gitignored)
-│   ├── brain/
-│   │   ├── state.json        # Governance state
-│   │   ├── config.json       # Plugin configuration
-│   │   ├── anchors/          # Persisted anchors
-│   │   └── sessions/         # Session tracking
-│   └── project-output/       # Phase outputs, research, validation
-└── .opencode/                # OpenCode integration (auto-generated)
-    ├── agents/               # Agent profiles
-    ├── plans/                # Implementation plans
-    └── .plugin-dev/          # Development artifacts
-```
-
-## Recent Updates (2026-02-06)
-
-### Major Changes from v1 to v2
-
-**Strategic Reset:**
-- Complete greenfield reboot based on governance framework analysis
-- Documentation cleanup: 20+ stale research documents archived
-- Clean architecture: engines → tools → hooks separation
-- Contracts-first: Zod schemas define all data structures
-
-**Phase 2A Complete (2026-02-06):**
-- ✅ Stop hook implemented and validated (Trial-1 PASS)
-- ✅ Permission enforcement working
-- ✅ Custom tools implemented (init, anchor, status)
-- ✅ Compaction hook implemented (P3 mechanism)
-- ✅ Framework detector engine (detects GSD, BMAD, custom)
-- ✅ Zero TypeScript/lint errors
-
-**New Agents Added:**
-- `idumb-architect` - System architecture design
-- `idumb-implementer` - Feature implementation
-- `idumb-tester` - Validation testing
-- `strategic-debugger` - Debug coordination
-- `strategic-framework-researcher` - Framework research
-- `validation-architect` - Validation architecture
-
-**Governance Framework Created:**
-- `.planning/GOVERNANCE.md` - Pitfalls catalog, principles, DOs/DON'Ts
-- `.planning/PHASE-COMPLETION.md` - Phase gates with completion criteria
-- `.planning/SUCCESS-CRITERIA.md` - 4 real-life use cases for validation
-- `.planning/PROJECT.md` - Single source of truth for project state
-
-### Architecture Improvements
-
-**Engine Pattern:**
-- Business logic isolated in `src/engines/`
-- No OpenCode dependencies in engines
-- Tools expose engines through OpenCode's tool() wrapper
-
-**Schema Registry:**
-- All data structures defined with Zod
-- TypeScript types inferred from schemas
-- Runtime validation on all inputs/outputs
-
-**Permission System:**
-- Role-based permissions (coordinator, governance, validator, builder)
-- Default role = meta (allow-all) for innate agents
-- Never blocks innate agents, only adds governance
-
-### Next Steps (Phase 2B+)
-
-- [ ] Live validation in OpenCode (load plugin, stress test)
-- [ ] Baseline measurement (agent behavior WITHOUT plugin)
-- [ ] Anchor survival validation across compactions
-- [ ] Inner cycle delegation (P3 mechanism)
-- [ ] 3-level TODO task list (P4 mechanism)
-- [ ] Message transform hooks (P5 mechanism)
-
-## Important Notes
-
-### Governance Documents Priority Order
-
-When working on iDumb, consult governance documents in this order:
-
-1. `.planning/PROJECT.md` - Current project state, what phase we're in
-2. `.planning/GOVERNANCE.md` - Principles, pitfalls, DOs/DON'Ts
-3. `.planning/PHASE-COMPLETION.md` - What must be done to complete current phase
-4. `.planning/SUCCESS-CRITERIA.md` - Real-life use cases for validation
-
-### Critical Principles
-
-**DO:**
-- Test one mechanism at a time
-- Pivot fast if hypothesis fails
-- Define schemas before implementation
-- Provide infrastructure, let LLM provide intelligence
-- Zero TypeScript/lint errors
-
-**DON'T:**
-- Stack features without validation
-- Build engines that analyze text for "poisoning"
-- Break OpenCode TUI (no console.log)
-- Conflict with innate agents
-- Skip baseline measurement
-
-### Context Poisoning Prevention
-
-- All planning artifacts in `.planning/` have lifecycle
-- Research documents synthesized, then archived
-- State.json capped at 100 history entries
-- Anchors have time-to-stale (TTL)
-- Compaction injection budget-capped (≤500 tokens)
-
-### Integration with Meta-Frameworks
-
-**GSD (Get Shit Done):**
-- Plugin provides enforcement layer
-- Context injection: "you are in research/planning/execution phase"
-- Atomic commit tracking against plan items
-- Auto-validation after tool execution
-
-**BMAD (Builder's Mad):**
-- Plugin provides traceability layer
-- Requirements → anchors (survive compaction)
-- Acceptance criteria → validation hooks
-- Tech stack decisions → chain-breaking detection
-
-### Testing Philosophy
-
-**Stress Test Scenario:**
-User bombards agent with context pollution across 20+ compactions:
-- Continuous feature requests
-- Mid-stream requirement changes
-- Mixed chains of thought
-
-**Success Criteria:**
-- Agent correctly identifies current phase/task (60% improvement over baseline)
-- Agent detects stale context and discards
-- Agent references correct planning artifacts despite noise
-- Agent stops and reports when chain breaks
-- Agent delegates correctly (coordinators don't write)
-
-## Current Status
-
-**Phase:** Phase 2A Complete — Awaiting Live Validation
-
-**Validated:**
-- ✅ REQ-01: Plugin loads in OpenCode without TUI pollution
-- ✅ REQ-02: Stop hook intercepts tool execution (Trial-1 PASS)
-- ✅ REQ-03: Permission enforcement blocks unauthorized tools (Trial-1 PASS)
-- ✅ REQ-10: Zero TypeScript/lint errors at all times
-- ✅ REQ-11: All data structures have Zod schemas
-
-**Active (Phase 2B+):**
-- [ ] REQ-04: State persists across compactions via anchors (awaiting live test)
-- [ ] REQ-05: Agent knows current phase/task at all times
-- [ ] REQ-06: Stale context auto-detected and flagged
-- [ ] REQ-07: Chain breaks trigger stop + report
-- [ ] REQ-08: Delegation respects hierarchy
-
-**Out of Scope:**
-- GUI/visual interfaces
-- Multi-platform (Cursor, Windsurf)
-- Forking OpenCode
-- Real-time collaboration
-
----
-
-*Last updated: 2026-02-06 after Phase 2A completion + governance framework creation*
+When resuming work on this codebase:
+1. Read `AGENTS.md` — it's the ground truth for what exists
+2. Run `npm run typecheck` — must be zero errors
+3. Run `npm test` — must be 294/294 baseline
+4. Check `planning/implamentation-plan-turn-based/` for the highest `n`-suffix plan (currently n6)

@@ -1,6 +1,6 @@
 {
   "version": "2.0.0",
-  "activeEpicId": "epic-1770449563137-1",
+  "activeEpicId": "epic-1770499779489-1",
   "epics": [
     {
       "id": "epic-bootstrap-1770449422655",
@@ -461,6 +461,426 @@
           "createdAt": 1770449567689,
           "modifiedAt": 1770449567689,
           "subtasks": []
+        }
+      ]
+    },
+    {
+      "id": "epic-1770499779489-1",
+      "name": "Research Intent Clarity & OpenCode Skills Integration",
+      "status": "active",
+      "category": "research",
+      "governanceLevel": "balanced",
+      "createdAt": 1770499779488,
+      "modifiedAt": 1770499789416,
+      "tasks": [
+        {
+          "id": "task-1770499789416-2",
+          "epicId": "epic-1770499779489-1",
+          "name": "Investigate project and OpenCode concepts, then create intent-clarification research skills",
+          "status": "completed",
+          "createdAt": 1770499789416,
+          "modifiedAt": 1770500872549,
+          "subtasks": [],
+          "assignee": {
+            "name": "build",
+            "description": "The default agent. Executes tools based on configured permissions.",
+            "options": {},
+            "permission": [
+              {
+                "permission": "*",
+                "action": "allow",
+                "pattern": "*"
+              },
+              {
+                "permission": "doom_loop",
+                "action": "ask",
+                "pattern": "*"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "*",
+                "action": "ask"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.local/share/opencode/tool-output/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/requesting-code-review/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/verification-before-completion/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/writing-plans/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/subagent-driven-development/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/brainstorming/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/dispatching-parallel-agents/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/executing-plans/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/test-driven-development/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/create-opencode-plugin/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/systematic-debugging/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/finishing-a-development-branch/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/command-creator/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/find-skills/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/opencode-config/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.claude/skills/using-superpowers/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/verification-before-completion/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/requesting-code-review/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/writing-plans/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/opencode-config/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/brainstorming/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/find-skills/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/finishing-a-development-branch/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/executing-plans/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/command-creator/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/dispatching-parallel-agents/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/using-superpowers/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/subagent-driven-development/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/systematic-debugging/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/create-opencode-plugin/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.agents/skills/test-driven-development/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/mcp-builder/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/ralph-loop/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/opentui/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/skill-creator/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/agent-browser/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/agent-architect/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/tailwind-v4-shadcn/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/architecture-patterns/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/opencode-bridge/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/shadcn-ui/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/find-skills/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.claude/skills/using-git-worktrees/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/find-skills/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/mcp-builder/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/web-search/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/frontend-design/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/agent-browser/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/agent-architect/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/web-design-guidelines/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/opentui/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/using-git-worktrees/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/idumb-meta-builder/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/shadcn-ui/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/skill-creator/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/brainstorming/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/opencode-bridge/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/hierarchical-mindfulness/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/systematic-debugging/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/architecture-patterns/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/tailwind-v4-shadcn/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/ralph-loop/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/Documents/coding-projects/idumb/v2/.agents/skills/mermaid-diagrams/*",
+                "action": "allow"
+              },
+              {
+                "permission": "question",
+                "action": "deny",
+                "pattern": "*"
+              },
+              {
+                "permission": "plan_enter",
+                "action": "deny",
+                "pattern": "*"
+              },
+              {
+                "permission": "plan_exit",
+                "action": "deny",
+                "pattern": "*"
+              },
+              {
+                "permission": "read",
+                "pattern": "*",
+                "action": "allow"
+              },
+              {
+                "permission": "read",
+                "pattern": "*.env",
+                "action": "ask"
+              },
+              {
+                "permission": "read",
+                "pattern": "*.env.*",
+                "action": "ask"
+              },
+              {
+                "permission": "read",
+                "pattern": "*.env.example",
+                "action": "allow"
+              },
+              {
+                "permission": "question",
+                "action": "allow",
+                "pattern": "*"
+              },
+              {
+                "permission": "plan_enter",
+                "action": "allow",
+                "pattern": "*"
+              },
+              {
+                "permission": "read",
+                "pattern": "/Users/apple/.config/opencode/get-shit-done/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.config/opencode/get-shit-done/*",
+                "action": "allow"
+              },
+              {
+                "permission": "external_directory",
+                "pattern": "/Users/apple/.local/share/opencode/tool-output/*",
+                "action": "allow"
+              }
+            ],
+            "mode": "primary",
+            "native": true
+          },
+          "evidence": "idumb-investigator completed comprehensive investigation and created:\n\n**Research Artifacts (3 files, 1,911 lines):**\n- .idumb/research/codebase-architecture-analysis-2026-02-08.md - Full 5-level architecture mapping\n- .idumb/research/opencode-concepts-mapping-2026-02-08.md - OpenCode primitives analysis\n- .idumb/research/integration-pitfalls-2026-02-08.md - 23 pitfalls + anti-patterns\n\n**Skill Suite (5 skills, 2,727 lines):**\n- .agents/skills/intent-clarification/ - 5W1H framework for clarifying vague requests\n- .agents/skills/gap-analysis/ - 8-dimensional gap detection framework\n- .agents/skills/multi-aspect-assessment/ - 8-angle evaluation with scoring rubric\n- .agents/skills/research-workflow-planner/ - Structured 4-step research planning\n- .agents/skills/opencode-primitive-selector/ - Decision tree for choosing OpenCode tools\n\n**Integration Documentation (1 file, 112 lines):**\n- .idumb/research/research-clarification-workflow-2026-02-08.md - How skills work together\n\nAll skills follow skill-creator guidelines with proper frontmatter, specific descriptions, and trigger examples. Total deliverables: 8 files, 4,750 lines."
         }
       ]
     }

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "scannedAt": 1770449516338,
-  "scanDurationMs": 54,
+  "scannedAt": 1770492665531,
+  "scanDurationMs": 446,
   "projectRoot": "/Users/apple/Documents/coding-projects/idumb/v2",
   "files": [
     {
@@ -259,6 +259,85 @@
       "classCount": 0
     },
     {
+      "path": "tests/planning-registry.test.ts",
+      "language": "ts",
+      "sizeBytes": 32615,
+      "lastModified": 1770471179776,
+      "items": [
+        {
+          "name": "ObjectContainingMatcher",
+          "type": "type",
+          "line": 57,
+          "exported": false,
+          "signature": "type ObjectContainingMatcher = { __matcher: \"objectContaining\"; subset: Record<string, unknown> }"
+        },
+        {
+          "name": "deepEqual",
+          "type": "function",
+          "line": 62,
+          "exported": false,
+          "signature": "function deepEqual(a: unknown, b: unknown): boolean {"
+        },
+        {
+          "name": "objectContaining",
+          "type": "function",
+          "line": 66,
+          "exported": false,
+          "signature": "function objectContaining(subset: Record<string, unknown>): ObjectContainingMatcher {"
+        },
+        {
+          "name": "matchObjectContaining",
+          "type": "function",
+          "line": 70,
+          "exported": false,
+          "signature": "function matchObjectContaining(actual: unknown, matcher: ObjectContainingMatcher): boolean {"
+        },
+        {
+          "name": "expect",
+          "type": "function",
+          "line": 76,
+          "exported": false,
+          "signature": "function expect(actual: unknown) {"
+        },
+        {
+          "name": "describe",
+          "type": "function",
+          "line": 157,
+          "exported": false,
+          "signature": "function describe(name: string, fn: () => void): void {"
+        },
+        {
+          "name": "it",
+          "type": "function",
+          "line": 162,
+          "exported": false,
+          "signature": "function it(name: string, fn: () => void): void {"
+        },
+        {
+          "name": "buildChainedRegistry",
+          "type": "function",
+          "line": 338,
+          "exported": false,
+          "signature": "function buildChainedRegistry(): PlanningRegistry {"
+        },
+        {
+          "name": "buildThreeArtifactChain",
+          "type": "function",
+          "line": 429,
+          "exported": false,
+          "signature": "function buildThreeArtifactChain(): { reg: PlanningRegistry; n1: PlanningArtifact; n2: PlanningArtifact; n3: PlanningArt"
+        }
+      ],
+      "importPaths": [
+        "../src/schemas/planning-registry.js"
+      ],
+      "exportNames": [],
+      "comments": [],
+      "lineCount": 889,
+      "functionCount": 8,
+      "classCount": 0
+    },
+    {
       "path": "tests/task.test.ts",
       "language": "ts",
       "sizeBytes": 17787,
@@ -303,8 +382,8 @@
     {
       "path": "tests/delegation.test.ts",
       "language": "ts",
-      "sizeBytes": 14805,
-      "lastModified": 1770431425837,
+      "sizeBytes": 15072,
+      "lastModified": 1770469340117,
       "items": [
         {
           "name": "assert",
@@ -324,7 +403,7 @@
       ],
       "exportNames": [],
       "comments": [],
-      "lineCount": 312,
+      "lineCount": 313,
       "functionCount": 1,
       "classCount": 0
     },
@@ -564,34 +643,111 @@
     {
       "path": "src/tools/init.ts",
       "language": "ts",
-      "sizeBytes": 13999,
-      "lastModified": 1770447209061,
+      "sizeBytes": 19201,
+      "lastModified": 1770471452695,
       "items": [
+        {
+          "name": "PlanningRegistry",
+          "type": "type",
+          "line": 27,
+          "exported": false,
+          "signature": "type PlanningRegistry,"
+        },
+        {
+          "name": "OutlierEntry",
+          "type": "type",
+          "line": 28,
+          "exported": false,
+          "signature": "type OutlierEntry,"
+        },
+        {
+          "name": "PlanningOutlierScanResult",
+          "type": "interface",
+          "line": 39,
+          "exported": false,
+          "signature": "interface PlanningOutlierScanResult {"
+        },
+        {
+          "name": "normalizePath",
+          "type": "function",
+          "line": 44,
+          "exported": false,
+          "signature": "function normalizePath(path: string): string {"
+        },
+        {
+          "name": "shouldIgnoreOutlierPath",
+          "type": "function",
+          "line": 48,
+          "exported": false,
+          "signature": "function shouldIgnoreOutlierPath(path: string): boolean {"
+        },
+        {
+          "name": "readPlanningRegistry",
+          "type": "function",
+          "line": 54,
+          "exported": false,
+          "signature": "async function readPlanningRegistry(projectDir: string): Promise<PlanningRegistry> {"
+        },
+        {
+          "name": "writePlanningRegistry",
+          "type": "function",
+          "line": 72,
+          "exported": false,
+          "signature": "async function writePlanningRegistry(projectDir: string, registry: PlanningRegistry): Promise<void> {"
+        },
+        {
+          "name": "listFilesRecursively",
+          "type": "function",
+          "line": 78,
+          "exported": false,
+          "signature": "async function listFilesRecursively(projectDir: string, root: string): Promise<string[]> {"
+        },
+        {
+          "name": "walk",
+          "type": "function",
+          "line": 82,
+          "exported": false,
+          "signature": "async function walk(currentAbs: string): Promise<void> {"
+        },
+        {
+          "name": "scanPlanningOutliers",
+          "type": "function",
+          "line": 106,
+          "exported": false,
+          "signature": "async function scanPlanningOutliers("
+        },
+        {
+          "name": "formatOutlierReport",
+          "type": "function",
+          "line": 152,
+          "exported": false,
+          "signature": "function formatOutlierReport(outliers: PlanningOutlierScanResult, lang: Language): string {"
+        },
         {
           "name": "buildGreeting",
           "type": "function",
-          "line": 26,
+          "line": 183,
           "exported": false,
           "signature": "function buildGreeting("
         },
         {
           "name": "formatGovernanceMode",
           "type": "function",
-          "line": 98,
+          "line": 255,
           "exported": false,
           "signature": "function formatGovernanceMode(mode: GovernanceMode, lang: Language): string {"
         },
         {
           "name": "buildNextSteps",
           "type": "function",
-          "line": 120,
+          "line": 277,
           "exported": false,
           "signature": "function buildNextSteps(config: IdumbConfig, lang: Language): string {"
         },
         {
           "name": "idumb_init",
           "type": "constant",
-          "line": 186,
+          "line": 343,
           "exported": true,
           "signature": "export const idumb_init = tool({"
         }
@@ -603,14 +759,15 @@
         "../schemas/config.js",
         "../lib/framework-detector.js",
         "../lib/scaffolder.js",
-        "../lib/logging.js"
+        "../lib/logging.js",
+        "../schemas/planning-registry.js"
       ],
       "exportNames": [
         "idumb_init"
       ],
       "comments": [],
-      "lineCount": 284,
-      "functionCount": 3,
+      "lineCount": 442,
+      "functionCount": 11,
       "classCount": 0
     },
     {
@@ -947,8 +1104,8 @@
     {
       "path": "src/tools/write.ts",
       "language": "ts",
-      "sizeBytes": 32877,
-      "lastModified": 1770440865161,
+      "sizeBytes": 46092,
+      "lastModified": 1770471543506,
       "items": [
         {
           "name": "ResolvedEntity",
@@ -965,86 +1122,177 @@
           "signature": "type GovernanceSnapshot,"
         },
         {
+          "name": "ArtifactType",
+          "type": "type",
+          "line": 61,
+          "exported": false,
+          "signature": "type ArtifactType,"
+        },
+        {
+          "name": "PlanningRegistry",
+          "type": "type",
+          "line": 62,
+          "exported": false,
+          "signature": "type PlanningRegistry,"
+        },
+        {
           "name": "idumb_write",
           "type": "constant",
-          "line": 61,
+          "line": 77,
           "exported": true,
           "signature": "export const idumb_write = tool({"
         },
         {
           "name": "Log",
           "type": "type",
-          "line": 215,
+          "line": 238,
           "exported": false,
           "signature": "type Log = ReturnType<typeof createLogger>"
         },
         {
+          "name": "PlanningGuardResult",
+          "type": "interface",
+          "line": 239,
+          "exported": false,
+          "signature": "interface PlanningGuardResult {"
+        },
+        {
+          "name": "PlanningSyncResult",
+          "type": "interface",
+          "line": 244,
+          "exported": false,
+          "signature": "interface PlanningSyncResult {"
+        },
+        {
           "name": "handleCreate",
           "type": "function",
-          "line": 219,
+          "line": 252,
           "exported": false,
           "signature": "function handleCreate("
         },
         {
           "name": "handleOverwrite",
           "type": "function",
-          "line": 279,
+          "line": 318,
           "exported": false,
           "signature": "function handleOverwrite("
         },
         {
           "name": "handleAppend",
           "type": "function",
-          "line": 343,
+          "line": 388,
           "exported": false,
           "signature": "function handleAppend("
         },
         {
           "name": "handleUpdateSection",
           "type": "function",
-          "line": 389,
+          "line": 441,
           "exported": false,
           "signature": "function handleUpdateSection("
         },
         {
           "name": "handleLifecycle",
           "type": "function",
-          "line": 501,
+          "line": 559,
           "exported": false,
           "signature": "function handleLifecycle("
         },
         {
+          "name": "normalizeRegistryPath",
+          "type": "function",
+          "line": 691,
+          "exported": false,
+          "signature": "function normalizeRegistryPath(path: string): string {"
+        },
+        {
+          "name": "isGovernedPlanningPath",
+          "type": "function",
+          "line": 695,
+          "exported": false,
+          "signature": "function isGovernedPlanningPath(path: string): boolean {"
+        },
+        {
+          "name": "readPlanningRegistry",
+          "type": "function",
+          "line": 700,
+          "exported": false,
+          "signature": "function readPlanningRegistry(projectDir: string): PlanningRegistry {"
+        },
+        {
+          "name": "writePlanningRegistry",
+          "type": "function",
+          "line": 722,
+          "exported": false,
+          "signature": "function writePlanningRegistry(projectDir: string, registry: PlanningRegistry): void {"
+        },
+        {
+          "name": "inferChainName",
+          "type": "function",
+          "line": 731,
+          "exported": false,
+          "signature": "function inferChainName(path: string, type: ArtifactType): { name: string; iteration?: number } {"
+        },
+        {
+          "name": "parseArtifactSections",
+          "type": "function",
+          "line": 746,
+          "exported": false,
+          "signature": "function parseArtifactSections(path: string, content: string) {"
+        },
+        {
+          "name": "checkPlanningWriteGuard",
+          "type": "function",
+          "line": 754,
+          "exported": false,
+          "signature": "function checkPlanningWriteGuard(entity: ResolvedEntity, projectDir: string): PlanningGuardResult {"
+        },
+        {
+          "name": "syncPlanningRegistryAfterWrite",
+          "type": "function",
+          "line": 815,
+          "exported": false,
+          "signature": "function syncPlanningRegistryAfterWrite("
+        },
+        {
+          "name": "syncPlanningLifecycle",
+          "type": "function",
+          "line": 907,
+          "exported": false,
+          "signature": "function syncPlanningLifecycle("
+        },
+        {
           "name": "createBackup",
           "type": "function",
-          "line": 631,
+          "line": 987,
           "exported": false,
           "signature": "function createBackup(absPath: string, projectDir: string): string {"
         },
         {
           "name": "writeAuditEntry",
           "type": "function",
-          "line": 649,
+          "line": 1005,
           "exported": false,
           "signature": "function writeAuditEntry(projectDir: string, entry: Record<string, unknown>): void {"
         },
         {
           "name": "validateContent",
           "type": "function",
-          "line": 672,
+          "line": 1028,
           "exported": false,
           "signature": "function validateContent(entity: ResolvedEntity, content: string): {"
         },
         {
           "name": "updateStatusInFile",
           "type": "function",
-          "line": 752,
+          "line": 1108,
           "exported": false,
           "signature": "function updateStatusInFile(absPath: string, status: string, _context: string): void {"
         },
         {
           "name": "buildSuccessOutput",
           "type": "function",
-          "line": 782,
+          "line": 1138,
           "exported": false,
           "signature": "function buildSuccessOutput("
         }
@@ -1056,14 +1304,15 @@
         "../lib/entity-resolver.js",
         "../lib/chain-validator.js",
         "../lib/state-reader.js",
-        "../lib/logging.js"
+        "../lib/logging.js",
+        "../schemas/planning-registry.js"
       ],
       "exportNames": [
         "idumb_write"
       ],
       "comments": [],
-      "lineCount": 819,
-      "functionCount": 10,
+      "lineCount": 1175,
+      "functionCount": 19,
       "classCount": 0
     },
     {
@@ -1214,167 +1463,118 @@
     {
       "path": "src/templates.ts",
       "language": "ts",
-      "sizeBytes": 81195,
-      "lastModified": 1770448227695,
+      "sizeBytes": 56126,
+      "lastModified": 1770469252953,
       "items": [
         {
-          "name": "getMetaBuilderAgent",
+          "name": "getCoordinatorAgent",
           "type": "function",
           "line": 22,
           "exported": true,
-          "signature": "export function getMetaBuilderAgent(config: {"
+          "signature": "export function getCoordinatorAgent(config: {"
         },
         {
           "name": "getInitCommand",
           "type": "function",
-          "line": 398,
+          "line": 396,
           "exported": true,
           "signature": "export function getInitCommand(language: Language): string {"
         },
         {
           "name": "getSettingsCommand",
           "type": "function",
-          "line": 421,
+          "line": 419,
           "exported": true,
           "signature": "export function getSettingsCommand(language: Language): string {"
         },
         {
           "name": "getStatusCommand",
           "type": "function",
-          "line": 448,
+          "line": 446,
           "exported": true,
           "signature": "export function getStatusCommand(language: Language): string {"
         },
         {
-          "name": "SUPREME_COORDINATOR_PROFILE",
+          "name": "COORDINATOR_PROFILE",
           "type": "constant",
-          "line": 476,
+          "line": 474,
           "exported": true,
-          "signature": "export const SUPREME_COORDINATOR_PROFILE = `# Supreme Coordinator — Reference Profile"
+          "signature": "export const COORDINATOR_PROFILE = `# Supreme Coordinator — Reference Profile"
         },
         {
-          "name": "BUILDER_PROFILE",
+          "name": "INVESTIGATOR_PROFILE",
           "type": "constant",
-          "line": 576,
+          "line": 505,
           "exported": true,
-          "signature": "export const BUILDER_PROFILE = `# Builder — Reference Profile"
+          "signature": "export const INVESTIGATOR_PROFILE = `# Investigator — Reference Profile"
         },
         {
-          "name": "VALIDATOR_PROFILE",
+          "name": "EXECUTOR_PROFILE",
           "type": "constant",
-          "line": 668,
+          "line": 572,
           "exported": true,
-          "signature": "export const VALIDATOR_PROFILE = `# Validator — Reference Profile"
+          "signature": "export const EXECUTOR_PROFILE = `# Executor — Reference Profile"
         },
         {
-          "name": "SKILLS_CREATOR_PROFILE",
-          "type": "constant",
-          "line": 763,
-          "exported": true,
-          "signature": "export const SKILLS_CREATOR_PROFILE = `# Skills Creator — Reference Profile"
-        },
-        {
-          "name": "RESEARCH_SYNTHESIZER_PROFILE",
-          "type": "constant",
-          "line": 863,
-          "exported": true,
-          "signature": "export const RESEARCH_SYNTHESIZER_PROFILE = `# Research Synthesizer — Reference Profile"
-        },
-        {
-          "name": "PLANNER_PROFILE",
-          "type": "constant",
-          "line": 919,
-          "exported": true,
-          "signature": "export const PLANNER_PROFILE = `# Planner — Reference Profile"
-        },
-        {
-          "name": "getSupremeCoordinatorAgent",
+          "name": "getInvestigatorAgent",
           "type": "function",
-          "line": 981,
+          "line": 653,
           "exported": true,
-          "signature": "export function getSupremeCoordinatorAgent(config: {"
+          "signature": "export function getInvestigatorAgent(config: {"
         },
         {
-          "name": "getBuilderAgent",
+          "name": "getExecutorAgent",
           "type": "function",
-          "line": 1083,
+          "line": 740,
           "exported": true,
-          "signature": "export function getBuilderAgent(config: {"
-        },
-        {
-          "name": "getValidatorAgent",
-          "type": "function",
-          "line": 1177,
-          "exported": true,
-          "signature": "export function getValidatorAgent(config: {"
-        },
-        {
-          "name": "getSkillsCreatorAgent",
-          "type": "function",
-          "line": 1266,
-          "exported": true,
-          "signature": "export function getSkillsCreatorAgent(config: {"
-        },
-        {
-          "name": "getResearchSynthesizerAgent",
-          "type": "function",
-          "line": 1345,
-          "exported": true,
-          "signature": "export function getResearchSynthesizerAgent(config: {"
-        },
-        {
-          "name": "getPlannerAgent",
-          "type": "function",
-          "line": 1422,
-          "exported": true,
-          "signature": "export function getPlannerAgent(config: {"
+          "signature": "export function getExecutorAgent(config: {"
         },
         {
           "name": "AGENT_CONTRACT_TEMPLATE",
           "type": "constant",
-          "line": 1504,
+          "line": 837,
           "exported": true,
           "signature": "export const AGENT_CONTRACT_TEMPLATE = `# iDumb Agent Contract"
         },
         {
           "name": "MODULES_README_TEMPLATE",
           "type": "constant",
-          "line": 1603,
+          "line": 936,
           "exported": true,
           "signature": "export const MODULES_README_TEMPLATE = `# iDumb Modules"
         },
         {
           "name": "COMMAND_TEMPLATE",
           "type": "constant",
-          "line": 1636,
+          "line": 969,
           "exported": true,
           "signature": "export const COMMAND_TEMPLATE = `# Command Template"
         },
         {
           "name": "WORKFLOW_TEMPLATE",
           "type": "constant",
-          "line": 1706,
+          "line": 1039,
           "exported": true,
           "signature": "export const WORKFLOW_TEMPLATE = `# Workflow Template"
         },
         {
           "name": "DELEGATION_SKILL_TEMPLATE",
           "type": "constant",
-          "line": 1766,
+          "line": 1099,
           "exported": true,
           "signature": "export const DELEGATION_SKILL_TEMPLATE = `# Delegation Protocol"
         },
         {
           "name": "GOVERNANCE_SKILL_TEMPLATE",
           "type": "constant",
-          "line": 1935,
+          "line": 1268,
           "exported": true,
           "signature": "export const GOVERNANCE_SKILL_TEMPLATE = `# Governance Protocol"
         },
         {
           "name": "getDelegateCommand",
           "type": "function",
-          "line": 2136,
+          "line": 1469,
           "exported": true,
           "signature": "export function getDelegateCommand(language: Language): string {"
         }
@@ -1383,22 +1583,15 @@
         "./schemas/config.js"
       ],
       "exportNames": [
-        "getMetaBuilderAgent",
+        "getCoordinatorAgent",
         "getInitCommand",
         "getSettingsCommand",
         "getStatusCommand",
-        "SUPREME_COORDINATOR_PROFILE",
-        "BUILDER_PROFILE",
-        "VALIDATOR_PROFILE",
-        "SKILLS_CREATOR_PROFILE",
-        "RESEARCH_SYNTHESIZER_PROFILE",
-        "PLANNER_PROFILE",
-        "getSupremeCoordinatorAgent",
-        "getBuilderAgent",
-        "getValidatorAgent",
-        "getSkillsCreatorAgent",
-        "getResearchSynthesizerAgent",
-        "getPlannerAgent",
+        "COORDINATOR_PROFILE",
+        "INVESTIGATOR_PROFILE",
+        "EXECUTOR_PROFILE",
+        "getInvestigatorAgent",
+        "getExecutorAgent",
         "AGENT_CONTRACT_TEMPLATE",
         "MODULES_README_TEMPLATE",
         "COMMAND_TEMPLATE",
@@ -1412,11 +1605,11 @@
           "marker": "NOTE",
           "content": "plural!",
           "file": "src/templates.ts",
-          "line": 1530
+          "line": 863
         }
       ],
-      "lineCount": 2178,
-      "functionCount": 11,
+      "lineCount": 1511,
+      "functionCount": 7,
       "classCount": 0
     },
     {
@@ -1484,76 +1677,76 @@
     {
       "path": "src/cli/deploy.ts",
       "language": "ts",
-      "sizeBytes": 14254,
-      "lastModified": 1770448242969,
+      "sizeBytes": 13395,
+      "lastModified": 1770471389183,
       "items": [
         {
           "name": "DeployOptions",
           "type": "interface",
-          "line": 39,
+          "line": 33,
           "exported": true,
           "signature": "export interface DeployOptions {"
         },
         {
           "name": "DeployResult",
           "type": "interface",
-          "line": 48,
+          "line": 42,
           "exported": true,
           "signature": "export interface DeployResult {"
         },
         {
           "name": "PluginResolutionMethod",
           "type": "type",
-          "line": 58,
+          "line": 52,
           "exported": false,
           "signature": "type PluginResolutionMethod = \"npm\" | \"local-dev\" | \"npx-fallback\""
         },
         {
           "name": "PluginResolution",
           "type": "interface",
-          "line": 60,
+          "line": 54,
           "exported": false,
           "signature": "interface PluginResolution {"
         },
         {
           "name": "exists",
           "type": "function",
-          "line": 66,
+          "line": 60,
           "exported": false,
           "signature": "async function exists(path: string): Promise<boolean> {"
         },
         {
           "name": "writeIfNew",
           "type": "function",
-          "line": 75,
+          "line": 69,
           "exported": false,
           "signature": "async function writeIfNew(path: string, content: string, force: boolean, result: DeployResult): Promise<void> {"
         },
         {
           "name": "resolvePluginPath",
           "type": "function",
-          "line": 100,
+          "line": 94,
           "exported": false,
           "signature": "async function resolvePluginPath(projectDir: string): Promise<PluginResolution> {"
         },
         {
           "name": "cleanStalePluginPaths",
           "type": "function",
-          "line": 166,
+          "line": 160,
           "exported": false,
           "signature": "function cleanStalePluginPaths(plugins: string[]): string[] {"
         },
         {
           "name": "getOpenCodeDir",
           "type": "function",
-          "line": 181,
+          "line": 175,
           "exported": false,
           "signature": "function getOpenCodeDir(projectDir: string, scope: \"project\" | \"global\"): string {"
         },
         {
           "name": "deployAll",
           "type": "function",
-          "line": 192,
+          "line": 186,
           "exported": true,
           "signature": "export async function deployAll(options: DeployOptions): Promise<DeployResult> {"
         }
@@ -1563,7 +1756,8 @@
         "node:path",
         "../schemas/config.js",
         "../templates.js",
-        "../schemas/task.js"
+        "../schemas/task.js",
+        "../schemas/planning-registry.js"
       ],
       "exportNames": [
         "DeployOptions",
@@ -1574,18 +1768,18 @@
           "marker": "WARN",
           "content": "the user — this path may not survive.",
           "file": "src/cli/deploy.ts",
-          "line": 137
+          "line": 131
         }
       ],
-      "lineCount": 450,
+      "lineCount": 412,
       "functionCount": 6,
       "classCount": 0
     },
     {
       "path": "src/schemas/delegation.ts",
       "language": "ts",
-      "sizeBytes": 13186,
-      "lastModified": 1770431186544,
+      "sizeBytes": 13247,
+      "lastModified": 1770468741854,
       "items": [
         {
           "name": "DELEGATION_STORE_VERSION",
@@ -1639,126 +1833,126 @@
         {
           "name": "createEmptyDelegationStore",
           "type": "function",
-          "line": 100,
+          "line": 103,
           "exported": true,
           "signature": "export function createEmptyDelegationStore(): DelegationStore {"
         },
         {
           "name": "CreateDelegationOptions",
           "type": "interface",
-          "line": 107,
+          "line": 110,
           "exported": true,
           "signature": "export interface CreateDelegationOptions {"
         },
         {
           "name": "createDelegation",
           "type": "function",
-          "line": 118,
+          "line": 121,
           "exported": true,
           "signature": "export function createDelegation(opts: CreateDelegationOptions): DelegationRecord {"
         },
         {
           "name": "findDelegation",
           "type": "function",
-          "line": 142,
+          "line": 145,
           "exported": true,
           "signature": "export function findDelegation(store: DelegationStore, id: string): DelegationRecord | undefined {"
         },
         {
           "name": "findDelegationsForTask",
           "type": "function",
-          "line": 146,
+          "line": 149,
           "exported": true,
           "signature": "export function findDelegationsForTask(store: DelegationStore, taskId: string): DelegationRecord[] {"
         },
         {
           "name": "findDelegationsFromAgent",
           "type": "function",
-          "line": 150,
+          "line": 153,
           "exported": true,
           "signature": "export function findDelegationsFromAgent(store: DelegationStore, agent: string): DelegationRecord[] {"
         },
         {
           "name": "findDelegationsToAgent",
           "type": "function",
-          "line": 154,
+          "line": 157,
           "exported": true,
           "signature": "export function findDelegationsToAgent(store: DelegationStore, agent: string): DelegationRecord[] {"
         },
         {
           "name": "findActiveDelegations",
           "type": "function",
-          "line": 158,
+          "line": 161,
           "exported": true,
           "signature": "export function findActiveDelegations(store: DelegationStore): DelegationRecord[] {"
         },
         {
           "name": "DelegationValidation",
           "type": "interface",
-          "line": 164,
+          "line": 167,
           "exported": true,
           "signature": "export interface DelegationValidation {"
         },
         {
           "name": "validateDelegation",
           "type": "function",
-          "line": 178,
+          "line": 181,
           "exported": true,
           "signature": "export function validateDelegation("
         },
         {
           "name": "getDelegationDepth",
           "type": "function",
-          "line": 231,
+          "line": 234,
           "exported": true,
           "signature": "export function getDelegationDepth(store: DelegationStore, taskId: string): number {"
         },
         {
           "name": "acceptDelegation",
           "type": "function",
-          "line": 240,
+          "line": 243,
           "exported": true,
           "signature": "export function acceptDelegation(record: DelegationRecord): void {"
         },
         {
           "name": "completeDelegation",
           "type": "function",
-          "line": 244,
+          "line": 247,
           "exported": true,
           "signature": "export function completeDelegation(record: DelegationRecord, result: DelegationResult): void {"
         },
         {
           "name": "rejectDelegation",
           "type": "function",
-          "line": 250,
+          "line": 253,
           "exported": true,
           "signature": "export function rejectDelegation(record: DelegationRecord): void {"
         },
         {
           "name": "expireStaleDelegations",
           "type": "function",
-          "line": 259,
+          "line": 262,
           "exported": true,
           "signature": "export function expireStaleDelegations(store: DelegationStore): number {"
         },
         {
           "name": "formatDelegationRecord",
           "type": "function",
-          "line": 276,
+          "line": 279,
           "exported": true,
           "signature": "export function formatDelegationRecord(d: DelegationRecord): string {"
         },
         {
           "name": "formatDelegationStore",
           "type": "function",
-          "line": 294,
+          "line": 297,
           "exported": true,
           "signature": "export function formatDelegationStore(store: DelegationStore): string {"
         },
         {
           "name": "buildDelegationInstruction",
           "type": "function",
-          "line": 332,
+          "line": 335,
           "exported": true,
           "signature": "export function buildDelegationInstruction(record: DelegationRecord): string {"
         }
@@ -1794,8 +1988,385 @@
         "buildDelegationInstruction"
       ],
       "comments": [],
-      "lineCount": 361,
+      "lineCount": 364,
       "functionCount": 16,
+      "classCount": 0
+    },
+    {
+      "path": "src/schemas/planning-registry.ts",
+      "language": "ts",
+      "sizeBytes": 27242,
+      "lastModified": 1770468495761,
+      "items": [
+        {
+          "name": "DocumentTier",
+          "type": "type",
+          "line": 38,
+          "exported": true,
+          "signature": "export type DocumentTier = 1 | 2 | 3"
+        },
+        {
+          "name": "ArtifactType",
+          "type": "type",
+          "line": 42,
+          "exported": true,
+          "signature": "export type ArtifactType ="
+        },
+        {
+          "name": "SectionStatus",
+          "type": "type",
+          "line": 66,
+          "exported": true,
+          "signature": "export type SectionStatus = \"active\" | \"stale\" | \"superseded\" | \"invalid\""
+        },
+        {
+          "name": "ArtifactSection",
+          "type": "interface",
+          "line": 68,
+          "exported": true,
+          "signature": "export interface ArtifactSection {"
+        },
+        {
+          "name": "ArtifactStatus",
+          "type": "type",
+          "line": 84,
+          "exported": true,
+          "signature": "export type ArtifactStatus = \"draft\" | \"active\" | \"superseded\" | \"abandoned\""
+        },
+        {
+          "name": "PlanningArtifact",
+          "type": "interface",
+          "line": 86,
+          "exported": true,
+          "signature": "export interface PlanningArtifact {"
+        },
+        {
+          "name": "ArtifactChain",
+          "type": "interface",
+          "line": 107,
+          "exported": true,
+          "signature": "export interface ArtifactChain {"
+        },
+        {
+          "name": "OutlierReason",
+          "type": "type",
+          "line": 118,
+          "exported": true,
+          "signature": "export type OutlierReason = \"unregistered\" | \"no-chain\" | \"schema-mismatch\" | \"outside-hierarchy\""
+        },
+        {
+          "name": "OutlierAction",
+          "type": "type",
+          "line": 119,
+          "exported": true,
+          "signature": "export type OutlierAction = \"accepted\" | \"rejected\" | \"pending\""
+        },
+        {
+          "name": "OutlierEntry",
+          "type": "interface",
+          "line": 121,
+          "exported": true,
+          "signature": "export interface OutlierEntry {"
+        },
+        {
+          "name": "PLANNING_REGISTRY_VERSION",
+          "type": "constant",
+          "line": 132,
+          "exported": true,
+          "signature": "export const PLANNING_REGISTRY_VERSION = \"1.0.0\""
+        },
+        {
+          "name": "PlanningRegistry",
+          "type": "interface",
+          "line": 136,
+          "exported": true,
+          "signature": "export interface PlanningRegistry {"
+        },
+        {
+          "name": "createPlanningRegistry",
+          "type": "function",
+          "line": 156,
+          "exported": true,
+          "signature": "export function createPlanningRegistry(): PlanningRegistry {"
+        },
+        {
+          "name": "createPlanningArtifact",
+          "type": "function",
+          "line": 166,
+          "exported": true,
+          "signature": "export function createPlanningArtifact(opts: {"
+        },
+        {
+          "name": "createArtifactSection",
+          "type": "function",
+          "line": 199,
+          "exported": true,
+          "signature": "export function createArtifactSection(opts: {"
+        },
+        {
+          "name": "createArtifactChain",
+          "type": "function",
+          "line": 219,
+          "exported": true,
+          "signature": "export function createArtifactChain(opts: {"
+        },
+        {
+          "name": "createOutlierEntry",
+          "type": "function",
+          "line": 234,
+          "exported": true,
+          "signature": "export function createOutlierEntry(opts: {"
+        },
+        {
+          "name": "computeContentHash",
+          "type": "function",
+          "line": 253,
+          "exported": true,
+          "signature": "export function computeContentHash(content: string): string {"
+        },
+        {
+          "name": "parseMarkdownSections",
+          "type": "function",
+          "line": 266,
+          "exported": true,
+          "signature": "export function parseMarkdownSections("
+        },
+        {
+          "name": "parseSectionsFromMarkdown",
+          "type": "function",
+          "line": 309,
+          "exported": true,
+          "signature": "export function parseSectionsFromMarkdown("
+        },
+        {
+          "name": "resolveChainHead",
+          "type": "function",
+          "line": 323,
+          "exported": true,
+          "signature": "export function resolveChainHead("
+        },
+        {
+          "name": "getChainHistory",
+          "type": "function",
+          "line": 333,
+          "exported": true,
+          "signature": "export function getChainHistory("
+        },
+        {
+          "name": "addToChain",
+          "type": "function",
+          "line": 345,
+          "exported": true,
+          "signature": "export function addToChain("
+        },
+        {
+          "name": "isArtifactStaleByChainPosition",
+          "type": "function",
+          "line": 384,
+          "exported": true,
+          "signature": "export function isArtifactStaleByChainPosition("
+        },
+        {
+          "name": "findStaleArtifacts",
+          "type": "function",
+          "line": 414,
+          "exported": true,
+          "signature": "export function findStaleArtifacts(registry: PlanningRegistry): PlanningArtifact[] {"
+        },
+        {
+          "name": "findStaleSections",
+          "type": "function",
+          "line": 423,
+          "exported": true,
+          "signature": "export function findStaleSections("
+        },
+        {
+          "name": "isArtifactHealthy",
+          "type": "function",
+          "line": 438,
+          "exported": true,
+          "signature": "export function isArtifactHealthy("
+        },
+        {
+          "name": "supersedSection",
+          "type": "function",
+          "line": 449,
+          "exported": true,
+          "signature": "export function supersedSection("
+        },
+        {
+          "name": "markSectionStale",
+          "type": "function",
+          "line": 459,
+          "exported": true,
+          "signature": "export function markSectionStale(section: ArtifactSection): void {"
+        },
+        {
+          "name": "markSectionInvalid",
+          "type": "function",
+          "line": 465,
+          "exported": true,
+          "signature": "export function markSectionInvalid(section: ArtifactSection): void {"
+        },
+        {
+          "name": "detectSectionDrift",
+          "type": "function",
+          "line": 471,
+          "exported": true,
+          "signature": "export function detectSectionDrift("
+        },
+        {
+          "name": "linkTaskToArtifact",
+          "type": "function",
+          "line": 481,
+          "exported": true,
+          "signature": "export function linkTaskToArtifact("
+        },
+        {
+          "name": "linkDelegationToSections",
+          "type": "function",
+          "line": 500,
+          "exported": true,
+          "signature": "export function linkDelegationToSections("
+        },
+        {
+          "name": "linkBrainEntryToArtifact",
+          "type": "function",
+          "line": 514,
+          "exported": true,
+          "signature": "export function linkBrainEntryToArtifact("
+        },
+        {
+          "name": "findPendingOutliers",
+          "type": "function",
+          "line": 527,
+          "exported": true,
+          "signature": "export function findPendingOutliers(registry: PlanningRegistry): OutlierEntry[] {"
+        },
+        {
+          "name": "acceptOutlier",
+          "type": "function",
+          "line": 532,
+          "exported": true,
+          "signature": "export function acceptOutlier(registry: PlanningRegistry, path: string): boolean {"
+        },
+        {
+          "name": "rejectOutlier",
+          "type": "function",
+          "line": 540,
+          "exported": true,
+          "signature": "export function rejectOutlier(registry: PlanningRegistry, path: string): boolean {"
+        },
+        {
+          "name": "findArtifactByPath",
+          "type": "function",
+          "line": 550,
+          "exported": true,
+          "signature": "export function findArtifactByPath("
+        },
+        {
+          "name": "findArtifactById",
+          "type": "function",
+          "line": 558,
+          "exported": true,
+          "signature": "export function findArtifactById("
+        },
+        {
+          "name": "findArtifactsByType",
+          "type": "function",
+          "line": 566,
+          "exported": true,
+          "signature": "export function findArtifactsByType("
+        },
+        {
+          "name": "findArtifactsByChain",
+          "type": "function",
+          "line": 574,
+          "exported": true,
+          "signature": "export function findArtifactsByChain("
+        },
+        {
+          "name": "extractIterationPattern",
+          "type": "function",
+          "line": 591,
+          "exported": true,
+          "signature": "export function extractIterationPattern("
+        },
+        {
+          "name": "detectArtifactType",
+          "type": "function",
+          "line": 607,
+          "exported": true,
+          "signature": "export function detectArtifactType(path: string): ArtifactType | null {"
+        },
+        {
+          "name": "formatRegistrySummary",
+          "type": "function",
+          "line": 631,
+          "exported": true,
+          "signature": "export function formatRegistrySummary(registry: PlanningRegistry): string {"
+        },
+        {
+          "name": "formatArtifactDetail",
+          "type": "function",
+          "line": 680,
+          "exported": true,
+          "signature": "export function formatArtifactDetail("
+        }
+      ],
+      "importPaths": [
+        "crypto"
+      ],
+      "exportNames": [
+        "DocumentTier",
+        "ArtifactType",
+        "SectionStatus",
+        "ArtifactSection",
+        "ArtifactStatus",
+        "PlanningArtifact",
+        "ArtifactChain",
+        "OutlierReason",
+        "OutlierAction",
+        "OutlierEntry",
+        "PLANNING_REGISTRY_VERSION",
+        "PlanningRegistry",
+        "createPlanningRegistry",
+        "createPlanningArtifact",
+        "createArtifactSection",
+        "createArtifactChain",
+        "createOutlierEntry",
+        "computeContentHash",
+        "parseMarkdownSections",
+        "parseSectionsFromMarkdown",
+        "resolveChainHead",
+        "getChainHistory",
+        "addToChain",
+        "isArtifactStaleByChainPosition",
+        "findStaleArtifacts",
+        "findStaleSections",
+        "isArtifactHealthy",
+        "supersedSection",
+        "markSectionStale",
+        "markSectionInvalid",
+        "detectSectionDrift",
+        "linkTaskToArtifact",
+        "linkDelegationToSections",
+        "linkBrainEntryToArtifact",
+        "findPendingOutliers",
+        "acceptOutlier",
+        "rejectOutlier",
+        "findArtifactByPath",
+        "findArtifactById",
+        "findArtifactsByType",
+        "findArtifactsByChain",
+        "extractIterationPattern",
+        "detectArtifactType",
+        "formatRegistrySummary",
+        "formatArtifactDetail"
+      ],
+      "comments": [],
+      "lineCount": 730,
+      "functionCount": 33,
       "classCount": 0
     },
     {
@@ -2107,8 +2678,8 @@
     {
       "path": "src/schemas/index.ts",
       "language": "ts",
-      "sizeBytes": 2868,
-      "lastModified": 1770431220328,
+      "sizeBytes": 4065,
+      "lastModified": 1770468514502,
       "items": [],
       "importPaths": [
         "./anchor.js",
@@ -2117,11 +2688,12 @@
         "./brain.js",
         "./project-map.js",
         "./codemap.js",
-        "./delegation.js"
+        "./delegation.js",
+        "./planning-registry.js"
       ],
       "exportNames": [],
       "comments": [],
-      "lineCount": 65,
+      "lineCount": 87,
       "functionCount": 0,
       "classCount": 0
     },
@@ -2686,8 +3258,8 @@
     {
       "path": "src/dashboard/frontend/src/App.tsx",
       "language": "tsx",
-      "sizeBytes": 1893,
-      "lastModified": 1770441232067,
+      "sizeBytes": 1913,
+      "lastModified": 1770458874526,
       "items": [
         {
           "name": "App",
@@ -3315,8 +3887,8 @@
     {
       "path": "src/lib/entity-resolver.ts",
       "language": "ts",
-      "sizeBytes": 20224,
-      "lastModified": 1770440432913,
+      "sizeBytes": 20074,
+      "lastModified": 1770468782594,
       "items": [
         {
           "name": "EntityType",
@@ -4173,13 +4745,13 @@
       "marker": "NOTE",
       "content": "plural!",
       "file": "src/templates.ts",
-      "line": 1530
+      "line": 863
     },
     {
       "marker": "WARN",
       "content": "the user — this path may not survive.",
       "file": "src/cli/deploy.ts",
-      "line": 137
+      "line": 131
     },
     {
       "marker": "TODO",
@@ -4227,7 +4799,7 @@
   "inconsistencies": [
     {
       "type": "orphan",
-      "message": "38 file(s) export symbols but are never imported",
+      "message": "39 file(s) export symbols but are never imported",
       "files": [
         "src/tools/read.ts",
         "src/tools/status.ts",
@@ -4244,15 +4816,15 @@
     }
   ],
   "stats": {
-    "totalFiles": 55,
-    "totalLines": 16101,
-    "totalFunctions": 229,
+    "totalFiles": 57,
+    "totalLines": 17555,
+    "totalFunctions": 283,
     "totalClasses": 1,
     "totalTodos": 14,
     "totalFixmes": 0,
     "languages": {
       "mjs": 1,
-      "ts": 52,
+      "ts": 54,
       "tsx": 2
     }
   }

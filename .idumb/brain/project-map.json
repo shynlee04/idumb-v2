@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "scannedAt": 1770449516005,
-  "scanDurationMs": 167,
+  "scannedAt": 1770492665382,
+  "scanDurationMs": 880,
   "projectRoot": "/Users/apple/Documents/coding-projects/idumb/v2",
   "frameworks": [
     {
@@ -49,8 +49,8 @@
     },
     {
       "path": "tests",
-      "fileCount": 8,
-      "totalSizeBytes": 74468,
+      "fileCount": 9,
+      "totalSizeBytes": 107350,
       "isSource": true,
       "extensions": [
         ".ts"
@@ -67,8 +67,8 @@
     },
     {
       "path": "planning/implamentation-plan-turn-based",
-      "fileCount": 10,
-      "totalSizeBytes": 225742,
+      "fileCount": 15,
+      "totalSizeBytes": 280968,
       "isSource": false,
       "extensions": [
         ".md"
@@ -231,7 +231,7 @@
     {
       "path": "src/tools",
       "fileCount": 11,
-      "totalSizeBytes": 186118,
+      "totalSizeBytes": 204535,
       "isSource": true,
       "extensions": [
         ".ts"
@@ -240,7 +240,7 @@
     {
       "path": "src/cli",
       "fileCount": 2,
-      "totalSizeBytes": 20391,
+      "totalSizeBytes": 19532,
       "isSource": true,
       "extensions": [
         ".ts"
@@ -248,8 +248,8 @@
     },
     {
       "path": "src/schemas",
-      "fileCount": 8,
-      "totalSizeBytes": 67133,
+      "fileCount": 9,
+      "totalSizeBytes": 95633,
       "isSource": true,
       "extensions": [
         ".ts"
@@ -258,7 +258,7 @@
     {
       "path": "src/dashboard/frontend/src/styles",
       "fileCount": 1,
-      "totalSizeBytes": 2203,
+      "totalSizeBytes": 12813,
       "isSource": false,
       "extensions": [
         ".css"
@@ -267,7 +267,7 @@
     {
       "path": "src/dashboard/frontend/src",
       "fileCount": 2,
-      "totalSizeBytes": 2257,
+      "totalSizeBytes": 2277,
       "isSource": true,
       "extensions": [
         ".tsx"
@@ -275,8 +275,8 @@
     },
     {
       "path": "src/dashboard/frontend",
-      "fileCount": 4,
-      "totalSizeBytes": 2124,
+      "fileCount": 5,
+      "totalSizeBytes": 2325,
       "isSource": true,
       "extensions": [
         ".json",
@@ -314,7 +314,7 @@
     {
       "path": "src/lib",
       "fileCount": 9,
-      "totalSizeBytes": 101879,
+      "totalSizeBytes": 101729,
       "isSource": true,
       "extensions": [
         ".ts"
@@ -341,7 +341,7 @@
     {
       "path": "src",
       "fileCount": 4,
-      "totalSizeBytes": 108051,
+      "totalSizeBytes": 82982,
       "isSource": true,
       "extensions": [
         ".ts"
@@ -349,6 +349,13 @@
     }
   ],
   "documents": [
+    {
+      "path": "CLAUDE-NAVIGATION.md",
+      "type": "documentation",
+      "sizeBytes": 18447,
+      "lastModified": 1770482381693,
+      "firstLine": "# iDumb v2 - Code Navigation Guide"
+    },
     {
       "path": "LICENSE",
       "type": "license",
@@ -376,6 +383,20 @@
       "sizeBytes": 8998,
       "lastModified": 1770404561823,
       "firstLine": "# Trial Tracker"
+    },
+    {
+      "path": "CLAUDE-INDEX.md",
+      "type": "documentation",
+      "sizeBytes": 14713,
+      "lastModified": 1770482520425,
+      "firstLine": "# iDumb v2 - Documentation Index"
+    },
+    {
+      "path": "validation_report-2026-02-07.md",
+      "type": "documentation",
+      "sizeBytes": 5469,
+      "lastModified": 1770449659382,
+      "firstLine": "# iDumb v2 Validation Report"
     },
     {
       "path": "planning/research/2026-02-06-reset/STACK.md",
@@ -518,6 +539,13 @@
       "firstLine": "# Delegation Skills, Commands & Schema — Phase δ2"
     },
     {
+      "path": "planning/implamentation-plan-turn-based/intelligence-gap-analysis-implementation_plan-n5.md",
+      "type": "documentation",
+      "sizeBytes": 16675,
+      "lastModified": 1770459954384,
+      "firstLine": "# 🧠 Intelligence Gap Analysis: Vision vs. Current Implementation"
+    },
+    {
       "path": "planning/implamentation-plan-turn-based/implementation_plan-n3.md",
       "type": "documentation",
       "sizeBytes": 25815,
@@ -530,6 +558,27 @@
       "sizeBytes": 32624,
       "lastModified": 1770427567542,
       "firstLine": "# Phase 1b Master Plan v3 — Entity-Driven Intelligence Architecture"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-fe1.md",
+      "type": "documentation",
+      "sizeBytes": 2603,
+      "lastModified": 1770459879006,
+      "firstLine": "# Dashboard Setup & Bug Fixes — Walkthrough"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n6.md",
+      "type": "documentation",
+      "sizeBytes": 12964,
+      "lastModified": 1770469496712,
+      "firstLine": "# Schema-First Governance Redesign — Unified Iterations"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-fe1.md",
+      "type": "documentation",
+      "sizeBytes": 20005,
+      "lastModified": 1770459849192,
+      "firstLine": "# iDumb Dashboard — Interactive Governance UI"
     },
     {
       "path": "planning/implamentation-plan-turn-based/walkthrough-n3-2.md",
@@ -565,6 +614,13 @@
       "sizeBytes": 47302,
       "lastModified": 1770441203867,
       "firstLine": "# Phase 1b Master Plan n4 — Entity-Driven Intelligence Tools"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n6.md",
+      "type": "documentation",
+      "sizeBytes": 2979,
+      "lastModified": 1770470661619,
+      "firstLine": "# n6 Walkthrough — 3-Agent Model Refactor + AGENTS.md v6.0.0"
     },
     {
       "path": "planning/implamentation-plan-turn-based/implementation_plan-n3-2.md",
@@ -1162,11 +1218,25 @@
       "firstLine": "# Phase 0: Smart TODO Tool — Implementation Plan"
     },
     {
+      "path": "CLAUDE-ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 37573,
+      "lastModified": 1770482310546,
+      "firstLine": "# iDumb v2 - Complete Architecture Documentation"
+    },
+    {
       "path": "README.md",
       "type": "readme",
       "sizeBytes": 19935,
       "lastModified": 1770445909833,
       "firstLine": "<p align=\"center\">"
+    },
+    {
+      "path": "CLAUDE-GAPS.md",
+      "type": "documentation",
+      "sizeBytes": 28716,
+      "lastModified": 1770482472526,
+      "firstLine": "# iDumb v2 - Gaps and Issues Analysis"
     },
     {
       "path": "n-3-2-1e.md",
@@ -1199,8 +1269,8 @@
     {
       "path": "AGENTS.md",
       "type": "agents",
-      "sizeBytes": 22301,
-      "lastModified": 1770448596110,
+      "sizeBytes": 22143,
+      "lastModified": 1770472064988,
       "firstLine": "# AGENTS.md — iDumb v2 (Ground Truth)"
     },
     {
@@ -1220,8 +1290,8 @@
     {
       "path": "CLAUDE.md",
       "type": "documentation",
-      "sizeBytes": 15720,
-      "lastModified": 1770404561819,
+      "sizeBytes": 8359,
+      "lastModified": 1770489896305,
       "firstLine": "# CLAUDE.md"
     },
     {
@@ -1233,13 +1303,13 @@
     }
   ],
   "stats": {
-    "totalFiles": 193,
+    "totalFiles": 206,
     "totalDirs": 34,
-    "totalSizeBytes": 4526628,
-    "sourceFiles": 55,
-    "testFiles": 8,
-    "configFiles": 8,
-    "documentFiles": 126
+    "totalSizeBytes": 4743874,
+    "sourceFiles": 57,
+    "testFiles": 9,
+    "configFiles": 9,
+    "documentFiles": 136
   },
-  "lastFullScanAt": 1770449516172
+  "lastFullScanAt": 1770492666260
 }
