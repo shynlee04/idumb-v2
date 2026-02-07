@@ -22,6 +22,7 @@ import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/t
 import type { DelegationStore } from "../schemas/delegation.js"
 import { createEmptyDelegationStore, expireStaleDelegations } from "../schemas/delegation.js"
 import type { Logger } from "./logging.js"
+import { SqliteAdapter } from "./sqlite-adapter.js"
 
 // ─── State Shape ─────────────────────────────────────────────────────
 
@@ -59,14 +60,30 @@ export class StateManager {
   private delegationSaveTimer: ReturnType<typeof setTimeout> | null = null
   private initialized = false
   private degraded = false  // true if disk I/O failed
+  private sqliteAdapter: SqliteAdapter | null = null
+  private useSqlite = false
 
   /**
    * Initialize with project directory. Loads state from disk if available.
    * Must be called once before any state operations.
    */
-  async init(directory: string, log: Logger): Promise<void> {
+  async init(directory: string, log: Logger, options?: { sqlite?: boolean }): Promise<void> {
     this.directory = directory
     this.log = log
+
+    // ─── SQLite backend (feature-flagged) ───────────────────────────
+    if (options?.sqlite) {
+      this.sqliteAdapter = new SqliteAdapter()
+      await this.sqliteAdapter.init(directory)
+      this.useSqlite = true
+      // Load caches from SQLite
+      this.taskStore = this.sqliteAdapter.getTaskStore()
+      this.delegationStore = this.sqliteAdapter.getDelegationStore()
+      log.info("StateManager initialized with SQLite backend")
+      this.initialized = true
+      return  // Skip JSON loading
+    }
+    // ─── JSON backend (default) ─────────────────────────────────────
 
     try {
       const statePath = join(directory, STATE_FILE)
@@ -151,6 +168,9 @@ export class StateManager {
   // ─── Session State (tool-gate) ───────────────────────────────────
 
   getSession(sessionID: string): SessionState {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getSession(sessionID)
+    }
     let s = this.sessions.get(sessionID)
     if (!s) {
       s = { activeTask: null, lastBlock: null, capturedAgent: null }
@@ -160,22 +180,36 @@ export class StateManager {
   }
 
   setActiveTask(sessionID: string, task: { id: string; name: string } | null): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.setActiveTask(sessionID, task)
+      return
+    }
     const s = this.getSession(sessionID)
     s.activeTask = task
     this.scheduleSave()
   }
 
   getActiveTask(sessionID: string): { id: string; name: string } | null {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getActiveTask(sessionID)
+    }
     return this.getSession(sessionID).activeTask
   }
 
   setLastBlock(sessionID: string, block: { tool: string; timestamp: number } | null): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.setLastBlock(sessionID, block)
+      return
+    }
     const s = this.getSession(sessionID)
     s.lastBlock = block
     // lastBlock is ephemeral — don't trigger save for it
   }
 
   getLastBlock(sessionID: string): { tool: string; timestamp: number } | null {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getLastBlock(sessionID)
+    }
     return this.getSession(sessionID).lastBlock
   }
 
@@ -183,6 +217,10 @@ export class StateManager {
 
   /** Store the agent name captured from chat.params hook */
   setCapturedAgent(sessionID: string, agent: string): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.setCapturedAgent(sessionID, agent)
+      return
+    }
     const s = this.getSession(sessionID)
     s.capturedAgent = agent
     this.scheduleSave()
@@ -190,34 +228,56 @@ export class StateManager {
 
   /** Get the captured agent name for this session */
   getCapturedAgent(sessionID: string): string | null {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getCapturedAgent(sessionID)
+    }
     return this.getSession(sessionID).capturedAgent
   }
 
   // ─── Task Store (global, not per-session) ──────────────────────────
 
   getTaskStore(): TaskStore {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getTaskStore()
+    }
     return this.taskStore
   }
 
   setTaskStore(store: TaskStore): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.setTaskStore(store)
+      return
+    }
     this.taskStore = store
     this.scheduleTaskSave()
   }
 
   /** Convenience: get active epic from task store */
   getActiveEpic(): TaskEpic | null {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getActiveEpic()
+    }
     if (!this.taskStore.activeEpicId) return null
     return this.taskStore.epics.find(e => e.id === this.taskStore.activeEpicId) ?? null
   }
 
   /** Convenience: get the active task within the active epic */
   getSmartActiveTask(): Task | null {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getSmartActiveTask()
+    }
     const chain = getActiveChain(this.taskStore)
     return chain.task
   }
 
   /** Set active epic ID */
   setActiveEpicId(epicId: string | null): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      const store = this.sqliteAdapter.getTaskStore()
+      store.activeEpicId = epicId
+      this.sqliteAdapter.setTaskStore(store)
+      return
+    }
     this.taskStore.activeEpicId = epicId
     this.scheduleTaskSave()
   }
@@ -225,10 +285,17 @@ export class StateManager {
   // ─── Delegation Store (global, not per-session) ────────────────────
 
   getDelegationStore(): DelegationStore {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getDelegationStore()
+    }
     return this.delegationStore
   }
 
   setDelegationStore(store: DelegationStore): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.setDelegationStore(store)
+      return
+    }
     this.delegationStore = store
     this.scheduleDelegationSave()
   }
@@ -236,6 +303,10 @@ export class StateManager {
   // ─── Anchor State (compaction) ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.addAnchor(sessionID, anchor)
+      return
+    }
     const list = this.anchors.get(sessionID) ?? []
     list.push(anchor)
     this.anchors.set(sessionID, list)
@@ -243,6 +314,9 @@ export class StateManager {
   }
 
   getAnchors(sessionID: string): Anchor[] {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.getAnchors(sessionID)
+    }
     return this.anchors.get(sessionID) ?? []
   }
 
@@ -360,6 +434,10 @@ export class StateManager {
 
   /** Force immediate save — use on shutdown/cleanup. */
   async forceSave(): Promise<void> {
+    if (this.useSqlite && this.sqliteAdapter) {
+      await this.sqliteAdapter.forceSave()
+      return
+    }
     if (this.saveTimer) {
       clearTimeout(this.saveTimer)
       this.saveTimer = null
@@ -379,6 +457,9 @@ export class StateManager {
 
   /** Check if persistence is degraded (disk I/O failed). */
   isDegraded(): boolean {
+    if (this.useSqlite && this.sqliteAdapter) {
+      return this.sqliteAdapter.isDegraded()
+    }
     return this.degraded
   }
 
@@ -394,10 +475,21 @@ export class StateManager {
 
   /** Clear all state — for testing. */
   clear(): void {
+    if (this.useSqlite && this.sqliteAdapter) {
+      this.sqliteAdapter.clear()
+      return
+    }
     this.sessions.clear()
     this.anchors.clear()
     this.taskStore = createEmptyStore()
     this.delegationStore = createEmptyDelegationStore()
+  }
+
+  /** Close underlying storage — for cleanup (e.g., SQLite connection). */
+  async close(): Promise<void> {
+    if (this.sqliteAdapter) {
+      await this.sqliteAdapter.close()
+    }
   }
 }
 

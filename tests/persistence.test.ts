@@ -13,13 +13,17 @@
  * - Backward compatibility: existing hook APIs work unchanged
  */
 
-import { mkdirSync, existsSync, readFileSync, writeFileSync, rmSync, chmodSync } from "node:fs"
+import { mkdirSync, existsSync, readFileSync, writeFileSync, rmSync, chmodSync, mkdtempSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { StateManager } from "../src/lib/persistence.js"
 import { createLogger } from "../src/lib/index.js"
 import { createAnchor } from "../src/schemas/anchor.js"
 import type { Anchor } from "../src/schemas/anchor.js"
+import { createEpic, createTask } from "../src/schemas/task.js"
+import type { TaskStore } from "../src/schemas/task.js"
+import { createEmptyDelegationStore, createDelegation } from "../src/schemas/delegation.js"
+import type { DelegationStore } from "../src/schemas/delegation.js"
 
 // ─── Test harness ────────────────────────────────────────────────────
 
@@ -305,6 +309,268 @@ function wait(ms: number): Promise<void> {
   addAnchor(testSessionID, anchor)
   assert("compat: addAnchor works", getAnchors(testSessionID).length >= 1)
   assert("compat: anchor content", getAnchors(testSessionID).some(a => a.content === "compat anchor"))
+}
+
+// ─── Test 13: SQLite Backend — init with { sqlite: true } ────────────
+
+console.log("\nStateManager — SQLite Backend\n")
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  assert("sqlite init: initialized", sm.isInitialized())
+  assert("sqlite init: not degraded", !sm.isDegraded())
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 14: SQLite Backend — session operations ────────────────────
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  // setActiveTask / getActiveTask
+  sm.setActiveTask("sq1", { id: "st1", name: "SQLite task" })
+  assert("sqlite session: task set", sm.getActiveTask("sq1")?.name === "SQLite task")
+  assert("sqlite session: task id", sm.getActiveTask("sq1")?.id === "st1")
+
+  sm.setActiveTask("sq1", null)
+  assert("sqlite session: task cleared", sm.getActiveTask("sq1") === null)
+
+  // setLastBlock / getLastBlock
+  sm.setLastBlock("sq1", { tool: "write", timestamp: 2000 })
+  assert("sqlite session: lastBlock set", sm.getLastBlock("sq1")?.tool === "write")
+  assert("sqlite session: lastBlock timestamp", sm.getLastBlock("sq1")?.timestamp === 2000)
+
+  sm.setLastBlock("sq1", null)
+  assert("sqlite session: lastBlock cleared", sm.getLastBlock("sq1") === null)
+
+  // setCapturedAgent / getCapturedAgent
+  sm.setCapturedAgent("sq1", "idumb-executor")
+  assert("sqlite session: agent set", sm.getCapturedAgent("sq1") === "idumb-executor")
+
+  // Session isolation
+  sm.setActiveTask("sq2", { id: "st2", name: "other SQLite task" })
+  assert("sqlite isolation: sq1 no task", sm.getActiveTask("sq1") === null)
+  assert("sqlite isolation: sq2 has task", sm.getActiveTask("sq2")?.name === "other SQLite task")
+
+  // getSession returns full state
+  sm.setActiveTask("sq3", { id: "st3", name: "full session" })
+  sm.setCapturedAgent("sq3", "idumb-investigator")
+  sm.setLastBlock("sq3", { tool: "grep", timestamp: 3000 })
+  const session = sm.getSession("sq3")
+  assert("sqlite getSession: activeTask", session.activeTask?.id === "st3")
+  assert("sqlite getSession: capturedAgent", session.capturedAgent === "idumb-investigator")
+  assert("sqlite getSession: lastBlock", session.lastBlock?.tool === "grep")
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 15: SQLite Backend — task store operations ─────────────────
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  // Default empty store
+  const defaultStore = sm.getTaskStore()
+  assert("sqlite tasks: default empty", defaultStore.epics.length === 0)
+  assert("sqlite tasks: default no activeEpicId", defaultStore.activeEpicId === null)
+
+  // Set task store with epic and task
+  const epic = createEpic("SQLite Epic", { category: "development" })
+  const task = createTask(epic.id, "SQLite Task")
+  task.status = "active"
+  epic.tasks.push(task)
+
+  const store: TaskStore = {
+    version: "2.0.0",
+    activeEpicId: epic.id,
+    epics: [epic],
+  }
+  sm.setTaskStore(store)
+
+  const retrieved = sm.getTaskStore()
+  assert("sqlite tasks: epics persisted", retrieved.epics.length === 1)
+  assert("sqlite tasks: activeEpicId persisted", retrieved.activeEpicId === epic.id)
+  assert("sqlite tasks: epic name", retrieved.epics[0].name === "SQLite Epic")
+
+  // getActiveEpic
+  const activeEpic = sm.getActiveEpic()
+  assert("sqlite tasks: getActiveEpic works", activeEpic !== null)
+  assert("sqlite tasks: getActiveEpic name", activeEpic?.name === "SQLite Epic")
+
+  // getSmartActiveTask
+  const activeTask = sm.getSmartActiveTask()
+  assert("sqlite tasks: getSmartActiveTask works", activeTask !== null)
+  assert("sqlite tasks: getSmartActiveTask name", activeTask?.name === "SQLite Task")
+
+  // setActiveEpicId
+  sm.setActiveEpicId(null)
+  assert("sqlite tasks: setActiveEpicId(null)", sm.getActiveEpic() === null)
+  sm.setActiveEpicId(epic.id)
+  assert("sqlite tasks: setActiveEpicId restored", sm.getActiveEpic()?.name === "SQLite Epic")
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 16: SQLite Backend — anchor operations ─────────────────────
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  // Empty anchors
+  assert("sqlite anchors: empty initially", sm.getAnchors("sa1").length === 0)
+
+  // Add anchors
+  const a1 = createAnchor("decision", "critical", "SQLite anchor 1")
+  const a2 = createAnchor("context", "high", "SQLite anchor 2")
+  const a3 = createAnchor("decision", "critical", "SQLite anchor for sa2")
+  sm.addAnchor("sa1", a1)
+  sm.addAnchor("sa1", a2)
+  sm.addAnchor("sa2", a3)
+
+  assert("sqlite anchors: sa1 has 2", sm.getAnchors("sa1").length === 2)
+  assert("sqlite anchors: sa2 has 1", sm.getAnchors("sa2").length === 1)
+  assert("sqlite anchors: first type", sm.getAnchors("sa1")[0].type === "decision")
+  assert("sqlite anchors: first priority", sm.getAnchors("sa1")[0].priority === "critical")
+  assert("sqlite anchors: first content", sm.getAnchors("sa1")[0].content === "SQLite anchor 1")
+  assert("sqlite anchors: empty session", sm.getAnchors("sa3").length === 0)
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 17: SQLite Backend — delegation store ──────────────────────
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  // Default empty
+  const defaultStore = sm.getDelegationStore()
+  assert("sqlite deleg: default empty", defaultStore.delegations.length === 0)
+
+  // Set delegation store
+  const delegation = createDelegation({
+    fromAgent: "idumb-supreme-coordinator",
+    toAgent: "idumb-executor",
+    taskId: "task-sqlite",
+    context: "SQLite delegation test",
+    expectedOutput: "Working code",
+  })
+  const store: DelegationStore = {
+    version: "1.0.0",
+    delegations: [delegation],
+  }
+  sm.setDelegationStore(store)
+
+  const retrieved = sm.getDelegationStore()
+  assert("sqlite deleg: persisted", retrieved.delegations.length === 1)
+  assert("sqlite deleg: fromAgent", retrieved.delegations[0].fromAgent === "idumb-supreme-coordinator")
+  assert("sqlite deleg: toAgent", retrieved.delegations[0].toAgent === "idumb-executor")
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 18: SQLite Backend — forceSave doesn't throw ───────────────
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  sm.setActiveTask("fs1", { id: "tf1", name: "force save task" })
+
+  let threw = false
+  try {
+    await sm.forceSave()
+  } catch {
+    threw = true
+  }
+  assert("sqlite forceSave: does not throw", !threw)
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 19: SQLite Backend — clear resets everything ───────────────
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  // Populate
+  sm.setActiveTask("cl1", { id: "tc1", name: "clearable" })
+  sm.addAnchor("cl1", createAnchor("decision", "high", "clearable anchor"))
+  const epic = createEpic("Clearable Epic")
+  sm.setTaskStore({
+    version: "2.0.0",
+    activeEpicId: epic.id,
+    epics: [epic],
+  })
+  sm.setDelegationStore({
+    version: "1.0.0",
+    delegations: [createDelegation({
+      fromAgent: "a",
+      toAgent: "b",
+      taskId: "t",
+      context: "c",
+      expectedOutput: "e",
+    })],
+  })
+
+  // Verify populated
+  assert("sqlite clear pre: has task", sm.getActiveTask("cl1") !== null)
+  assert("sqlite clear pre: has anchors", sm.getAnchors("cl1").length === 1)
+  assert("sqlite clear pre: has epics", sm.getTaskStore().epics.length === 1)
+  assert("sqlite clear pre: has delegations", sm.getDelegationStore().delegations.length === 1)
+
+  // Clear
+  sm.clear()
+
+  // Verify empty
+  assert("sqlite clear post: no task", sm.getActiveTask("cl1") === null)
+  assert("sqlite clear post: no anchors", sm.getAnchors("cl1").length === 0)
+  assert("sqlite clear post: no epics", sm.getTaskStore().epics.length === 0)
+  assert("sqlite clear post: no delegations", sm.getDelegationStore().delegations.length === 0)
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
+}
+
+// ─── Test 20: SQLite Backend — isDegraded returns false when active ──
+
+{
+  const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
+
+  const sm = new StateManager()
+  await sm.init(sqlDir, log, { sqlite: true })
+
+  assert("sqlite isDegraded: false when active", !sm.isDegraded())
+
+  await sm.close()
+  rmSync(sqlDir, { recursive: true, force: true })
 }
 
 // ─── Cleanup + Results ───────────────────────────────────────────────
