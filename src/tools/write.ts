@@ -28,7 +28,7 @@
 
 import { tool } from "@opencode-ai/plugin/tool"
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "fs"
-import { join, dirname, extname } from "path"
+import { join, dirname, extname, basename } from "path"
 import {
     resolveEntity,
     formatEntityAnnotation,
@@ -47,14 +47,30 @@ import {
     type GovernanceSnapshot,
 } from "../lib/state-reader.js"
 import { createLogger } from "../lib/logging.js"
+import {
+    addToChain,
+    createArtifactChain,
+    createOutlierEntry,
+    createPlanningArtifact,
+    createPlanningRegistry,
+    detectArtifactType,
+    extractIterationPattern,
+    findArtifactByPath,
+    parseSectionsFromMarkdown,
+    supersedSection,
+    type ArtifactType,
+    type PlanningRegistry,
+} from "../schemas/planning-registry.js"
 
 // ─── Constants ──────────────────────────────────────────────────────
 
 const BACKUP_DIR = ".idumb/backups"
 const AUDIT_DIR = ".idumb/brain/audit"
+const PLANNING_REGISTRY_PATH = ".idumb/brain/planning-registry.json"
 const MAX_CONTENT_SIZE = 500_000  // 500KB hard limit
 const WRITE_MODES = ["create", "overwrite", "append", "update-section"] as const
 const LIFECYCLE_OPS = ["activate", "supersede", "abandon", "resolve"] as const
+const GOVERNED_PLANNING_PREFIXES = ["planning/", "plans/", ".idumb/planning/"]
 
 // ─── Tool Definition ────────────────────────────────────────────────
 
@@ -183,6 +199,13 @@ export const idumb_write = tool({
             }
         }
 
+        // ─── Planning Registry Guard ────────────────────────────
+        const planningGuard = checkPlanningWriteGuard(entity, projectDir)
+        if (!planningGuard.ok) {
+            log.warn(`BLOCKED: planning write guard for ${entity.relativePath}`)
+            return planningGuard.message ?? "❌ Planning write guard blocked this operation."
+        }
+
         // ─── Handle Lifecycle Operation ─────────────────────────
         if (args.lifecycle) {
             return handleLifecycle(entity, absPath, projectDir, args.lifecycle, content, govState, log)
@@ -213,6 +236,16 @@ export const idumb_write = tool({
 // ─── Logger type alias ──────────────────────────────────────────────
 
 type Log = ReturnType<typeof createLogger>
+interface PlanningGuardResult {
+    ok: boolean
+    message?: string
+}
+
+interface PlanningSyncResult {
+    ok: boolean
+    note?: string
+    message?: string
+}
 
 // ─── Mode: Create ───────────────────────────────────────────────────
 
@@ -257,6 +290,11 @@ function handleCreate(
     writeFileSync(absPath, content, "utf-8")
     log.info(`Created: ${entity.relativePath} (${content.length} bytes)`)
 
+    const planningSync = syncPlanningRegistryAfterWrite(entity, content, projectDir, govState, "create")
+    if (!planningSync.ok) {
+        return planningSync.message ?? "❌ Planning registry sync failed after create."
+    }
+
     // Audit log
     writeAuditEntry(projectDir, {
         action: "create",
@@ -271,6 +309,7 @@ function handleCreate(
     return buildSuccessOutput("CREATE", entity, govState, {
         contentSize: content.length,
         lineCount: content.split("\n").length,
+        planningRegistry: planningSync.note,
     })
 }
 
@@ -319,6 +358,11 @@ function handleOverwrite(
     writeFileSync(absPath, content, "utf-8")
     log.info(`Overwritten: ${entity.relativePath} (${content.length} bytes)`)
 
+    const planningSync = syncPlanningRegistryAfterWrite(entity, content, projectDir, govState, "overwrite")
+    if (!planningSync.ok) {
+        return planningSync.message ?? "❌ Planning registry sync failed after overwrite."
+    }
+
     // Audit
     writeAuditEntry(projectDir, {
         action: "overwrite",
@@ -335,6 +379,7 @@ function handleOverwrite(
         contentSize: content.length,
         lineCount: content.split("\n").length,
         backup: existed && shouldBackup,
+        planningRegistry: planningSync.note,
     })
 }
 
@@ -363,9 +408,15 @@ function handleAppend(
     // Append
     const separator = existing.endsWith("\n") ? "" : "\n"
     writeFileSync(absPath, existing + separator + content, "utf-8")
+    const mergedContent = existing + separator + content
 
     const newLines = content.split("\n").length
     log.info(`Appended: ${entity.relativePath} (+${newLines} lines)`)
+
+    const planningSync = syncPlanningRegistryAfterWrite(entity, mergedContent, projectDir, govState, "append")
+    if (!planningSync.ok) {
+        return planningSync.message ?? "❌ Planning registry sync failed after append."
+    }
 
     // Audit
     writeAuditEntry(projectDir, {
@@ -381,6 +432,7 @@ function handleAppend(
     return buildSuccessOutput("APPEND", entity, govState, {
         appendedLines: newLines,
         totalLines: existingLines + newLines,
+        planningRegistry: planningSync.note,
     })
 }
 
@@ -474,6 +526,11 @@ function handleUpdateSection(
     const newSectionLines = content.split("\n").length + 1  // +1 for heading
     log.info(`Updated section "${section}" in ${entity.relativePath} (${oldSectionLines} → ${newSectionLines} lines)`)
 
+    const planningSync = syncPlanningRegistryAfterWrite(entity, newContent, projectDir, govState, "update-section")
+    if (!planningSync.ok) {
+        return planningSync.message ?? "❌ Planning registry sync failed after section update."
+    }
+
     // Audit
     writeAuditEntry(projectDir, {
         action: "update-section",
@@ -493,6 +550,7 @@ function handleUpdateSection(
         newLines: newSectionLines,
         totalLines: newContent.split("\n").length,
         backup: shouldBackup,
+        planningRegistry: planningSync.note,
     })
 }
 
@@ -618,11 +676,309 @@ function handleLifecycle(
         newStatus: lifecycle === "activate" ? "active" : lifecycle,
     })
 
+    const planningLifecycle = syncPlanningLifecycle(entity, projectDir, lifecycle, content)
+    if (planningLifecycle.note) {
+        output.push(``)
+        output.push(`Planning Registry: ${planningLifecycle.note}`)
+    }
+
     log.info(`Lifecycle: ${entity.relativePath} → ${lifecycle}`)
     return output.join("\n")
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
+
+function normalizeRegistryPath(path: string): string {
+    return path.replace(/\\/g, "/").replace(/^\.\//, "")
+}
+
+function isGovernedPlanningPath(path: string): boolean {
+    const normalized = normalizeRegistryPath(path).toLowerCase()
+    return GOVERNED_PLANNING_PREFIXES.some(prefix => normalized.startsWith(prefix))
+}
+
+function readPlanningRegistry(projectDir: string): PlanningRegistry {
+    const registryPath = join(projectDir, PLANNING_REGISTRY_PATH)
+    if (!existsSync(registryPath)) {
+        const fresh = createPlanningRegistry()
+        writePlanningRegistry(projectDir, fresh)
+        return fresh
+    }
+
+    try {
+        const parsed = JSON.parse(readFileSync(registryPath, "utf-8")) as Partial<PlanningRegistry>
+        return {
+            version: typeof parsed.version === "string" ? parsed.version : createPlanningRegistry().version,
+            artifacts: Array.isArray(parsed.artifacts) ? parsed.artifacts : [],
+            chains: Array.isArray(parsed.chains) ? parsed.chains : [],
+            outliers: Array.isArray(parsed.outliers) ? parsed.outliers : [],
+            lastScanAt: typeof parsed.lastScanAt === "number" ? parsed.lastScanAt : 0,
+        }
+    } catch {
+        return createPlanningRegistry()
+    }
+}
+
+function writePlanningRegistry(projectDir: string, registry: PlanningRegistry): void {
+    const registryPath = join(projectDir, PLANNING_REGISTRY_PATH)
+    const registryDir = dirname(registryPath)
+    if (!existsSync(registryDir)) {
+        mkdirSync(registryDir, { recursive: true })
+    }
+    writeFileSync(registryPath, JSON.stringify(registry, null, 2) + "\n", "utf-8")
+}
+
+function inferChainName(path: string, type: ArtifactType): { name: string; iteration?: number } {
+    const normalized = normalizeRegistryPath(path)
+    const iterationPattern = extractIterationPattern(basename(normalized))
+    if (iterationPattern) {
+        return {
+            name: `${type}:${iterationPattern.prefix.toLowerCase()}`,
+            iteration: iterationPattern.iteration,
+        }
+    }
+
+    return {
+        name: `${type}:${dirname(normalized).toLowerCase()}`,
+    }
+}
+
+function parseArtifactSections(path: string, content: string) {
+    const ext = extname(path).toLowerCase()
+    if (ext !== ".md" && ext !== ".mdx") {
+        return []
+    }
+    return parseSectionsFromMarkdown(content)
+}
+
+function checkPlanningWriteGuard(entity: ResolvedEntity, projectDir: string): PlanningGuardResult {
+    if (entity.entityType !== "planning-artifact") {
+        return { ok: true }
+    }
+
+    const normalizedPath = normalizeRegistryPath(entity.relativePath)
+    const registry = readPlanningRegistry(projectDir)
+    const existingArtifact = findArtifactByPath(registry, normalizedPath)
+    if (existingArtifact) {
+        return { ok: true }
+    }
+
+    const detectedType = detectArtifactType(normalizedPath)
+    if (!detectedType) {
+        return {
+            ok: false,
+            message: [
+                `❌ PLANNING TYPE UNKNOWN`,
+                ``,
+                `Unable to classify planning artifact type for "${normalizedPath}".`,
+                `Use recognized naming patterns (implementation_plan-*, walkthrough-*, gap-analysis-*).`,
+            ].join("\n"),
+        }
+    }
+
+    if (isGovernedPlanningPath(normalizedPath)) {
+        return { ok: true }
+    }
+
+    if (detectedType) {
+        const chain = inferChainName(normalizedPath, detectedType)
+        if (registry.chains.some(c => c.name === chain.name)) {
+            return { ok: true }
+        }
+    }
+
+    if (!registry.outliers.some(o => normalizeRegistryPath(o.path) === normalizedPath && o.reason === "unregistered")) {
+        registry.outliers.push(createOutlierEntry({
+            path: normalizedPath,
+            reason: "unregistered",
+            detectedBy: "idumb_write",
+            note: "Planning artifact path is outside governed planning hierarchy and has no chain.",
+        }))
+        registry.lastScanAt = Date.now()
+        writePlanningRegistry(projectDir, registry)
+    }
+
+    return {
+        ok: false,
+        message: [
+            `❌ PLANNING HIERARCHY VIOLATION`,
+            ``,
+            `${normalizedPath} is outside governed planning paths and has no existing chain registration.`,
+            `This write was blocked to prevent untracked planning artifacts entering governance.`,
+            ``,
+            `Action: move the artifact under planning/, plans/, or .idumb/planning/,`,
+            `or register/accept it in the planning registry first.`,
+        ].join("\n"),
+    }
+}
+
+function syncPlanningRegistryAfterWrite(
+    entity: ResolvedEntity,
+    content: string,
+    projectDir: string,
+    govState: GovernanceSnapshot,
+    mode: "create" | "overwrite" | "append" | "update-section",
+): PlanningSyncResult {
+    if (entity.entityType !== "planning-artifact") {
+        return { ok: true }
+    }
+
+    const normalizedPath = normalizeRegistryPath(entity.relativePath)
+    const registry = readPlanningRegistry(projectDir)
+    const now = Date.now()
+    const detectedType = detectArtifactType(normalizedPath)
+    const existing = findArtifactByPath(registry, normalizedPath)
+    const sections = parseArtifactSections(normalizedPath, content)
+    const taskId = govState.activeTask?.id
+
+    if (existing) {
+        existing.sections = sections
+        existing.modifiedAt = now
+        if (existing.status === "draft") {
+            existing.status = "active"
+        }
+        if (taskId && !existing.linkedTaskIds.includes(taskId)) {
+            existing.linkedTaskIds.push(taskId)
+        }
+        const pendingOutlier = registry.outliers.find(
+            o => normalizeRegistryPath(o.path) === normalizedPath && o.userAction === "pending",
+        )
+        if (pendingOutlier) {
+            pendingOutlier.userAction = "accepted"
+        }
+        registry.lastScanAt = now
+        writePlanningRegistry(projectDir, registry)
+        return { ok: true, note: `registry updated (${mode})` }
+    }
+
+    if (!detectedType) {
+        return {
+            ok: false,
+            message: `❌ PLANNING REGISTRY ERROR: cannot detect artifact type for "${normalizedPath}". Use a governed planning filename.`,
+        }
+    }
+
+    const chain = inferChainName(normalizedPath, detectedType)
+    const existingChain = registry.chains.find(c => c.name === chain.name)
+
+    if (existingChain) {
+        const artifact = createPlanningArtifact({
+            path: normalizedPath,
+            type: detectedType,
+            chainId: existingChain.id,
+            createdBy: govState.capturedAgent ?? "unknown",
+            iteration: chain.iteration,
+            linkedTaskIds: taskId ? [taskId] : [],
+        })
+        artifact.sections = sections
+        artifact.status = "active"
+        registry.artifacts.push(artifact)
+        addToChain(registry, existingChain.id, artifact)
+        existingChain.activeArtifactId = artifact.id
+        registry.lastScanAt = now
+        writePlanningRegistry(projectDir, registry)
+        return { ok: true, note: `registered in chain ${existingChain.name}` }
+    }
+
+    const artifact = createPlanningArtifact({
+        path: normalizedPath,
+        type: detectedType,
+        chainId: "pending-chain-id",
+        createdBy: govState.capturedAgent ?? "unknown",
+        iteration: chain.iteration,
+        linkedTaskIds: taskId ? [taskId] : [],
+    })
+    artifact.sections = sections
+    artifact.status = "active"
+    registry.artifacts.push(artifact)
+
+    const createdChain = createArtifactChain({
+        name: chain.name,
+        rootArtifactId: artifact.id,
+        tier: artifact.tier,
+    })
+    artifact.chainId = createdChain.id
+    registry.chains.push(createdChain)
+    registry.lastScanAt = now
+    writePlanningRegistry(projectDir, registry)
+    return { ok: true, note: `registered with new chain ${createdChain.name}` }
+}
+
+function syncPlanningLifecycle(
+    entity: ResolvedEntity,
+    projectDir: string,
+    lifecycle: string,
+    lifecycleContext: string,
+): { note?: string } {
+    if (entity.entityType !== "planning-artifact") {
+        return {}
+    }
+
+    const normalizedPath = normalizeRegistryPath(entity.relativePath)
+    const registry = readPlanningRegistry(projectDir)
+    const artifact = findArtifactByPath(registry, normalizedPath)
+    if (!artifact) {
+        return { note: "no artifact entry found for lifecycle sync" }
+    }
+
+    const now = Date.now()
+    switch (lifecycle) {
+        case "activate": {
+            artifact.status = "active"
+            artifact.modifiedAt = now
+            const chain = registry.chains.find(c => c.id === artifact.chainId)
+            if (chain) {
+                chain.activeArtifactId = artifact.id
+            }
+            break
+        }
+        case "supersede": {
+            artifact.status = "superseded"
+            artifact.modifiedAt = now
+            const replacementPath = normalizeRegistryPath(lifecycleContext.trim())
+            const replacement = replacementPath ? findArtifactByPath(registry, replacementPath) : undefined
+            if (replacement) {
+                if (!artifact.chainChildIds.includes(replacement.id)) {
+                    artifact.chainChildIds.push(replacement.id)
+                }
+                replacement.chainParentId = artifact.id
+                replacement.status = replacement.status === "draft" ? "active" : replacement.status
+                const chain = registry.chains.find(c => c.id === artifact.chainId)
+                if (chain && chain.artifactIds.includes(replacement.id)) {
+                    chain.activeArtifactId = replacement.id
+                }
+                for (const section of artifact.sections) {
+                    if (section.status !== "active") continue
+                    const target = replacement.sections.find(s => s.heading === section.heading)
+                    const replacementSectionId = target?.id ?? replacement.sections[0]?.id ?? replacement.id
+                    supersedSection(section, replacementSectionId)
+                }
+            } else {
+                for (const section of artifact.sections) {
+                    if (section.status === "active") {
+                        supersedSection(section, `superseded-${now}`)
+                    }
+                }
+            }
+            break
+        }
+        case "abandon": {
+            artifact.status = "abandoned"
+            artifact.modifiedAt = now
+            break
+        }
+        case "resolve": {
+            artifact.modifiedAt = now
+            break
+        }
+        default:
+            return {}
+    }
+
+    registry.lastScanAt = now
+    writePlanningRegistry(projectDir, registry)
+    return { note: `lifecycle synced (${lifecycle})` }
+}
 
 /**
  * Create a timestamped backup of a file.

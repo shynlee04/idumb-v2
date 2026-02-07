@@ -14,7 +14,6 @@
  * - Formatting
  */
 
-import { describe, it, expect } from "vitest"
 import {
     createPlanningRegistry,
     createPlanningArtifact,
@@ -52,6 +51,124 @@ import {
     PLANNING_REGISTRY_VERSION,
 } from "../src/schemas/planning-registry.js"
 import type { PlanningRegistry, PlanningArtifact } from "../src/schemas/planning-registry.js"
+
+// ─── Minimal Test Harness (tsx-compatible) ─────────────────────────
+
+type ObjectContainingMatcher = { __matcher: "objectContaining"; subset: Record<string, unknown> }
+
+let passed = 0
+let failed = 0
+
+function deepEqual(a: unknown, b: unknown): boolean {
+    return JSON.stringify(a) === JSON.stringify(b)
+}
+
+function objectContaining(subset: Record<string, unknown>): ObjectContainingMatcher {
+    return { __matcher: "objectContaining", subset }
+}
+
+function matchObjectContaining(actual: unknown, matcher: ObjectContainingMatcher): boolean {
+    if (!actual || typeof actual !== "object") return false
+    const obj = actual as Record<string, unknown>
+    return Object.entries(matcher.subset).every(([key, value]) => deepEqual(obj[key], value))
+}
+
+function expect(actual: unknown) {
+    const assert = (condition: boolean, message: string): void => {
+        if (!condition) {
+            throw new Error(message)
+        }
+    }
+
+    const api = {
+        toBe(expected: unknown) {
+            assert(Object.is(actual, expected), `Expected ${String(actual)} to be ${String(expected)}`)
+        },
+        toEqual(expected: unknown) {
+            if (
+                expected &&
+                typeof expected === "object" &&
+                "__matcher" in (expected as Record<string, unknown>) &&
+                (expected as ObjectContainingMatcher).__matcher === "objectContaining"
+            ) {
+                assert(
+                    matchObjectContaining(actual, expected as ObjectContainingMatcher),
+                    `Expected object to contain ${JSON.stringify((expected as ObjectContainingMatcher).subset)}`,
+                )
+                return
+            }
+            assert(deepEqual(actual, expected), `Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`)
+        },
+        toHaveLength(expected: number) {
+            const length = (actual as { length?: number } | null | undefined)?.length
+            assert(length === expected, `Expected length ${String(length)} to be ${expected}`)
+        },
+        toContain(expected: unknown) {
+            if (typeof actual === "string") {
+                assert(actual.includes(String(expected)), `Expected "${actual}" to contain "${String(expected)}"`)
+                return
+            }
+            if (Array.isArray(actual)) {
+                assert(actual.includes(expected), `Expected array to contain ${JSON.stringify(expected)}`)
+                return
+            }
+            throw new Error("toContain supports only strings and arrays")
+        },
+        toMatch(pattern: RegExp) {
+            assert(typeof actual === "string" && pattern.test(actual), `Expected "${String(actual)}" to match ${String(pattern)}`)
+        },
+        toBeDefined() {
+            assert(actual !== undefined, "Expected value to be defined")
+        },
+        toBeUndefined() {
+            assert(actual === undefined, "Expected value to be undefined")
+        },
+        toBeTruthy() {
+            assert(Boolean(actual), `Expected value to be truthy, got ${String(actual)}`)
+        },
+        toBeNull() {
+            assert(actual === null, `Expected value to be null, got ${String(actual)}`)
+        },
+    }
+
+    return {
+        ...api,
+        not: {
+            toBe(expected: unknown) {
+                assert(!Object.is(actual, expected), `Expected ${String(actual)} not to be ${String(expected)}`)
+            },
+            toContain(expected: unknown) {
+                if (typeof actual === "string") {
+                    assert(!actual.includes(String(expected)), `Expected "${actual}" not to contain "${String(expected)}"`)
+                    return
+                }
+                if (Array.isArray(actual)) {
+                    assert(!actual.includes(expected), `Expected array not to contain ${JSON.stringify(expected)}`)
+                    return
+                }
+                throw new Error("not.toContain supports only strings and arrays")
+            },
+        },
+    }
+}
+
+expect.objectContaining = objectContaining
+
+function describe(name: string, fn: () => void): void {
+    process.stderr.write(`\n${name}\n`)
+    fn()
+}
+
+function it(name: string, fn: () => void): void {
+    try {
+        fn()
+        passed++
+    } catch (err) {
+        failed++
+        const msg = err instanceof Error ? err.message : String(err)
+        process.stderr.write(`FAIL: ${name}\n${msg}\n`)
+    }
+}
 
 // ─── Factory Function Tests ─────────────────────────────────────────
 
@@ -766,3 +883,6 @@ describe("Planning Registry — Formatting", () => {
         expect(detail).toContain("Overview")
     })
 })
+
+process.stderr.write(`\nResults: ${passed}/${passed + failed} passed, ${failed} failed\n`)
+if (failed > 0) process.exit(1)

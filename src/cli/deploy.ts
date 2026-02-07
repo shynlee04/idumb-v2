@@ -28,6 +28,7 @@ import {
   GOVERNANCE_SKILL_TEMPLATE,
 } from "../templates.js"
 import { createBootstrapStore } from "../schemas/task.js"
+import { createPlanningRegistry } from "../schemas/planning-registry.js"
 
 export interface DeployOptions {
   projectDir: string
@@ -333,6 +334,15 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     await writeIfNew(
       tasksPath,
       JSON.stringify(bootstrapStore, null, 2) + "\n",
+      force,
+      result,
+    )
+
+    const planningRegistryPath = join(projectDir, ".idumb", "brain", "planning-registry.json")
+    const emptyRegistry = createPlanningRegistry()
+    await writeIfNew(
+      planningRegistryPath,
+      JSON.stringify(emptyRegistry, null, 2) + "\n",
       force,
       result,
     )

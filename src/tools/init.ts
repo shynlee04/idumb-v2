@@ -13,13 +13,170 @@
  */
 
 import { tool } from "@opencode-ai/plugin/tool"
-import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { readFile, writeFile, mkdir, readdir } from "node:fs/promises"
+import { join, dirname } from "node:path"
 import { createConfig, validateConfig } from "../schemas/config.js"
 import type { Language, ExperienceLevel, GovernanceMode, InstallScope, IdumbConfig } from "../schemas/config.js"
 import { scanProject, formatDetectionReport } from "../lib/framework-detector.js"
 import { scaffoldProject, formatScaffoldReport } from "../lib/scaffolder.js"
 import { createLogger } from "../lib/logging.js"
+import {
+  createOutlierEntry,
+  createPlanningRegistry,
+  detectArtifactType,
+  type PlanningRegistry,
+  type OutlierEntry,
+} from "../schemas/planning-registry.js"
+
+const PLANNING_REGISTRY_PATH = ".idumb/brain/planning-registry.json"
+const PLANNING_SCAN_ROOTS = [".idumb", "planning"]
+const IGNORED_OUTLIER_PREFIXES = [
+  ".idumb/backups/",
+  ".idumb/brain/audit/",
+  ".idumb/idumb-modules/",
+]
+
+interface PlanningOutlierScanResult {
+  pendingOutliers: OutlierEntry[]
+  newlyDetected: OutlierEntry[]
+}
+
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, "/").replace(/^\.\//, "")
+}
+
+function shouldIgnoreOutlierPath(path: string): boolean {
+  const normalized = normalizePath(path)
+  if (normalized === PLANNING_REGISTRY_PATH) return true
+  return IGNORED_OUTLIER_PREFIXES.some(prefix => normalized.startsWith(prefix))
+}
+
+async function readPlanningRegistry(projectDir: string): Promise<PlanningRegistry> {
+  const registryPath = join(projectDir, PLANNING_REGISTRY_PATH)
+
+  try {
+    const raw = await readFile(registryPath, "utf-8")
+    const parsed = JSON.parse(raw) as Partial<PlanningRegistry>
+    return {
+      version: typeof parsed.version === "string" ? parsed.version : createPlanningRegistry().version,
+      artifacts: Array.isArray(parsed.artifacts) ? parsed.artifacts : [],
+      chains: Array.isArray(parsed.chains) ? parsed.chains : [],
+      outliers: Array.isArray(parsed.outliers) ? parsed.outliers : [],
+      lastScanAt: typeof parsed.lastScanAt === "number" ? parsed.lastScanAt : 0,
+    }
+  } catch {
+    return createPlanningRegistry()
+  }
+}
+
+async function writePlanningRegistry(projectDir: string, registry: PlanningRegistry): Promise<void> {
+  const registryPath = join(projectDir, PLANNING_REGISTRY_PATH)
+  await mkdir(dirname(registryPath), { recursive: true })
+  await writeFile(registryPath, JSON.stringify(registry, null, 2) + "\n", "utf-8")
+}
+
+async function listFilesRecursively(projectDir: string, root: string): Promise<string[]> {
+  const absRoot = join(projectDir, root)
+  const out: string[] = []
+
+  async function walk(currentAbs: string): Promise<void> {
+    let entries
+    try {
+      entries = await readdir(currentAbs, { withFileTypes: true })
+    } catch {
+      return
+    }
+
+    for (const entry of entries) {
+      const name = String(entry.name)
+      const entryAbs = join(currentAbs, name)
+      const rel = normalizePath(entryAbs.slice(projectDir.length + 1))
+      if (entry.isDirectory()) {
+        await walk(entryAbs)
+      } else if (entry.isFile()) {
+        out.push(rel)
+      }
+    }
+  }
+
+  await walk(absRoot)
+  return out
+}
+
+async function scanPlanningOutliers(
+  projectDir: string,
+  persist: boolean,
+): Promise<PlanningOutlierScanResult> {
+  const registry = await readPlanningRegistry(projectDir)
+  const registeredPaths = new Set(registry.artifacts.map(a => normalizePath(a.path)))
+  const candidateFiles: string[] = []
+
+  for (const root of PLANNING_SCAN_ROOTS) {
+    const files = await listFilesRecursively(projectDir, root)
+    for (const file of files) {
+      if (shouldIgnoreOutlierPath(file)) continue
+      if (!detectArtifactType(file)) continue
+      candidateFiles.push(file)
+    }
+  }
+
+  const newlyDetected: OutlierEntry[] = []
+  for (const candidate of candidateFiles) {
+    const normalized = normalizePath(candidate)
+    if (registeredPaths.has(normalized)) continue
+
+    const existingOutlier = registry.outliers.find(o => normalizePath(o.path) === normalized)
+    if (existingOutlier) continue
+
+    const outlier = createOutlierEntry({
+      path: normalized,
+      reason: "unregistered",
+      detectedBy: "idumb_init",
+      note: "Detected during init scan: file exists but is missing from planning registry.",
+    })
+    registry.outliers.push(outlier)
+    newlyDetected.push(outlier)
+  }
+
+  registry.lastScanAt = Date.now()
+  if (persist) {
+    await writePlanningRegistry(projectDir, registry)
+  }
+
+  return {
+    pendingOutliers: registry.outliers.filter(o => o.userAction === "pending"),
+    newlyDetected,
+  }
+}
+
+function formatOutlierReport(outliers: PlanningOutlierScanResult, lang: Language): string {
+  if (outliers.pendingOutliers.length === 0) {
+    return ""
+  }
+
+  const lines: string[] = []
+  if (lang === "vi") {
+    lines.push("## ⚠️ Outliers Phát Hiện")
+    lines.push(`- **Đang chờ xử lý:** ${outliers.pendingOutliers.length}`)
+    if (outliers.newlyDetected.length > 0) {
+      lines.push(`- **Mới phát hiện:** ${outliers.newlyDetected.length}`)
+    }
+    lines.push("- Các file chưa đăng ký (tối đa 10):")
+  } else {
+    lines.push("## ⚠️ Planning Outliers Detected")
+    lines.push(`- **Pending:** ${outliers.pendingOutliers.length}`)
+    if (outliers.newlyDetected.length > 0) {
+      lines.push(`- **Newly detected:** ${outliers.newlyDetected.length}`)
+    }
+    lines.push("- Unregistered files (up to 10 shown):")
+  }
+
+  for (const outlier of outliers.pendingOutliers.slice(0, 10)) {
+    lines.push(`- \`${outlier.path}\``)
+  }
+
+  return `\n${lines.join("\n")}`
+}
 
 // ─── Greeting Builder ────────────────────────────────────────────────
 
@@ -237,7 +394,8 @@ export const idumb_init = tool({
       // ─── SCAN: read-only brownfield scan ─────────────────
       const detection = await scanProject(directory, log)
       const lang = (args.language ?? "en") as Language
-      const detectionReport = formatDetectionReport(detection, lang)
+      const outlierScan = await scanPlanningOutliers(directory, action === "install")
+      const detectionReport = formatDetectionReport(detection, lang) + formatOutlierReport(outlierScan, lang)
 
       if (action === "scan") {
         return detectionReport
