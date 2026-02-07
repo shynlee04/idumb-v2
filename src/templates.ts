@@ -155,9 +155,18 @@ Create in \`.opencode/agents/\`:
 
 For each agent:
 1. Read the reference profile from \`.idumb/idumb-modules/agents/{role}-profile.md\`
-2. Adapt the system prompt to the detected project context
-3. Set appropriate \`tools\` and \`permissions\` per the profile
-4. Write the agent file to \`.opencode/agents/\`
+2. Read \`.idumb/idumb-modules/skills/delegation-protocol.md\` for delegation rules
+3. Read \`.idumb/idumb-modules/skills/governance-protocol.md\` for governance rules
+4. Adapt the system prompt to the detected project context
+5. Set appropriate \`tools\` and \`permissions\` per the profile
+6. Embed delegation boundaries in each agent's system prompt:
+   - Coordinator: CAN delegate via \`idumb_task action=delegate\`, CAN create epics
+   - Builder: CANNOT create epics, CAN create tasks/subtasks within delegated scope
+   - Validator: CANNOT delegate or create epics, read-only + test execution only
+   - Skills Creator: CANNOT delegate or create epics, skill discovery + creation only
+7. Write the agent file to \`.opencode/agents/\`
+
+**NOTE on plugin tools:** The \`tools:\` frontmatter can only control innate tools (read/write/edit/bash). Plugin tools like \`idumb_task\` are ALWAYS visible to all agents. Agent-level plugin tool restrictions are enforced by the iDumb plugin at runtime via \`tool.execute.before\`. But each agent's system prompt MUST state its boundaries clearly.
 
 ### Step 3: Create Project-Specific Commands
 Create commands in \`.opencode/commands/\` that route through the coordinator:
@@ -211,7 +220,7 @@ Every agent you create MUST follow OpenCode markdown agent format:
 description: "<clear one-line description>"      # REQUIRED
 mode: primary | subagent                          # REQUIRED
 tools:
-  "<tool-name>": true | false                     # specific tools
+  "<tool-name>": true | false                     # innate tools only (read/write/edit/bash)
   "*": true                                       # or wildcard
 permissions:
   edit: allow | ask | deny
@@ -220,8 +229,20 @@ permissions:
   task:
     "<agent-glob>": allow | deny
 ---
-[System prompt body — persona, workflows, boundaries]
+[System prompt body — persona, workflows, boundaries, delegation rules]
 \`\`\`
+
+### Delegation Rules in Agent Prompts
+
+Every agent's system prompt body MUST include a **Delegation** section stating:
+- Whether the agent CAN or CANNOT use \`idumb_task action=delegate\`
+- Which agents it can delegate TO (via \`task:\` permissions)
+- What happens if it tries a blocked action (hard governance block with redirect)
+- Example: "If you need an epic created, delegate UP to the coordinator, do not call \`idumb_task action=create_epic\` directly."
+
+### Plugin Tool Boundaries
+
+The \`tools:\` frontmatter CANNOT control plugin tools (\`idumb_task\`, \`idumb_anchor\`, \`idumb_init\`, \`idumb_scan\`, \`idumb_codemap\`). These are enforced at runtime by the iDumb plugin. But the system prompt MUST document these boundaries for the agent to self-regulate.
 
 Reference: \`.idumb/idumb-modules/schemas/agent-contract.md\`
 
@@ -892,3 +913,407 @@ Workflows ALWAYS route through the coordinator to enforce governance:
 
 This ensures every step goes through the delegation + validation loop.
 `
+
+
+// ─── Skill Templates (deployed to .idumb/idumb-modules/skills/) ──────────
+
+/**
+ * Delegation skill — reference protocol for agent-to-agent delegation.
+ * Deployed to .idumb/idumb-modules/skills/delegation-protocol.md
+ *
+ * This is the PP-01 workaround: since subagent hooks don't fire,
+ * ALL delegation governance travels via this skill + disk-persisted records.
+ */
+export const DELEGATION_SKILL_TEMPLATE = `# Delegation Protocol
+
+Reference protocol for structured task delegation between iDumb agents.
+The meta-builder reads this protocol when creating sub-agent profiles and
+embeds the relevant delegation rules in each agent's system prompt.
+
+## Key Insight
+
+**Delegation ≠ assignment.** It's a schema-regulated handoff with:
+- Context transfer (what the delegate needs to know)
+- Evidence requirements (what must be returned)
+- Permission boundaries (what tools the delegate can use)
+- Chain tracking (who delegated to whom, depth limit)
+
+**PP-01 constraint:** Subagent hooks don't fire. ALL governance for sub-agents
+flows through agent profiles + this protocol + disk-persisted delegation records.
+
+---
+
+## When to Delegate
+
+| Your Role | Delegate To | When |
+|-----------|------------|------|
+| \\\`supreme-coordinator\\\` | \\\`meta-builder\\\`, \\\`builder\\\`, \\\`validator\\\` | Implementation, validation, spec work |
+| \\\`meta-builder\\\` | \\\`builder\\\`, \\\`validator\\\`, \\\`skills-creator\\\` | Code writing, testing, skill creation |
+| \\\`builder\\\` | \\\`validator\\\` | Post-implementation validation |
+
+**NEVER delegate:**
+- To yourself
+- Upward (builder → coordinator)
+- Beyond depth 3 (coordinator → meta → builder → validator STOP)
+- Cross-category without coordinator approval
+
+---
+
+## How to Delegate
+
+### Step 1: Create the Delegation
+
+\\\`\\\`\\\`
+idumb_task action=delegate
+  task_id=task-123
+  to_agent="idumb-builder"
+  context="Implement the login form component with email validation..."
+  expected_output="Working LoginForm component with unit tests"
+\\\`\\\`\\\`
+
+### Step 2: Pass the Handoff
+
+The tool returns a structured delegation instruction. Pass it verbatim to the target agent via \\\`@agent-name\\\`.
+
+### Step 3: Receive Results
+
+The delegate completes with evidence:
+
+\\\`\\\`\\\`
+idumb_task action=complete target_id=task-123 evidence="LoginForm implemented, 8/8 tests passing"
+\\\`\\\`\\\`
+
+---
+
+## Context Transfer Rules
+
+### What Context MUST Include
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| **What to do** | Clear action description | "Implement login form" |
+| **Where** | File paths, directories | "src/components/LoginForm.tsx" |
+| **Constraints** | Tech stack, patterns | "Use React + Shadcn, follow existing Button pattern" |
+| **Acceptance criteria** | How to know it's done | "Tests pass, renders correctly" |
+| **Related files** | Context the delegate needs | "See src/components/Button.tsx for pattern" |
+
+### What Context MUST NOT Include
+
+- Sensitive credentials or API keys
+- Full file contents (reference paths instead)
+- Previous failed attempts (unless relevant to the fix)
+
+---
+
+## Evidence Requirements
+
+### What Delegates MUST Return
+
+\\\`\\\`\\\`yaml
+result:
+  evidence: "Description of what was done and verification"
+  filesModified:
+    - "src/components/LoginForm.tsx"
+    - "tests/LoginForm.test.tsx"
+  testsRun: "8/8 passed"
+  brainEntriesCreated:
+    - "login-form-architecture"
+\\\`\\\`\\\`
+
+### Evidence Quality by Governance Level
+
+| Governance Level | Required Evidence |
+|-----------------|-------------------|
+| \\\`strict\\\` | Test results + file list + verification command output |
+| \\\`balanced\\\` | Test results + file list |
+| \\\`minimal\\\` | Summary statement |
+
+---
+
+## Category → Agent Routing
+
+| Category | Allowed Agents | Reason |
+|----------|---------------|--------|
+| \\\`development\\\` | builder | Write + bash permissions needed |
+| \\\`research\\\` | meta-builder, skills-creator | Read access and synthesis |
+| \\\`governance\\\` | validator, coordinator | Validation authority |
+| \\\`maintenance\\\` | builder, validator | Write + validation |
+| \\\`spec-kit\\\` | meta-builder, skills-creator | Structured output generation |
+| \\\`ad-hoc\\\` | any agent | Minimal routing constraints |
+
+---
+
+## Chain Rules
+
+### Hierarchy Levels
+
+\\\`\\\`\\\`
+Level 0: idumb-supreme-coordinator (orchestrates, cannot write)
+Level 1: idumb-meta-builder (analyzes, generates specs)
+Level 2: idumb-builder, idumb-validator, idumb-skills-creator (executes)
+\\\`\\\`\\\`
+
+### Depth Limits
+
+- Depth 0 → 1: coordinator delegates to meta-builder ✅
+- Depth 1 → 2: meta-builder delegates to builder ✅
+- Depth 2 → 3: builder delegates to validator ✅ (MAX)
+- Depth 3 → ❌: BLOCKED
+
+### Conflict Resolution
+
+**Rejected:** Delegator adjusts scope and re-delegates. 3 rejections → escalate to coordinator.
+**Expired (30 min):** Task returns to delegator as "expired." Re-delegate, adjust, or handle self.
+
+---
+
+## Quick Reference
+
+### For Delegators
+
+1. Identify the right agent for the task category
+2. Provide clear context with file paths and constraints
+3. Define specific expected output and acceptance criteria
+4. Use \\\`idumb_task action=delegate\\\` with all required args
+5. Pass the handoff instruction to \\\`@target-agent\\\`
+6. Monitor delegation status via \\\`idumb_task action=status\\\`
+
+### For Delegates
+
+1. Read the full delegation instruction
+2. Verify you have the required permissions
+3. Work within allowed tools and actions
+4. Complete with evidence via \\\`idumb_task action=complete\\\`
+5. Include filesModified, testsRun in your evidence
+6. Do NOT delegate beyond your remaining depth
+`
+
+/**
+ * Governance skill — reference protocol for operating within iDumb governance.
+ * Deployed to .idumb/idumb-modules/skills/governance-protocol.md
+ */
+export const GOVERNANCE_SKILL_TEMPLATE = `# Governance Protocol
+
+Complete protocols for operating within the iDumb hierarchical governance system.
+The meta-builder reads this protocol when creating sub-agent profiles.
+
+## Governance Philosophy
+
+### Expert-Skeptic Mode
+
+**NEVER assume. ALWAYS verify.**
+
+- Don't trust file contents are current — check timestamps
+- Don't trust state is consistent — validate structure
+- Don't trust context survives compaction — anchor critical decisions
+- Don't trust previous agent conclusions — verify with evidence
+
+### Context-First
+
+Before ANY action:
+
+1. Run \\\`idumb_task action=status\\\` — see full governance state
+2. Check current active epic/task
+3. Identify stale tasks (>4h active with no subtask progress)
+4. Anchor decisions that must survive compaction via \\\`idumb_anchor\\\`
+
+### Evidence-Based Results
+
+Every completion must include evidence:
+
+\\\`\\\`\\\`
+idumb_task action=complete target_id=<id> evidence="<proof of work>"
+\\\`\\\`\\\`
+
+---
+
+## Agent Hierarchy
+
+### Level 0: Supreme Coordinator
+
+**Agent:** \\\`@idumb-supreme-coordinator\\\`
+**Role:** Top-level orchestration
+- NEVER execute code directly
+- NEVER write files directly
+- ALWAYS delegate to builders/validators
+- Track delegations via \\\`idumb_task action=delegate\\\`
+
+### Level 1: Meta Builder
+
+**Agent:** \\\`@idumb-meta-builder\\\`
+**Role:** Analysis, spec generation, module creation
+- Can read and analyze codebases
+- Can generate specifications and modules
+- Delegates implementation to builders, validation to validators
+
+### Level 2: Execution Agents
+
+**Builder** (\\\`@idumb-builder\\\`): File creation/editing, test execution, bash commands
+**Validator** (\\\`@idumb-validator\\\`): Compliance checks, test runs, evidence gathering
+**Skills Creator** (\\\`@idumb-skills-creator\\\`): Skill generation and packaging
+
+---
+
+## Tool Reference (Current)
+
+| Tool | Purpose | Key Actions |
+|------|---------|-------------|
+| \\\`idumb_task\\\` | Task hierarchy CRUD + governance | create_epic, create_task, add_subtask, assign, start, complete, defer, abandon, **delegate**, status, list |
+| \\\`idumb_anchor\\\` | Context anchoring for compaction survival | create, list, prune |
+| \\\`idumb_scan\\\` | Project scanning and discovery | scan, status |
+| \\\`idumb_codemap\\\` | Code structure mapping | map, query, todos |
+| \\\`idumb_init\\\` | First-run initialization | init |
+
+### Task Workflow
+
+\\\`\\\`\\\`
+1. idumb_task action=create_epic name="Feature" category="development"
+2. idumb_task action=create_task name="Implementation step"
+3. idumb_task action=start task_id=<id>
+4. [do work, add subtasks as you go]
+5. idumb_task action=complete target_id=<id> evidence="proof"
+\\\`\\\`\\\`
+
+### Delegation Workflow
+
+\\\`\\\`\\\`
+1. idumb_task action=delegate task_id=<id> to_agent="idumb-builder" context="..." expected_output="..."
+2. Pass the handoff instruction to @target-agent
+3. Delegate completes: idumb_task action=complete target_id=<id> evidence="..."
+\\\`\\\`\\\`
+
+---
+
+## WorkStream Categories
+
+| Category | Governance | Required Artifacts | Delegatable To |
+|----------|-----------|-------------------|----------------|
+| \\\`development\\\` | balanced | impl plan + tests + code review | builder |
+| \\\`research\\\` | minimal | research doc + synthesis + evidence | meta-builder, skills-creator |
+| \\\`governance\\\` | strict | spec + validation + deployment | validator, coordinator |
+| \\\`maintenance\\\` | balanced | before/after evidence | builder, validator |
+| \\\`spec-kit\\\` | balanced | API contract + schema defs | meta-builder, skills-creator |
+| \\\`ad-hoc\\\` | minimal | just evidence | any agent |
+
+---
+
+## Validation Protocols
+
+### Structure Validation
+
+Check \\\`.idumb/\\\` directory integrity:
+
+\\\`\\\`\\\`
+.idumb/
+├── brain/
+│   ├── tasks.json         # Task hierarchy (TaskStore v2)
+│   ├── delegations.json   # Delegation records
+│   ├── hook-state.json    # Plugin state
+│   └── governance/        # Logs
+└── anchors/               # Optional
+\\\`\\\`\\\`
+
+### Completion Validation
+
+Tasks require: all subtasks completed, non-empty evidence, category-appropriate evidence depth.
+Epics require: all tasks completed or deferred, evidence on every completed task.
+
+### Freshness Validation
+
+- Tasks active >4h with no subtask progress → STALE warning
+- Delegations older than 30 min → auto-expired
+- Anchors older than 48h → deprioritized in compaction
+
+---
+
+## Context Anchoring
+
+Create anchors for:
+- **Critical decisions** that change project direction
+- **Discovered constraints** that affect future work
+- **Phase transitions** marking completion of major work
+- **Delegation outcomes** documenting what delegates returned
+
+| Type | Use | Priority |
+|------|-----|----------|
+| \\\`decision\\\` | Strategic choices | critical/high |
+| \\\`context\\\` | Background information | normal/high |
+| \\\`checkpoint\\\` | Phase completion markers | high |
+
+---
+
+## Best Practices
+
+### For Coordinators
+1. Always check status before delegating
+2. Provide full context in delegation
+3. Synthesize results before reporting
+4. Anchor significant outcomes
+
+### For Validators
+1. Never assume — verify everything
+2. Return structured evidence
+3. Be specific about failures
+4. Include timestamps
+
+### For Builders
+1. Report all file changes
+2. Complete subtasks incrementally
+3. Return evidence with file lists
+4. Stay within allowed tools/actions
+
+### For All Agents
+1. Context first, action second
+2. Evidence-based conclusions only
+3. Anchor critical discoveries
+4. Respect the hierarchy
+5. Use \\\`idumb_task\\\` for ALL task operations
+`
+
+
+// ─── Delegate Command (deployed to .opencode/commands/) ──────────────────
+
+/**
+ * Delegate command — deployed to .opencode/commands/idumb-delegate.md
+ * Routes through the supreme coordinator for governed task delegation.
+ */
+export function getDelegateCommand(language: Language): string {
+  const desc = language === "vi"
+    ? "Ủy quyền task hiện tại cho agent chuyên biệt với theo dõi handoff"
+    : "Delegate current task to a specialized agent with tracked handoff"
+
+  return `---
+description: "${desc}"
+agent: idumb-supreme-coordinator
+---
+
+Delegate a task to the appropriate sub-agent with full context tracking.
+
+## Workflow
+
+1. **Check active task** — verify there's a task to delegate via \`idumb_task action=status\`
+2. **Validate target** — ensure arguments specify a valid agent
+3. **Create delegation** — use \`idumb_task action=delegate\` with:
+   - \`task_id\` = the current active task
+   - \`to_agent\` = target from arguments
+   - \`context\` = delegation context from arguments
+   - \`expected_output\` = inferred from task name and context
+4. **Pass handoff** — send the delegation instruction to @target-agent
+
+## Available Targets
+
+- \`idumb-builder\` — code implementation, file writes, test execution
+- \`idumb-validator\` — validation, compliance checks, evidence review
+- \`idumb-skills-creator\` — skill generation, spec packaging
+
+## Rules
+
+- Only the coordinator and meta-builder can delegate
+- Delegation depth max = 3
+- Category routing is enforced (development → builder, research → meta-builder)
+- Delegations expire after 30 minutes if not accepted
+
+$ARGUMENTS
+`
+}
+

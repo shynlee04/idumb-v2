@@ -14,6 +14,7 @@ import {
   getInitCommand,
   getSettingsCommand,
   getStatusCommand,
+  getDelegateCommand,
   AGENT_CONTRACT_TEMPLATE,
   MODULES_README_TEMPLATE,
   COMMAND_TEMPLATE,
@@ -22,6 +23,8 @@ import {
   BUILDER_PROFILE,
   VALIDATOR_PROFILE,
   SKILLS_CREATOR_PROFILE,
+  DELEGATION_SKILL_TEMPLATE,
+  GOVERNANCE_SKILL_TEMPLATE,
 } from "../templates.js"
 import { createBootstrapStore } from "../schemas/task.js"
 
@@ -154,6 +157,12 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       force,
       result,
     )
+    await writeIfNew(
+      join(commandsDir, "idumb-delegate.md"),
+      getDelegateCommand(language),
+      force,
+      result,
+    )
 
     // ─── Deploy Module Templates ────────────────────────────────
     await writeIfNew(
@@ -203,6 +212,20 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     await writeIfNew(
       join(modulesDir, "agents", "skills-creator-profile.md"),
       SKILLS_CREATOR_PROFILE,
+      force,
+      result,
+    )
+
+    // ─── Deploy Skill Protocol Templates ─────────────────────────
+    await writeIfNew(
+      join(modulesDir, "skills", "delegation-protocol.md"),
+      DELEGATION_SKILL_TEMPLATE,
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(modulesDir, "skills", "governance-protocol.md"),
+      GOVERNANCE_SKILL_TEMPLATE,
       force,
       result,
     )

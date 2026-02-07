@@ -19,6 +19,8 @@ import { join, dirname } from "node:path"
 import type { Anchor } from "../schemas/anchor.js"
 import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
 import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/task.js"
+import type { DelegationStore } from "../schemas/delegation.js"
+import { createEmptyDelegationStore, expireStaleDelegations } from "../schemas/delegation.js"
 import type { Logger } from "./logging.js"
 
 // ─── State Shape ─────────────────────────────────────────────────────
@@ -41,6 +43,7 @@ const STATE_VERSION = "1.1.0"
 const DEBOUNCE_MS = 500
 const STATE_FILE = ".idumb/brain/hook-state.json"
 const TASKS_FILE = ".idumb/brain/tasks.json"
+const DELEGATIONS_FILE = ".idumb/brain/delegations.json"
 
 // ─── StateManager ────────────────────────────────────────────────────
 
@@ -48,10 +51,12 @@ export class StateManager {
   private sessions = new Map<string, SessionState>()
   private anchors = new Map<string, Anchor[]>()
   private taskStore: TaskStore = createEmptyStore()
+  private delegationStore: DelegationStore = createEmptyDelegationStore()
   private directory: string = ""
   private log: Logger | null = null
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private taskSaveTimer: ReturnType<typeof setTimeout> | null = null
+  private delegationSaveTimer: ReturnType<typeof setTimeout> | null = null
   private initialized = false
   private degraded = false  // true if disk I/O failed
 
@@ -114,6 +119,29 @@ export class StateManager {
       const msg = err instanceof Error ? err.message : String(err)
       if (!msg.includes("ENOENT")) {
         log.warn("Could not load task store — starting fresh", { error: msg })
+      }
+    }
+
+    // Load delegation store from separate file
+    try {
+      const delegPath = join(directory, DELEGATIONS_FILE)
+      const delegRaw = await readFile(delegPath, "utf-8")
+      const loadedDeleg = JSON.parse(delegRaw) as DelegationStore
+      if (loadedDeleg.version && Array.isArray(loadedDeleg.delegations)) {
+        this.delegationStore = loadedDeleg
+        // Expire stale delegations on load
+        const expired = expireStaleDelegations(this.delegationStore)
+        if (expired > 0) {
+          log.info("Expired stale delegations on load", { expired })
+        }
+        log.info("Delegation store loaded from disk", {
+          delegations: loadedDeleg.delegations.length,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load delegation store — starting fresh", { error: msg })
       }
     }
 
@@ -194,6 +222,17 @@ export class StateManager {
     this.scheduleTaskSave()
   }
 
+  // ─── Delegation Store (global, not per-session) ────────────────────
+
+  getDelegationStore(): DelegationStore {
+    return this.delegationStore
+  }
+
+  setDelegationStore(store: DelegationStore): void {
+    this.delegationStore = store
+    this.scheduleDelegationSave()
+  }
+
   // ─── Anchor State (compaction) ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
@@ -236,6 +275,20 @@ export class StateManager {
     this.taskSaveTimer = setTimeout(() => {
       this.taskSaveTimer = null
       this.saveTasksToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
+  /** Schedule a debounced delegation save. */
+  private scheduleDelegationSave(): void {
+    if (this.degraded) return
+
+    if (this.delegationSaveTimer) {
+      clearTimeout(this.delegationSaveTimer)
+    }
+
+    this.delegationSaveTimer = setTimeout(() => {
+      this.delegationSaveTimer = null
+      this.saveDelegationsToDisk().catch(() => { })
     }, DEBOUNCE_MS)
   }
 
@@ -286,6 +339,25 @@ export class StateManager {
     }
   }
 
+  /** Write delegation store to separate disk file. */
+  private async saveDelegationsToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const delegPath = join(this.directory, DELEGATIONS_FILE)
+
+    try {
+      await mkdir(dirname(delegPath), { recursive: true })
+      await writeFile(delegPath, JSON.stringify(this.delegationStore, null, 2) + "\n", "utf-8")
+      this.log?.info("Delegation store saved to disk", {
+        delegations: this.delegationStore.delegations.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save delegation store — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
   /** Force immediate save — use on shutdown/cleanup. */
   async forceSave(): Promise<void> {
     if (this.saveTimer) {
@@ -296,8 +368,13 @@ export class StateManager {
       clearTimeout(this.taskSaveTimer)
       this.taskSaveTimer = null
     }
+    if (this.delegationSaveTimer) {
+      clearTimeout(this.delegationSaveTimer)
+      this.delegationSaveTimer = null
+    }
     await this.saveToDisk()
     await this.saveTasksToDisk()
+    await this.saveDelegationsToDisk()
   }
 
   /** Check if persistence is degraded (disk I/O failed). */
@@ -320,6 +397,7 @@ export class StateManager {
     this.sessions.clear()
     this.anchors.clear()
     this.taskStore = createEmptyStore()
+    this.delegationStore = createEmptyDelegationStore()
   }
 }
 

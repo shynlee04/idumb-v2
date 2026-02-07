@@ -29,6 +29,11 @@ import {
   SESSION_STALE_MS,
 } from "../schemas/task.js"
 import type { TaskStore } from "../schemas/task.js"
+import {
+  createDelegation, validateDelegation, getDelegationDepth,
+  buildDelegationInstruction, formatDelegationStore,
+  expireStaleDelegations,
+} from "../schemas/delegation.js"
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -79,12 +84,35 @@ function responseFooter(store: TaskStore): string {
 // ─── Tool Definition ─────────────────────────────────────────────────
 
 export const idumb_task = tool({
-  description: "Manage governance tasks (Epic→Task→Subtask hierarchy). Create epics and tasks before writing files — writes blocked without active task. Actions: create_epic, create_task, add_subtask, assign, start, complete, defer, abandon, status, list, update, branch.",
+  description: [
+    "Manage governance tasks (Epic→Task→Subtask hierarchy).",
+    "IMPORTANT: Writes are BLOCKED without an active task. Create + start a task first.",
+    "",
+    "QUICK START (3 steps before any file writes):",
+    "  1. idumb_task action=create_epic name=\"Feature X\" category=\"development\"",
+    "  2. idumb_task action=create_task name=\"Implement Y\" (auto-links to active epic)",
+    "  3. idumb_task action=start task_id=<id from step 2>",
+    "",
+    "ACTIONS AND REQUIRED ARGS:",
+    "  create_epic  → name, category (development|research|governance|maintenance|spec-kit|ad-hoc)",
+    "  create_task  → name (auto-links to active epic)",
+    "  add_subtask  → name, task_id",
+    "  assign       → task_id, assignee",
+    "  start        → task_id",
+    "  complete     → target_id, evidence (required for tasks)",
+    "  defer        → target_id, reason",
+    "  abandon      → target_id, reason",
+    "  delegate     → task_id, to_agent, context, expected_output",
+    "  status       → (no args — shows full governance state)",
+    "  list         → (no args — lists all epics/tasks)",
+    "  update       → target_id, name (rename)",
+    "  branch       → task_id, branch_name (future use)",
+  ].join("\n"),
   args: {
     action: tool.schema.enum([
       "create_epic", "create_task", "add_subtask",
       "assign", "start", "complete",
-      "defer", "abandon",
+      "defer", "abandon", "delegate",
       "status", "list", "update", "branch",
     ]).describe("Action to perform on the task hierarchy"),
     name: tool.schema.string().optional().describe(
@@ -113,6 +141,16 @@ export const idumb_task = tool({
       "maintenance", "spec-kit", "ad-hoc",
     ]).optional().describe(
       "Work stream category (for: create_epic). Controls governance strictness and required artifacts. Default: development"
+    ),
+    // δ2: Delegation args
+    to_agent: tool.schema.string().optional().describe(
+      "Target agent for delegation (for: delegate). Example: idumb-builder"
+    ),
+    context: tool.schema.string().optional().describe(
+      "Context the delegate needs to know (for: delegate)"
+    ),
+    expected_output: tool.schema.string().optional().describe(
+      "What the delegate must return (for: delegate)"
     ),
   },
   async execute(args, context) {
@@ -586,6 +624,15 @@ export const idumb_task = tool({
         }
         lines.push("")
 
+        // ── Delegation status (δ2) ──
+        const delegStore = stateManager.getDelegationStore()
+        expireStaleDelegations(delegStore)
+        const delegSummary = formatDelegationStore(delegStore)
+        if (delegStore.delegations.length > 0) {
+          lines.push(delegSummary)
+          lines.push("")
+        }
+
         // ── Governance rules ──
         lines.push("RULES:")
         lines.push("  - File writes/edits blocked without active task (must use idumb_task action=start)")
@@ -680,10 +727,99 @@ export const idumb_task = tool({
         ].join("\n")
       }
 
+      // ─── DELEGATE (δ2) ────────────────────────────────────────────────
+      case "delegate": {
+        if (!args.task_id) {
+          return "ERROR: 'task_id' is required for delegate.\nExample: idumb_task action=delegate task_id=task-123 to_agent='idumb-builder' context='Implement login form' expected_output='Working form with tests'"
+        }
+        if (!args.to_agent) {
+          return "ERROR: 'to_agent' is required for delegate.\nExample: idumb_task action=delegate task_id=" + args.task_id + " to_agent='idumb-builder' context='...' expected_output='...'"
+        }
+        if (!args.context) {
+          return "ERROR: 'context' is required for delegate. Describe what the delegate needs to know.\nExample: idumb_task action=delegate task_id=" + args.task_id + " to_agent=" + args.to_agent + " context='Build the login form component' expected_output='...'"
+        }
+        if (!args.expected_output) {
+          return "ERROR: 'expected_output' is required for delegate. Describe what the delegate must return.\nExample: idumb_task action=delegate task_id=" + args.task_id + " to_agent=" + args.to_agent + " context='..." + "' expected_output='Working login form with passing tests'"
+        }
+
+        const task = findTask(store, args.task_id)
+        if (!task) {
+          const allTasks = store.epics.flatMap(e => e.tasks)
+          return [
+            `ERROR: Task "${args.task_id}" not found.`,
+            allTasks.length > 0
+              ? `Available tasks:\n${allTasks.map(t => `  - ${t.id}: "${t.name}" (${t.status})`).join("\n")}`
+              : "No tasks exist.",
+          ].join("\n")
+        }
+
+        // Check if already delegated
+        if (task.delegatedTo) {
+          return `ERROR: Task "${task.name}" is already delegated to ${task.delegatedTo} (delegation: ${task.delegationId}).\nComplete or reject the existing delegation first.`
+        }
+
+        // Identify the calling agent
+        const fromAgent = stateManager.getCapturedAgent(context.sessionID) ?? "idumb-meta-builder"
+
+        // Get epic category for routing validation
+        const epic = findParentEpic(store, task.id)
+        const category = epic?.category
+
+        // Get current delegation depth
+        const delegStore = stateManager.getDelegationStore()
+        // Expire stale delegations first
+        expireStaleDelegations(delegStore)
+        const currentDepth = getDelegationDepth(delegStore, task.id)
+
+        // Validate delegation
+        const validation = validateDelegation(fromAgent, args.to_agent, currentDepth, category)
+        if (!validation.valid) {
+          return `DELEGATION BLOCKED: ${validation.reason}`
+        }
+
+        // Create delegation record
+        const delegation = createDelegation({
+          fromAgent,
+          toAgent: args.to_agent,
+          taskId: task.id,
+          context: args.context,
+          expectedOutput: args.expected_output,
+          currentDepth,
+        })
+
+        // Update task with delegation link
+        task.delegatedTo = args.to_agent
+        task.delegationId = delegation.id
+        task.modifiedAt = Date.now()
+
+        // Persist both stores
+        delegStore.delegations.push(delegation)
+        stateManager.setDelegationStore(delegStore)
+        commitStore(store)
+
+        // Build the handoff instruction
+        const instruction = buildDelegationInstruction(delegation)
+
+        return [
+          `✅ Delegation created successfully.`,
+          `  ID: ${delegation.id}`,
+          `  From: ${fromAgent} → To: ${args.to_agent}`,
+          `  Task: "${task.name}" (${task.id})`,
+          `  Depth: ${currentDepth + 1}/${3}`,
+          `  Expires: ${new Date(delegation.expiresAt).toISOString()}`,
+          ``,
+          `📨 Pass the following to @${args.to_agent}:`,
+          ``,
+          instruction,
+          ``,
+          responseFooter(store),
+        ].join("\n")
+      }
+
       default:
         return [
           `Unknown action: "${action}".`,
-          `Valid actions: create_epic, create_task, add_subtask, assign, start, complete, defer, abandon, status, list, update, branch`,
+          `Valid actions: create_epic, create_task, add_subtask, assign, start, complete, defer, abandon, delegate, status, list, update, branch`,
         ].join("\n")
     }
   },

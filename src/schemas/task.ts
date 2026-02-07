@@ -72,6 +72,8 @@ export interface Task {
     status: TaskStatus
     assignee?: string      // agent name
     evidence?: string      // proof of completion (required for "completed")
+    delegatedTo?: string   // δ2: agent this task is delegated to
+    delegationId?: string  // δ2: links to DelegationRecord.id
     createdAt: number
     modifiedAt: number
     subtasks: Subtask[]

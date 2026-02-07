@@ -47,3 +47,18 @@ export type {
     CodeComment, CommentMarker, Inconsistency, InconsistencyType,
 } from "./codemap.js"
 
+// ─── Phase δ2 Delegation Schema ─────────────────────────────────────
+export {
+    createDelegation, createEmptyDelegationStore,
+    findDelegation, findDelegationsForTask, findDelegationsFromAgent,
+    findDelegationsToAgent, findActiveDelegations,
+    validateDelegation, getDelegationDepth,
+    acceptDelegation, completeDelegation, rejectDelegation, expireStaleDelegations,
+    formatDelegationRecord, formatDelegationStore, buildDelegationInstruction,
+    DELEGATION_STORE_VERSION, MAX_DELEGATION_DEPTH, DELEGATION_EXPIRY_MS,
+} from "./delegation.js"
+export type {
+    DelegationStatus, DelegationResult, DelegationRecord,
+    DelegationStore, DelegationValidation, CreateDelegationOptions,
+} from "./delegation.js"
+

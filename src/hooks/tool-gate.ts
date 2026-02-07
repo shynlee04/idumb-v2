@@ -20,6 +20,57 @@ import { stateManager } from "../lib/persistence.js"
 /** Write tools that require an active task */
 const WRITE_TOOLS = new Set(["write", "edit"])
 
+/** Plugin tools that need agent-scoped access control */
+const PLUGIN_TOOLS = new Set(["idumb_task", "idumb_anchor", "idumb_init", "idumb_scan", "idumb_codemap"])
+
+/**
+ * Agent → Plugin tool access matrix.
+ * 
+ * Only agents with RESTRICTIONS are listed. Unlisted agents get full access.
+ * This is the PP-01 workaround: since OpenCode frontmatter can't scope plugin
+ * tools, we enforce access here using chat.params-captured agent identity.
+ */
+interface AgentToolRule {
+  /** Plugin tools this agent cannot call at all */
+  blockedTools: Set<string>
+  /** idumb_task actions this agent cannot use */
+  blockedActions: Set<string>
+}
+
+const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
+  "idumb-supreme-coordinator": {
+    blockedTools: new Set(["idumb_init"]),
+    blockedActions: new Set([]),  // Can delegate, can create epics — it's the coordinator
+  },
+  "idumb-validator": {
+    blockedTools: new Set(["idumb_init"]),
+    blockedActions: new Set(["delegate", "create_epic"]),
+  },
+  "idumb-builder": {
+    blockedTools: new Set(["idumb_init"]),
+    blockedActions: new Set(["create_epic"]),
+  },
+  "idumb-skills-creator": {
+    blockedTools: new Set(["idumb_init"]),
+    blockedActions: new Set(["delegate", "create_epic"]),
+  },
+}
+
+/** Build block message for agent-scoped tool denial */
+function buildAgentScopeBlock(agent: string, tool: string, action?: string): string {
+  const target = action ? `${tool} action=${action}` : tool
+  return [
+    `GOVERNANCE BLOCK: ${target} denied for agent "${agent}"`,
+    "",
+    `WHAT: Your agent role "${agent}" does not have permission to use "${target}".`,
+    `WHY: Plugin tool access is scoped per agent to enforce hierarchy.`,
+    action
+      ? `USE INSTEAD: Ask your delegator to perform this action, or delegate to an agent with permission.`
+      : `USE INSTEAD: This tool should be called by the meta-builder or a higher-level agent.`,
+    `EVIDENCE: Agent-scoped tool gate blocked this call.`,
+  ].join("\n")
+}
+
 /** Exported for task tool to update session state — delegates to StateManager */
 export function setActiveTask(sessionID: string, task: { id: string; name: string } | null): void {
   stateManager.setActiveTask(sessionID, task)
@@ -79,6 +130,34 @@ export function createToolGateBefore(log: Logger) {
     try {
       const { tool, sessionID } = input
 
+      // ─── Agent-scoped plugin tool gating ─────────────────────
+      if (PLUGIN_TOOLS.has(tool)) {
+        const agent = stateManager.getCapturedAgent(sessionID)
+        if (agent) {
+          const rules = AGENT_TOOL_RULES[agent]
+          if (rules) {
+            // Check tool-level block
+            if (rules.blockedTools.has(tool)) {
+              const message = buildAgentScopeBlock(agent, tool)
+              log.warn(`AGENT SCOPE BLOCK: ${tool} denied for ${agent}`, { sessionID })
+              throw new Error(message)
+            }
+
+            // Check action-level block (idumb_task only)
+            if (tool === "idumb_task" && rules.blockedActions.size > 0) {
+              const args = _output.args as Record<string, unknown> | undefined
+              const action = args?.action as string | undefined
+              if (action && rules.blockedActions.has(action)) {
+                const message = buildAgentScopeBlock(agent, tool, action)
+                log.warn(`AGENT SCOPE BLOCK: ${tool} action=${action} denied for ${agent}`, { sessionID })
+                throw new Error(message)
+              }
+            }
+          }
+        }
+      }
+
+      // ─── Write tool gate (existing) ──────────────────────────
       // Only gate write tools (breadth: don't over-block, start minimal)
       if (!WRITE_TOOLS.has(tool)) return
 
