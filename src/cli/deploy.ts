@@ -29,6 +29,8 @@ import {
   BUILDER_PROFILE,
   VALIDATOR_PROFILE,
   SKILLS_CREATOR_PROFILE,
+  RESEARCH_SYNTHESIZER_PROFILE,
+  PLANNER_PROFILE,
   DELEGATION_SKILL_TEMPLATE,
   GOVERNANCE_SKILL_TEMPLATE,
 } from "../templates.js"
@@ -340,6 +342,18 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     await writeIfNew(
       join(modulesDir, "agents", "skills-creator-profile.md"),
       SKILLS_CREATOR_PROFILE,
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(modulesDir, "agents", "research-synthesizer-profile.md"),
+      RESEARCH_SYNTHESIZER_PROFILE,
+      force,
+      result,
+    )
+    await writeIfNew(
+      join(modulesDir, "agents", "planner-profile.md"),
+      PLANNER_PROFILE,
       force,
       result,
     )
