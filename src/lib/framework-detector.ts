@@ -20,6 +20,7 @@ import { join } from "node:path"
 import type { FrameworkDetection, GovernanceFramework, TechFramework } from "../schemas/config.js"
 import { DEFAULT_DETECTION } from "../schemas/config.js"
 import type { Logger } from "./logging.js"
+import { scanCodeQuality } from "./code-quality.js"
 
 // ─── Detection Signatures ────────────────────────────────────────────
 
@@ -330,13 +331,14 @@ export async function scanProject(projectDir: string, log: Logger): Promise<Fram
   log.info("Starting brownfield scan", { projectDir })
 
   try {
-    const [frameworks, packageManager, agentDirs, hasMonorepo, conflicts, gaps] = await Promise.all([
+    const [frameworks, packageManager, agentDirs, hasMonorepo, conflicts, gaps, codeQuality] = await Promise.all([
       detectFrameworks(projectDir),
       detectPackageManager(projectDir),
       detectAgentDirs(projectDir),
       detectMonorepo(projectDir),
       detectConflicts(projectDir),
       detectGaps(projectDir),
+      scanCodeQuality(projectDir, log),
     ])
 
     const result: FrameworkDetection = {
@@ -348,6 +350,7 @@ export async function scanProject(projectDir: string, log: Logger): Promise<Fram
       existingCommandDirs: agentDirs.commands,
       conflicts,
       gaps,
+      codeQuality,
     }
 
     log.info("Brownfield scan complete", {
@@ -357,6 +360,9 @@ export async function scanProject(projectDir: string, log: Logger): Promise<Fram
       monorepo: result.hasMonorepo,
       conflicts: result.conflicts.length,
       gaps: result.gaps.length,
+      codeQualityGrade: codeQuality.grade,
+      codeQualityScore: codeQuality.score,
+      codeSmells: codeQuality.smells.length,
     })
 
     return result

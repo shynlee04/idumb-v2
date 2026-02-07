@@ -41,6 +41,21 @@ function buildGreeting(
     sections.push("")
     sections.push(detectionReport)
     sections.push("")
+    // Code quality summary for agents
+    const cq = config.detection.codeQuality
+    if (cq) {
+      sections.push(`## 📊 Chất Lượng Code — Điểm ${cq.grade} (${cq.score}/100)\n`)
+      sections.push(`- **File đã quét:** ${cq.totalFiles}`)
+      sections.push(`- **Tổng dòng:** ${cq.totalLines.toLocaleString()}`)
+      sections.push(`- **Vấn đề phát hiện:** ${cq.smells.length}`)
+      if (cq.smells.length > 0) {
+        sections.push(`\n### Top Issues`)
+        for (const smell of cq.smells.slice(0, 5)) {
+          sections.push(`- \`${smell.file}\`: ${smell.message}`)
+        }
+      }
+      sections.push("")
+    }
     sections.push(scaffoldReport)
     sections.push("")
     sections.push(buildNextSteps(config, lang))
@@ -54,6 +69,24 @@ function buildGreeting(
     sections.push("")
     sections.push(detectionReport)
     sections.push("")
+    // Code quality summary for agents
+    const cq = config.detection.codeQuality
+    if (cq) {
+      sections.push(`## 📊 Code Quality — Grade ${cq.grade} (${cq.score}/100)\n`)
+      sections.push(`- **Files scanned:** ${cq.totalFiles}`)
+      sections.push(`- **Total lines:** ${cq.totalLines.toLocaleString()}`)
+      sections.push(`- **Issues detected:** ${cq.smells.length}`)
+      if (cq.stats.filesOver500Lines > 0) sections.push(`- ⚠️ **${cq.stats.filesOver500Lines} mega file(s)** (>500 lines)`)
+      if (cq.stats.functionsOver50Lines > 0) sections.push(`- ⚠️ **${cq.stats.functionsOver50Lines} long function(s)** (>50 lines)`)
+      if (cq.stats.todoCount > 0) sections.push(`- 📌 **${cq.stats.todoCount} TODO/FIXME markers**`)
+      if (cq.smells.length > 0) {
+        sections.push(`\n### Top Issues`)
+        for (const smell of cq.smells.slice(0, 5)) {
+          sections.push(`- \`${smell.file}\`${smell.line ? `:${smell.line}` : ""}: ${smell.message}`)
+        }
+      }
+      sections.push("")
+    }
     sections.push(scaffoldReport)
     sections.push("")
     sections.push(buildNextSteps(config, lang))
@@ -129,7 +162,14 @@ function buildNextSteps(config: IdumbConfig, lang: Language): string {
     }
 
     if (detection.gaps.length > 0) {
-      lines.push(`\n📋 **${detection.gaps.length} issue(s) detected** — see scan results above for details`)
+      lines.push(`\n📋 **${detection.gaps.length} setup issue(s) detected** — see scan results above for details`)
+    }
+
+    const cq = detection.codeQuality
+    if (cq && cq.smells.length > 0) {
+      lines.push(`\n🔬 **Code quality: ${cq.grade} (${cq.score}/100)** — ${cq.smells.length} smell(s) detected across ${cq.totalFiles} files`)
+      if (cq.stats.filesOver500Lines > 0) lines.push(`   ↳ Consider splitting ${cq.stats.filesOver500Lines} mega file(s) (>500 lines)`)
+      if (cq.stats.functionsOver50Lines > 0) lines.push(`   ↳ Refactor ${cq.stats.functionsOver50Lines} long function(s) (>50 lines)`)
     }
 
     lines.push("\n**Available commands:**")

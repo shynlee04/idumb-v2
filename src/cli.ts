@@ -240,18 +240,31 @@ async function main(): Promise<void> {
   const gapCount = detection.gaps.length
   const conflictCount = detection.conflicts.length
   const totalIssues = gapCount + conflictCount
+  const isSavage = choices.governance === "retard"
+  const cq = detection.codeQuality
 
-  // Health grade
-  const grade = totalIssues === 0 ? "A" : totalIssues <= 2 ? "B" : totalIssues <= 4 ? "C" : totalIssues <= 6 ? "D" : "F"
+  // Use code quality grade if available, otherwise fall back to gap-based grade
+  const grade = cq ? cq.grade : (totalIssues === 0 ? "A" : totalIssues <= 2 ? "B" : totalIssues <= 4 ? "C" : totalIssues <= 6 ? "D" : "F")
   const gradeColor = grade === "A" ? C.green : grade === "B" ? C.cyan : grade === "C" ? C.yellow : C.red
-  const gradeBar = grade === "A" ? "██████████" : grade === "B" ? "████████░░" : grade === "C" ? "██████░░░░" : grade === "D" ? "████░░░░░░" : "██░░░░░░░░"
+  const score = cq ? cq.score : (totalIssues === 0 ? 100 : Math.max(0, 100 - totalIssues * 12))
+  const bar10 = (v: number, max: number) => {
+    const filled = Math.round((v / max) * 10)
+    return "█".repeat(Math.min(filled, 10)) + "░".repeat(Math.max(10 - filled, 0))
+  }
 
   print("")
-  print(`  ${C.bold}┌────────────────────────────────────────────────┐${C.reset}`)
-  print(`  ${C.bold}│${C.reset}  ${gradeColor}${C.bold}PROJECT HEALTH: ${grade}${C.reset}  ${gradeColor}${gradeBar}${C.reset}         ${C.bold}│${C.reset}`)
-  print(`  ${C.bold}└────────────────────────────────────────────────┘${C.reset}`)
+  print(`  ${C.bold}┌──────────────────────────────────────────────────────┐${C.reset}`)
+  print(`  ${C.bold}│${C.reset}  ${gradeColor}${C.bold}PROJECT HEALTH: ${grade}${C.reset}  ${gradeColor}${bar10(score, 100)}${C.reset}  score: ${score}/100  ${C.bold}│${C.reset}`)
+  print(`  ${C.bold}└──────────────────────────────────────────────────────┘${C.reset}`)
+
+  if (isSavage) {
+    if (grade === "F") print(`  ${C.magenta}${C.italic}  "I've seen cleaner dumpster fires." — iDumb${C.reset}`)
+    else if (grade === "D") print(`  ${C.magenta}${C.italic}  "Below average and proud of it, apparently." — iDumb${C.reset}`)
+    else if (grade === "A") print(`  ${C.magenta}${C.italic}  "Clean code? Suspicious. What are you hiding?" — iDumb${C.reset}`)
+  }
   print("")
 
+  // Project basics
   if (detection.tech.length > 0) {
     print(`  ${C.cyan}▐${C.reset} ${C.bold}Tech Stack${C.reset}    ${techList}`)
   }
@@ -263,14 +276,22 @@ async function main(): Promise<void> {
     print(`  ${C.cyan}▐${C.reset} ${C.bold}Agent Dirs${C.reset}    ${detection.existingAgentDirs.join(", ")}`)
   }
 
-  // Issues with severity and sass
+  // ─── CODE QUALITY DASHBOARD (from real scanner) ────────────────
+  if (cq) {
+    const { formatCodeQualityReport } = await import("./lib/code-quality.js")
+    const cqLines = formatCodeQualityReport(cq, isSavage)
+    for (const line of cqLines) {
+      print(line)
+    }
+  }
+
+  // ─── Config/Setup Issues ───────────────────────────────────────
   if (totalIssues > 0) {
     print("")
-    const isSavage = choices.governance === "retard"
     if (isSavage) {
-      print(`  ${C.red}${C.bold}⚠️  ${totalIssues} ISSUE(S) — Let me roast your project real quick:${C.reset}`)
+      print(`  ${C.red}${C.bold}🛠️  ${totalIssues} CONFIG ISSUE(S) — The circus continues:${C.reset}`)
     } else {
-      print(`  ${C.yellow}${C.bold}⚠️  ${totalIssues} issue(s) detected:${C.reset}`)
+      print(`  ${C.yellow}${C.bold}🛠️  ${totalIssues} setup issue(s):${C.reset}`)
     }
 
     for (const gap of detection.gaps) {
@@ -292,9 +313,10 @@ async function main(): Promise<void> {
       print("")
       print(`  ${C.magenta}${C.italic}  "${totalIssues} issues before I even started. This is going to be fun." — iDumb${C.reset}`)
     }
-  } else {
+  } else if (!cq || cq.smells.length === 0) {
+    // Only show clean message if code quality also found nothing
     print("")
-    if (choices.governance === "retard") {
+    if (isSavage) {
       print(`  ${C.green}${C.bold}✓ Zero issues.${C.reset} ${C.magenta}${C.italic}"Hmm. Suspicious. I'll find something later." — iDumb${C.reset}`)
     } else {
       print(`  ${C.green}${C.bold}✓ No issues detected. Clean project.${C.reset}`)

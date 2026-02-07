@@ -54,6 +54,36 @@ export type TechFramework =
   | "typescript" | "javascript" | "python" | "rust" | "go"
   | "unknown"
 
+/** Individual code smell — a specific issue found in a specific file */
+export interface CodeSmell {
+  file: string                   // relative path
+  line?: number                  // approximate line number (0 = whole file)
+  severity: "info" | "warning" | "critical"
+  category: "spaghetti" | "god-file" | "dead-code" | "coupling" | "missing-tests" | "naming" | "security" | "todo-debt"
+  message: string                // human-readable description
+  roast: string                  // savage mode commentary
+}
+
+/** Aggregated code quality report — produced by the code scanner */
+export interface CodeQualityReport {
+  grade: "A" | "B" | "C" | "D" | "F"
+  score: number                  // 0-100
+  totalFiles: number
+  totalLines: number
+  smells: CodeSmell[]
+  stats: {
+    avgFileLength: number        // average lines per file
+    maxFileLength: number        // biggest file
+    maxFileName: string          // which file is the monster
+    filesOver300Lines: number    // "god files"
+    filesOver500Lines: number    // "mega files"
+    functionsOver50Lines: number // long functions detected
+    todoCount: number            // TODO/FIXME/HACK density
+    consoleLogCount: number      // console.log in non-test files
+    deepNesting: number          // files with 5+ indent levels
+  }
+}
+
 /** Result of framework detection scan */
 export interface FrameworkDetection {
   governance: GovernanceFramework[]
@@ -64,6 +94,7 @@ export interface FrameworkDetection {
   existingCommandDirs: string[]  // e.g. [".opencode/command"]
   conflicts: string[]            // things that may clash with .idumb/
   gaps: string[]                 // detected issues (stale files, missing configs, etc.)
+  codeQuality?: CodeQualityReport  // code quality analysis (if scan ran deep enough)
 }
 
 // ─── Config Structure ────────────────────────────────────────────────
