@@ -78,7 +78,7 @@ export interface ArtifactContentResponse {
 }
 
 export interface WebSocketMessage {
-  type: "connected" | "file-changed" | "state-update"
+  type: "connected" | "file-changed" | "state-update" | "artifact-saved" | "comment-added" | "comment-updated" | "comment-deleted"
   data?: unknown
   timestamp: number
 }

@@ -18,13 +18,30 @@
  */
 
 import { createServer as createHttpServer } from "http"
-import { join } from "path"
+import { join, resolve, relative } from "path"
 import express, { type Request, type Response } from "express"
 import cors from "cors"
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from "fs"
 import { randomUUID } from "crypto"
 import { SqliteAdapter } from "../../lib/sqlite-adapter.js"
 import { createLogger, type Logger } from "../../lib/logging.js"
+
+// ─── Security ─────────────────────────────────────────────────────────────
+
+/**
+ * Sanitize a user-supplied path to prevent directory traversal.
+ * Resolves against projectDir and verifies the result stays within bounds.
+ * Returns null if the path escapes the project directory.
+ */
+function sanitizePath(projectDir: string, userPath: string): string | null {
+  const resolved = resolve(projectDir, userPath)
+  const rel = relative(projectDir, resolved)
+  // Escapes projectDir if relative path starts with ".." or is absolute
+  if (rel.startsWith("..") || resolve(rel) === rel) {
+    return null
+  }
+  return resolved
+}
 
 // ─── Module-level state (configured by startServer) ──────────────────────
 let adapter: SqliteAdapter | null = null
@@ -139,14 +156,19 @@ app.get("/api/tasks", (req: Request, res: Response) => {
 
   // Use SQLite adapter when available and project dir matches
   if (adapter && configuredProjectDir === projectDir) {
-    const state = getGovernanceState(projectDir) // still need capturedAgent from JSON
-    res.json({
-      tasks: adapter.getTaskStore(),
-      activeTask: adapter.getSmartActiveTask(),
-      activeEpic: adapter.getActiveEpic(),
-      capturedAgent: state.capturedAgent,
-    })
-    return
+    try {
+      const state = getGovernanceState(projectDir) // still need capturedAgent from JSON
+      res.json({
+        tasks: adapter.getTaskStore(),
+        activeTask: adapter.getSmartActiveTask(),
+        activeEpic: adapter.getActiveEpic(),
+        capturedAgent: state.capturedAgent,
+      })
+      return
+    } catch (err) {
+      log.warn("SQLite read failed for /api/tasks, falling back to JSON", { error: String(err) })
+      // Fall through to JSON path
+    }
   }
 
   // Fallback to JSON file reads
@@ -176,10 +198,15 @@ app.get("/api/delegations", (req: Request, res: Response) => {
 
   // Use SQLite adapter when available and project dir matches
   if (adapter && configuredProjectDir === projectDir) {
-    res.json({
-      delegations: adapter.getDelegationStore(),
-    })
-    return
+    try {
+      res.json({
+        delegations: adapter.getDelegationStore(),
+      })
+      return
+    } catch (err) {
+      log.warn("SQLite read failed for /api/delegations, falling back to JSON", { error: String(err) })
+      // Fall through to JSON path
+    }
   }
 
   // Fallback to JSON file reads
@@ -227,7 +254,13 @@ app.get("/api/artifacts/content", (req: Request, res: Response): void => {
     return
   }
 
-  const fullPath = join(projectDir, path)
+  const fullPath = sanitizePath(projectDir, path)
+  if (!fullPath) {
+    log.warn("Path traversal attempt blocked", { path })
+    res.status(403).json({ error: "Path traversal denied" })
+    return
+  }
+
   if (!existsSync(fullPath)) {
     res.status(404).json({ error: "Artifact not found" })
     return
@@ -259,7 +292,12 @@ app.put("/api/artifacts/content", (req: Request, res: Response): void => {
     return
   }
 
-  const fullPath = join(projectDir, path)
+  const fullPath = sanitizePath(projectDir, path)
+  if (!fullPath) {
+    log.warn("Path traversal attempt blocked on write", { path })
+    res.status(403).json({ error: "Path traversal denied" })
+    return
+  }
 
   if (!existsSync(fullPath)) {
     res.status(404).json({ error: "Artifact not found" })
@@ -618,12 +656,12 @@ export async function stopServer(): Promise<void> {
 
 process.on("SIGINT", async () => {
   log.info("Received SIGINT, shutting down...")
-  await stopServer()
+  try { await stopServer() } catch { /* best-effort */ }
   process.exit(0)
 })
 
 process.on("SIGTERM", async () => {
   log.info("Received SIGTERM, shutting down...")
-  await stopServer()
+  try { await stopServer() } catch { /* best-effort */ }
   process.exit(0)
 })

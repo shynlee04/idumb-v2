@@ -4,7 +4,7 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { MessageSquare, Send, Check, X, Trash2, Reply } from "lucide-react"
+import { MessageSquare, Send, Check, X, Trash2 } from "lucide-react"
 import type { CommentEntry } from "@shared/comments-types"
 
 interface ArtifactCommentsProps {
