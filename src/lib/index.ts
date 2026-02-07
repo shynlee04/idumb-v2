@@ -20,3 +20,7 @@ export {
     readGovernanceState, readTaskStore, readBrainStore, readCapturedAgent, formatGovernanceSummary,
 } from "./state-reader.js"
 export type { GovernanceSnapshot } from "./state-reader.js"
+
+// ─── Storage Adapter (SQLite migration path) ────────────────────────
+export type { StorageAdapter, SessionState } from "./storage-adapter.js"
+export { SqliteAdapter } from "./sqlite-adapter.js"
