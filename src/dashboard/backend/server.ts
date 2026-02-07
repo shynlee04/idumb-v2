@@ -23,6 +23,18 @@ import express, { type Request, type Response } from "express"
 import cors from "cors"
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from "fs"
 import { randomUUID } from "crypto"
+import { SqliteAdapter } from "../../lib/sqlite-adapter.js"
+import { createLogger, type Logger } from "../../lib/logging.js"
+
+// ─── Module-level state (configured by startServer) ──────────────────────
+let adapter: SqliteAdapter | null = null
+let configuredProjectDir: string | null = null
+let log: Logger = {
+  debug() {},
+  info() {},
+  warn() {},
+  error() {},
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -93,6 +105,17 @@ function getPlanningArtifacts(projectDir: string) {
   const implPlanDir = join(planningDir, "implamentation-plan-turn-based")
   if (existsSync(implPlanDir)) {
     const files = readdirSync(implPlanDir).filter((f: string) => f.endsWith(".md"))
+
+    // Find the highest n-suffix to mark as active
+    let highestN = 0
+    for (const file of files) {
+      const match = file.match(/n(\d+)/)
+      if (match) {
+        const n = parseInt(match[1], 10)
+        if (n > highestN) highestN = n
+      }
+    }
+
     for (const file of files) {
       const filePath = join(implPlanDir, file)
       const stats = statSync(filePath)
@@ -100,7 +123,7 @@ function getPlanningArtifacts(projectDir: string) {
         path: filePath,
         name: `impl-plan/${file}`,
         modifiedAt: stats.mtimeMs,
-        status: file.includes("n4") ? "active" : "superseded",
+        status: file.includes(`n${highestN}`) ? "active" : "superseded",
       })
     }
   }
@@ -113,8 +136,21 @@ function getPlanningArtifacts(projectDir: string) {
 // GET /api/tasks — TaskStore snapshot
 app.get("/api/tasks", (req: Request, res: Response) => {
   const projectDir = req.header("X-Project-Dir") || process.cwd()
-  const state = getGovernanceState(projectDir)
 
+  // Use SQLite adapter when available and project dir matches
+  if (adapter && configuredProjectDir === projectDir) {
+    const state = getGovernanceState(projectDir) // still need capturedAgent from JSON
+    res.json({
+      tasks: adapter.getTaskStore(),
+      activeTask: adapter.getSmartActiveTask(),
+      activeEpic: adapter.getActiveEpic(),
+      capturedAgent: state.capturedAgent,
+    })
+    return
+  }
+
+  // Fallback to JSON file reads
+  const state = getGovernanceState(projectDir)
   res.json({
     tasks: state.taskStore,
     activeTask: state.activeTask,
@@ -137,8 +173,17 @@ app.get("/api/brain", (req: Request, res: Response) => {
 // GET /api/delegations — DelegationStore snapshot
 app.get("/api/delegations", (req: Request, res: Response) => {
   const projectDir = req.header("X-Project-Dir") || process.cwd()
-  const state = getGovernanceState(projectDir)
 
+  // Use SQLite adapter when available and project dir matches
+  if (adapter && configuredProjectDir === projectDir) {
+    res.json({
+      delegations: adapter.getDelegationStore(),
+    })
+    return
+  }
+
+  // Fallback to JSON file reads
+  const state = getGovernanceState(projectDir)
   res.json({
     delegations: state.delegationStore,
   })
@@ -421,10 +466,10 @@ function setupWebSocket(server: ReturnType<typeof createHttpServer>) {
   wss = new WebSocketServer({ server, path: "/ws" })
 
   wss.on("connection", (ws: WebSocket) => {
-    console.log("  [WS] Client connected")
+    log.info("WebSocket client connected")
 
     ws.on("close", () => {
-      console.log("  [WS] Client disconnected")
+      log.info("WebSocket client disconnected")
     })
 
     // Send initial state
@@ -469,7 +514,7 @@ function setupFileWatcher(projectDir: string) {
   })
 
   watcher.on("change", (path) => {
-    console.log(`  [Watch] File changed: ${path}`)
+    log.info("File changed", { path })
 
     // Broadcast update to all clients
     const relativePath = path.replace(projectDir, "")
@@ -477,7 +522,7 @@ function setupFileWatcher(projectDir: string) {
   })
 
   watcher.on("error", (error) => {
-    console.error("  [Watch] Error:", error)
+    log.error("File watcher error", { error: String(error) })
   })
 
   return watcher
@@ -494,6 +539,22 @@ export async function startServer(config: DashboardConfig): Promise<void> {
     await stopServer()
   }
 
+  // Initialize file-based logger (replaces console.log for TUI safety)
+  configuredProjectDir = config.projectDir
+  log = createLogger(config.projectDir, "dashboard")
+
+  // Initialize SQLite adapter for task/delegation data
+  adapter = new SqliteAdapter()
+  try {
+    await adapter.init(config.projectDir)
+    log.info("SQLite adapter initialized")
+  } catch (err) {
+    log.warn("SQLite adapter failed to initialize, falling back to JSON reads", {
+      error: String(err),
+    })
+    adapter = null
+  }
+
   return new Promise((resolve, reject) => {
     try {
       server = createHttpServer(app)
@@ -503,17 +564,17 @@ export async function startServer(config: DashboardConfig): Promise<void> {
 
       // Start listening
       server.listen(config.backendPort, () => {
-        console.log(`  [Server] Backend listening on port ${config.backendPort}`)
+        log.info(`Backend listening on port ${config.backendPort}`)
 
         // Setup file watcher
         watcher = setupFileWatcher(config.projectDir)
-        console.log(`  [Watch] Watching .idumb/brain/ and planning/`)
+        log.info("Watching .idumb/brain/ and planning/")
 
         resolve()
       })
 
       server.on("error", (err) => {
-        console.error("  [Server] Error:", err)
+        log.error("Server error", { error: String(err) })
         reject(err)
       })
     } catch (err) {
@@ -523,11 +584,16 @@ export async function startServer(config: DashboardConfig): Promise<void> {
 }
 
 export async function stopServer(): Promise<void> {
-  console.log("  [Server] Stopping dashboard backend...")
+  log.info("Stopping dashboard backend...")
 
   if (watcher) {
     await watcher.close()
     watcher = null
+  }
+
+  if (adapter) {
+    await adapter.close()
+    adapter = null
   }
 
   if (wss) {
@@ -539,7 +605,7 @@ export async function stopServer(): Promise<void> {
     return new Promise((resolve) => {
       server!.close(() => {
         server = null
-        console.log("  [Server] Backend stopped")
+        log.info("Backend stopped")
         resolve()
       })
     })
@@ -551,13 +617,13 @@ export async function stopServer(): Promise<void> {
 // ─── Graceful Shutdown ───────────────────────────────────────────────────
 
 process.on("SIGINT", async () => {
-  console.log("\n  [Server] Received SIGINT, shutting down...")
+  log.info("Received SIGINT, shutting down...")
   await stopServer()
   process.exit(0)
 })
 
 process.on("SIGTERM", async () => {
-  console.log("\n  [Server] Received SIGTERM, shutting down...")
+  log.info("Received SIGTERM, shutting down...")
   await stopServer()
   process.exit(0)
 })
