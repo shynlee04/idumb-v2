@@ -32,8 +32,14 @@ export type ExperienceLevel = "beginner" | "guided" | "expert"
  * autonomous: "You take the wheel" — agent decides freely.
  *   Showcases raw AI intelligence. Minimal intervention, maximum freedom.
  *   Still logs everything for post-session review.
+ * 
+ * retard: 🔥 Easter egg mode. "I am retard" — full autonomous freedom WITH
+ *   expert-level guardrails and explanatory advice. iDumb becomes bitchy, bossy,
+ *   skeptical as fuck. Challenges every decision, roasts bad code, demands evidence.
+ *   Think: autonomous intelligence + zero-trust personality + Gordon Ramsay attitude.
+ *   Hidden behind expert level selection in CLI.
  */
-export type GovernanceMode = "balanced" | "strict" | "autonomous"
+export type GovernanceMode = "balanced" | "strict" | "autonomous" | "retard"
 
 // ─── Detected Frameworks ─────────────────────────────────────────────
 
@@ -41,7 +47,7 @@ export type GovernanceMode = "balanced" | "strict" | "autonomous"
 export type GovernanceFramework = "bmad" | "gsd" | "spec-kit" | "open-spec" | "custom" | "none"
 
 /** Known tech stack frameworks we detect */
-export type TechFramework = 
+export type TechFramework =
   | "nextjs" | "react" | "vue" | "nuxt" | "svelte" | "sveltekit"
   | "angular" | "express" | "fastify" | "nestjs" | "astro" | "remix"
   | "django" | "flask" | "rails" | "laravel" | "spring"
@@ -78,6 +84,7 @@ export interface IdumbConfig {
 
   governance: {
     mode: GovernanceMode
+    personality?: "professional" | "savage"  // savage = retard mode's bitchy personality
   }
 
   detection: FrameworkDetection   // snapshot of what init found
@@ -146,6 +153,7 @@ export function createConfig(overrides: {
     },
     governance: {
       mode: overrides.governanceMode ?? "balanced",
+      personality: overrides.governanceMode === "retard" ? "savage" : "professional",
     },
     detection: overrides.detection ?? DEFAULT_DETECTION,
     paths: { ...DEFAULT_PATHS },

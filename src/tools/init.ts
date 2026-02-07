@@ -76,6 +76,10 @@ function formatGovernanceMode(mode: GovernanceMode, lang: Language): string {
       en: "**Autonomous** — AI agent decides freely. Minimal intervention, maximum freedom. Still logs everything.",
       vi: "**Tự chủ** — Agent AI tự quyết định. Can thiệp tối thiểu, tự do tối đa. Vẫn ghi log tất cả.",
     },
+    retard: {
+      en: "🔥 **Retard Mode** — Autonomous + expert guardrails. iDumb is skeptical, bitchy, and will challenge every decision. Demands evidence. Roasts bad code. Trust issues included free.",
+      vi: "🔥 **Chế Độ Retard** — Tự chủ + guardrail chuyên gia. iDumb sẽ nghi ngờ mọi thứ, thách thức mọi quyết định, và roast code tệ. Không tin ai cả.",
+    },
   }
   return descriptions[mode][lang]
 }
@@ -154,8 +158,8 @@ export const idumb_init = tool({
     experience: tool.schema.enum(["beginner", "guided", "expert"]).optional().describe(
       "User experience level. beginner = verbose guidance, guided = balanced, expert = terse. Default: guided"
     ),
-    governance_mode: tool.schema.enum(["balanced", "strict", "autonomous"]).optional().describe(
-      "balanced = recommend before stopping, strict = validate at every node, autonomous = AI decides freely. Default: balanced"
+    governance_mode: tool.schema.enum(["balanced", "strict", "autonomous", "retard"]).optional().describe(
+      "balanced = recommend before stopping, strict = validate at every node, autonomous = AI decides freely, retard = autonomous + expert guardrails + savage personality. Default: balanced"
     ),
     scope: tool.schema.enum(["project", "global"]).optional().describe(
       "Installation scope: project-level or global. Default: project"

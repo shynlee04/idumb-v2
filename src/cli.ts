@@ -31,6 +31,8 @@ const C = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
   dim: "\x1b[2m",
+  italic: "\x1b[3m",
+  underline: "\x1b[4m",
   green: "\x1b[32m",
   yellow: "\x1b[33m",
   blue: "\x1b[34m",
@@ -38,6 +40,10 @@ const C = {
   cyan: "\x1b[36m",
   red: "\x1b[31m",
   white: "\x1b[37m",
+  bgRed: "\x1b[41m",
+  bgGreen: "\x1b[42m",
+  bgYellow: "\x1b[43m",
+  bgMagenta: "\x1b[45m",
 }
 
 function print(msg: string): void {
@@ -129,7 +135,24 @@ async function runPrompts(rl: ReturnType<typeof createInterface>): Promise<{
     { value: "balanced" as GovernanceMode, label: "Balanced", description: "Recommend before stopping. Full completion, governed at decisions." },
     { value: "strict" as GovernanceMode, label: "Strict", description: "Validate at every node. Must pass gate before proceeding." },
     { value: "autonomous" as GovernanceMode, label: "Autonomous", description: "AI decides freely. Minimal intervention, max freedom." },
+    ...(experience === "expert" ? [{
+      value: "retard" as GovernanceMode,
+      label: `${C.bgMagenta}${C.bold} 🔥 I am retard ${C.reset}`,
+      description: `${C.magenta}Autonomous + expert guardrails. iDumb becomes your savage, skeptical, bitchy co-pilot. Challenges everything. Roasts bad code. Trust issues included free.${C.reset}`
+    }] : []),
   ], "balanced" as GovernanceMode)
+
+  // Easter egg confirmation for retard mode
+  if (governance === "retard") {
+    print("")
+    print(`  ${C.bgMagenta}${C.bold} 🔥 RETARD MODE ACTIVATED ${C.reset}`)
+    print(`  ${C.magenta}${C.italic}  "You chose violence. I respect that."${C.reset}`)
+    print(`  ${C.dim}  ── Autonomous intelligence + zero-trust personality ──${C.reset}`)
+    print(`  ${C.dim}  ── Expert guardrails + Gordon Ramsay attitude ──${C.reset}`)
+    print(`  ${C.dim}  ── Every claim will be challenged. Every shortcut exposed. ──${C.reset}`)
+    print(`  ${C.magenta}  iDumb will now question your existence as a developer.${C.reset}`)
+    print("")
+  }
 
   return { scope, language, documentsLanguage, experience, governance }
 }
@@ -210,15 +233,72 @@ async function main(): Promise<void> {
   const detection = await scanProject(projectDir, log)
 
   print(`  ${C.green}✅ Scan complete${C.reset}`)
+
+  // ─── JAW-DROPPING SCAN PRESENTATION ────────────────────────────
+  const techList = detection.tech.join(", ")
+  const govList = detection.governance.length > 0 ? detection.governance.join(", ") : "none"
+  const gapCount = detection.gaps.length
+  const conflictCount = detection.conflicts.length
+  const totalIssues = gapCount + conflictCount
+
+  // Health grade
+  const grade = totalIssues === 0 ? "A" : totalIssues <= 2 ? "B" : totalIssues <= 4 ? "C" : totalIssues <= 6 ? "D" : "F"
+  const gradeColor = grade === "A" ? C.green : grade === "B" ? C.cyan : grade === "C" ? C.yellow : C.red
+  const gradeBar = grade === "A" ? "██████████" : grade === "B" ? "████████░░" : grade === "C" ? "██████░░░░" : grade === "D" ? "████░░░░░░" : "██░░░░░░░░"
+
+  print("")
+  print(`  ${C.bold}┌────────────────────────────────────────────────┐${C.reset}`)
+  print(`  ${C.bold}│${C.reset}  ${gradeColor}${C.bold}PROJECT HEALTH: ${grade}${C.reset}  ${gradeColor}${gradeBar}${C.reset}         ${C.bold}│${C.reset}`)
+  print(`  ${C.bold}└────────────────────────────────────────────────┘${C.reset}`)
+  print("")
+
   if (detection.tech.length > 0) {
-    print(`  ${C.dim}   Tech: ${detection.tech.join(", ")}${C.reset}`)
+    print(`  ${C.cyan}▐${C.reset} ${C.bold}Tech Stack${C.reset}    ${techList}`)
   }
-  if (detection.governance.length > 0) {
-    print(`  ${C.dim}   Governance: ${detection.governance.join(", ")}${C.reset}`)
+  print(`  ${C.cyan}▐${C.reset} ${C.bold}Governance${C.reset}    ${govList}`)
+  print(`  ${C.cyan}▐${C.reset} ${C.bold}Pkg Manager${C.reset}   ${detection.packageManager}`)
+  print(`  ${C.cyan}▐${C.reset} ${C.bold}Monorepo${C.reset}      ${detection.hasMonorepo ? `${C.green}Yes${C.reset}` : `${C.dim}No${C.reset}`}`)
+
+  if (detection.existingAgentDirs.length > 0) {
+    print(`  ${C.cyan}▐${C.reset} ${C.bold}Agent Dirs${C.reset}    ${detection.existingAgentDirs.join(", ")}`)
   }
-  print(`  ${C.dim}   Package manager: ${detection.packageManager}${C.reset}`)
-  if (detection.gaps.length > 0) {
-    print(`  ${C.yellow}   ⚠ ${detection.gaps.length} issue(s) detected${C.reset}`)
+
+  // Issues with severity and sass
+  if (totalIssues > 0) {
+    print("")
+    const isSavage = choices.governance === "retard"
+    if (isSavage) {
+      print(`  ${C.red}${C.bold}⚠️  ${totalIssues} ISSUE(S) — Let me roast your project real quick:${C.reset}`)
+    } else {
+      print(`  ${C.yellow}${C.bold}⚠️  ${totalIssues} issue(s) detected:${C.reset}`)
+    }
+
+    for (const gap of detection.gaps) {
+      if (isSavage) {
+        print(`     ${C.red}✘${C.reset} ${gap} ${C.dim}${C.italic}...seriously?${C.reset}`)
+      } else {
+        print(`     ${C.yellow}●${C.reset} ${gap}`)
+      }
+    }
+    for (const conflict of detection.conflicts) {
+      if (isSavage) {
+        print(`     ${C.red}✘${C.reset} ${conflict} ${C.dim}${C.italic}...you knew about this, right?${C.reset}`)
+      } else {
+        print(`     ${C.red}●${C.reset} ${conflict}`)
+      }
+    }
+
+    if (isSavage && totalIssues > 3) {
+      print("")
+      print(`  ${C.magenta}${C.italic}  "${totalIssues} issues before I even started. This is going to be fun." — iDumb${C.reset}`)
+    }
+  } else {
+    print("")
+    if (choices.governance === "retard") {
+      print(`  ${C.green}${C.bold}✓ Zero issues.${C.reset} ${C.magenta}${C.italic}"Hmm. Suspicious. I'll find something later." — iDumb${C.reset}`)
+    } else {
+      print(`  ${C.green}${C.bold}✓ No issues detected. Clean project.${C.reset}`)
+    }
   }
 
   // ─── Create config ────────────────────────────────────────────
@@ -273,9 +353,12 @@ async function main(): Promise<void> {
   }
 
   // ─── Success summary ──────────────────────────────────────────
-  divider()
   print("")
-  print(`  ${C.green}${C.bold}✅ iDumb is ready!${C.reset}`)
+  if (choices.governance === "retard") {
+    print(`  ${C.magenta}${C.bold}🔥 iDumb is ready. And judging you already.${C.reset}`)
+  } else {
+    print(`  ${C.green}${C.bold}✅ iDumb is ready!${C.reset}`)
+  }
   print("")
 
   const methodLabel = deployResult.pluginMethod === "npm"

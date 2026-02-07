@@ -262,12 +262,59 @@ async function detectGaps(projectDir: string): Promise<string[]> {
     if (deps["typescript"] && !(await exists(join(projectDir, "tsconfig.json")))) {
       gaps.push("TypeScript dependency found but no tsconfig.json")
     }
+
+    // Check for missing linter/formatter
+    const hasEslint = deps["eslint"] || await exists(join(projectDir, ".eslintrc.json")) || await exists(join(projectDir, ".eslintrc.js")) || await exists(join(projectDir, "eslint.config.js")) || await exists(join(projectDir, "eslint.config.mjs"))
+    const hasPrettier = deps["prettier"] || await exists(join(projectDir, ".prettierrc")) || await exists(join(projectDir, ".prettierrc.json")) || await exists(join(projectDir, "prettier.config.js"))
+    const hasBiome = deps["@biomejs/biome"] || await exists(join(projectDir, "biome.json"))
+
+    if (!hasEslint && !hasBiome) {
+      gaps.push("No linter configured (ESLint/Biome) — code quality unchecked")
+    }
+    if (!hasPrettier && !hasBiome) {
+      gaps.push("No formatter configured (Prettier/Biome) — inconsistent code style likely")
+    }
+
+    // Check for test framework
+    const hasTestFramework = deps["jest"] || deps["vitest"] || deps["mocha"] || deps["ava"] || deps["@playwright/test"] || deps["cypress"]
+    if (!hasTestFramework) {
+      gaps.push("No test framework detected — how do you even know this works?")
+    }
   }
 
   // Check for README
   const hasReadme = await exists(join(projectDir, "README.md")) || await exists(join(projectDir, "readme.md"))
   if (!hasReadme) {
     gaps.push("No README.md — project documentation missing")
+  }
+
+  // Check for exposed .env files (security concern)
+  if (await exists(join(projectDir, ".env"))) {
+    // Check if .gitignore covers it
+    try {
+      const gitignore = await readFile(join(projectDir, ".gitignore"), "utf-8")
+      if (!gitignore.includes(".env")) {
+        gaps.push("⚠️ .env file found without .gitignore coverage — secrets may be exposed!")
+      }
+    } catch {
+      gaps.push("⚠️ .env file found with no .gitignore — secrets may be committed!")
+    }
+  }
+
+  // Check for CI/CD
+  const hasCi = await exists(join(projectDir, ".github/workflows")) ||
+    await exists(join(projectDir, ".gitlab-ci.yml")) ||
+    await exists(join(projectDir, ".circleci")) ||
+    await exists(join(projectDir, "Jenkinsfile"))
+  if (!hasCi) {
+    gaps.push("No CI/CD pipeline detected — shipping without safety net")
+  }
+
+  // Check for editor config (code consistency)
+  const hasEditorConfig = await exists(join(projectDir, ".editorconfig"))
+  if (!hasEditorConfig && pkg) {
+    // Only flag for projects with package.json (likely collaborative)
+    gaps.push("No .editorconfig — tab vs space wars are inevitable")
   }
 
   return gaps
