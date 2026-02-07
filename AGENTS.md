@@ -2,7 +2,7 @@
 
 **Version:** 6.0.0  
 **Last Updated:** 2026-02-07  
-**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema DONE.
+**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE.
 
 ---
 
@@ -58,7 +58,7 @@ v2/
 ├── src/
 │   ├── cli.ts                      # CLI entry point — npx idumb-v2 init (431 LOC)
 │   ├── cli/
-│   │   ├── deploy.ts               # Deploys 3 agents + 3 profiles + commands + modules (401 LOC)
+│   │   ├── deploy.ts               # Deploys 3 agents + 3 profiles + commands + modules + planning registry bootstrap (411 LOC)
 │   │   └── dashboard.ts            # Dashboard server launcher
 │   ├── templates.ts                # All deployable templates — coordinator + investigator + executor (1510 LOC ⚠️)
 │   ├── index.ts                    # Plugin entry — wires 6 hooks + 5 tools
@@ -93,9 +93,9 @@ v2/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── task.ts                 # 12 actions + 6 edge-case mechanisms (826 LOC ⚠️)
 │   │   ├── anchor.ts               # add/list context anchors
-│   │   ├── init.ts                 # Init tool — scan → scaffold → greeting + code quality report
+│   │   ├── init.ts                 # Init tool — scan → scaffold → greeting + code quality report + planning outlier detection (441 LOC)
 │   │   ├── read.ts                 # Read tool — file and entity reading (568 LOC ⚠️)
-│   │   ├── write.ts                # Write tool — file and entity writing (818 LOC ⚠️)
+│   │   ├── write.ts                # Write tool — file and entity writing + planning registry integration (1174 LOC ⚠️⚠️)
 │   │   ├── scan.ts                 # Project scanner — framework detection (445 LOC)
 │   │   ├── codemap.ts              # Code mapper — symbol extraction (521 LOC ⚠️)
 │   │   ├── bash.ts                 # Bash command execution (438 LOC)
@@ -120,7 +120,7 @@ v2/
 │   ├── persistence.test.ts         # 45 assertions — all pass ✅
 │   ├── task.test.ts                # 54 assertions — all pass ✅
 │   ├── delegation.test.ts          # 38 assertions — all pass ✅
-│   ├── planning-registry.test.ts   # EXISTS — ⚠️ NOT in npm test script
+│   ├── planning-registry.test.ts   # 52 assertions — all pass ✅
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
 ├── planning/
 │   └── implamentation-plan-turn-based/   # Turn-based plan chain (n3→n4→n5→n6)
@@ -133,10 +133,10 @@ v2/
 └── tsconfig.json
 ```
 
-**Source LOC:** ~14,150 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **242/242** assertions across **7** test files  
+**Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
+**Test baseline:** `npm test` → **294/294** assertions across **8** test files  
 **TypeScript:** `tsc --noEmit` clean, zero errors  
-**Files above 500 LOC (⚠️):** `templates.ts` (1510), `tools/task.ts` (826), `tools/write.ts` (818), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (701), `tools/read.ts` (568), `dashboard/backend/server.ts` (563), `lib/entity-resolver.ts` (545), `schemas/task.ts` (530), `tools/codemap.ts` (521)
+**Files above 500 LOC (⚠️):** `templates.ts` (1510), `tools/write.ts` (1174 ⚠️⚠️), `tools/task.ts` (826), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (701), `tools/read.ts` (568), `dashboard/backend/server.ts` (563), `lib/entity-resolver.ts` (545), `schemas/task.ts` (530), `tools/codemap.ts` (521)
 
 ---
 
@@ -191,7 +191,10 @@ v2/
 | **Planning Registry schema** | `schemas/planning-registry.ts` | 729 LOC. Tiers (T1-T3), artifact chains, section-level tracking, outlier detection |
 | **Factory functions** | `schemas/planning-registry.ts` | `createPlanningArtifact`, `createArtifactSection`, `createArtifactChain`, `createPlanningRegistry`, `addOutlier` |
 | **Helpers** | `schemas/planning-registry.ts` | `resolveChainHead`, `getChainHistory`, `findStaleSections`, `computeSectionHash`, `linkTaskToArtifact`, `findOutliers` |
-| **Test file** | `tests/planning-registry.test.ts` | EXISTS (28KB) — ⚠️ not yet in `npm test` script |
+| **Test file** | `tests/planning-registry.test.ts` | **52/52** assertions in `npm test` ✅ |
+| **Write integration** | `tools/write.ts` | Pre-write guard, sync-after-write, lifecycle sync to registry |
+| **Init integration** | `tools/init.ts` | Outlier scan on install, pending outlier reporting |
+| **Deploy bootstrap** | `cli/deploy.ts` | Empty `planning-registry.json` created on `idumb-v2 init` |
 
 ---
 
@@ -229,9 +232,6 @@ Reference profiles deployed to `.idumb/idumb-modules/agents/` as documentation.
 | `experimental.chat.messages.transform` | **Unverified.** SDK input is `{}` (empty!). |
 | `chat.params` hook | **REGISTERED.** Captures `agent` field. Auto-assigns to active task. |
 | `chat.message` hook | **NOT REGISTERED.** Available with optional `agent?` field. |
-| Planning Registry in `npm test` | **Schema exists.** Test file exists. ⚠️ NOT wired into `npm test` script. |
-| Planning Registry runtime | **Schema only.** `write.ts` does NOT yet register planning artifacts on write. |
-| Outlier detection at init | **Not implemented.** Schema exists but `init.ts` doesn't scan for unregistered files. |
 | Framework agent interception | **Not implemented.** BMAD/GSD/Agent-OS agents not intercepted yet. |
 | Command splitting | **Not implemented.** Agent prompts still monolithic in `templates.ts`. |
 | Dashboard integration | **Frontend built.** Backend exists. Not integrated into CLI. |
@@ -334,7 +334,7 @@ Turn-based plans live in `planning/implamentation-plan-turn-based/`. Highest `n`
 | **Phase α2** | Foundation fixes — WorkStream, chat.params, docs | **DONE** ✅ |
 | **Phase δ2** | Delegation schema + validation | **DONE** ✅ |
 | **Phase n6-Iter1** | 3-agent model refactor + planning registry schema | **Cycle 1 DONE** ✅ |
-| **Phase n6-Iter1** | Integration cycle — wire planning registry into `npm test`, `write.ts`, `init.ts` | **NEXT** 🔜 |
+| **Phase n6-Iter1** | Integration cycle — wire planning registry into `npm test`, `write.ts`, `init.ts` | **Cycle 2 DONE** ✅ |
 | **Phase n6-Iter2** | Framework interception + command splitting | Planned |
 | **Phase n6-Iter3** | Dashboard data layer | Planned |
 
@@ -348,7 +348,7 @@ These files need future splitting. Listed in severity order:
 |---|---|---|
 | `templates.ts` | 1510 | Split into `templates/coordinator.ts`, `templates/investigator.ts`, `templates/executor.ts`, `templates/modules.ts` |
 | `tools/task.ts` | 826 | Split actions into `task-actions/` directory |
-| `tools/write.ts` | 818 | Extract entity-specific write handlers |
+| `tools/write.ts` | 1174 ⚠️⚠️ | Extract planning registry helpers to `lib/planning-registry-runtime.ts` (~290 LOC); extract entity-specific write handlers |
 | `schemas/planning-registry.ts` | 729 | Split schema types from helper functions |
 | `lib/code-quality.ts` | 701 | Extract smell detectors into separate modules |
 | `tools/read.ts` | 568 | Extract entity-specific read handlers |
@@ -376,8 +376,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 7 test files via tsx (242 assertions)
-npx tsx tests/planning-registry.test.ts  # ⚠️ Not yet in npm test
+npm test             # 8 test files via tsx (294 assertions)
 ```
 
 ---
@@ -391,5 +390,5 @@ When resuming work:
 3. Read `planning/implamentation-plan-turn-based/walkthrough-n6.md` — latest changes walkthrough
 4. Check which Phase is current (see Roadmap above)
 5. Run `npm run typecheck` — must be zero errors
-6. Run `npm test` — must be 242/242 baseline
-7. **NEXT WORK**: Wire `planning-registry.test.ts` into `npm test`, integrate planning registry into `write.ts` (registration-at-creation), integrate outlier detection into `init.ts`
+6. Run `npm test` — must be 294/294 baseline
+7. **NEXT WORK**: Extract planning registry runtime helpers from `write.ts` to `lib/planning-registry-runtime.ts` (LOC fix). Then Phase n6-Iter2: framework interception + command splitting.
