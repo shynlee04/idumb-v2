@@ -1,10 +1,9 @@
 /**
- * Dashboard Layout — Resizable 3-column panel layout
+ * Dashboard Layout — Main layout wrapper with header and grid
  */
 
-import { ReactNode, useRef, useState, useCallback, useEffect } from "react"
-
-
+import type { ReactNode } from "react"
+import { Separator } from "@/components/ui/separator"
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -12,93 +11,20 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="flex h-screen w-screen flex-col bg-background">
-      {/* Header */}
-      <header className="flex h-14 items-center justify-between border-b px-4" style={{ background: 'var(--surface-elevated)', borderImage: 'linear-gradient(to right, var(--primary), var(--info), var(--success)) 1' }}>
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🧠</span>
-          <h1 className="font-bold" style={{ letterSpacing: '-0.02em' }}>iDumb Dashboard</h1>
-          <span className="text-xs text-muted-foreground font-mono" style={{ opacity: 0.5 }}>v2</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-green-500" style={{ boxShadow: '0 0 6px #34d399' }} />
-            Connected
-          </span>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+        <div className="flex h-12 items-center px-4">
+          <h1 className="text-sm font-bold tracking-tight">
+            <span className="text-primary">iDumb</span>
+            <span className="text-muted-foreground ml-1.5">Governance Dashboard</span>
+          </h1>
+          <Separator orientation="vertical" className="mx-3 h-5" />
+          <span className="text-xs text-muted-foreground font-mono">v2.2.0</span>
         </div>
       </header>
-
-      {/* Main Content - 3 Panel Layout */}
-      <main className="flex flex-1 overflow-hidden">
+      <main className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2">
         {children}
       </main>
-    </div>
-  )
-}
-
-interface ResizablePanelProps {
-  children: ReactNode
-  defaultWidth?: number
-  minWidth?: number
-  maxWidth?: number
-  className?: string
-}
-
-export function ResizablePanel({
-  children,
-  defaultWidth = 320,
-  minWidth = 200,
-  maxWidth = 600,
-  className = "",
-}: ResizablePanelProps) {
-  const panelRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(defaultWidth)
-  const [isResizing, setIsResizing] = useState(false)
-
-  const handleMouseDown = useCallback(() => {
-    setIsResizing(true)
-  }, [])
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizing || !panelRef.current) return
-
-    const newWidth = e.clientX
-    if (newWidth >= minWidth && newWidth <= maxWidth) {
-      setWidth(newWidth)
-    }
-  }, [isResizing, minWidth, maxWidth])
-
-  const handleMouseUp = useCallback(() => {
-    setIsResizing(false)
-  }, [])
-
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove)
-        document.removeEventListener("mouseup", handleMouseUp)
-      }
-    }
-  }, [isResizing, handleMouseMove, handleMouseUp])
-
-  return (
-    <div
-      ref={panelRef}
-      className={`relative flex-shrink-0 ${className}`}
-      style={{ width: `${width}px` }}
-    >
-      {children}
-      {/* Resize Handle */}
-      <div
-        className={`
-          absolute right-0 top-0 bottom-0 w-1 cursor-col-resize
-          hover:bg-primary/20 active:bg-primary/40
-          ${isResizing ? "bg-primary/40" : ""}
-        `}
-        onMouseDown={handleMouseDown}
-      />
     </div>
   )
 }

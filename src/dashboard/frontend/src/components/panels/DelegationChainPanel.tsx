@@ -5,7 +5,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Panel } from "../layout/Panel"
 import { ArrowRight, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react"
-import type { DelegationStore, DelegationRecord } from "@shared/types"
+import type { DelegationStore, DelegationRecord } from "@shared/schema-types"
 
 function getStatusIcon(status: DelegationRecord["status"]) {
   switch (status) {

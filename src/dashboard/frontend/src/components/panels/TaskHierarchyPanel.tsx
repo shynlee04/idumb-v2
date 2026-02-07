@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Panel } from "../layout/Panel"
 import { ChevronDown, ChevronRight, Circle, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react"
-import type { TaskStore, TaskEpic, Task, Subtask, EpicStatus, TaskStatus, SubtaskStatus } from "@shared/types"
+import type { TaskStore, TaskEpic, Task, Subtask, EpicStatus, TaskStatus, SubtaskStatus } from "@shared/schema-types"
 
 // Combined status type for icon rendering
 type StatusForIcon = EpicStatus | TaskStatus | SubtaskStatus
@@ -180,7 +180,7 @@ export function TaskHierarchyPanel() {
   })
 
   return (
-    <Panel title="Task Hierarchy" badge={data?.epics.length || 0}>
+    <Panel title="Task Hierarchy" badge={data ? `${data.epics.length} epics` : undefined}>
       {isLoading && (
         <p className="text-sm text-muted-foreground">Loading tasks...</p>
       )}

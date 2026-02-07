@@ -5,7 +5,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Panel } from "../layout/Panel"
 import { Brain, Lightbulb, GitBranch, BookOpen, Code, Settings, AlertTriangle } from "lucide-react"
-import type { BrainStore, BrainEntry } from "@shared/types"
+import type { BrainStore, BrainEntry } from "@shared/schema-types"
 
 function getEntryIcon(type: BrainEntry["type"]) {
   switch (type) {

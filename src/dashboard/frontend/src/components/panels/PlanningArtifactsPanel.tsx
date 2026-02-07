@@ -9,7 +9,7 @@ import { FileText, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-re
 import { ArtifactViewer } from "../artifacts/ArtifactViewer"
 import { ArtifactComments } from "../artifacts/ArtifactComments"
 import { ArtifactMetadata } from "../artifacts/ArtifactMetadata"
-import type { ArtifactsResponse, ArtifactMetadata as ArtifactMetadataType } from "@shared/types"
+import type { ArtifactsResponse, ArtifactMetadata as ArtifactMetadataType } from "@shared/schema-types"
 
 function getStatusIcon(status?: string) {
   switch (status) {
@@ -69,9 +69,8 @@ export function PlanningArtifactsPanel() {
     queryKey: ["artifact-content", selectedArtifact],
     queryFn: async (): Promise<{ content: string; path: string } | null> => {
       if (!selectedArtifact) return null
-      // Need to make the path relative to the project root
-      const relativePath = selectedArtifact.replace(process.cwd(), "").replace(/^\//, "")
-      const res = await fetch(`/api/artifacts/content?path=${encodeURIComponent(relativePath)}`)
+      // Path from API is already relative to project root
+      const res = await fetch(`/api/artifacts/content?path=${encodeURIComponent(selectedArtifact)}`)
       if (!res.ok) throw new Error("Failed to fetch artifact content")
       return res.json()
     },
@@ -87,12 +86,11 @@ export function PlanningArtifactsPanel() {
   const handleSave = async (content: string): Promise<boolean> => {
     if (!selectedArtifact) return false
 
-    const relativePath = selectedArtifact.replace(process.cwd(), "").replace(/^\//, "")
     try {
       const res = await fetch("/api/artifacts/content", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: relativePath, content }),
+        body: JSON.stringify({ path: selectedArtifact, content }),
       })
 
       if (!res.ok) {
@@ -111,7 +109,7 @@ export function PlanningArtifactsPanel() {
   }
 
   return (
-    <Panel title="Planning Artifacts" badge={data?.artifacts.length || 0} className="flex-1">
+    <Panel title="Planning Artifacts" badge={data ? `${data.artifacts.length}` : undefined} className="flex-1">
       {!selectedArtifact ? (
         // Artifact List View
         <div className="flex flex-col gap-1 p-2">

@@ -3,7 +3,7 @@
  */
 
 import { CheckCircle2, AlertTriangle, Link, FileText } from "lucide-react"
-import type { ArtifactMetadata } from "@shared/types"
+import type { ArtifactMetadata } from "@shared/schema-types"
 
 interface ArtifactMetadataProps {
   metadata: ArtifactMetadata

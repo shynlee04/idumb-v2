@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
 import rehypeRaw from "rehype-raw"
 import { Edit2 } from "lucide-react"
-import type { ArtifactMetadata } from "@shared/types"
+import type { ArtifactMetadata } from "@shared/schema-types"
 import { InlineEditor } from "./InlineEditor"
 
 // Import highlight.js styles (will be loaded via CSS)

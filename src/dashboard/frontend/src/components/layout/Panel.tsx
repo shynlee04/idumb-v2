@@ -1,57 +1,28 @@
 /**
- * Panel component — Collapsible panel with header
+ * Panel component — Generic panel container using shadcn Card
  */
 
-import { ReactNode, useState } from "react"
-import { ChevronDown, ChevronRight } from "lucide-react"
+import type { ReactNode } from "react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import type { BadgeVariant } from "@/components/ui/badge"
 
 interface PanelProps {
-  children: ReactNode
   title: string
-  defaultCollapsed?: boolean
-  badge?: string | number
+  badge?: string
+  badgeVariant?: BadgeVariant
+  children: ReactNode
   className?: string
 }
 
-export function Panel({
-  children,
-  title,
-  defaultCollapsed = false,
-  badge,
-  className = "",
-}: PanelProps) {
-  const [collapsed, setCollapsed] = useState(defaultCollapsed)
-
+export function Panel({ title, badge, badgeVariant = "secondary", children, className }: PanelProps) {
   return (
-    <div className={`flex flex-col border-r bg-card ${className}`}>
-      {/* Panel Header */}
-      <div className="flex h-10 items-center justify-between border-b px-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center text-muted-foreground hover:text-foreground"
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </button>
-          <span className="text-sm font-medium">{title}</span>
-          {badge != null && (
-            <span className="text-xs rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-              {badge}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Panel Content */}
-      {!collapsed && (
-        <div className="flex-1 overflow-auto p-3 scrollbar-thin">
-          {children}
-        </div>
-      )}
-    </div>
+    <Card className={className}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle>{title}</CardTitle>
+        {badge && <Badge variant={badgeVariant}>{badge}</Badge>}
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   )
 }
