@@ -37,38 +37,31 @@ interface AgentToolRule {
   blockedActions: Set<string>
 }
 
-const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
-  // Meta-builder is unrestricted for Plugin A tools — it's the primary orchestrator.
-  // But it should NOT use idumb_write/idumb_bash/idumb_webfetch (delegate instead).
-  // Those restrictions are enforced by the tools' self-governance + system prompt.
-
+export const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
+  // Supreme Coordinator: governance-only orchestrator
+  // CAN: idumb_task (status, delegate), idumb_scan, idumb_codemap (high-level)
+  // CANNOT: idumb_init (only on first run), idumb_write, idumb_bash, idumb_webfetch
   "idumb-supreme-coordinator": {
     blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash", "idumb_webfetch"]),
-    blockedActions: new Set(["create_epic"]),  // Only meta-builder creates epics
+    blockedActions: new Set(["create_epic"]),
   },
-  "idumb-validator": {
-    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_webfetch"]),
-    blockedActions: new Set(["delegate", "create_epic"]),  // Leaf node — cannot delegate
-  },
-  "idumb-builder": {
-    blockedTools: new Set(["idumb_init", "idumb_webfetch"]),
-    blockedActions: new Set(["create_epic"]),  // Can delegate to validator
-  },
-  "idumb-skills-creator": {
-    blockedTools: new Set(["idumb_init"]),
-    blockedActions: new Set(["delegate", "create_epic"]),  // Leaf node
-  },
-  "idumb-research-synthesizer": {
-    blockedTools: new Set(["idumb_init", "idumb_bash"]),
-    blockedActions: new Set(["delegate", "create_epic"]),  // Leaf node
-  },
-  "idumb-planner": {
-    blockedTools: new Set(["idumb_init", "idumb_bash"]),
-    blockedActions: new Set(["create_epic"]),  // Can delegate to researcher
-  },
-  "idumb-roadmapper": {
+
+  // Investigator: research, analysis, brain entries
+  // CAN: idumb_read, idumb_scan, idumb_codemap, idumb_anchor, idumb_webfetch
+  // CANNOT: idumb_write (except brain), idumb_init, idumb_bash
+  // CANNOT: delegate or create epics — leaf node for research
+  "idumb-investigator": {
     blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash"]),
-    blockedActions: new Set(["delegate", "create_epic"]),  // Read-only + research
+    blockedActions: new Set(["delegate", "create_epic"]),
+  },
+
+  // Executor: precision writes, implementation
+  // CAN: idumb_write, idumb_task (complete/evidence)
+  // CANNOT: idumb_init, idumb_webfetch (delegate research to investigator)
+  // CANNOT: delegate or create epics — leaf node for execution
+  "idumb-executor": {
+    blockedTools: new Set(["idumb_init", "idumb_webfetch"]),
+    blockedActions: new Set(["delegate", "create_epic"]),
   },
 }
 
@@ -82,7 +75,7 @@ function buildAgentScopeBlock(agent: string, tool: string, action?: string): str
     `WHY: Plugin tool access is scoped per agent to enforce hierarchy.`,
     action
       ? `USE INSTEAD: Ask your delegator to perform this action, or delegate to an agent with permission.`
-      : `USE INSTEAD: This tool should be called by the meta-builder or a higher-level agent.`,
+      : `USE INSTEAD: This tool should be called by the supreme-coordinator or the appropriate agent.`,
     `EVIDENCE: Agent-scoped tool gate blocked this call.`,
   ].join("\n")
 }

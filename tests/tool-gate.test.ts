@@ -10,7 +10,7 @@
  * - Non-write tools → always allowed
  */
 
-import { createToolGateBefore, createToolGateAfter, setActiveTask } from "../src/hooks/index.js"
+import { createToolGateBefore, createToolGateAfter, setActiveTask, AGENT_TOOL_RULES } from "../src/hooks/index.js"
 import { createLogger } from "../src/lib/index.js"
 import { mkdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
@@ -123,6 +123,65 @@ async function test6_afterHookFallback(): Promise<void> {
   assert("after-hook replaces output with redirect message", output.output.includes("USE INSTEAD"))
 }
 
+// ─── 3-Agent Model: AGENT_TOOL_RULES tests ──────────────────────
+
+function test7_agentToolRulesHas3Agents(): void {
+  const agentNames = Object.keys(AGENT_TOOL_RULES)
+  assert("AGENT_TOOL_RULES has exactly 3 entries", agentNames.length === 3)
+  assert("AGENT_TOOL_RULES has supreme-coordinator", "idumb-supreme-coordinator" in AGENT_TOOL_RULES)
+  assert("AGENT_TOOL_RULES has investigator", "idumb-investigator" in AGENT_TOOL_RULES)
+  assert("AGENT_TOOL_RULES has executor", "idumb-executor" in AGENT_TOOL_RULES)
+}
+
+function test8_supremeCoordinatorRules(): void {
+  const rules = AGENT_TOOL_RULES["idumb-supreme-coordinator"]
+  assert("supreme-coordinator blocks idumb_init", rules.blockedTools.has("idumb_init"))
+  assert("supreme-coordinator blocks idumb_write", rules.blockedTools.has("idumb_write"))
+  assert("supreme-coordinator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
+  assert("supreme-coordinator blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
+  assert("supreme-coordinator has 4 blocked tools", rules.blockedTools.size === 4)
+  assert("supreme-coordinator blocks create_epic action", rules.blockedActions.has("create_epic"))
+  assert("supreme-coordinator has 1 blocked action", rules.blockedActions.size === 1)
+}
+
+function test9_investigatorRules(): void {
+  const rules = AGENT_TOOL_RULES["idumb-investigator"]
+  assert("investigator blocks idumb_init", rules.blockedTools.has("idumb_init"))
+  assert("investigator blocks idumb_write", rules.blockedTools.has("idumb_write"))
+  assert("investigator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
+  assert("investigator does NOT block idumb_webfetch", !rules.blockedTools.has("idumb_webfetch"))
+  assert("investigator has 3 blocked tools", rules.blockedTools.size === 3)
+  assert("investigator blocks delegate action", rules.blockedActions.has("delegate"))
+  assert("investigator blocks create_epic action", rules.blockedActions.has("create_epic"))
+  assert("investigator has 2 blocked actions", rules.blockedActions.size === 2)
+}
+
+function test10_executorRules(): void {
+  const rules = AGENT_TOOL_RULES["idumb-executor"]
+  assert("executor blocks idumb_init", rules.blockedTools.has("idumb_init"))
+  assert("executor blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
+  assert("executor does NOT block idumb_write", !rules.blockedTools.has("idumb_write"))
+  assert("executor does NOT block idumb_bash", !rules.blockedTools.has("idumb_bash"))
+  assert("executor has 2 blocked tools", rules.blockedTools.size === 2)
+  assert("executor blocks delegate action", rules.blockedActions.has("delegate"))
+  assert("executor blocks create_epic action", rules.blockedActions.has("create_epic"))
+  assert("executor has 2 blocked actions", rules.blockedActions.size === 2)
+}
+
+function test11_oldAgentsRemoved(): void {
+  const oldAgents = [
+    "idumb-validator",
+    "idumb-builder",
+    "idumb-skills-creator",
+    "idumb-research-synthesizer",
+    "idumb-planner",
+    "idumb-roadmapper",
+  ]
+  for (const agent of oldAgents) {
+    assert(`old agent "${agent}" is NOT in AGENT_TOOL_RULES`, !(agent in AGENT_TOOL_RULES))
+  }
+}
+
 // Run all tests
 async function main(): Promise<void> {
   await test1_writeBlockedWithoutTask()
@@ -131,6 +190,11 @@ async function main(): Promise<void> {
   await test4_nonWriteToolAlwaysAllowed()
   await test5_retryDetection()
   await test6_afterHookFallback()
+  test7_agentToolRulesHas3Agents()
+  test8_supremeCoordinatorRules()
+  test9_investigatorRules()
+  test10_executorRules()
+  test11_oldAgentsRemoved()
 
   const total = passed + failed
   const summary = `\nResults: ${passed}/${total} passed, ${failed} failed`
