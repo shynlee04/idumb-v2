@@ -41,8 +41,18 @@ export interface DeployResult {
   deployed: string[]
   skipped: string[]
   errors: string[]
+  warnings: string[]
   pluginPath: string
+  pluginMethod: PluginResolutionMethod
   opencodConfigUpdated: boolean
+}
+
+type PluginResolutionMethod = "npm" | "local-dev" | "npx-fallback"
+
+interface PluginResolution {
+  path: string
+  method: PluginResolutionMethod
+  warning?: string
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -64,30 +74,95 @@ async function writeIfNew(path: string, content: string, force: boolean, result:
   result.deployed.push(path)
 }
 
+// ─── Plugin name constant (single source of truth) ───────────────────
+const PLUGIN_PACKAGE_NAME = "idumb-v2"
+
 /**
- * Resolve the plugin path — where the idumb-v2 package lives.
- * This is what goes into opencode.json "plugin" array.
+ * Resolve the plugin path for opencode.json.
+ * 
+ * 4-strategy priority chain:
+ *   S1: idumb-v2 exists in project's node_modules → "idumb-v2" (npm resolution)
+ *   S2: CLI is running from project's node_modules → "idumb-v2"
+ *   S3: Running from cloned repo (dev mode) → absolute path
+ *   S4: npx cache / global install fallback → absolute path + warning
+ * 
+ * OpenCode supports: package names, file:// URLs, and relative/absolute paths.
+ * Package name ("idumb-v2") is most portable — works with npm, pnpm, yarn, monorepos.
  */
-function resolvePluginPath(projectDir: string): string {
-  // Check if we're running from node_modules (npm install idumb-v2)
+async function resolvePluginPath(projectDir: string): Promise<PluginResolution> {
   const thisFile = new URL(import.meta.url).pathname
 
-  if (thisFile.includes("node_modules/idumb-v2")) {
-    // Installed as dependency — use relative path
-    return "./node_modules/idumb-v2"
+  // ── S1: Check if idumb-v2 is installed in the PROJECT's node_modules ──
+  // This is the cleanest case — the user did `npm install idumb-v2`
+  const localPkgJson = join(projectDir, "node_modules", PLUGIN_PACKAGE_NAME, "package.json")
+  if (await exists(localPkgJson)) {
+    return { path: PLUGIN_PACKAGE_NAME, method: "npm" }
   }
 
-  // Running from cloned repo or npx — use the package root
-  // Go up from src/cli/deploy.js → package root
+  // ── S2: Are we running from inside the project's own node_modules? ──
+  // Handles edge case where S1 check failed but we ARE the local dep
+  const projectNodeModules = join(projectDir, "node_modules") + "/"
+  if (thisFile.startsWith(projectNodeModules)) {
+    return { path: PLUGIN_PACKAGE_NAME, method: "npm" }
+  }
+
+  // ── S3: Local development (cloned repo) ──
+  // Go up from dist/cli/deploy.js → package root
   const packageRoot = resolve(dirname(thisFile), "..", "..")
+  const packageJsonPath = join(packageRoot, "package.json")
 
-  // If package root is inside the project, use relative path
-  if (packageRoot.startsWith(projectDir)) {
-    return "./" + packageRoot.slice(projectDir.length + 1)
+  if (await exists(packageJsonPath)) {
+    try {
+      const raw = await readFile(packageJsonPath, "utf-8")
+      const pkg = JSON.parse(raw) as Record<string, unknown>
+      if (pkg.name === PLUGIN_PACKAGE_NAME) {
+        // Confirmed this is the idumb-v2 repo — dev mode
+        return { path: packageRoot, method: "local-dev" }
+      }
+    } catch {
+      // Ignore parse errors, fall through
+    }
   }
 
-  // Otherwise use absolute path
-  return packageRoot
+  // ── S4: npx cache or global install fallback ──
+  // The package is in a transient location (npx cache, global prefix).
+  // Extract the package root and WARN the user — this path may not survive.
+  if (thisFile.includes(`node_modules/${PLUGIN_PACKAGE_NAME}`)) {
+    const marker = `node_modules/${PLUGIN_PACKAGE_NAME}`
+    const idx = thisFile.indexOf(marker)
+    const pkgRoot = thisFile.slice(0, idx + marker.length)
+
+    return {
+      path: pkgRoot,
+      method: "npx-fallback",
+      warning:
+        `Plugin path points to a temporary location (npx cache or global install). ` +
+        `This WILL break when the cache is cleared. ` +
+        `For a stable setup, run: npm install ${PLUGIN_PACKAGE_NAME}`,
+    }
+  }
+
+  // ── Final fallback ──
+  return {
+    path: packageRoot,
+    method: "npx-fallback",
+    warning: `Could not reliably locate ${PLUGIN_PACKAGE_NAME}. Run: npm install ${PLUGIN_PACKAGE_NAME}`,
+  }
+}
+
+/**
+ * Clean stale idumb-v2 entries from an existing plugin array.
+ * Removes duplicates and paths that reference idumb-v2 in any form.
+ * Non-idumb plugins are preserved untouched.
+ */
+function cleanStalePluginPaths(plugins: string[]): string[] {
+  return plugins.filter(p => {
+    // Keep non-idumb-v2 entries
+    if (p === PLUGIN_PACKAGE_NAME) return false
+    if (p.includes(`/${PLUGIN_PACKAGE_NAME}`)) return false
+    if (p.includes(`\\${PLUGIN_PACKAGE_NAME}`)) return false // Windows
+    return true
+  })
 }
 
 /**
@@ -108,14 +183,21 @@ function getOpenCodeDir(projectDir: string, scope: "project" | "global"): string
  */
 export async function deployAll(options: DeployOptions): Promise<DeployResult> {
   const { projectDir, language, governance, experience, scope, force } = options
-  const pluginPath = resolvePluginPath(projectDir)
+  const resolution = await resolvePluginPath(projectDir)
 
   const result: DeployResult = {
     deployed: [],
     skipped: [],
     errors: [],
-    pluginPath,
+    warnings: [],
+    pluginPath: resolution.path,
+    pluginMethod: resolution.method,
     opencodConfigUpdated: false,
+  }
+
+  // Surface resolution warnings
+  if (resolution.warning) {
+    result.warnings.push(resolution.warning)
   }
 
   const openCodeDir = getOpenCodeDir(projectDir, scope)
@@ -129,7 +211,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       language,
       governance,
       experience,
-      pluginPath,
+      pluginPath: resolution.path,
     })
     await writeIfNew(
       join(agentsDir, "idumb-meta-builder.md"),
@@ -255,23 +337,28 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
         config = JSON.parse(raw) as Record<string, unknown>
       }
 
-      // Add plugin if not already present
-      const plugins = (config.plugin as string[] | undefined) ?? []
-      if (!plugins.includes(pluginPath)) {
-        plugins.push(pluginPath)
-        config.plugin = plugins
+      // Clean stale idumb-v2 entries, then add fresh path
+      const existingPlugins = (config.plugin as string[] | undefined) ?? []
+      const cleanedPlugins = cleanStalePluginPaths(existingPlugins)
+      cleanedPlugins.push(resolution.path)
+      config.plugin = cleanedPlugins
 
-        // Ensure schema is set
-        if (!config["$schema"]) {
-          config["$schema"] = "https://opencode.ai/config.json"
-        }
-
-        await writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
-        result.opencodConfigUpdated = true
-        result.deployed.push(configPath)
-      } else {
-        result.skipped.push(configPath + " (plugin already registered)")
+      // Log stale entries that were removed
+      const removedCount = existingPlugins.length - (cleanedPlugins.length - 1)
+      if (removedCount > 0) {
+        result.warnings.push(
+          `Removed ${removedCount} stale idumb-v2 plugin path(s) from opencode.json`
+        )
       }
+
+      // Ensure schema is set
+      if (!config["$schema"]) {
+        config["$schema"] = "https://opencode.ai/config.json"
+      }
+
+      await writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
+      result.opencodConfigUpdated = true
+      result.deployed.push(configPath)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       result.errors.push(`opencode.json update failed: ${msg}`)

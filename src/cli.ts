@@ -160,7 +160,7 @@ async function main(): Promise<void> {
   }
 
   banner()
-  
+
   const projectDir = resolve(process.cwd())
   print(`  ${C.dim}Project: ${projectDir}${C.reset}`)
   divider()
@@ -256,8 +256,12 @@ async function main(): Promise<void> {
     print(`  ${C.dim}   Skipped ${deployResult.skipped.length} (already exist)${C.reset}`)
   }
   if (deployResult.errors.length > 0) {
-    print(`  ${C.yellow}   ⚠ ${deployResult.errors.length} warning(s):${C.reset}`)
-    deployResult.errors.forEach(e => print(`  ${C.yellow}     ${e}${C.reset}`))
+    print(`  ${C.red}   ❌ ${deployResult.errors.length} error(s):${C.reset}`)
+    deployResult.errors.forEach(e => print(`  ${C.red}     ${e}${C.reset}`))
+  }
+  if (deployResult.warnings.length > 0) {
+    print(`  ${C.yellow}   ⚠ ${deployResult.warnings.length} warning(s):${C.reset}`)
+    deployResult.warnings.forEach(w => print(`  ${C.yellow}     ${w}${C.reset}`))
   }
 
   // ─── Success summary ──────────────────────────────────────────
@@ -266,6 +270,12 @@ async function main(): Promise<void> {
   print(`  ${C.green}${C.bold}✅ iDumb is ready!${C.reset}`)
   print("")
 
+  const methodLabel = deployResult.pluginMethod === "npm"
+    ? `${C.green}npm (stable)${C.reset}`
+    : deployResult.pluginMethod === "local-dev"
+      ? `${C.cyan}local dev${C.reset}`
+      : `${C.yellow}fallback (unstable)${C.reset}`
+
   if (choices.language === "vi") {
     print(`  ${C.bold}Bước tiếp theo:${C.reset}`)
     print(`  ${C.cyan}1.${C.reset} Khởi động OpenCode: ${C.bold}opencode${C.reset}`)
@@ -273,8 +283,12 @@ async function main(): Promise<void> {
     print(`  ${C.cyan}3.${C.reset} Hoặc chạy: ${C.bold}/idumb-init${C.reset}`)
     print("")
     print(`  ${C.dim}Plugin path: ${deployResult.pluginPath}${C.reset}`)
+    print(`  ${C.dim}Resolution:  ${methodLabel}${C.reset}`)
     if (deployResult.opencodConfigUpdated) {
       print(`  ${C.dim}Plugin đã được thêm vào opencode.json${C.reset}`)
+    }
+    if (deployResult.pluginMethod === "npx-fallback") {
+      print(`  ${C.yellow}⚠ Để ổn định, hãy chạy: ${C.bold}npm install idumb-v2${C.reset}`)
     }
   } else {
     print(`  ${C.bold}Next steps:${C.reset}`)
@@ -283,11 +297,15 @@ async function main(): Promise<void> {
     print(`  ${C.cyan}3.${C.reset} Or run: ${C.bold}/idumb-init${C.reset}`)
     print("")
     print(`  ${C.dim}Plugin path: ${deployResult.pluginPath}${C.reset}`)
+    print(`  ${C.dim}Resolution:  ${methodLabel}${C.reset}`)
     if (deployResult.opencodConfigUpdated) {
       print(`  ${C.dim}Plugin added to opencode.json automatically${C.reset}`)
     } else {
       print(`  ${C.dim}Add to opencode.json if not already there:${C.reset}`)
       print(`  ${C.dim}  "plugin": ["${deployResult.pluginPath}"]${C.reset}`)
+    }
+    if (deployResult.pluginMethod === "npx-fallback") {
+      print(`  ${C.yellow}⚠ For a stable setup, run: ${C.bold}npm install idumb-v2${C.reset}`)
     }
   }
 
