@@ -104,7 +104,7 @@ function buildNextSteps(config: IdumbConfig, lang: Language): string {
     lines.push("\n**Lệnh tiếp theo:**")
     lines.push("- `idumb_task create \"...\"` — Tạo task trước khi viết file")
     lines.push("- `idumb_anchor add` — Lưu context quan trọng")
-    lines.push("- `idumb_status` — Xem trạng thái quản trị")
+    lines.push("- `idumb_task action=status` — Xem trạng thái quản trị")
   } else {
     lines.push("## 🚀 Next Steps\n")
 
@@ -131,7 +131,7 @@ function buildNextSteps(config: IdumbConfig, lang: Language): string {
     lines.push("\n**Available commands:**")
     lines.push("- `idumb_task create \"...\"` — Create a task before writing files")
     lines.push("- `idumb_anchor add` — Save important context that survives compaction")
-    lines.push("- `idumb_status` — View governance state")
+    lines.push("- `idumb_task action=status` — View governance state")
   }
 
   return lines.join("\n")

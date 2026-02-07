@@ -1,4 +1,5 @@
 export { idumb_task } from "./task.js"
 export { idumb_anchor } from "./anchor.js"
-export { idumb_status } from "./status.js"
 export { idumb_init } from "./init.js"
+export { idumb_scan } from "./scan.js"
+export { idumb_codemap } from "./codemap.js"

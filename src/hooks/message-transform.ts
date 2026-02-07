@@ -26,7 +26,8 @@ const TRUNCATE_TO = 150
 const EXEMPT_TOOLS = new Set([
   "idumb_task",
   "idumb_anchor",
-  "idumb_status",
+  "idumb_scan",
+  "idumb_codemap",
 ])
 
 interface ToolRef {

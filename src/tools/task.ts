@@ -18,6 +18,9 @@
 
 import { tool } from "@opencode-ai/plugin/tool"
 import { stateManager } from "../lib/persistence.js"
+import { getActiveTask } from "../hooks/index.js"
+import { getAnchors } from "../hooks/compaction.js"
+import { isStale, stalenessHours } from "../schemas/anchor.js"
 import {
   createEpic, createTask, createSubtask,
   findEpic, findTask, findSubtask, findParentTask, findParentEpic,
@@ -525,9 +528,64 @@ export const idumb_task = tool({
         ].filter(Boolean).join("\n")
       }
 
-      // ─── STATUS ──────────────────────────────────────────────────
+      // ─── STATUS (full governance view — absorbed from idumb_status) ──
       case "status": {
-        return formatTaskTree(store) + "\n" + responseFooter(store)
+        const chain = getActiveChain(store)
+        const sessionTask = getActiveTask(context.sessionID)
+        const anchors = getAnchors(context.sessionID)
+        const critical = anchors.filter(a => a.priority === "critical")
+        const staleAnchors = anchors.filter(a => isStale(a))
+        const fresh = anchors.filter(a => !isStale(a))
+
+        const lines: string[] = []
+        lines.push("=== iDumb Governance Status ===")
+        lines.push("")
+
+        // ── Task Hierarchy ──
+        lines.push(formatTaskTree(store))
+        lines.push("")
+
+        // ── Active Session Task ──
+        if (sessionTask) {
+          lines.push(`SESSION TASK: ${sessionTask.name} (ID: ${sessionTask.id})`)
+        } else if (chain.task) {
+          lines.push(`⚠️ Smart task "${chain.task.name}" is active but NOT started in this session.`)
+          lines.push(`   Start it: idumb_task action=start task_id=${chain.task.id}`)
+        } else {
+          lines.push("SESSION TASK: None — create an epic and start a task before writing files")
+        }
+        lines.push("")
+
+        // ── Chain Warnings ──
+        const chainWarnings = detectChainBreaks(store)
+        if (chainWarnings.length > 0) {
+          lines.push(`⛓ CHAIN WARNINGS (${chainWarnings.length}):`)
+          for (const w of chainWarnings) {
+            lines.push(`  - ${w.message}`)
+          }
+          lines.push("")
+        }
+
+        // ── Anchor summary ──
+        lines.push(`ANCHORS: ${anchors.length} total (${fresh.length} fresh, ${staleAnchors.length} stale)`)
+        if (critical.length > 0) {
+          lines.push(`CRITICAL DECISIONS (${critical.length}):`)
+          for (const a of critical) {
+            const staleTag = isStale(a) ? ` [STALE: ${stalenessHours(a).toFixed(1)}h]` : ""
+            lines.push(`  - [${a.type}] ${a.content}${staleTag}`)
+          }
+        }
+        lines.push("")
+
+        // ── Governance rules ──
+        lines.push("RULES:")
+        lines.push("  - File writes/edits blocked without active task (must use idumb_task action=start)")
+        lines.push("  - Task completion requires evidence (proof of work)")
+        lines.push("  - Epic completion requires all tasks complete/deferred")
+        lines.push("  - Critical decisions must be updated via idumb_anchor before overriding")
+        lines.push("  - Stale anchors (>48h) are deprioritized in compaction")
+
+        return lines.join("\n")
       }
 
       // ─── LIST ────────────────────────────────────────────────────

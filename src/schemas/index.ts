@@ -14,3 +14,33 @@ export type {
     Subtask, Task, TaskEpic, TaskStore,
     ActiveChain, ValidationResult, ChainWarning,
 } from "./task.js"
+
+// ─── Phase 1b Entity Schemas ─────────────────────────────────────────
+export {
+    createBrainEntry, createBrainStore, effectiveConfidence,
+    isBrainEntryStale, queryBrain, formatBrainEntries,
+    BRAIN_STORE_VERSION,
+} from "./brain.js"
+export type {
+    BrainEntry, BrainEntryType, BrainSource, BrainStore,
+} from "./brain.js"
+
+export {
+    createProjectMap, formatProjectMap,
+    PROJECT_MAP_VERSION,
+} from "./project-map.js"
+export type {
+    ProjectMap, FrameworkCategory, DocumentType,
+    DocumentEntry, DirectoryEntry,
+    FrameworkDetection as ProjectFrameworkDetection,
+} from "./project-map.js"
+
+export {
+    createCodeMapStore, formatCodeMapSummary, formatTodoList,
+    CODEMAP_VERSION,
+} from "./codemap.js"
+export type {
+    CodeMapStore, FileMapEntry, CodeItem, CodeItemType,
+    CodeComment, CommentMarker, Inconsistency, InconsistencyType,
+} from "./codemap.js"
+
