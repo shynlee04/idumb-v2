@@ -289,6 +289,18 @@ export function createToolGateBefore(log: Logger) {
         }
       }
 
+      // ─── Non-iDumb agent passthrough ──────────────────────────
+      // If the captured agent is null (no agent context, e.g. direct user)
+      // or is NOT an iDumb-managed agent (e.g. OpenCode's built-in "build"),
+      // skip ALL write-gating. iDumb governance only governs iDumb agents.
+      {
+        const capturedAgent = stateManager.getCapturedAgent(sessionID)
+        if (!capturedAgent || !capturedAgent.startsWith("idumb-")) {
+          log.debug(`PASSTHROUGH: ${tool} allowed — agent "${capturedAgent ?? "none"}" is not iDumb-managed`, { sessionID })
+          return
+        }
+      }
+
       // ─── Write tool gate (existing) ──────────────────────────
       // Only gate write tools (breadth: don't over-block, start minimal)
       if (!WRITE_TOOLS.has(tool)) return
@@ -406,8 +418,12 @@ export function createToolGateAfter(log: Logger) {
     // ─── Defense-in-depth for write tools ────────────────────────────
     if (WRITE_TOOLS.has(tool)) {
       try {
-        // If there's an active task, tool was legitimately allowed
-        if (!stateManager.getActiveTask(sessionID)) {
+        // Non-iDumb agent passthrough (must mirror before-hook logic)
+        const capturedAgent = stateManager.getCapturedAgent(sessionID)
+        if (!capturedAgent || !capturedAgent.startsWith("idumb-")) {
+          // Not an iDumb-managed agent — skip defense-in-depth replacement
+          // (The before-hook already allowed this write via passthrough)
+        } else if (!stateManager.getActiveTask(sessionID)) {
           // ─── Auto-inherit from TaskGraph (v3) ──────────────────────
           const graph = stateManager.getTaskGraph()
           const activeWP = graph.workPlans.find(wp => wp.status === "active")

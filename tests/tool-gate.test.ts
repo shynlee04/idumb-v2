@@ -12,6 +12,7 @@
 
 import { createToolGateBefore, createToolGateAfter, setActiveTask, AGENT_TOOL_RULES } from "../src/hooks/index.js"
 import { createLogger } from "../src/lib/index.js"
+import { stateManager } from "../src/lib/persistence.js"
 import { shouldCreateCheckpoint, createCheckpoint } from "../src/schemas/index.js"
 import { mkdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
@@ -40,6 +41,9 @@ function assert(name: string, condition: boolean): void {
 async function test1_writeBlockedWithoutTask(): Promise<void> {
   const input = { tool: "write", sessionID: "test-session-1", callID: "call-1" }
   const output = { args: {} }
+  // Set capturedAgent to an iDumb agent so write-gate engages
+  // (Use investigator, not executor — executor has grace mode when no WorkPlans exist)
+  stateManager.setCapturedAgent("test-session-1", "idumb-investigator")
 
   let threw = false
   let errorMsg = ""
@@ -74,6 +78,9 @@ async function test2_writeAllowedWithTask(): Promise<void> {
 async function test3_editBlockedWithoutTask(): Promise<void> {
   const input = { tool: "edit", sessionID: "test-session-3", callID: "call-3" }
   const output = { args: {} }
+  // Set capturedAgent to an iDumb agent so write-gate engages
+  // (Use investigator, not executor — executor has grace mode when no WorkPlans exist)
+  stateManager.setCapturedAgent("test-session-3", "idumb-investigator")
 
   let threw = false
   try {
@@ -101,6 +108,9 @@ async function test4_nonWriteToolAlwaysAllowed(): Promise<void> {
 
 async function test5_retryDetection(): Promise<void> {
   const input = { tool: "write", sessionID: "test-session-5", callID: "call-5a" }
+  // Set capturedAgent to an iDumb agent so write-gate engages
+  // (Use investigator, not executor — executor has grace mode when no WorkPlans exist)
+  stateManager.setCapturedAgent("test-session-5", "idumb-investigator")
 
   // First block
   let msg1 = ""
@@ -117,6 +127,9 @@ async function test5_retryDetection(): Promise<void> {
 async function test6_afterHookFallback(): Promise<void> {
   const input = { tool: "write", sessionID: "test-session-6", callID: "call-6" }
   const output = { title: "write", output: "file written", metadata: {} }
+  // Set capturedAgent to an iDumb agent so after-hook defense-in-depth engages
+  // (Use investigator, not executor — executor has grace mode when no WorkPlans exist)
+  stateManager.setCapturedAgent("test-session-6", "idumb-investigator")
 
   await hookAfter(input, output)
 
@@ -558,6 +571,84 @@ async function test23_nonExecutorNoGraceMode(): Promise<void> {
   assert("test23: investigator write blocked (no grace mode)", threw)
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// Tests 24-27: Non-iDumb Agent Passthrough
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Test 24: Write ALLOWED when capturedAgent is null (no agent captured, e.g. direct user)
+ */
+async function test24_passthroughNullAgent(): Promise<void> {
+  const sessionID = "test-passthrough-null"
+  // Don't set any capturedAgent — it defaults to null
+  stateManager.setActiveTask(sessionID, null)
+
+  const input = { tool: "write", sessionID, callID: "call-pt-1" }
+  let threw = false
+  try {
+    await hookBefore(input, { args: {} })
+  } catch {
+    threw = true
+  }
+
+  assert("test24: write allowed with null capturedAgent (passthrough)", !threw)
+}
+
+/**
+ * Test 25: Write ALLOWED when capturedAgent is "build" (OpenCode built-in agent)
+ */
+async function test25_passthroughBuiltinAgent(): Promise<void> {
+  const sessionID = "test-passthrough-build"
+  stateManager.setCapturedAgent(sessionID, "build")
+  stateManager.setActiveTask(sessionID, null)
+
+  const input = { tool: "write", sessionID, callID: "call-pt-2" }
+  let threw = false
+  try {
+    await hookBefore(input, { args: {} })
+  } catch {
+    threw = true
+  }
+
+  assert("test25: write allowed with 'build' agent (passthrough)", !threw)
+}
+
+/**
+ * Test 26: Edit ALLOWED when capturedAgent is a non-iDumb agent
+ */
+async function test26_passthroughEditNonIdumb(): Promise<void> {
+  const sessionID = "test-passthrough-edit"
+  stateManager.setCapturedAgent(sessionID, "custom-agent")
+  stateManager.setActiveTask(sessionID, null)
+
+  const input = { tool: "edit", sessionID, callID: "call-pt-3" }
+  let threw = false
+  try {
+    await hookBefore(input, { args: {} })
+  } catch {
+    threw = true
+  }
+
+  assert("test26: edit allowed with non-iDumb agent (passthrough)", !threw)
+}
+
+/**
+ * Test 27: After-hook also passes through for non-iDumb agents
+ */
+async function test27_afterHookPassthrough(): Promise<void> {
+  const sessionID = "test-passthrough-after"
+  stateManager.setCapturedAgent(sessionID, "build")
+  stateManager.setActiveTask(sessionID, null)
+
+  const input = { tool: "write", sessionID, callID: "call-pt-4" }
+  const output = { title: "write", output: "file written", metadata: {} }
+
+  await hookAfter(input, output)
+
+  assert("test27: after-hook does NOT replace output for non-iDumb agent", !output.title.includes("GOVERNANCE BLOCK"))
+  assert("test27: after-hook preserves original output for non-iDumb agent", output.output === "file written")
+}
+
 // Run all tests
 async function main(): Promise<void> {
   await test1_writeBlockedWithoutTask()
@@ -583,6 +674,10 @@ async function main(): Promise<void> {
   await test21_executorGraceMode_noContext()
   await test22_executorGraceMode_withContext()
   await test23_nonExecutorNoGraceMode()
+  await test24_passthroughNullAgent()
+  await test25_passthroughBuiltinAgent()
+  await test26_passthroughEditNonIdumb()
+  await test27_afterHookPassthrough()
 
   const total = passed + failed
   const summary = `\nResults: ${passed}/${total} passed, ${failed} failed`
