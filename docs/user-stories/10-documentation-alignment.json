@@ -1,0 +1,40 @@
+[
+  {
+    "description": "Rewrite v2 CLAUDE.md to match current reality: currently references 19 slash commands (only 4 exist), 11 tools (only 6 exist), 23 agents (only 3 exist), and npm run install:local (doesn't exist)",
+    "steps": [
+      "Update the 'Slash Commands' section to list only 4 commands: /idumb-init, /idumb-settings, /idumb-status, /idumb-delegate",
+      "Update the 'Architecture / Plugin Structure' section to show only 6 tools in src/tools/",
+      "Update the 'Agent Categories' section to show only 3 agents: supreme-coordinator, investigator, executor",
+      "Remove the 'Permission Matrix' with 23-agent hierarchy — replace with 3-agent permission table",
+      "Remove 'npm run install:local' and 'npm run install:global' — replace with 'npx idumb-v2 init' or 'npm link && idumb-v2 init'",
+      "Update the 'Key Files' section to reference current file structure (not v1 structure)",
+      "Update the 'Path Conventions' section to match Phase 8's .idumb/ redesign",
+      "Update test count and suite count to current baseline",
+      "Verify every file path mentioned in CLAUDE.md actually exists: grep for each referenced file",
+      "Verify npm run typecheck passes with zero errors"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Fix AGENTS.md minor issues: directory tree lists deleted STRATEGIC-PLANNING-PROMPT.md, investigator description says 'Uses innate read + webfetch' but webfetch is blocked",
+    "steps": [
+      "Remove STRATEGIC-PLANNING-PROMPT.md from the AGENTS.md directory tree listing",
+      "Fix investigator description to not reference webfetch (which is blocked by AGENT_TOOL_RULES)",
+      "Verify all files listed in the AGENTS.md directory tree actually exist: cross-reference with ls/glob",
+      "Update test baseline numbers if they've changed since last AGENTS.md update",
+      "Verify npm run typecheck passes with zero errors"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Neutralize v1 CLAUDE.md context pollution: the v1 CLAUDE.md at parent /Users/apple/Documents/coding-projects/idumb/CLAUDE.md pollutes every Claude Code conversation with stale 23-agent/19-command/11-tool information",
+    "steps": [
+      "Option A: Add a .claudeignore file at /Users/apple/Documents/coding-projects/idumb/v2/ that excludes the parent CLAUDE.md",
+      "Option B: Rename the parent /Users/apple/Documents/coding-projects/idumb/CLAUDE.md to CLAUDE-v1-archived.md so Claude Code doesn't auto-load it",
+      "Option C: Add a prominent 'THIS IS v1 — DEPRECATED' header at the top of the parent CLAUDE.md with a redirect to v2/CLAUDE.md",
+      "Verify that starting a new Claude Code session in the v2 directory does NOT inject v1's 23-agent/19-command/11-tool content into the system context",
+      "Verify the v2 CLAUDE.md is still loaded correctly"
+    ],
+    "passes": false
+  }
+]

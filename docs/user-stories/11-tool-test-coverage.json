@@ -1,0 +1,108 @@
+[
+  {
+    "description": "govern_plan tool tests: test all 6 actions (create, plan_tasks, status, archive, abandon, phase) with mocked stateManager",
+    "steps": [
+      "Create tests/govern-plan.test.ts using the project's hand-rolled test harness pattern",
+      "Mock stateManager (getTaskGraph, saveTaskGraph, getPlanState, savePlanState) to isolate tool logic from disk",
+      "Test create: returns plan ID, adds to graph.workPlans, sets status='planned'",
+      "Test create with missing name: returns ERROR string",
+      "Test plan_tasks: adds TaskNodes to the specified WorkPlan, respects depends_on for temporal gates",
+      "Test plan_tasks with invalid plan_id: returns ERROR string",
+      "Test status: returns formatted plan summary with task counts and status breakdown",
+      "Test archive: moves completed plan to archived status",
+      "Test archive on active plan: returns ERROR (can't archive active)",
+      "Test abandon: marks plan as abandoned, clears activeWorkPlanId if it was active",
+      "Test phase: transitions plan-state phase, validates phase name",
+      "Wire the new test file into npm test script in package.json",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with total assertions >= previous baseline + new assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "govern_task tool tests: test all 6 actions (quick_start, start, complete, fail, review, status) with mocked stateManager",
+    "steps": [
+      "Create tests/govern-task.test.ts using the project's hand-rolled test harness pattern",
+      "Mock stateManager to isolate tool logic from disk I/O",
+      "Test quick_start: creates WorkPlan + TaskNode + sets active + bridges to tool-gate",
+      "Test quick_start reuse: second quick_start adds task to existing active WorkPlan",
+      "Test quick_start with missing name: returns ERROR string",
+      "Test start: activates a planned task, validates temporal gates",
+      "Test start with blocked dependencies: returns GOVERNANCE BLOCK message with blocked-by info",
+      "Test complete: marks task completed, clears active task, unblocks dependents",
+      "Test complete with missing evidence: returns ERROR string",
+      "Test complete auto-completes plan when all tasks done",
+      "Test fail: marks task failed, blocks dependents, clears active task",
+      "Test review: transitions active task to review status",
+      "Test status: returns formatted governance status with active task, plan, and warnings",
+      "Wire the new test file into npm test script in package.json",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with total assertions >= previous baseline + new assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "govern_delegate tool tests: test all 3 actions (assign, recall, status) with mocked stateManager",
+    "steps": [
+      "Create tests/govern-delegate.test.ts using the project's hand-rolled test harness pattern",
+      "Mock stateManager to isolate tool logic from disk I/O",
+      "Test assign: creates delegation record, validates from/to agents, auto-activates task if temporal gates pass",
+      "Test assign with invalid target agent: returns ERROR string",
+      "Test assign with missing task_id: returns ERROR string",
+      "Test recall: marks delegation as recalled, returns task to original agent",
+      "Test status: returns formatted delegation chain with active delegations and history",
+      "Wire the new test file into npm test script in package.json",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with total assertions >= previous baseline + new assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "govern_shell tool tests: test command classification, execution, blocking, and timeout handling",
+    "steps": [
+      "Create tests/govern-shell.test.ts using the project's hand-rolled test harness pattern",
+      "Test classifyCommand: 'npm test' -> 'build', 'git status' -> 'git', 'ls -la' -> 'inspection', 'tsc' -> 'build', 'grep pattern' -> 'inspection'",
+      "Test classifyCommand for categories added in story 08-01 (node/python/docker)",
+      "Test ROLE_PERMISSIONS: coordinator has no allowed categories, investigator has inspection only, executor has all categories",
+      "Test blocked command for coordinator: returns GOVERNANCE BLOCK message",
+      "Test blacklisted command (rm -rf, shutdown, format): blocked for ALL agents with specific warning",
+      "Test timeout handling: command with timeout > MAX_TIMEOUT is capped",
+      "Test output truncation: command producing > MAX_OUTPUT_CHARS is truncated with warning",
+      "Wire the new test file into npm test script in package.json",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with total assertions >= previous baseline + new assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Anchor and init tool tests: test anchor CRUD operations and init tool's scan/initialize/report actions",
+    "steps": [
+      "Create tests/anchor.test.ts for idumb_anchor tool testing",
+      "Test anchor create: creates anchor with type, priority, content — stored in state",
+      "Test anchor create with missing content: returns ERROR",
+      "Test anchor list: returns formatted list of all anchors with scores",
+      "Test anchor delete: removes anchor by ID",
+      "Test anchor delete with invalid ID: returns ERROR",
+      "Create tests/init-tool.test.ts for idumb_init tool testing (separate from init.test.ts which tests scaffold/framework)",
+      "Test init tool scan action: returns project analysis with framework detection",
+      "Test init tool initialize action: creates config and scaffolds .idumb/",
+      "Test init tool report action: returns formatted code quality report",
+      "Wire both new test files into npm test script in package.json",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with total assertions >= previous baseline + new assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Add standalone test files to npm test script: smoke-code-quality.ts and sqlite-adapter.test.ts are not chained in the npm test command",
+    "steps": [
+      "Add 'npx tsx tests/smoke-code-quality.ts' to the npm test script chain (with &&)",
+      "Add 'npx tsx tests/sqlite-adapter.test.ts' to the npm test script chain (conditionally — only when better-sqlite3 native binding is available, or skip with warning)",
+      "Verify npm test now runs all test files including the two previously standalone ones",
+      "Update AGENTS.md and CLAUDE.md test suite count if it changes",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with all suites green"
+    ],
+    "passes": false
+  }
+]

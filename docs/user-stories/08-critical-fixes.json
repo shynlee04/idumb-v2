@@ -1,0 +1,61 @@
+[
+  {
+    "description": "Fix govern_shell 'general' category: classifyCommand() returns 'general' for unrecognized commands (node, python, docker, curl, mv, cp, mkdir) but no agent has 'general' in ROLE_PERMISSIONS — all are silently blocked",
+    "steps": [
+      "In govern-shell.ts, add 'general' to the executor's allowed categories in ROLE_PERMISSIONS so unclassified commands are allowed for executors",
+      "Alternatively, add specific categories: 'runtime' for node/python/docker, 'filesystem' for mv/cp/mkdir/touch, and update classifyCommand() patterns + ROLE_PERMISSIONS accordingly",
+      "Add test: classifyCommand('node script.js') returns a category that the executor is allowed to use",
+      "Add test: classifyCommand('python test.py') returns an allowed category for executor",
+      "Add test: classifyCommand('docker compose up') returns an allowed category for executor",
+      "Add test: classifyCommand('curl http://example.com') is still blocked or categorized appropriately",
+      "Add test: coordinator is still blocked from all shell execution categories",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Self-install detection + backup on --force: detect running init inside the idumb-v2 repo itself (warn and abort), create .idumb/backups/ before --force overwrites state files, handle parallel brain file naming",
+    "steps": [
+      "In cli.ts, before scaffolding, check if package.json in the current directory has name === 'idumb-v2' — if so, print warning and abort with exit code 1 unless --force is also passed",
+      "In scaffolder.ts and deploy.ts, before overwriting any state file (config.json, tasks.json, graph.json, registry.json, plan.json) with --force, copy the existing file to .idumb/backups/{filename}.{timestamp}.bak",
+      "Create the .idumb/backups/ directory if it doesn't exist",
+      "In deploy.ts, when creating bootstrap graph.json, first check if legacy task-graph.json exists — if so, rename it to graph.json (migrate) instead of creating a new empty one",
+      "Add test: self-install detection reads package.json name and blocks init when name is 'idumb-v2'",
+      "Add test: --force backup creates .idumb/backups/ with timestamped copies of existing state files",
+      "Add test: legacy task-graph.json is migrated to graph.json on re-init (not orphaned)",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Zod validation on JSON.parse disk reads: all 5 JSON.parse → as Type casts in persistence.ts should use Zod schema parse with graceful fallback instead of blind structural casts",
+    "steps": [
+      "Create a safeParse<T>(raw: string, schema: ZodSchema<T>, fallback: T): T helper in persistence.ts that tries schema.parse(JSON.parse(raw)), catches errors, logs corruption warning, and returns fallback",
+      "Replace persistence.ts line ~130: JSON.parse(raw) as PersistedState with safeParse using a PersistedState Zod schema (create if needed)",
+      "Replace persistence.ts line ~172: JSON.parse(tasksRaw) as TaskStore with safeParse using SmartTodoStoreSchema",
+      "Replace persistence.ts line ~192: JSON.parse(delegRaw) as DelegationStore with safeParse using DelegationStoreSchema",
+      "Replace persistence.ts line ~214: JSON.parse(graphRaw) as TaskGraph with safeParse using TaskGraphSchema",
+      "Replace persistence.ts line ~242: JSON.parse(planStateRaw) as PlanState with safeParse using PlanStateSchema",
+      "Add test: safeParse with valid JSON returns parsed data",
+      "Add test: safeParse with corrupted JSON (invalid shape) returns fallback and does not throw",
+      "Add test: safeParse with malformed JSON string returns fallback and does not throw",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Auto-sync VERSION from package.json: src/index.ts hardcodes VERSION = '2.2.0' which drifts from package.json on version bumps",
+    "steps": [
+      "In src/index.ts, replace the hardcoded VERSION constant with a dynamic read: import { createRequire } from 'module'; const pkg = createRequire(import.meta.url)('../package.json'); const VERSION = pkg.version",
+      "Alternatively, use a simpler approach: read and parse the package.json at build time via a small script that writes a version.ts file",
+      "Remove the hardcoded VERSION = '2.2.0' line",
+      "Add test: the VERSION exported or used in index.ts matches package.json version",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  }
+]

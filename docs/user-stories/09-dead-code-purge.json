@@ -1,0 +1,61 @@
+[
+  {
+    "description": "Delete orphaned src/modules/schemas/agent-profile.ts (89 LOC) — exports AgentRole, PermissionLevel, ToolCategory, AgentProfile, ROLE_PERMISSIONS, TOOL_CATEGORY_MAP but is NEVER imported by any file in the codebase",
+    "steps": [
+      "Verify agent-profile.ts is not imported: grep src/ for 'agent-profile' — zero matches expected (excluding this file itself)",
+      "Delete src/modules/schemas/agent-profile.ts",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Remove dead exports: getClient() in sdk-client.ts (never called), CATEGORY_SKIP_SUBTASKS in task.ts (never used), GRAPH_SESSION_STALE_MS re-export in schemas/index.ts (never imported)",
+    "steps": [
+      "In sdk-client.ts, remove the getClient() function export — only tryGetClient() is used in practice",
+      "In schemas/task.ts, remove the CATEGORY_SKIP_SUBTASKS export (or make it non-exported if used internally)",
+      "In schemas/index.ts, remove the 'SESSION_STALE_MS as GRAPH_SESSION_STALE_MS' re-export line",
+      "Verify no file imports any of these three symbols: grep for 'getClient', 'CATEGORY_SKIP_SUBTASKS', 'GRAPH_SESSION_STALE_MS' across src/ — only definition sites should match",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Consolidate duplicate constants: SESSION_STALE_MS defined in both task.ts:108 and work-plan.ts:128, SessionState interface defined in both persistence.ts:35 and storage-adapter.ts:18",
+    "steps": [
+      "Remove SESSION_STALE_MS from task.ts — keep only the one in work-plan.ts (which is consumed by task-graph.ts)",
+      "If any file imports SESSION_STALE_MS from task.ts, update the import to use work-plan.ts",
+      "Move SessionState interface to storage-adapter.ts (or create a shared types file) and import it in persistence.ts instead of defining a duplicate",
+      "Verify both constants/interfaces have exactly ONE definition across the codebase",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Exclude archived files from build + add code-quality.ts to lib barrel: tsconfig includes src/**/* which compiles _archived/ dead code into dist/, and code-quality.ts (701 LOC) is missing from lib/index.ts",
+    "steps": [
+      "In tsconfig.json, add 'src/lib/_archived-2026-02-08/**' to the exclude array to prevent archived files from being compiled into dist/",
+      "In src/lib/index.ts, add export for code-quality.ts functions (scanCodeQuality, CodeQualityReport type, etc.)",
+      "Run npm run build and verify dist/ does NOT contain entity-resolver.js or chain-validator.js",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Clean stale comments: 'chain-validator (integrity)' in planning-registry.ts:15, 'Plugin A's governance state' in state-reader.ts:61, archived file comment in lib/index.ts:11, hardcoded phase names in plan-state.ts:82-98",
+    "steps": [
+      "In planning-registry.ts, update the JSDoc comment at line ~15 to remove 'chain-validator' reference — replace with current validation approach",
+      "In state-reader.ts, update 'Plugin A' reference at line ~61 to 'iDumb' or remove the naming",
+      "In lib/index.ts, update or remove the '_archived' informational comment at line ~11",
+      "In plan-state.ts createDefaultPlanState(), add a comment noting that phase names are synced from MASTER-PLAN.md and may need manual update",
+      "Grep src/ for 'Plugin A' — zero matches expected after fix",
+      "Grep src/ for 'chain-validator' — only the _archived directory should match",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 637 assertions"
+    ],
+    "passes": false
+  }
+]

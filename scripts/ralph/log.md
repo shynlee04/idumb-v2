@@ -114,6 +114,37 @@
 - **Baseline**: 613/613 tests across 11 suites. TypeScript clean.
 - **Delta**: +9 assertions (6 delegation + 3 tool-gate).
 
+### Session 7 — Gap Resolution Plan (2026-02-09)
+- **Task**: Deep verification audit + comprehensive gap-to-Phase-9 plan creation
+- **Verification audit findings** (52 discrete issues across 10 categories):
+  - CRITICAL: bin/cli.mjs doesn't exist — CLI unusable via npm
+  - HIGH: govern_shell "general" category blocks ALL unclassified commands (node, python, docker)
+  - HIGH: No backup on --force, no self-install detection
+  - HIGH: 3 diverged git branches, GitHub default branch stale
+  - HIGH: Zero test coverage for all 4 core governance tools
+  - HIGH: 3 schema modules (brain, codemap, project-map) have no write path — Phase 9 blockers
+  - MEDIUM: Dashboard 50% empty, always dev mode, hardcoded port proxy
+  - MEDIUM: JSON.parse → as Type without Zod validation on 5 disk reads
+  - MEDIUM: v1 CLAUDE.md pollutes Claude Code context
+  - LOW: Dead exports, duplicate constants, orphaned files, stale comments
+- **Implementation**: Created `quick_start` action for govern_task (committed abc4590)
+- **Files created**:
+  - `docs/plans/ralph-loop/gaps-resolve-to-phase-9.md` — Master plan with 52-gap inventory, dependency graph, 5-wave execution strategy
+  - `docs/user-stories/08-critical-fixes.json` (4 stories)
+  - `docs/user-stories/09-dead-code-purge.json` (5 stories)
+  - `docs/user-stories/10-documentation-alignment.json` (3 stories)
+  - `docs/user-stories/11-tool-test-coverage.json` (6 stories)
+  - `docs/user-stories/12-dashboard-maturation.json` (4 stories)
+  - `docs/user-stories/13-git-npm-readiness.json` (4 stories)
+  - `docs/user-stories/14-sdk-phase9-foundation.json` (8 stories)
+  - Updated `scripts/ralph/prompt.md` with wave-based priority order
+- **Status**: 24/64 stories passing (34 new stories + 6 pending from group 06).
+- **Baseline**: 637/637 tests across 12 suites. TypeScript clean.
+- **Notes**:
+  - Wave 1 (groups 06+08+09) can run in parallel — no cross-dependencies
+  - Critical path to Phase 9: Wave 1 → Wave 2 (docs) → Wave 3 (tests) → Wave 4 (SDK+brain index)
+  - Dashboard (Wave 5) and git/npm (Wave 5) are optional — not on Phase 9 critical path
+
 ## Summary
 
 | Group | Stories | Session | Status |
@@ -123,6 +154,13 @@
 | 03 — Dashboard Completion | 3/3 | Session 4 | DONE |
 | 04 — SDK Client Integration | 4/4 | Session 3 | DONE |
 | 05 — Integration Validation | 3/3 | Session 4 | DONE |
-| 06 — Installation Channel Integrity | 0/6 | Session 5 | IN PROGRESS |
+| 06 — Installation Channel Integrity | 0/6 | Session 5 | WAVE 1 |
 | 07 — Post-Cleanup Safety | 4/4 | Session 6 | DONE |
-| **Total** | **24/30** | — | **IN PROGRESS** |
+| 08 — Critical Fixes | 0/4 | — | WAVE 1 |
+| 09 — Dead Code Purge | 0/5 | — | WAVE 1 |
+| 10 — Documentation Alignment | 0/3 | — | WAVE 2 |
+| 11 — Tool Test Coverage | 0/6 | — | WAVE 3 |
+| 12 — Dashboard Maturation | 0/4 | — | WAVE 5 |
+| 13 — Git + npm Readiness | 0/4 | — | WAVE 5 |
+| 14 — SDK + Phase 9 Foundation | 0/8 | — | WAVE 4 |
+| **Total** | **24/64** | — | **IN PROGRESS** |

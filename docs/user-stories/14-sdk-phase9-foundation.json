@@ -1,0 +1,118 @@
+[
+  {
+    "description": "Wire client.find.files() with fs fallback for init.ts: replace the manual listFilesRecursively() with SDK's find.files() when available, falling back to fs-based scanning when SDK client is null (tests, CLI)",
+    "steps": [
+      "In tools/init.ts, import tryGetClient from lib/sdk-client",
+      "Create a helper: listProjectFiles(dir) that tries client.find.files() first, falls back to the existing fs.readdir recursive implementation",
+      "Replace the current listFilesRecursively() call with listProjectFiles()",
+      "Ensure the fallback path is exercised in tests (where SDK client is null)",
+      "Add test: listProjectFiles returns file list when SDK client is unavailable (fs fallback)",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Wire context.agent + client.app.agents() for dynamic agent rules: replace hardcoded AGENT_TOOL_RULES in tool-gate.ts with SDK-derived agent permissions, keeping static fallback",
+    "steps": [
+      "In tool-gate.ts, use context.agent (from ToolContext) as the primary agent identity source instead of relying solely on stateManager.getCapturedAgent()",
+      "Create a helper: getAgentRules(agentName, client?) that tries client.app.agents() to fetch live agent definitions, maps their permissions to AGENT_TOOL_RULES format, falls back to the hardcoded AGENT_TOOL_RULES when SDK unavailable",
+      "Cache the SDK-derived rules per session (agent definitions don't change mid-session)",
+      "Add test: context.agent is used when available, falls back to captured agent when context.agent is null",
+      "Add test: getAgentRules returns hardcoded rules when SDK client is null",
+      "Verify the static AGENT_TOOL_RULES remain as fallback and don't break existing behavior",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Brain index: create knowledge.json write path — StateManager + tool action for persisting brain entries (schema exists in schemas/brain.ts but no code writes to this file)",
+    "steps": [
+      "Add saveBrainStore(store: BrainStore) method to StateManager in persistence.ts — writes to .idumb/brain/knowledge.json with debounced disk I/O",
+      "Add getBrainStore() method to StateManager — reads knowledge.json with Zod validation (using safeParse from story 08-03), returns empty store on missing/corrupt",
+      "Add a 'learn' action to idumb_anchor tool (or create a new idumb_brain tool) that creates a BrainEntry from user input and saves via StateManager",
+      "Wire the system.ts hook to auto-create brain entries from significant governance events (task completion, plan completion) if config.governance.brainAutoCapture is enabled",
+      "Add test: saveBrainStore writes valid JSON, getBrainStore reads it back",
+      "Add test: brain entry creation via tool action returns confirmation with entry ID",
+      "Verify dashboard /api/brain endpoint returns non-empty data after brain entries are created",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Brain index: create codemap.json write path via client.find.symbols() with fs fallback — schema exists in schemas/codemap.ts but no code writes this file",
+    "steps": [
+      "Add saveCodeMap(store: CodeMapStore) method to StateManager in persistence.ts",
+      "Add getCodeMap() method to StateManager — reads codemap.json with Zod validation",
+      "Create a populateCodeMap(dir: string, client?: SdkClient) function in a new lib/brain-indexer.ts that: (1) tries client.find.symbols() to get symbol definitions, (2) falls back to parsing .ts/.js files for export statements via regex",
+      "Wire populateCodeMap to the idumb_init tool's scan action — after framework detection, build the codemap",
+      "Store results via StateManager.saveCodeMap()",
+      "Add test: populateCodeMap with fs fallback extracts function/class/const exports from .ts files",
+      "Add test: saveCodeMap writes valid JSON matching CodeMapStore schema",
+      "Verify dashboard /api/codemap endpoint returns non-empty data after codemap is populated",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Brain index: create project-map.json write path via client.find.files() with fs fallback — schema exists in schemas/project-map.ts but no code writes this file",
+    "steps": [
+      "Add saveProjectMap(map: ProjectMap) method to StateManager in persistence.ts",
+      "Add getProjectMap() method to StateManager — reads project-map.json with Zod validation",
+      "Create a populateProjectMap(dir: string, client?: SdkClient) function in lib/brain-indexer.ts that: (1) tries client.find.files() for file listing, (2) falls back to fs-based recursive listing, (3) builds directory tree structure matching ProjectMap schema",
+      "Wire populateProjectMap to idumb_init tool's scan action — after framework detection, build the project map",
+      "Store results via StateManager.saveProjectMap()",
+      "Add test: populateProjectMap with fs fallback builds correct directory tree",
+      "Add test: saveProjectMap writes valid JSON matching ProjectMap schema",
+      "Verify dashboard /api/scan endpoint returns non-empty data after project map is populated",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Auto-invoke migrateV2ToV3() on TaskStore load: the function is exported and tested but never called at runtime — users with v2 task data get no automatic migration",
+    "steps": [
+      "In persistence.ts getTaskGraph(), after loading graph.json, check if graph is empty/default AND tasks.json has actual data",
+      "If so, call migrateV2ToV3(taskStore) from task-graph.ts to convert TaskStore → TaskGraph format",
+      "Save the migrated TaskGraph to graph.json and log the migration",
+      "Only migrate once — if graph.json already has data, skip migration even if tasks.json also has data",
+      "Add test: loading empty graph.json + populated tasks.json triggers migrateV2ToV3 and saves result",
+      "Add test: loading populated graph.json + populated tasks.json does NOT trigger migration",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Unify duplicate path constants: persistence.ts and state-reader.ts define the SAME file paths independently — if one changes, reads and writes target different files",
+    "steps": [
+      "Create a shared BRAIN_PATHS constant in a central location (schemas/config.ts or a new lib/paths.ts) that defines all .idumb/ file paths",
+      "Import BRAIN_PATHS in both persistence.ts and state-reader.ts — remove their independent path definitions",
+      "Include legacy path mappings in the shared constant (for migration fallbacks)",
+      "Verify persistence.ts and state-reader.ts reference the EXACT same path strings",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= previous baseline"
+    ],
+    "passes": false
+  },
+  {
+    "description": "E2E validation: all brain index files are populated after init, all 4 dashboard panels show real data, no mocked content remains",
+    "steps": [
+      "Run idumb-v2 init (or equivalent) in a test project directory",
+      "Verify .idumb/brain/knowledge.json exists and contains valid BrainStore data (even if empty entries array)",
+      "Verify .idumb/brain/codemap.json exists and contains valid CodeMapStore data with extracted symbols",
+      "Verify .idumb/brain/project-map.json exists and contains valid ProjectMap data with directory tree",
+      "Start the dashboard (idumb-v2 dashboard) and verify: TaskHierarchyPanel shows tasks (or empty state message), DelegationChainPanel shows delegations (or empty state), BrainKnowledgePanel shows brain entries (or empty state — NOT a broken/missing data error), PlanningArtifactsPanel shows real metadata (NOT getMockMetadata() output)",
+      "Verify /api/brain returns non-null response",
+      "Verify /api/codemap returns non-null response",
+      "Verify /api/scan returns non-null response",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with all suites green"
+    ],
+    "passes": false
+  }
+]
