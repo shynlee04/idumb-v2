@@ -63,7 +63,7 @@
 
 ### 2.7 Tests
 - **File:** `tests/plan-state.test.ts`
-- **Result:** 39/39 assertions
+- **Result:** 40/40 assertions (was 39, updated when Phases 7-10 added)
 
 ---
 
@@ -149,7 +149,7 @@
 ### Results
 - `grep -ri "meta.builder" src/` returns zero (excluding `_archived/`) ✅
 - All orphaned code has status documentation ✅
-- `npm run typecheck && npm test` passes (657/657) ✅
+- `npm run typecheck && npm test` passes (658/658) ✅
 
 ---
 
@@ -178,32 +178,31 @@
 
 ---
 
-## Phase 7: Documentation Hygiene
+## Phase 7: Documentation Hygiene ✅
 
-**Status:** Pending
+**Status:** Completed
 **Goal:** Fix 3 known defects from Phase 1-5 audit, archive stale design docs.
 
 ### 7.1 Investigator description fix
-- **File:** `src/templates.ts:652`
-- **Defect:** `description` field says "Uses innate read + webfetch" but `tools.webfetch: false` blocks it
-- **Fix:** Remove "webfetch" from description string
+- **File:** `src/templates.ts` (lines 322, 502, 652, 901)
+- **Defect:** 4 locations described investigator as using "webfetch" but `tools.webfetch: false` blocks it
+- **Fix:** Removed "webfetch" from all 4 description/capability strings
+- **Result:** `grep -i "webfetch" src/templates.ts` → zero in description fields ✅
 
 ### 7.2 AGENTS.md directory tree fix
-- **File:** `AGENTS.md:135`
-- **Defect:** Lists deleted `STRATEGIC-PLANNING-PROMPT.md` as "Planning SOT", missing `MASTER-PLAN.md` and `src/schemas/plan-state.ts`
-- **Fix:** Update tree to match actual file system
+- **File:** `AGENTS.md`
+- **Changes:** Removed deleted `STRATEGIC-PLANNING-PROMPT.md`, added `MASTER-PLAN.md`, `src/schemas/plan-state.ts`, `tests/plan-state.test.ts`, `planning/diagrams/`
+- **Result:** Tree matches `ls` output ✅
 
 ### 7.3 Archive stale docs/plans/
-- 4 documents are >60% factually wrong (reference deleted Plugin B, 9 tools, 49 actions)
-- **Archive to `docs/plans/_archived-2026-02-09/`:** sot-contract.md, tool-agent-redesign-plan.md, slice1-enforcement-sqlite-dashboard-revival.md, phase-1a-completion.md
-- **Keep:** user-journey-governance-design.md (implementation-agnostic, still valid), task-graph-hook-intelligence-design.md (design philosophy valid)
-- **Preserve:** SOT contract Section 3 (SDK Client API) — extract to `docs/sdk-client-api.md` before archiving
+- **Archived to `docs/plans/_archived-2026-02-09/`:** sot-contract.md (~40% accurate), tool-agent-redesign-plan.md, slice1-enforcement-sqlite-dashboard-revival.md, phase-1a-completion.md
+- **Kept:** user-journey-governance-design.md (implementation-agnostic), task-graph-hook-intelligence-design.md (design philosophy valid)
+- **Extracted:** SOT contract Section 3 → `docs/sdk-client-api.md` (SDK Client API reference preserved before archiving)
+- **Result:** Only 2 active docs remain in docs/plans/ ✅
 
-### Acceptance Criteria
-- `grep -i "webfetch" src/templates.ts` shows zero in description fields
-- AGENTS.md tree matches `ls` output
-- Only 2 active docs remain in docs/plans/
-- 657+ tests, zero typecheck errors
+### Results
+- 658/658 tests, zero typecheck errors ✅
+- Commit: `b306972` docs: Phase 7 documentation hygiene
 
 ---
 
