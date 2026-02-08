@@ -72,9 +72,10 @@ function test3_createPlanState(): void {
 
 function test4_createDefaultPlanState(): void {
   const state = createDefaultPlanState()
-  assert("createDefaultPlanState: has 6 phases", state.phases.length === 6)
+  assert("createDefaultPlanState: has 10 phases", state.phases.length === 10)
   assert("createDefaultPlanState: phase 1 is Critical Bug Fixes", state.phases[0].name === "Critical Bug Fixes")
   assert("createDefaultPlanState: phase 6 is SDK Integration Foundation", state.phases[5].name === "SDK Integration Foundation")
+  assert("createDefaultPlanState: phase 10 is Init Experience", state.phases[9].name === "Init Experience — Showcase Foundation")
   assert("createDefaultPlanState: all phases pending", state.phases.every(p => p.status === "pending"))
   assert("createDefaultPlanState: planName matches", state.planName === "One True Plan + Self-Enforcement")
 }
@@ -155,7 +156,7 @@ function test12_formatCompact(): void {
   const output = formatPlanStateCompact(state)
   assert("formatCompact: contains phase name", output.includes("Self-Enforcement Wiring"))
   assert("formatCompact: contains status", output.includes("in_progress"))
-  assert("formatCompact: contains progress", output.includes("1/6"))
+  assert("formatCompact: contains progress", output.includes("1/10"))
   assert("formatCompact: contains next phase", output.includes("Document Consolidation"))
 }
 
@@ -202,7 +203,7 @@ async function test16_stateManagerRoundTrip(): Promise<void> {
   // Read it back
   const retrieved = stateManager.getPlanState()
   assert("stateManager round-trip: planName matches", retrieved.planName === state.planName)
-  assert("stateManager round-trip: phases count", retrieved.phases.length === 6)
+  assert("stateManager round-trip: phases count", retrieved.phases.length === 10)
   assert("stateManager round-trip: phase 1 completed", retrieved.phases[0].status === "completed")
   assert("stateManager round-trip: phase 2 in_progress", retrieved.phases[1].status === "in_progress")
   assert("stateManager round-trip: currentPhaseId", retrieved.currentPhaseId === 2)

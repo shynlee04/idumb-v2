@@ -89,6 +89,10 @@ export function createDefaultPlanState(): PlanState {
       createPlanPhase({ id: 4, name: "Hook Intelligence Enhancement" }),
       createPlanPhase({ id: 5, name: "Dead Code Cleanup" }),
       createPlanPhase({ id: 6, name: "SDK Integration Foundation" }),
+      createPlanPhase({ id: 7, name: "Documentation Hygiene" }),
+      createPlanPhase({ id: 8, name: ".idumb/ Structure Redesign" }),
+      createPlanPhase({ id: 9, name: "Fullscan — Brain Index Population" }),
+      createPlanPhase({ id: 10, name: "Init Experience — Showcase Foundation" }),
     ],
   })
 }
