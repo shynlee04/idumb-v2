@@ -25,11 +25,8 @@ const WRITE_TOOLS = new Set(["write", "edit"])
 const PLUGIN_TOOLS = new Set([
   // v3 governance tools
   "govern_plan", "govern_task", "govern_delegate", "govern_shell",
-  // Retained tools
+  // Context & bootstrap tools
   "idumb_anchor", "idumb_init",
-  // Legacy tools (backward compat)
-  "idumb_task", "idumb_scan", "idumb_codemap",
-  "idumb_read", "idumb_write", "idumb_bash", "idumb_webfetch",
 ])
 
 /**
@@ -49,38 +46,35 @@ interface AgentToolRule {
 export const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
   // Supreme Coordinator: orchestrator — plans, delegates, monitors status
   // CAN: govern_plan (all), govern_delegate (all), govern_task (status only),
-  //      govern_shell (inspection only — internal gating), idumb_anchor, idumb_scan, idumb_codemap,
+  //      govern_shell (inspection only — internal gating), idumb_anchor,
   //      idumb_init (status, scan — but NOT install)
-  // CANNOT: govern_task (start/complete/fail/review), idumb_init install, idumb_write, idumb_bash, idumb_webfetch
+  // CANNOT: govern_task (start/complete/fail/review), idumb_init install
   "idumb-supreme-coordinator": {
-    blockedTools: new Set(["idumb_write", "idumb_bash", "idumb_webfetch"]),
+    blockedTools: new Set<string>(),
     blockedActions: {
-      "idumb_task": new Set(["create_epic"]),
-      "idumb_init": new Set(["install"]),  // can status/scan but not install
+      "idumb_init": new Set(["install"]),
       "govern_task": new Set(["start", "complete", "fail", "review"]),
     },
   },
 
   // Investigator: research, analysis, brain entries
   // CAN: govern_task (all), govern_shell (validation+inspection — internal gating),
-  //      idumb_anchor, idumb_read, idumb_scan, idumb_codemap, idumb_webfetch
-  // CANNOT: govern_plan (except status), govern_delegate, idumb_init, idumb_write, idumb_bash
+  //      idumb_anchor
+  // CANNOT: govern_plan (except status), govern_delegate, idumb_init
   "idumb-investigator": {
-    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash", "govern_delegate"]),
+    blockedTools: new Set(["idumb_init", "govern_delegate"]),
     blockedActions: {
-      "idumb_task": new Set(["delegate", "create_epic"]),
       "govern_plan": new Set(["create", "plan_tasks", "archive", "abandon"]),
     },
   },
 
   // Executor: precision writes, builds, tests, git
   // CAN: govern_task (all), govern_shell (all categories — internal gating),
-  //      idumb_anchor, idumb_write, idumb_bash, idumb_read
-  // CANNOT: govern_plan (except status), govern_delegate, idumb_init, idumb_webfetch
+  //      idumb_anchor
+  // CANNOT: govern_plan (except status), govern_delegate, idumb_init
   "idumb-executor": {
-    blockedTools: new Set(["idumb_init", "idumb_webfetch", "govern_delegate"]),
+    blockedTools: new Set(["idumb_init", "govern_delegate"]),
     blockedActions: {
-      "idumb_task": new Set(["delegate", "create_epic"]),
       "govern_plan": new Set(["create", "plan_tasks", "archive", "abandon"]),
     },
   },

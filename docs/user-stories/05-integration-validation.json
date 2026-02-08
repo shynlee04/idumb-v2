@@ -1,0 +1,39 @@
+[
+  {
+    "description": "Update AGENTS.md ground truth to reflect current tool set and architecture",
+    "steps": [
+      "Update tool inventory: list only govern_plan, govern_task, govern_delegate, govern_shell, idumb_anchor, idumb_init",
+      "Remove all references to killed tools (idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_bash, idumb_webfetch, idumb_task)",
+      "Update test baseline count to match current npm test output",
+      "Update file tree to reflect deleted files",
+      "Document new tool descriptions with shadow technique",
+      "Document hook behavior changes (temporal gates, checkpoints, allowedTools)",
+      "Verify AGENTS.md accurately describes what exists in the codebase"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Run SOT contract cross-validation checks",
+    "steps": [
+      "Grep for /idumb-\\w+/ across src/ — all matches must be in AGENT_HIERARCHY (coordinator, investigator, executor)",
+      "Grep for /idumb_\\w+/ in AGENT_TOOL_RULES — all must exist in tool exports",
+      "Grep for /govern_\\w+/ in AGENT_TOOL_RULES — all must exist in tool exports",
+      "Verify no permission contradictions: if AGENT_TOOL_RULES allows a tool for an agent, that tool must also allow the agent internally",
+      "Verify schema versions are monotonically increasing",
+      "Report any violations found"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Full integration smoke test passes",
+    "steps": [
+      "npm run typecheck returns zero errors",
+      "npm test passes with all suites green",
+      "No grep matches for idumb_bash, idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_webfetch in src/ (excluding comments)",
+      "All exports in src/tools/index.ts have corresponding .ts files",
+      "Dashboard frontend builds successfully (npx vite build)",
+      "Dashboard backend starts without errors"
+    ],
+    "passes": false
+  }
+]

@@ -17,11 +17,8 @@ import { createToolGateBefore, createToolGateAfter, createCompactionHook, create
 import {
   // v3 governance tools
   govern_plan, govern_task, govern_delegate, govern_shell,
-  // Retained tools
+  // Context & bootstrap tools
   idumb_anchor, idumb_init,
-  // Legacy tools (backward compat — removal pending)
-  idumb_task, idumb_scan, idumb_codemap,
-  idumb_read, idumb_write, idumb_bash, idumb_webfetch,
 } from "./tools/index.js"
 
 const VERSION = "2.2.0"
@@ -173,10 +170,10 @@ const idumb: Plugin = async ({ directory }) => {
     },
 
     /**
-     * v3 governance tools + retained + legacy.
-     * v3: govern_plan, govern_task, govern_delegate, govern_shell
-     * Retained: idumb_anchor, idumb_init
-     * Legacy (removal pending): idumb_task, idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_bash, idumb_webfetch
+     * v3 governance tools + context/bootstrap tools.
+     * Governance: govern_plan, govern_task, govern_delegate, govern_shell
+     * Context: idumb_anchor (anchors survive compaction)
+     * Bootstrap: idumb_init (project setup)
      * Agent-scoped access enforced via AGENT_TOOL_RULES in tool-gate.ts.
      */
     tool: {
@@ -185,17 +182,9 @@ const idumb: Plugin = async ({ directory }) => {
       govern_task,
       govern_delegate,
       govern_shell,
-      // Retained tools
+      // Context & bootstrap tools
       idumb_anchor,
       idumb_init,
-      // Legacy tools (backward compat — removal pending)
-      idumb_task,
-      idumb_scan,
-      idumb_codemap,
-      idumb_read,
-      idumb_write,
-      idumb_bash,
-      idumb_webfetch,
     },
   }
 }

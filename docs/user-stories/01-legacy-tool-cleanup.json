@@ -1,0 +1,73 @@
+[
+  {
+    "description": "Remove legacy tool source files that are superseded by govern_* tools",
+    "steps": [
+      "Delete src/tools/scan.ts (replaced by innate grep/find + SDK client.find)",
+      "Delete src/tools/codemap.ts (replaced by innate grep + SDK client.find.symbols)",
+      "Delete src/tools/read.ts (replaced by innate read)",
+      "Delete src/tools/webfetch.ts (replaced by innate fetch + MCP tools)",
+      "Delete src/tools/write.ts (replaced by innate write + tool-gate enforcement)",
+      "Delete src/tools/task.ts (replaced by govern-task.ts + govern-plan.ts)",
+      "Delete src/tools/bash.ts (replaced by govern-shell.ts)",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with same or higher assertion count"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Update tools/index.ts barrel to export only current tools",
+    "steps": [
+      "Remove exports for idumb_task, idumb_bash, idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_webfetch from src/tools/index.ts",
+      "Keep exports for govern_plan, govern_task, govern_delegate, govern_shell, idumb_anchor, idumb_init",
+      "Verify npm run typecheck passes with zero errors"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Update index.ts plugin registration to remove legacy tools",
+    "steps": [
+      "Remove imports of idumb_task, idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_bash, idumb_webfetch from src/index.ts",
+      "Remove these tools from the plugin's tools record in src/index.ts",
+      "Remove the 'Legacy (removal pending)' comment block",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Update AGENT_TOOL_RULES to reference only current tool names",
+    "steps": [
+      "Replace all idumb_write, idumb_bash, idumb_webfetch, idumb_task references in AGENT_TOOL_RULES with equivalent govern_* tool references",
+      "Update coordinator blockedTools: remove idumb_write/idumb_bash/idumb_webfetch, keep relevant govern_* blocks",
+      "Update investigator blockedTools: remove idumb_init/idumb_write/idumb_bash, add equivalent blocks for new tools",
+      "Update executor blockedTools: remove idumb_init/idumb_webfetch, add equivalent blocks for new tools",
+      "Remove PLUGIN_TOOLS set if it still references old tool names",
+      "Verify tool-gate.test.ts passes with updated tool names"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Fix all remaining references to old tool names across codebase",
+    "steps": [
+      "Update src/templates.ts: replace any idumb_bash/idumb_scan/idumb_codemap/idumb_read/idumb_write/idumb_webfetch/idumb_task references with govern_* equivalents",
+      "Update src/lib/state-reader.ts: remove idumb_bash references if present",
+      "Update src/schemas/project-map.ts: remove idumb_scan references if present",
+      "Update src/hooks/message-transform.ts: remove idumb_scan references if present",
+      "Grep for idumb_bash, idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_webfetch, idumb_task across src/ and verify zero matches (excluding test files)",
+      "Verify npm run typecheck passes",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Migrate or remove tests that depend on deleted tools",
+    "steps": [
+      "Identify test assertions that reference deleted tool exports or behavior",
+      "Remove test assertions for dead tools (scan, codemap, read, write, webfetch, old task)",
+      "Add test assertions for new tools if coverage gaps exist",
+      "Verify npm test passes with all suites green",
+      "Report new test count (should be >= 592 minus removed assertions + any new ones)"
+    ],
+    "passes": false
+  }
+]

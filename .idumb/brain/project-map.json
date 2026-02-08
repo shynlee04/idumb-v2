@@ -1,0 +1,1982 @@
+{
+  "version": "1.0.0",
+  "scannedAt": 1770528383027,
+  "scanDurationMs": 1379,
+  "projectRoot": "/Users/apple/Documents/coding-projects/idumb/v2",
+  "frameworks": [
+    {
+      "name": "express",
+      "category": "backend",
+      "confidence": 80
+    },
+    {
+      "name": "typescript",
+      "category": "other",
+      "confidence": 80
+    }
+  ],
+  "languages": [
+    {
+      "name": "ts",
+      "category": "language",
+      "confidence": 95
+    },
+    {
+      "name": "mjs",
+      "category": "language",
+      "confidence": 55
+    },
+    {
+      "name": "tsx",
+      "category": "language",
+      "confidence": 70
+    }
+  ],
+  "directories": [
+    {
+      "path": "tests",
+      "fileCount": 13,
+      "totalSizeBytes": 199218,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "planning/research/2026-02-06-reset",
+      "fileCount": 13,
+      "totalSizeBytes": 72991,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based",
+      "fileCount": 15,
+      "totalSizeBytes": 280968,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/codebase",
+      "fileCount": 7,
+      "totalSizeBytes": 56079,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/meta",
+      "fileCount": 1,
+      "totalSizeBytes": 911486,
+      "isSource": false,
+      "extensions": [
+        ".json"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference",
+      "fileCount": 3,
+      "totalSizeBytes": 68874,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System",
+      "fileCount": 7,
+      "totalSizeBytes": 165259,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System",
+      "fileCount": 5,
+      "totalSizeBytes": 114171,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System",
+      "fileCount": 5,
+      "totalSizeBytes": 98193,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System",
+      "fileCount": 6,
+      "totalSizeBytes": 120760,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Templates and Standards",
+      "fileCount": 1,
+      "totalSizeBytes": 22582,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management",
+      "fileCount": 6,
+      "totalSizeBytes": 120674,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System",
+      "fileCount": 5,
+      "totalSizeBytes": 96343,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System",
+      "fileCount": 7,
+      "totalSizeBytes": 117392,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System",
+      "fileCount": 11,
+      "totalSizeBytes": 216002,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System",
+      "fileCount": 8,
+      "totalSizeBytes": 184277,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview",
+      "fileCount": 8,
+      "totalSizeBytes": 144978,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/legacy-repo/en/content",
+      "fileCount": 3,
+      "totalSizeBytes": 62944,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning/MASTER-ACTION-PLAN",
+      "fileCount": 1,
+      "totalSizeBytes": 11498,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "planning",
+      "fileCount": 6,
+      "totalSizeBytes": 288437,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "docs/plans",
+      "fileCount": 6,
+      "totalSizeBytes": 157668,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/bin",
+      "fileCount": 1,
+      "totalSizeBytes": 45,
+      "isSource": true,
+      "extensions": [
+        ".mjs"
+      ]
+    },
+    {
+      "path": "idumb-v2/tests",
+      "fileCount": 9,
+      "totalSizeBytes": 107350,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset",
+      "fileCount": 13,
+      "totalSizeBytes": 72991,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based",
+      "fileCount": 15,
+      "totalSizeBytes": 280968,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning/codebase",
+      "fileCount": 7,
+      "totalSizeBytes": 56079,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning/legacy-repo/en/meta",
+      "fileCount": 1,
+      "totalSizeBytes": 911486,
+      "isSource": false,
+      "extensions": [
+        ".json"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning/legacy-repo/en/content",
+      "fileCount": 3,
+      "totalSizeBytes": 62944,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning/MASTER-ACTION-PLAN",
+      "fileCount": 1,
+      "totalSizeBytes": 11498,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/planning",
+      "fileCount": 7,
+      "totalSizeBytes": 291346,
+      "isSource": false,
+      "extensions": [
+        ".md",
+        ".json"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/tools",
+      "fileCount": 11,
+      "totalSizeBytes": 204535,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/cli",
+      "fileCount": 2,
+      "totalSizeBytes": 19532,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/schemas",
+      "fileCount": 9,
+      "totalSizeBytes": 95633,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/dashboard/frontend/src",
+      "fileCount": 2,
+      "totalSizeBytes": 2277,
+      "isSource": true,
+      "extensions": [
+        ".tsx"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/dashboard/frontend",
+      "fileCount": 5,
+      "totalSizeBytes": 2325,
+      "isSource": true,
+      "extensions": [
+        ".json",
+        ".html",
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/dashboard/backend",
+      "fileCount": 1,
+      "totalSizeBytes": 16198,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/dashboard/shared",
+      "fileCount": 2,
+      "totalSizeBytes": 6021,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/hooks",
+      "fileCount": 5,
+      "totalSizeBytes": 21069,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/lib",
+      "fileCount": 9,
+      "totalSizeBytes": 101729,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/modules/agents",
+      "fileCount": 1,
+      "totalSizeBytes": 4379,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "idumb-v2/src/modules/schemas",
+      "fileCount": 1,
+      "totalSizeBytes": 2720,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2/src",
+      "fileCount": 4,
+      "totalSizeBytes": 82982,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "idumb-v2",
+      "fileCount": 18,
+      "totalSizeBytes": 557888,
+      "isSource": false,
+      "extensions": [
+        ".md",
+        ".json"
+      ]
+    },
+    {
+      "path": "src/tools",
+      "fileCount": 14,
+      "totalSizeBytes": 244610,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/cli",
+      "fileCount": 2,
+      "totalSizeBytes": 19337,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/schemas",
+      "fileCount": 11,
+      "totalSizeBytes": 128219,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend/src/styles",
+      "fileCount": 1,
+      "totalSizeBytes": 1557,
+      "isSource": false,
+      "extensions": [
+        ".css"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend/src/lib",
+      "fileCount": 1,
+      "totalSizeBytes": 166,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend/src",
+      "fileCount": 2,
+      "totalSizeBytes": 3048,
+      "isSource": true,
+      "extensions": [
+        ".tsx"
+      ]
+    },
+    {
+      "path": "src/dashboard/frontend",
+      "fileCount": 5,
+      "totalSizeBytes": 2771,
+      "isSource": true,
+      "extensions": [
+        ".json",
+        ".html",
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/backend",
+      "fileCount": 1,
+      "totalSizeBytes": 19616,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/dashboard/shared",
+      "fileCount": 2,
+      "totalSizeBytes": 2925,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/hooks",
+      "fileCount": 5,
+      "totalSizeBytes": 31872,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/lib",
+      "fileCount": 11,
+      "totalSizeBytes": 120283,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src/modules/agents",
+      "fileCount": 1,
+      "totalSizeBytes": 4379,
+      "isSource": false,
+      "extensions": [
+        ".md"
+      ]
+    },
+    {
+      "path": "src/modules/schemas",
+      "fileCount": 1,
+      "totalSizeBytes": 2720,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    },
+    {
+      "path": "src",
+      "fileCount": 3,
+      "totalSizeBytes": 81385,
+      "isSource": true,
+      "extensions": [
+        ".ts"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "CLAUDE-NAVIGATION.md",
+      "type": "documentation",
+      "sizeBytes": 18447,
+      "lastModified": 1770519939304,
+      "firstLine": "# iDumb v2 - Code Navigation Guide"
+    },
+    {
+      "path": "LICENSE",
+      "type": "license",
+      "sizeBytes": 1066,
+      "lastModified": 1770519939318,
+      "firstLine": "MIT License"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "type": "changelog",
+      "sizeBytes": 3323,
+      "lastModified": 1770519939299,
+      "firstLine": "# Changelog"
+    },
+    {
+      "path": "session-ses_3c9b.md",
+      "type": "documentation",
+      "sizeBytes": 74185,
+      "lastModified": 1770437405389,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, Phase 1 greeting approval"
+    },
+    {
+      "path": "TRIAL-TRACKER.md",
+      "type": "documentation",
+      "sizeBytes": 8998,
+      "lastModified": 1770519939323,
+      "firstLine": "# Trial Tracker"
+    },
+    {
+      "path": "CLAUDE-INDEX.md",
+      "type": "documentation",
+      "sizeBytes": 14713,
+      "lastModified": 1770519939303,
+      "firstLine": "# iDumb v2 - Documentation Index"
+    },
+    {
+      "path": "validation_report-2026-02-07.md",
+      "type": "documentation",
+      "sizeBytes": 5469,
+      "lastModified": 1770519942578,
+      "firstLine": "# iDumb v2 Validation Report"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/STACK.md",
+      "type": "documentation",
+      "sizeBytes": 3079,
+      "lastModified": 1770519942342,
+      "firstLine": "# Technology Stack Recommendation (Pivot 1: OpenCode Plugin)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/PRINCIPLES.md",
+      "type": "documentation",
+      "sizeBytes": 1518,
+      "lastModified": 1770519942340,
+      "firstLine": "# Non-Negotiable Development Principles (iDumb Reset)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 3190,
+      "lastModified": 1770519942330,
+      "firstLine": "# Architecture Patterns for iDumb (OpenCode Plugin First)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/PITFALLS.md",
+      "type": "documentation",
+      "sizeBytes": 4002,
+      "lastModified": 1770519942339,
+      "firstLine": "# Pitfalls for Meta-Governance Plugins (OpenCode / Claude Code)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/ECOSYSTEM-PLUGINS.md",
+      "type": "documentation",
+      "sizeBytes": 5031,
+      "lastModified": 1770519942334,
+      "firstLine": "# OpenCode Ecosystem Plugin Study (Selected 6)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/STRESS-TESTS-LEGACY-INFORMED.md",
+      "type": "documentation",
+      "sizeBytes": 10921,
+      "lastModified": 1770519942344,
+      "firstLine": "# Stress Tests: Legacy-Informed Design"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/SUMMARY.md",
+      "type": "documentation",
+      "sizeBytes": 11083,
+      "lastModified": 1770519942347,
+      "firstLine": "# Research Summary: iDumb Strategic Reset (Meta-Governance for Agentic CLIs)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/LEGACY-FLAWS-ANALYSIS.md",
+      "type": "documentation",
+      "sizeBytes": 10134,
+      "lastModified": 1770519942337,
+      "firstLine": "# Legacy iDumb Plugin: Flaw Analysis"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/VALIDATION-RESULTS.md",
+      "type": "documentation",
+      "sizeBytes": 6799,
+      "lastModified": 1770519942358,
+      "firstLine": "# Research Validation Results"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/STRESS-TESTS.md",
+      "type": "documentation",
+      "sizeBytes": 2344,
+      "lastModified": 1770519942345,
+      "firstLine": "# Stress Tests: Poisoned Context + Compaction + Delegation"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/COMPARISON-opencode-vs-claude-code.md",
+      "type": "documentation",
+      "sizeBytes": 5774,
+      "lastModified": 1770519942332,
+      "firstLine": "# Comparison: OpenCode vs Claude Code (Concepts, Terminology, Leverage Points)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/FEATURES.md",
+      "type": "documentation",
+      "sizeBytes": 2682,
+      "lastModified": 1770519942336,
+      "firstLine": "# Feature Landscape (Meta-Governance for Agentic CLIs)"
+    },
+    {
+      "path": "planning/research/2026-02-06-reset/V2-VIOLATION-CHECK.md",
+      "type": "documentation",
+      "sizeBytes": 6434,
+      "lastModified": 1770519942355,
+      "firstLine": "# V2 Codebase Violation Check"
+    },
+    {
+      "path": "planning/SUCCESS-CRITERIA.md",
+      "type": "documentation",
+      "sizeBytes": 11004,
+      "lastModified": 1770519941941,
+      "firstLine": "# Success Criteria: Real-Life Use Cases"
+    },
+    {
+      "path": "planning/this-is-when-run-init-a-terrible-experiencea.md",
+      "type": "documentation",
+      "sizeBytes": 188440,
+      "lastModified": 1770519942364,
+      "firstLine": "# Project scan and tech stack detection"
+    },
+    {
+      "path": "planning/GOVERNANCE.md",
+      "type": "documentation",
+      "sizeBytes": 18443,
+      "lastModified": 1770519941930,
+      "firstLine": "# iDumb Governance Framework"
+    },
+    {
+      "path": "planning/RESET-SYNTHESIS.md",
+      "type": "documentation",
+      "sizeBytes": 41306,
+      "lastModified": 1770519941939,
+      "firstLine": "# iDumb Meta Framework — Strategic Reset Synthesis"
+    },
+    {
+      "path": "planning/PROJECT.md",
+      "type": "documentation",
+      "sizeBytes": 17921,
+      "lastModified": 1770519941936,
+      "firstLine": "# iDumb v2: Intelligence Plugin for OpenCode"
+    },
+    {
+      "path": "planning/PHASE-COMPLETION.md",
+      "type": "documentation",
+      "sizeBytes": 11323,
+      "lastModified": 1770519941934,
+      "firstLine": "# Phase Completion Definitions (Incremental)"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n3-1.md",
+      "type": "documentation",
+      "sizeBytes": 7897,
+      "lastModified": 1770519941980,
+      "firstLine": "# Delegation Skills, Commands & Schema — Phase δ2"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/intelligence-gap-analysis-implementation_plan-n5.md",
+      "type": "documentation",
+      "sizeBytes": 16675,
+      "lastModified": 1770519942005,
+      "firstLine": "# 🧠 Intelligence Gap Analysis: Vision vs. Current Implementation"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n3.md",
+      "type": "documentation",
+      "sizeBytes": 25815,
+      "lastModified": 1770519941994,
+      "firstLine": "# Phase 1b Master Plan n3 — Deep Verification, Hierarchy Redesign & GUI Prototype"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n2.md",
+      "type": "documentation",
+      "sizeBytes": 32624,
+      "lastModified": 1770519941976,
+      "firstLine": "# Phase 1b Master Plan v3 — Entity-Driven Intelligence Architecture"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-fe1.md",
+      "type": "documentation",
+      "sizeBytes": 2603,
+      "lastModified": 1770519942007,
+      "firstLine": "# Dashboard Setup & Bug Fixes — Walkthrough"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n6.md",
+      "type": "documentation",
+      "sizeBytes": 12964,
+      "lastModified": 1770519942002,
+      "firstLine": "# Schema-First Governance Redesign — Unified Iterations"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-fe1.md",
+      "type": "documentation",
+      "sizeBytes": 20005,
+      "lastModified": 1770519941970,
+      "firstLine": "# iDumb Dashboard — Interactive Governance UI"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n3-2.md",
+      "type": "documentation",
+      "sizeBytes": 1720,
+      "lastModified": 1770519942019,
+      "firstLine": "# Phase δ2.5 — Tool Discoverability + Agent Scoping"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n3.md",
+      "type": "documentation",
+      "sizeBytes": 23274,
+      "lastModified": 1770519942022,
+      "firstLine": "# Phase α2: Foundation Fixes — Walkthrough"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n1.md",
+      "type": "documentation",
+      "sizeBytes": 36100,
+      "lastModified": 1770519941973,
+      "firstLine": "# Phase 1b Master Plan — Integration & Intelligence"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n5.md",
+      "type": "documentation",
+      "sizeBytes": 42917,
+      "lastModified": 1770519942000,
+      "firstLine": "# Phase 1b Master Plan n5 — Agent Ecosystem Integration"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n4.md",
+      "type": "documentation",
+      "sizeBytes": 47302,
+      "lastModified": 1770519941997,
+      "firstLine": "# Phase 1b Master Plan n4 — Entity-Driven Intelligence Tools"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n6.md",
+      "type": "documentation",
+      "sizeBytes": 2979,
+      "lastModified": 1770519942024,
+      "firstLine": "# n6 Walkthrough — 3-Agent Model Refactor + AGENTS.md v6.0.0"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/implementation_plan-n3-2.md",
+      "type": "documentation",
+      "sizeBytes": 3407,
+      "lastModified": 1770519941991,
+      "firstLine": "# Phase δ2.5 — Tool Discoverability + Agent Scoping + Delegation Awareness"
+    },
+    {
+      "path": "planning/implamentation-plan-turn-based/walkthrough-n2.md",
+      "type": "documentation",
+      "sizeBytes": 4686,
+      "lastModified": 1770519942009,
+      "firstLine": "# Phase 1b-β Walkthrough — Scan + CodeMap Showcase"
+    },
+    {
+      "path": "planning/codebase/STACK.md",
+      "type": "documentation",
+      "sizeBytes": 3828,
+      "lastModified": 1770519941960,
+      "firstLine": "# Technology Stack"
+    },
+    {
+      "path": "planning/codebase/ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 7340,
+      "lastModified": 1770519941944,
+      "firstLine": "# Architecture"
+    },
+    {
+      "path": "planning/codebase/STRUCTURE.md",
+      "type": "documentation",
+      "sizeBytes": 10142,
+      "lastModified": 1770519941964,
+      "firstLine": "# Codebase Structure"
+    },
+    {
+      "path": "planning/codebase/CONVENTIONS.md",
+      "type": "documentation",
+      "sizeBytes": 8479,
+      "lastModified": 1770519941947,
+      "firstLine": "# Coding Conventions"
+    },
+    {
+      "path": "planning/codebase/INTEGRATIONS.md",
+      "type": "documentation",
+      "sizeBytes": 7490,
+      "lastModified": 1770519941950,
+      "firstLine": "# External Integrations"
+    },
+    {
+      "path": "planning/codebase/TESTING.md",
+      "type": "documentation",
+      "sizeBytes": 8879,
+      "lastModified": 1770519941966,
+      "firstLine": "# Testing Patterns"
+    },
+    {
+      "path": "planning/codebase/CONCERNS.md",
+      "type": "documentation",
+      "sizeBytes": 9921,
+      "lastModified": 1770519941946,
+      "firstLine": "# Codebase Concerns"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference/Event System.md",
+      "type": "documentation",
+      "sizeBytes": 18606,
+      "lastModified": 1770519942031,
+      "firstLine": "# Event System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference/Data Models.md",
+      "type": "documentation",
+      "sizeBytes": 28966,
+      "lastModified": 1770519942029,
+      "firstLine": "# Data Models"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/API Reference/API Reference.md",
+      "type": "api",
+      "sizeBytes": 21302,
+      "lastModified": 1770519942026,
+      "firstLine": "# API Reference"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Testing Guide.md",
+      "type": "documentation",
+      "sizeBytes": 16093,
+      "lastModified": 1770519942249,
+      "firstLine": "# Testing Guide"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Skill Development Guide.md",
+      "type": "documentation",
+      "sizeBytes": 21688,
+      "lastModified": 1770519942184,
+      "firstLine": "# Skill Development Guide"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Governance Skills.md",
+      "type": "documentation",
+      "sizeBytes": 21618,
+      "lastModified": 1770519942179,
+      "firstLine": "# Governance Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Validation Skills.md",
+      "type": "documentation",
+      "sizeBytes": 23862,
+      "lastModified": 1770519942190,
+      "firstLine": "# Validation Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Support Skills.md",
+      "type": "documentation",
+      "sizeBytes": 19661,
+      "lastModified": 1770519942188,
+      "firstLine": "# Support Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Skill System.md",
+      "type": "documentation",
+      "sizeBytes": 30603,
+      "lastModified": 1770519942186,
+      "firstLine": "# Skill System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Meta Framework Skills.md",
+      "type": "documentation",
+      "sizeBytes": 20704,
+      "lastModified": 1770519942180,
+      "firstLine": "# Meta Framework Skills"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Skill System/Skill Architecture Overview.md",
+      "type": "documentation",
+      "sizeBytes": 27123,
+      "lastModified": 1770519942182,
+      "firstLine": "# Skill Architecture Overview"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Security System.md",
+      "type": "documentation",
+      "sizeBytes": 18157,
+      "lastModified": 1770519942166,
+      "firstLine": "# Security System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Validation Utilities.md",
+      "type": "documentation",
+      "sizeBytes": 24618,
+      "lastModified": 1770519942176,
+      "firstLine": "# Validation Utilities"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Security Policies.md",
+      "type": "documentation",
+      "sizeBytes": 23026,
+      "lastModified": 1770519942164,
+      "firstLine": "# Security Policies"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Threat Models and Mitigations.md",
+      "type": "documentation",
+      "sizeBytes": 23505,
+      "lastModified": 1770519942168,
+      "firstLine": "# Threat Models and Mitigations"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Security System/Monitoring and Auditing.md",
+      "type": "documentation",
+      "sizeBytes": 24865,
+      "lastModified": 1770519942162,
+      "firstLine": "# Monitoring and Auditing"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Prerequisite Validation.md",
+      "type": "documentation",
+      "sizeBytes": 18254,
+      "lastModified": 1770519942160,
+      "firstLine": "# Prerequisite Validation"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Permission Auditing.md",
+      "type": "documentation",
+      "sizeBytes": 20279,
+      "lastModified": 1770519942156,
+      "firstLine": "# Permission Auditing"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Chain Enforcement.md",
+      "type": "documentation",
+      "sizeBytes": 22463,
+      "lastModified": 1770519942153,
+      "firstLine": "# Chain Enforcement"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Deny Rules Configuration.md",
+      "type": "documentation",
+      "sizeBytes": 18532,
+      "lastModified": 1770519942155,
+      "firstLine": "# Deny Rules Configuration"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Permission System/Permission System.md",
+      "type": "documentation",
+      "sizeBytes": 18665,
+      "lastModified": 1770519942158,
+      "firstLine": "# Permission System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Project Management Commands.md",
+      "type": "documentation",
+      "sizeBytes": 20309,
+      "lastModified": 1770519942097,
+      "firstLine": "# Project Management Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Command Architecture.md",
+      "type": "documentation",
+      "sizeBytes": 19759,
+      "lastModified": 1770519942091,
+      "firstLine": "# Command Architecture"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Command System.md",
+      "type": "documentation",
+      "sizeBytes": 19827,
+      "lastModified": 1770519942093,
+      "firstLine": "# Command System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Workflow Commands.md",
+      "type": "documentation",
+      "sizeBytes": 18947,
+      "lastModified": 1770519942109,
+      "firstLine": "# Workflow Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Specialized Commands.md",
+      "type": "documentation",
+      "sizeBytes": 22799,
+      "lastModified": 1770519942099,
+      "firstLine": "# Specialized Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Command System/Core Commands.md",
+      "type": "documentation",
+      "sizeBytes": 19119,
+      "lastModified": 1770519942095,
+      "firstLine": "# Core Commands"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Templates and Standards/Templates and Standards.md",
+      "type": "documentation",
+      "sizeBytes": 22582,
+      "lastModified": 1770519942247,
+      "firstLine": "# Templates and Standards"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/State Management.md",
+      "type": "documentation",
+      "sizeBytes": 22624,
+      "lastModified": 1770519942207,
+      "firstLine": "# State Management"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/State Operations.md",
+      "type": "documentation",
+      "sizeBytes": 19632,
+      "lastModified": 1770519942209,
+      "firstLine": "# State Operations"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/Session Tracking.md",
+      "type": "documentation",
+      "sizeBytes": 15814,
+      "lastModified": 1770519942196,
+      "firstLine": "# Session Tracking"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/State Architecture.md",
+      "type": "documentation",
+      "sizeBytes": 21909,
+      "lastModified": 1770519942198,
+      "firstLine": "# State Architecture"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/Context Preservation.md",
+      "type": "documentation",
+      "sizeBytes": 22631,
+      "lastModified": 1770519942194,
+      "firstLine": "# Context Preservation"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/State Management/Checkpoint System.md",
+      "type": "documentation",
+      "sizeBytes": 18064,
+      "lastModified": 1770519942192,
+      "firstLine": "# Checkpoint System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Getting Started.md",
+      "type": "documentation",
+      "sizeBytes": 11475,
+      "lastModified": 1770519942151,
+      "firstLine": "# Getting Started"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Model Profiles.md",
+      "type": "documentation",
+      "sizeBytes": 13443,
+      "lastModified": 1770519942118,
+      "firstLine": "# Model Profiles"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Configuration Management.md",
+      "type": "documentation",
+      "sizeBytes": 24013,
+      "lastModified": 1770519942115,
+      "firstLine": "# Configuration Management"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Completion Definitions.md",
+      "type": "documentation",
+      "sizeBytes": 20781,
+      "lastModified": 1770519942112,
+      "firstLine": "# Completion Definitions"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Configuration System.md",
+      "type": "documentation",
+      "sizeBytes": 21287,
+      "lastModified": 1770519942116,
+      "firstLine": "# Configuration System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Configuration System/Permission Deny Rules.md",
+      "type": "documentation",
+      "sizeBytes": 16819,
+      "lastModified": 1770519942119,
+      "firstLine": "# Permission Deny Rules"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Mid Coordinator.md",
+      "type": "documentation",
+      "sizeBytes": 15977,
+      "lastModified": 1770519942087,
+      "firstLine": "# Mid Coordinator"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/High Governance.md",
+      "type": "documentation",
+      "sizeBytes": 16081,
+      "lastModified": 1770519942083,
+      "firstLine": "# High Governance"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Supreme Coordinator.md",
+      "type": "documentation",
+      "sizeBytes": 22530,
+      "lastModified": 1770519942089,
+      "firstLine": "# Supreme Coordinator"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Agent Hierarchy.md",
+      "type": "documentation",
+      "sizeBytes": 17304,
+      "lastModified": 1770519942067,
+      "firstLine": "# Agent Hierarchy"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Agent System.md",
+      "type": "documentation",
+      "sizeBytes": 16755,
+      "lastModified": 1770519942069,
+      "firstLine": "# Agent System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Builder Agent.md",
+      "type": "documentation",
+      "sizeBytes": 14171,
+      "lastModified": 1770519942080,
+      "firstLine": "# Builder Agent"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Agent System/Low Validator.md",
+      "type": "documentation",
+      "sizeBytes": 14574,
+      "lastModified": 1770519942085,
+      "firstLine": "# Low Validator"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Brainstorm Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 13355,
+      "lastModified": 1770519942277,
+      "firstLine": "# Brainstorm Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Research Platforms Script.md",
+      "type": "documentation",
+      "sizeBytes": 15378,
+      "lastModified": 1770519942285,
+      "firstLine": "# Research Platforms Script"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Validate Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 19480,
+      "lastModified": 1770519942298,
+      "firstLine": "# Validate Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Workflow Architecture.md",
+      "type": "documentation",
+      "sizeBytes": 19178,
+      "lastModified": 1770519942300,
+      "firstLine": "# Workflow Architecture"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Workflow System.md",
+      "type": "documentation",
+      "sizeBytes": 23888,
+      "lastModified": 1770519942304,
+      "firstLine": "# Workflow System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Init Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 14716,
+      "lastModified": 1770519942281,
+      "firstLine": "# Init Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Execute Phase Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 22890,
+      "lastModified": 1770519942279,
+      "firstLine": "# Execute Phase Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Research Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 20862,
+      "lastModified": 1770519942286,
+      "firstLine": "# Research Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Plan Phase Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 18519,
+      "lastModified": 1770519942282,
+      "firstLine": "# Plan Phase Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Roadmap Workflow.md",
+      "type": "documentation",
+      "sizeBytes": 15718,
+      "lastModified": 1770519942288,
+      "firstLine": "# Roadmap Workflow"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Workflow System/Workflow Customization.md",
+      "type": "documentation",
+      "sizeBytes": 32018,
+      "lastModified": 1770519942302,
+      "firstLine": "# Workflow Customization"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Troubleshooting Guide.md",
+      "type": "documentation",
+      "sizeBytes": 35376,
+      "lastModified": 1770519942275,
+      "firstLine": "# Troubleshooting Guide"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Validation Tool.md",
+      "type": "documentation",
+      "sizeBytes": 20542,
+      "lastModified": 1770519942273,
+      "firstLine": "# Validation Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/State Management Tool.md",
+      "type": "documentation",
+      "sizeBytes": 16196,
+      "lastModified": 1770519942267,
+      "firstLine": "# State Management Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Tool System.md",
+      "type": "documentation",
+      "sizeBytes": 32595,
+      "lastModified": 1770519942270,
+      "firstLine": "# Tool System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Performance Tool.md",
+      "type": "documentation",
+      "sizeBytes": 16049,
+      "lastModified": 1770519942256,
+      "firstLine": "# Performance Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Configuration Tool.md",
+      "type": "documentation",
+      "sizeBytes": 15770,
+      "lastModified": 1770519942252,
+      "firstLine": "# Configuration Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Orchestration Tool.md",
+      "type": "documentation",
+      "sizeBytes": 23298,
+      "lastModified": 1770519942254,
+      "firstLine": "# Orchestration Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Utility Tools.md",
+      "type": "documentation",
+      "sizeBytes": 40130,
+      "lastModified": 1770519942272,
+      "firstLine": "# Utility Tools"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Tool System/Security Tool.md",
+      "type": "documentation",
+      "sizeBytes": 19697,
+      "lastModified": 1770519942258,
+      "firstLine": "# Security Tool"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/State Management.md",
+      "type": "documentation",
+      "sizeBytes": 20963,
+      "lastModified": 1770519942130,
+      "firstLine": "# State Management"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Building With Agents Framework.md",
+      "type": "agents",
+      "sizeBytes": 15784,
+      "lastModified": 1770519942123,
+      "firstLine": "# Building With Agents Framework"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Agent Hierarchy.md",
+      "type": "documentation",
+      "sizeBytes": 18475,
+      "lastModified": 1770519942120,
+      "firstLine": "# Agent Hierarchy"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Permission System.md",
+      "type": "documentation",
+      "sizeBytes": 16482,
+      "lastModified": 1770519942128,
+      "firstLine": "# Permission System"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Workflow Orchestration.md",
+      "type": "documentation",
+      "sizeBytes": 15503,
+      "lastModified": 1770519942148,
+      "firstLine": "# Workflow Orchestration"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Framework Overview.md",
+      "type": "documentation",
+      "sizeBytes": 18979,
+      "lastModified": 1770519942124,
+      "firstLine": "# Framework Overview"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/Architecture Overview.md",
+      "type": "documentation",
+      "sizeBytes": 22669,
+      "lastModified": 1770519942121,
+      "firstLine": "# Architecture Overview"
+    },
+    {
+      "path": "planning/legacy-repo/en/content/Framework Overview/OpenCode Plugin Integration.md",
+      "type": "documentation",
+      "sizeBytes": 16123,
+      "lastModified": 1770519942126,
+      "firstLine": "# OpenCode Plugin Integration"
+    },
+    {
+      "path": "planning/MASTER-ACTION-PLAN/MASTER-PLAN-2026-02-07.md",
+      "type": "documentation",
+      "sizeBytes": 11498,
+      "lastModified": 1770519941932,
+      "firstLine": "# Phase 0: Smart TODO Tool — Implementation Plan"
+    },
+    {
+      "path": "analysis-agent-system.md",
+      "type": "documentation",
+      "sizeBytes": 15907,
+      "lastModified": 1770520246015,
+      "firstLine": "# iDumb Plugin — Agent System Analysis"
+    },
+    {
+      "path": "CLAUDE-ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 37573,
+      "lastModified": 1770519939300,
+      "firstLine": "# iDumb v2 - Complete Architecture Documentation"
+    },
+    {
+      "path": "docs/plans/2026-02-08-slice1-enforcement-sqlite-dashboard-revival.md",
+      "type": "documentation",
+      "sizeBytes": 40635,
+      "lastModified": 1770519939413,
+      "firstLine": "# Slice 1: Enforcement Fix + SQLite Foundation + Dashboard Revival"
+    },
+    {
+      "path": "docs/plans/2026-02-08-task-graph-hook-intelligence-design.md",
+      "type": "documentation",
+      "sizeBytes": 33082,
+      "lastModified": 1770519939416,
+      "firstLine": "# Task Graph + Hook Intelligence Engine — Design Document"
+    },
+    {
+      "path": "docs/plans/2026-02-08-tool-agent-redesign-plan.md",
+      "type": "documentation",
+      "sizeBytes": 16682,
+      "lastModified": 1770519939418,
+      "firstLine": "# Tool & Agent Redesign Plan — iDumb v2"
+    },
+    {
+      "path": "docs/plans/2026-02-08-sot-contract.md",
+      "type": "documentation",
+      "sizeBytes": 16193,
+      "lastModified": 1770519939415,
+      "firstLine": "# SOT (Source of Truth) Contract — iDumb v2"
+    },
+    {
+      "path": "docs/plans/2026-02-08-user-journey-governance-design.md",
+      "type": "documentation",
+      "sizeBytes": 19904,
+      "lastModified": 1770526857364,
+      "firstLine": "# User Journey + Governance Design — iDumb v2"
+    },
+    {
+      "path": "docs/plans/2026-02-08-phase-1a-completion.md",
+      "type": "documentation",
+      "sizeBytes": 31172,
+      "lastModified": 1770521596056,
+      "firstLine": "# Phase 1a Completion — Implementation Plan"
+    },
+    {
+      "path": "fix-delegation-system.md",
+      "type": "documentation",
+      "sizeBytes": 10022,
+      "lastModified": 1770520365936,
+      "firstLine": "# iDumb Delegation System — Fix Plan"
+    },
+    {
+      "path": "README.md",
+      "type": "readme",
+      "sizeBytes": 24906,
+      "lastModified": 1770519939319,
+      "firstLine": "<p align=\"center\">"
+    },
+    {
+      "path": "CLAUDE-GAPS.md",
+      "type": "documentation",
+      "sizeBytes": 28716,
+      "lastModified": 1770519939301,
+      "firstLine": "# iDumb v2 - Gaps and Issues Analysis"
+    },
+    {
+      "path": "n-3-2-1e.md",
+      "type": "documentation",
+      "sizeBytes": 178261,
+      "lastModified": 1770519939425,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, phase 1 greeting"
+    },
+    {
+      "path": "STRATEGIC-PLANNING-PROMPT.md",
+      "type": "documentation",
+      "sizeBytes": 47318,
+      "lastModified": 1770519939321,
+      "firstLine": "# iDumb v3 — Strategic Planning Prompt (Source of Truth)"
+    },
+    {
+      "path": "GAP-ANALYSIS.md",
+      "type": "documentation",
+      "sizeBytes": 11645,
+      "lastModified": 1770519939316,
+      "firstLine": "# iDumb v2 Plugin Gap Analysis"
+    },
+    {
+      "path": "idumb-v2/LICENSE",
+      "type": "license",
+      "sizeBytes": 1066,
+      "lastModified": 1770528050786,
+      "firstLine": "MIT License"
+    },
+    {
+      "path": "idumb-v2/CHANGELOG.md",
+      "type": "changelog",
+      "sizeBytes": 3323,
+      "lastModified": 1770528050785,
+      "firstLine": "# Changelog"
+    },
+    {
+      "path": "idumb-v2/TRIAL-TRACKER.md",
+      "type": "documentation",
+      "sizeBytes": 8998,
+      "lastModified": 1770528050789,
+      "firstLine": "# Trial Tracker"
+    },
+    {
+      "path": "idumb-v2/validation_report-2026-02-07.md",
+      "type": "documentation",
+      "sizeBytes": 5469,
+      "lastModified": 1770528050925,
+      "firstLine": "# iDumb v2 Validation Report"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/STACK.md",
+      "type": "documentation",
+      "sizeBytes": 3079,
+      "lastModified": 1770528050869,
+      "firstLine": "# Technology Stack Recommendation (Pivot 1: OpenCode Plugin)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/PRINCIPLES.md",
+      "type": "documentation",
+      "sizeBytes": 1518,
+      "lastModified": 1770528050869,
+      "firstLine": "# Non-Negotiable Development Principles (iDumb Reset)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 3190,
+      "lastModified": 1770528050867,
+      "firstLine": "# Architecture Patterns for iDumb (OpenCode Plugin First)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/PITFALLS.md",
+      "type": "documentation",
+      "sizeBytes": 4002,
+      "lastModified": 1770528050869,
+      "firstLine": "# Pitfalls for Meta-Governance Plugins (OpenCode / Claude Code)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/ECOSYSTEM-PLUGINS.md",
+      "type": "documentation",
+      "sizeBytes": 5031,
+      "lastModified": 1770528050868,
+      "firstLine": "# OpenCode Ecosystem Plugin Study (Selected 6)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/STRESS-TESTS-LEGACY-INFORMED.md",
+      "type": "documentation",
+      "sizeBytes": 10921,
+      "lastModified": 1770528050870,
+      "firstLine": "# Stress Tests: Legacy-Informed Design"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/SUMMARY.md",
+      "type": "documentation",
+      "sizeBytes": 11083,
+      "lastModified": 1770528050870,
+      "firstLine": "# Research Summary: iDumb Strategic Reset (Meta-Governance for Agentic CLIs)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/LEGACY-FLAWS-ANALYSIS.md",
+      "type": "documentation",
+      "sizeBytes": 10134,
+      "lastModified": 1770528050868,
+      "firstLine": "# Legacy iDumb Plugin: Flaw Analysis"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/VALIDATION-RESULTS.md",
+      "type": "documentation",
+      "sizeBytes": 6799,
+      "lastModified": 1770528050872,
+      "firstLine": "# Research Validation Results"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/STRESS-TESTS.md",
+      "type": "documentation",
+      "sizeBytes": 2344,
+      "lastModified": 1770528050870,
+      "firstLine": "# Stress Tests: Poisoned Context + Compaction + Delegation"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/COMPARISON-opencode-vs-claude-code.md",
+      "type": "documentation",
+      "sizeBytes": 5774,
+      "lastModified": 1770528050867,
+      "firstLine": "# Comparison: OpenCode vs Claude Code (Concepts, Terminology, Leverage Points)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/FEATURES.md",
+      "type": "documentation",
+      "sizeBytes": 2682,
+      "lastModified": 1770528050868,
+      "firstLine": "# Feature Landscape (Meta-Governance for Agentic CLIs)"
+    },
+    {
+      "path": "idumb-v2/planning/research/2026-02-06-reset/V2-VIOLATION-CHECK.md",
+      "type": "documentation",
+      "sizeBytes": 6434,
+      "lastModified": 1770528050871,
+      "firstLine": "# V2 Codebase Violation Check"
+    },
+    {
+      "path": "idumb-v2/planning/SUCCESS-CRITERIA.md",
+      "type": "documentation",
+      "sizeBytes": 11004,
+      "lastModified": 1770528050795,
+      "firstLine": "# Success Criteria: Real-Life Use Cases"
+    },
+    {
+      "path": "idumb-v2/planning/this-is-when-run-init-a-terrible-experiencea.md",
+      "type": "documentation",
+      "sizeBytes": 188440,
+      "lastModified": 1770528050873,
+      "firstLine": "# Project scan and tech stack detection"
+    },
+    {
+      "path": "idumb-v2/planning/GOVERNANCE.md",
+      "type": "documentation",
+      "sizeBytes": 18443,
+      "lastModified": 1770528050793,
+      "firstLine": "# iDumb Governance Framework"
+    },
+    {
+      "path": "idumb-v2/planning/RESET-SYNTHESIS.md",
+      "type": "documentation",
+      "sizeBytes": 41306,
+      "lastModified": 1770528050795,
+      "firstLine": "# iDumb Meta Framework — Strategic Reset Synthesis"
+    },
+    {
+      "path": "idumb-v2/planning/PROJECT.md",
+      "type": "documentation",
+      "sizeBytes": 17921,
+      "lastModified": 1770528050794,
+      "firstLine": "# iDumb v2: Intelligence Plugin for OpenCode"
+    },
+    {
+      "path": "idumb-v2/planning/PHASE-COMPLETION.md",
+      "type": "documentation",
+      "sizeBytes": 11323,
+      "lastModified": 1770528050794,
+      "firstLine": "# Phase Completion Definitions (Incremental)"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n3-1.md",
+      "type": "documentation",
+      "sizeBytes": 7897,
+      "lastModified": 1770528050802,
+      "firstLine": "# Delegation Skills, Commands & Schema — Phase δ2"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/intelligence-gap-analysis-implementation_plan-n5.md",
+      "type": "documentation",
+      "sizeBytes": 16675,
+      "lastModified": 1770528050806,
+      "firstLine": "# 🧠 Intelligence Gap Analysis: Vision vs. Current Implementation"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n3.md",
+      "type": "documentation",
+      "sizeBytes": 25815,
+      "lastModified": 1770528050803,
+      "firstLine": "# Phase 1b Master Plan n3 — Deep Verification, Hierarchy Redesign & GUI Prototype"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n2.md",
+      "type": "documentation",
+      "sizeBytes": 32624,
+      "lastModified": 1770528050801,
+      "firstLine": "# Phase 1b Master Plan v3 — Entity-Driven Intelligence Architecture"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/walkthrough-fe1.md",
+      "type": "documentation",
+      "sizeBytes": 2603,
+      "lastModified": 1770528050806,
+      "firstLine": "# Dashboard Setup & Bug Fixes — Walkthrough"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n6.md",
+      "type": "documentation",
+      "sizeBytes": 12964,
+      "lastModified": 1770528050805,
+      "firstLine": "# Schema-First Governance Redesign — Unified Iterations"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-fe1.md",
+      "type": "documentation",
+      "sizeBytes": 20005,
+      "lastModified": 1770528050800,
+      "firstLine": "# iDumb Dashboard — Interactive Governance UI"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/walkthrough-n3-2.md",
+      "type": "documentation",
+      "sizeBytes": 1720,
+      "lastModified": 1770528050807,
+      "firstLine": "# Phase δ2.5 — Tool Discoverability + Agent Scoping"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/walkthrough-n3.md",
+      "type": "documentation",
+      "sizeBytes": 23274,
+      "lastModified": 1770528050807,
+      "firstLine": "# Phase α2: Foundation Fixes — Walkthrough"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n1.md",
+      "type": "documentation",
+      "sizeBytes": 36100,
+      "lastModified": 1770528050801,
+      "firstLine": "# Phase 1b Master Plan — Integration & Intelligence"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n5.md",
+      "type": "documentation",
+      "sizeBytes": 42917,
+      "lastModified": 1770528050805,
+      "firstLine": "# Phase 1b Master Plan n5 — Agent Ecosystem Integration"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n4.md",
+      "type": "documentation",
+      "sizeBytes": 47302,
+      "lastModified": 1770528050804,
+      "firstLine": "# Phase 1b Master Plan n4 — Entity-Driven Intelligence Tools"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/walkthrough-n6.md",
+      "type": "documentation",
+      "sizeBytes": 2979,
+      "lastModified": 1770528050808,
+      "firstLine": "# n6 Walkthrough — 3-Agent Model Refactor + AGENTS.md v6.0.0"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/implementation_plan-n3-2.md",
+      "type": "documentation",
+      "sizeBytes": 3407,
+      "lastModified": 1770528050802,
+      "firstLine": "# Phase δ2.5 — Tool Discoverability + Agent Scoping + Delegation Awareness"
+    },
+    {
+      "path": "idumb-v2/planning/implamentation-plan-turn-based/walkthrough-n2.md",
+      "type": "documentation",
+      "sizeBytes": 4686,
+      "lastModified": 1770528050807,
+      "firstLine": "# Phase 1b-β Walkthrough — Scan + CodeMap Showcase"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/STACK.md",
+      "type": "documentation",
+      "sizeBytes": 3828,
+      "lastModified": 1770528050798,
+      "firstLine": "# Technology Stack"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/ARCHITECTURE.md",
+      "type": "documentation",
+      "sizeBytes": 7340,
+      "lastModified": 1770528050796,
+      "firstLine": "# Architecture"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/STRUCTURE.md",
+      "type": "documentation",
+      "sizeBytes": 10142,
+      "lastModified": 1770528050798,
+      "firstLine": "# Codebase Structure"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/CONVENTIONS.md",
+      "type": "documentation",
+      "sizeBytes": 8479,
+      "lastModified": 1770528050797,
+      "firstLine": "# Coding Conventions"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/INTEGRATIONS.md",
+      "type": "documentation",
+      "sizeBytes": 7490,
+      "lastModified": 1770528050797,
+      "firstLine": "# External Integrations"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/TESTING.md",
+      "type": "documentation",
+      "sizeBytes": 8879,
+      "lastModified": 1770528050799,
+      "firstLine": "# Testing Patterns"
+    },
+    {
+      "path": "idumb-v2/planning/codebase/CONCERNS.md",
+      "type": "documentation",
+      "sizeBytes": 9921,
+      "lastModified": 1770528050796,
+      "firstLine": "# Codebase Concerns"
+    },
+    {
+      "path": "idumb-v2/planning/legacy-repo/en/content/Testing Guide.md",
+      "type": "documentation",
+      "sizeBytes": 16093,
+      "lastModified": 1770528050850,
+      "firstLine": "# Testing Guide"
+    },
+    {
+      "path": "idumb-v2/planning/legacy-repo/en/content/Getting Started.md",
+      "type": "documentation",
+      "sizeBytes": 11475,
+      "lastModified": 1770528050832,
+      "firstLine": "# Getting Started"
+    },
+    {
+      "path": "idumb-v2/planning/legacy-repo/en/content/Troubleshooting Guide.md",
+      "type": "documentation",
+      "sizeBytes": 35376,
+      "lastModified": 1770528050854,
+      "firstLine": "# Troubleshooting Guide"
+    },
+    {
+      "path": "idumb-v2/planning/MASTER-ACTION-PLAN/MASTER-PLAN-2026-02-07.md",
+      "type": "documentation",
+      "sizeBytes": 11498,
+      "lastModified": 1770528050793,
+      "firstLine": "# Phase 0: Smart TODO Tool — Implementation Plan"
+    },
+    {
+      "path": "idumb-v2/README.md",
+      "type": "readme",
+      "sizeBytes": 19935,
+      "lastModified": 1770528050787,
+      "firstLine": "<p align=\"center\">"
+    },
+    {
+      "path": "idumb-v2/n-3-2-1e.md",
+      "type": "documentation",
+      "sizeBytes": 178261,
+      "lastModified": 1770528050790,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, phase 1 greeting"
+    },
+    {
+      "path": "idumb-v2/STRATEGIC-PLANNING-PROMPT.md",
+      "type": "documentation",
+      "sizeBytes": 47318,
+      "lastModified": 1770528050787,
+      "firstLine": "# iDumb v3 — Strategic Planning Prompt (Source of Truth)"
+    },
+    {
+      "path": "idumb-v2/GAP-ANALYSIS.md",
+      "type": "documentation",
+      "sizeBytes": 11645,
+      "lastModified": 1770528050786,
+      "firstLine": "# iDumb v2 Plugin Gap Analysis"
+    },
+    {
+      "path": "idumb-v2/TRIAL-1-RESULTS.md",
+      "type": "documentation",
+      "sizeBytes": 4709,
+      "lastModified": 1770528050788,
+      "firstLine": "# TRIAL-1 Validation Results"
+    },
+    {
+      "path": "idumb-v2/AGENTS.md",
+      "type": "agents",
+      "sizeBytes": 22143,
+      "lastModified": 1770528050785,
+      "firstLine": "# AGENTS.md — iDumb v2 (Ground Truth)"
+    },
+    {
+      "path": "idumb-v2/TEST-CASES.md",
+      "type": "documentation",
+      "sizeBytes": 14426,
+      "lastModified": 1770528050788,
+      "firstLine": "# iDumb v2 — Real-Life Test Cases"
+    },
+    {
+      "path": "idumb-v2/CLAUDE.md",
+      "type": "documentation",
+      "sizeBytes": 15720,
+      "lastModified": 1770528050785,
+      "firstLine": "# CLAUDE.md"
+    },
+    {
+      "path": "idumb-v2/src/modules/agents/meta-builder.md",
+      "type": "documentation",
+      "sizeBytes": 4379,
+      "lastModified": 1770528050900,
+      "firstLine": "# iDumb Meta Builder Agent"
+    },
+    {
+      "path": "TRIAL-1-RESULTS.md",
+      "type": "documentation",
+      "sizeBytes": 4709,
+      "lastModified": 1770519939322,
+      "firstLine": "# TRIAL-1 Validation Results"
+    },
+    {
+      "path": "AGENTS.md",
+      "type": "agents",
+      "sizeBytes": 22449,
+      "lastModified": 1770527564097,
+      "firstLine": "# AGENTS.md — iDumb v2 (Ground Truth)"
+    },
+    {
+      "path": "session-deldegation-tools-init-run.md",
+      "type": "documentation",
+      "sizeBytes": 183157,
+      "lastModified": 1770417917710,
+      "firstLine": "# Project scan: tech stack, gaps, conflicts, Phase 1 greeting"
+    },
+    {
+      "path": "TEST-CASES.md",
+      "type": "documentation",
+      "sizeBytes": 14426,
+      "lastModified": 1770404561821,
+      "firstLine": "# iDumb v2 — Real-Life Test Cases"
+    },
+    {
+      "path": "CLAUDE.md",
+      "type": "documentation",
+      "sizeBytes": 8178,
+      "lastModified": 1770519939306,
+      "firstLine": "# CLAUDE.md"
+    },
+    {
+      "path": "src/modules/agents/meta-builder.md",
+      "type": "documentation",
+      "sizeBytes": 4379,
+      "lastModified": 1770519942481,
+      "firstLine": "# iDumb Meta Builder Agent"
+    }
+  ],
+  "stats": {
+    "totalFiles": 350,
+    "totalDirs": 57,
+    "totalSizeBytes": 8026859,
+    "sourceFiles": 124,
+    "testFiles": 22,
+    "configFiles": 17,
+    "documentFiles": 202
+  },
+  "lastFullScanAt": 1770528384405
+}

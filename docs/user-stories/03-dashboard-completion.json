@@ -1,0 +1,42 @@
+[
+  {
+    "description": "Wire remaining dashboard backend endpoints to SQLite adapter",
+    "steps": [
+      "Identify all readFileSync calls in src/dashboard/backend/server.ts (lines 270, 318, 360)",
+      "Replace artifact content reads (line 270) with SQLite-backed or direct file reads via the adapter pattern",
+      "Replace artifact save (line 318) with adapter-backed write",
+      "Replace comments reads (line 360) with adapter-backed query",
+      "Ensure SqliteAdapter is initialized on server start",
+      "Verify backend starts without errors: npx tsx src/dashboard/backend/server.ts",
+      "Verify /api/tasks endpoint returns valid JSON",
+      "Verify /api/delegations endpoint returns valid JSON"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Install missing shadcn components and rebuild dashboard panels",
+    "steps": [
+      "Install missing shadcn components in frontend: tabs, collapsible, tooltip",
+      "Rebuild TaskHierarchyPanel using Card, Badge, ScrollArea, Collapsible from shadcn",
+      "Rebuild DelegationChainPanel using Card, Badge, Tabs from shadcn",
+      "Rebuild BrainKnowledgePanel using Card, ScrollArea, Badge from shadcn",
+      "Rebuild PlanningArtifactsPanel using Card, Tabs, ScrollArea from shadcn",
+      "Replace all hand-written CSS class divs with shadcn component equivalents",
+      "Use governance-block, governance-allow, governance-warn CSS vars for status colors",
+      "Verify frontend builds: npx vite build in frontend directory"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Add WebSocket real-time connection to dashboard App.tsx",
+    "steps": [
+      "Add useWebSocket hook to App.tsx or a hooks file",
+      "Connect to ws://localhost:3001/ws on mount",
+      "On file-changed or state-update messages, invalidate React Query cache",
+      "Add reconnection logic with 3-second delay",
+      "Clean up WebSocket on unmount",
+      "Verify frontend builds without errors"
+    ],
+    "passes": false
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "description": "Wire temporal gate enforcement in tool-gate.ts",
+    "steps": [
+      "In tool.execute.before, when govern_task action=start is called, check TaskNode.dependsOn array",
+      "If any dependency TaskNode has status !== 'completed', block the start action",
+      "Return instructive error: WHAT (tried to start task X), WHY (depends on task Y which is still active/blocked), USE INSTEAD (complete Y first or ask coordinator to adjust), EVIDENCE (TaskNode IDs and statuses)",
+      "Write tests in tool-gate.test.ts verifying temporal gate blocks when deps not met",
+      "Write tests verifying temporal gate allows when deps are completed",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Wire per-TaskNode allowedTools enforcement in tool-gate.ts",
+    "steps": [
+      "When a task is active, check if the invoked tool is in TaskNode.allowedTools",
+      "If allowedTools is non-empty and the tool is not in the list, block the tool call",
+      "Return instructive error with WHAT/WHY/USE INSTEAD/EVIDENCE pattern",
+      "Write tests verifying allowedTools enforcement blocks unauthorized tools",
+      "Write tests verifying allowedTools allows authorized tools",
+      "Verify empty allowedTools means no restriction (backward compatible)",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Wire checkpoint auto-recording in tool.execute.after",
+    "steps": [
+      "In tool.execute.after, when tool is write/edit and there is an active TaskNode, create a Checkpoint",
+      "Checkpoint records: tool name, timestamp, auto-generated summary, files modified",
+      "Filter: only record checkpoints for CHECKPOINT_TOOLS (write, edit, govern_shell with build/test/git purpose)",
+      "Skip checkpoint recording for reads, greps, status checks",
+      "Persist checkpoint to TaskGraph via stateManager",
+      "Write tests verifying checkpoint creation on write/edit",
+      "Write tests verifying checkpoint NOT created on read/status",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Enhance system.ts to inject full active chain context",
+    "steps": [
+      "When a WorkPlan is active, inject: WorkPlan name, progress (X/Y tasks done), current TaskNode, recent checkpoints",
+      "Include planAhead visibility: show next planned tasks",
+      "Include delegation context: who delegated the current task, expected output",
+      "Keep within 800-char budget (existing constraint)",
+      "Write tests in system.test.ts verifying active chain injection",
+      "Write tests verifying planAhead visibility",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "description": "Create sdk-client.ts module for shared access to OpencodeClient",
+    "steps": [
+      "Create src/lib/sdk-client.ts with getClient() function",
+      "Store client reference from PluginInput in index.ts plugin factory",
+      "Export getClient() that throws if not initialized",
+      "Update src/index.ts to destructure client from PluginInput alongside directory",
+      "Pass client to sdk-client module during plugin initialization",
+      "Add re-export from src/lib/index.ts barrel",
+      "Verify npm run typecheck passes",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Wire client.tui.showToast() for governance notifications",
+    "steps": [
+      "Import getClient from sdk-client in tool-gate.ts",
+      "When a write is blocked, call client.tui.showToast() with governance block message",
+      "When a task is started, call client.tui.showToast() with task activation message",
+      "Wrap all showToast calls in try-catch (graceful degradation if TUI unavailable)",
+      "Verify npm run typecheck passes",
+      "Verify npm test passes (tests should not break since showToast is optional)"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Wire client.app.log() as optional logging backend",
+    "steps": [
+      "In src/lib/logging.ts, accept optional client parameter",
+      "When client is available, log to both file and client.app.log()",
+      "When client is unavailable, fall back to file logging only",
+      "Update createLogger factory to accept client parameter",
+      "Update index.ts to pass client to logger creation",
+      "Verify npm run typecheck passes",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Wire delegation via client.session and client.tui for programmatic agent switching",
+    "steps": [
+      "In govern-delegate.ts assign action, after creating delegation record, attempt client.tui.executeCommand('agent_cycle')",
+      "Wrap in try-catch: if executeCommand fails, fall back to returning delegation instructions in tool output",
+      "Test client.session.children() to track delegation tree (log result, don't crash if unavailable)",
+      "Document which SDK methods work and which don't in a comment block",
+      "Verify npm run typecheck passes",
+      "Verify npm test passes"
+    ],
+    "passes": false
+  }
+]
