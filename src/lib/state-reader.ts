@@ -11,10 +11,13 @@
  * Files read:
  * - .idumb/brain/tasks.json     → TaskStore (active task, epics, hierarchy)
  * - .idumb/brain/state.json     → SessionState (captured agent, blocks)
+ * - .idumb/brain/graph.json     → TaskGraph (v3 WorkPlan/TaskNode model)
+ * - .idumb/brain/plan.json      → PlanState (phase tracking)
  * - .idumb/brain/delegations.json → DelegationStore (active delegations)
  * - .idumb/brain/knowledge.json  → BrainStore (knowledge entries)
  * - .idumb/brain/codemap.json    → CodeMapStore (codebase map)
  * - .idumb/brain/project-map.json → ProjectMap (framework detection)
+ * - .idumb/brain/registry.json   → PlanningRegistry (artifact tracking)
  * - .idumb/config.json           → IdumbConfig (language, governance settings)
  */
 
@@ -67,6 +70,9 @@ export interface GovernanceSnapshot {
     delegationStore: DelegationStore | null
     codeMapStore: CodeMapStore | null
     projectMap: ProjectMap | null
+    taskGraph: Record<string, unknown> | null
+    planState: Record<string, unknown> | null
+    planningRegistry: Record<string, unknown> | null
     config: Record<string, unknown> | null
 }
 
@@ -117,6 +123,9 @@ export function readGovernanceState(projectDir: string): GovernanceSnapshot {
         delegationStore: safeReadJSON<DelegationStore>(join(projectDir, BRAIN_PATHS.delegations)),
         codeMapStore: safeReadJSON<CodeMapStore>(join(projectDir, BRAIN_PATHS.codemap)),
         projectMap: safeReadJSON<ProjectMap>(join(projectDir, BRAIN_PATHS.projectMap)),
+        taskGraph: safeReadJSON<Record<string, unknown>>(join(projectDir, BRAIN_PATHS.taskGraph)),
+        planState: safeReadJSON<Record<string, unknown>>(join(projectDir, BRAIN_PATHS.planState)),
+        planningRegistry: safeReadJSON<Record<string, unknown>>(join(projectDir, BRAIN_PATHS.planningRegistry)),
         config: safeReadJSON<Record<string, unknown>>(join(projectDir, BRAIN_PATHS.config)),
     }
 }

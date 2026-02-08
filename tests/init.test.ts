@@ -159,7 +159,6 @@ function assert(name: string, condition: boolean): void {
   // Verify directory structure
   assert("scaffold: .idumb/ exists", existsSync(join(scaffoldDir, ".idumb")))
   assert("scaffold: brain/ exists", existsSync(join(scaffoldDir, ".idumb/brain")))
-  assert("scaffold: brain/index/ exists", existsSync(join(scaffoldDir, ".idumb/brain/index")))
   assert("scaffold: modules/ exists", existsSync(join(scaffoldDir, ".idumb/modules")))
   assert("scaffold: modules/agents/ exists", existsSync(join(scaffoldDir, ".idumb/modules/agents")))
   assert("scaffold: modules/schemas/ exists", existsSync(join(scaffoldDir, ".idumb/modules/schemas")))

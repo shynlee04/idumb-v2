@@ -403,7 +403,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       }
 
       // Clean stale idumb-v2 entries, then add single plugin entry
-      // All 9 tools + all hooks are registered via the main package entry
+      // All 6 tools + all hooks are registered via the main package entry
       const existingPlugins = (config.plugin as string[] | undefined) ?? []
       const cleanedPlugins = cleanStalePluginPaths(existingPlugins)
       cleanedPlugins.push(resolution.path)

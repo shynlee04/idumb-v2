@@ -29,7 +29,8 @@ import {
   type OutlierEntry,
 } from "../schemas/planning-registry.js"
 
-const PLANNING_REGISTRY_PATH = ".idumb/brain/registry.json"
+import { BRAIN_PATHS } from "../lib/paths.js"
+const PLANNING_REGISTRY_PATH = BRAIN_PATHS.planningRegistry
 const LEGACY_PLANNING_REGISTRY_PATH = ".idumb/brain/planning-registry.json"
 const PLANNING_SCAN_ROOTS = [".idumb", "planning"]
 const IGNORED_OUTLIER_PREFIXES = [

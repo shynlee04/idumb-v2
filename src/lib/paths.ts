@@ -20,6 +20,7 @@ export const BRAIN_PATHS = {
   knowledge: ".idumb/brain/knowledge.json",
   codemap: ".idumb/brain/codemap.json",
   projectMap: ".idumb/brain/project-map.json",
+  planningRegistry: ".idumb/brain/registry.json",
   config: ".idumb/config.json",
 
   // ─── Legacy paths (pre-Phase 8 migration) ──────────────────────

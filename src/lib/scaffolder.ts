@@ -43,7 +43,6 @@ async function backupFile(filePath: string, idumbRoot: string, log: Logger): Pro
 /** All directories that must exist under .idumb/ */
 const SCAFFOLD_DIRS = [
   "brain",
-  "brain/index",
   "modules",
   "modules/agents",
   "modules/schemas",
