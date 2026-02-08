@@ -14,11 +14,12 @@
  * - GET /api/codemap        — CodeMapStore snapshot
  * - GET /api/artifacts      — List planning artifacts
  * - GET /api/artifacts/:id  — Get artifact content
+ * - GET /api/artifacts/metadata — Real file metadata for an artifact
  * - WS  /ws                — WebSocket for live updates
  */
 
 import { createServer as createHttpServer } from "http"
-import { join, resolve, relative } from "path"
+import { join, resolve, relative, extname } from "path"
 import express, { type Request, type Response } from "express"
 import cors from "cors"
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from "fs"
@@ -335,6 +336,55 @@ app.put("/api/artifacts/content", (req: Request, res: Response): void => {
   }
 })
 
+// GET /api/artifacts/metadata — Real file metadata for an artifact (replaces mock)
+app.get("/api/artifacts/metadata", (req: Request, res: Response): void => {
+  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const path = req.query.path as string
+
+  if (!path) {
+    res.status(400).json({ error: "Missing path query parameter" })
+    return
+  }
+
+  const fullPath = sanitizePath(projectDir, path)
+  if (!fullPath) {
+    log.warn("Path traversal attempt blocked on metadata", { path })
+    res.status(403).json({ error: "Path traversal denied" })
+    return
+  }
+
+  if (!existsSync(fullPath)) {
+    res.status(404).json({ error: "Artifact not found" })
+    return
+  }
+
+  try {
+    const stats = statSync(fullPath)
+    const ext = extname(fullPath).replace(".", "").toLowerCase()
+    const fileType = (["md", "json", "yaml", "yml", "xml"].includes(ext) ? (ext === "yml" ? "yaml" : ext) : "other") as
+      "md" | "json" | "yaml" | "xml" | "other"
+
+    // Determine status heuristics
+    const lowerPath = path.toLowerCase()
+    const isSuperseded = lowerPath.includes("archive") || lowerPath.includes("superseded")
+
+    // Stale if older than 7 days
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+    const isStale = (Date.now() - stats.mtimeMs) > SEVEN_DAYS_MS
+
+    res.json({
+      status: isSuperseded ? "superseded" : "active",
+      stale: isStale,
+      lastModified: stats.mtimeMs,
+      fileType,
+      chainIntegrity: true,
+      sizeBytes: stats.size,
+    })
+  } catch {
+    res.status(500).json({ error: "Failed to read artifact metadata" })
+  }
+})
+
 // ─── Comments API ─────────────────────────────────────────────────────────────
 
 /**
@@ -604,7 +654,21 @@ export async function startServer(config: DashboardConfig): Promise<void> {
     adapter = null
   }
 
-  // Try binding to port with retry on EADDRINUSE
+  // ─── Story 12-02: Serve pre-built frontend assets if available ──────
+  const frontendDistPath = join(config.projectDir, "src/dashboard/frontend/dist")
+  if (existsSync(join(frontendDistPath, "index.html"))) {
+    app.use(express.static(frontendDistPath))
+    // SPA catch-all: serve index.html for any non-API route
+    // This MUST come after all /api/ routes are registered (they are module-level above)
+    app.get("*", (req: Request, res: Response) => {
+      // Skip API routes — they are already handled above
+      if (req.path.startsWith("/api/")) return
+      res.sendFile(join(frontendDistPath, "index.html"))
+    })
+    log.info("Serving pre-built frontend from Express", { path: frontendDistPath })
+  }
+
+    // Try binding to port with retry on EADDRINUSE
   let lastError: Error | null = null
   for (let attempt = 0; attempt <= MAX_PORT_RETRIES; attempt++) {
     const port = config.backendPort + attempt

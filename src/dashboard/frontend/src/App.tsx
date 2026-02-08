@@ -42,7 +42,7 @@ function useWebSocket() {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data)
-        if (msg.type === "file-changed" || msg.type === "state-update" ||
+        if (msg.type === "file-changed" ||
             msg.type === "artifact-saved" || msg.type === "comment-added" ||
             msg.type === "comment-updated" || msg.type === "comment-deleted") {
           qc.invalidateQueries()

@@ -25,22 +25,13 @@ import type { BrainStore } from "../schemas/brain.js"
 import type { DelegationStore } from "../schemas/delegation.js"
 import type { CodeMapStore } from "../schemas/codemap.js"
 import type { ProjectMap } from "../schemas/project-map.js"
+import { BRAIN_PATHS } from "./paths.js"
 
-// ─── File Locations ──────────────────────────────────────────────────
-
-const STATE_FILES = {
-    tasks: ".idumb/brain/tasks.json",
-    hookState: ".idumb/brain/state.json",
-    delegations: ".idumb/brain/delegations.json",
-    knowledge: ".idumb/brain/knowledge.json",
-    codemap: ".idumb/brain/codemap.json",
-    projectMap: ".idumb/brain/project-map.json",
-    config: ".idumb/config.json",
-} as const
+// ─── File Locations (from shared BRAIN_PATHS) ───────────────────────
 
 // Legacy filenames for backward compatibility
 const LEGACY_STATE_FILES = {
-    hookState: ".idumb/brain/hook-state.json",
+    hookState: BRAIN_PATHS.legacy.state,
 } as const
 
 // ─── Safe JSON Reader ────────────────────────────────────────────────
@@ -87,7 +78,7 @@ export interface GovernanceSnapshot {
  */
 export function readGovernanceState(projectDir: string): GovernanceSnapshot {
     // Read task store + compute active task/epic
-    const taskStore = safeReadJSON<TaskStore>(join(projectDir, STATE_FILES.tasks))
+    const taskStore = safeReadJSON<TaskStore>(join(projectDir, BRAIN_PATHS.tasks))
 
     let activeTask: Task | null = null
     let activeEpic: TaskEpic | null = null
@@ -103,7 +94,7 @@ export function readGovernanceState(projectDir: string): GovernanceSnapshot {
     let capturedAgent: string | null = null
     const hookState = safeReadJSON<{
         sessions?: Record<string, { capturedAgent?: string | null }>
-    }>(join(projectDir, STATE_FILES.hookState))
+    }>(join(projectDir, BRAIN_PATHS.state))
         ?? safeReadJSON<{
             sessions?: Record<string, { capturedAgent?: string | null }>
         }>(join(projectDir, LEGACY_STATE_FILES.hookState))
@@ -122,11 +113,11 @@ export function readGovernanceState(projectDir: string): GovernanceSnapshot {
         activeTask,
         activeEpic,
         capturedAgent,
-        brainStore: safeReadJSON<BrainStore>(join(projectDir, STATE_FILES.knowledge)),
-        delegationStore: safeReadJSON<DelegationStore>(join(projectDir, STATE_FILES.delegations)),
-        codeMapStore: safeReadJSON<CodeMapStore>(join(projectDir, STATE_FILES.codemap)),
-        projectMap: safeReadJSON<ProjectMap>(join(projectDir, STATE_FILES.projectMap)),
-        config: safeReadJSON<Record<string, unknown>>(join(projectDir, STATE_FILES.config)),
+        brainStore: safeReadJSON<BrainStore>(join(projectDir, BRAIN_PATHS.knowledge)),
+        delegationStore: safeReadJSON<DelegationStore>(join(projectDir, BRAIN_PATHS.delegations)),
+        codeMapStore: safeReadJSON<CodeMapStore>(join(projectDir, BRAIN_PATHS.codemap)),
+        projectMap: safeReadJSON<ProjectMap>(join(projectDir, BRAIN_PATHS.projectMap)),
+        config: safeReadJSON<Record<string, unknown>>(join(projectDir, BRAIN_PATHS.config)),
     }
 }
 
@@ -134,14 +125,14 @@ export function readGovernanceState(projectDir: string): GovernanceSnapshot {
  * Read ONLY the task store — lightweight for tools that just need task info.
  */
 export function readTaskStore(projectDir: string): TaskStore | null {
-    return safeReadJSON<TaskStore>(join(projectDir, STATE_FILES.tasks))
+    return safeReadJSON<TaskStore>(join(projectDir, BRAIN_PATHS.tasks))
 }
 
 /**
  * Read ONLY the brain store — for tools that need knowledge context.
  */
 export function readBrainStore(projectDir: string): BrainStore | null {
-    return safeReadJSON<BrainStore>(join(projectDir, STATE_FILES.knowledge))
+    return safeReadJSON<BrainStore>(join(projectDir, BRAIN_PATHS.knowledge))
 }
 
 /**
@@ -160,7 +151,7 @@ export function readCapturedAgent(
     // Fallback: read from hook state on disk (try new path, then legacy)
     const hookState = safeReadJSON<{
         sessions?: Record<string, { capturedAgent?: string | null }>
-    }>(join(projectDir, STATE_FILES.hookState))
+    }>(join(projectDir, BRAIN_PATHS.state))
         ?? safeReadJSON<{
             sessions?: Record<string, { capturedAgent?: string | null }>
         }>(join(projectDir, LEGACY_STATE_FILES.hookState))

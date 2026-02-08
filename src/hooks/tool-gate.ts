@@ -104,6 +104,20 @@ export const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
   },
 }
 
+/**
+ * Look up agent-scoped tool rules by agent name.
+ *
+ * Returns the AgentToolRule for the given agent, or null if no rules are
+ * defined (meaning the agent has unrestricted access to plugin tools).
+ *
+ * Extracted as a testable helper for Story 14-02.
+ * In the future, this could consult the SDK for dynamic rule definitions
+ * (e.g. via client.app.agents()) — for now it's a pure static lookup.
+ */
+export function getAgentRules(agentName: string): AgentToolRule | null {
+  return AGENT_TOOL_RULES[agentName] ?? null
+}
+
 /** Build block message for agent-scoped tool denial */
 function buildAgentScopeBlock(agent: string, tool: string, action?: string): string {
   const target = action ? `${tool} action=${action}` : tool
@@ -206,7 +220,7 @@ export function createToolGateBefore(log: Logger) {
       if (PLUGIN_TOOLS.has(tool)) {
         const agent = stateManager.getCapturedAgent(sessionID)
         if (agent) {
-          const rules = AGENT_TOOL_RULES[agent]
+          const rules = getAgentRules(agent)
           if (rules) {
             // Check tool-level block
             if (rules.blockedTools.has(tool)) {

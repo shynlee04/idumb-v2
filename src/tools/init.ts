@@ -20,6 +20,7 @@ import type { Language, ExperienceLevel, GovernanceMode, InstallScope, IdumbConf
 import { scanProject, formatDetectionReport } from "../lib/framework-detector.js"
 import { scaffoldProject, formatScaffoldReport } from "../lib/scaffolder.js"
 import { createLogger } from "../lib/logging.js"
+import { tryGetClient } from "../lib/sdk-client.js"
 import {
   createOutlierEntry,
   createPlanningRegistry,
@@ -115,6 +116,39 @@ async function listFilesRecursively(projectDir: string, root: string): Promise<s
   return out
 }
 
+/**
+ * List project files using SDK client.find.files() when available,
+ * falling back to the manual fs-based listFilesRecursively().
+ *
+ * Story 14-01: The SDK call shape is experimental — wrapped in try/catch
+ * so any mismatch degrades gracefully to the fs walker.
+ */
+async function listProjectFiles(projectDir: string, root: string): Promise<string[]> {
+  try {
+    const client = tryGetClient()
+    if (client) {
+      // Attempt SDK-based file listing — shape may not match expectations
+      const absRoot = join(projectDir, root)
+      const findApi = client.find as unknown as Record<string, unknown>
+      if (typeof findApi.files === "function") {
+        const result = await (findApi.files as (opts: { directory: string }) => Promise<unknown>)({ directory: absRoot })
+        if (Array.isArray(result) && result.length > 0) {
+          // SDK returns absolute paths — normalize to project-relative
+          return result.map((f: unknown) => {
+            const s = String(f)
+            return s.startsWith(projectDir)
+              ? normalizePath(s.slice(projectDir.length + 1))
+              : normalizePath(s)
+          })
+        }
+      }
+    }
+  } catch {
+    // SDK call failed or shape mismatch — fall through to fs walker
+  }
+  return listFilesRecursively(projectDir, root)
+}
+
 async function scanPlanningOutliers(
   projectDir: string,
   persist: boolean,
@@ -124,7 +158,7 @@ async function scanPlanningOutliers(
   const candidateFiles: string[] = []
 
   for (const root of PLANNING_SCAN_ROOTS) {
-    const files = await listFilesRecursively(projectDir, root)
+    const files = await listProjectFiles(projectDir, root)
     for (const file of files) {
       if (shouldIgnoreOutlierPath(file)) continue
       if (!detectArtifactType(file)) continue
@@ -431,6 +465,28 @@ export const idumb_init = tool({
 
       if (!scaffoldResult.success) {
         return `## ❌ Installation failed\n\n${scaffoldReport}`
+      }
+
+      // ─── Brain index population (P3: optional, non-blocking) ───
+      try {
+        const { populateCodeMap, populateProjectMap } = await import("../lib/brain-indexer.js")
+        const { stateManager } = await import("../lib/persistence.js")
+        const client = tryGetClient()
+
+        const codeMap = await populateCodeMap(directory, client)
+        stateManager.saveCodeMap(codeMap)
+
+        const projMap = await populateProjectMap(directory, client)
+        stateManager.saveProjectMap(projMap)
+
+        log.info("Brain index populated", {
+          codeMapFiles: codeMap.stats.totalFiles,
+          projectMapDirs: projMap.stats.totalDirs,
+        })
+      } catch (brainErr) {
+        // P3: Brain index is optional — don't fail init
+        const msg = brainErr instanceof Error ? brainErr.message : String(brainErr)
+        log.warn("Brain index population failed — skipping", { error: msg })
       }
 
       // Build the greeting

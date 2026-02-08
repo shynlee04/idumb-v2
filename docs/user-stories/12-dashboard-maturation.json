@@ -9,7 +9,7 @@
       "Test: start dashboard when port 3001 is occupied — verify frontend API calls reach the backend on the retried port",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Production serve mode: Express backend serves built frontend assets via express.static when running from compiled dist/, falling back to Vite dev server when running from source",
@@ -22,7 +22,7 @@
       "Test: build frontend, run dashboard from compiled CLI — verify frontend loads from Express without Vite",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Remove mocked artifact metadata and fix WebSocket event mismatch: PlanningArtifactsPanel uses getMockMetadata() and frontend listens for 'state-update' event that server never sends",
@@ -34,7 +34,7 @@
       "Verify no dead event listeners remain in the frontend",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Fix frontend directory resolution for compiled CLI: join(__dirname, '../dashboard/frontend') resolves wrong when running from dist/cli/dashboard.js vs src/cli/dashboard.ts",
@@ -47,6 +47,6 @@
       "Test: run dashboard from compiled dist/ — verify frontend directory resolves correctly",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   }
 ]

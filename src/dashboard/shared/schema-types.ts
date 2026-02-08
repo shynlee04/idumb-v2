@@ -43,6 +43,7 @@ export interface ArtifactMetadata {
   relatedArtifacts?: string[]
   lastModified: number
   fileType: "md" | "json" | "yaml" | "xml" | "other"
+  sizeBytes?: number
 }
 
 // ─── API Response Types ─────────────────────────────────────────────

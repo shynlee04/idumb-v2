@@ -10,7 +10,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Wire context.agent + client.app.agents() for dynamic agent rules: replace hardcoded AGENT_TOOL_RULES in tool-gate.ts with SDK-derived agent permissions, keeping static fallback",
@@ -24,7 +24,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Brain index: create knowledge.json write path — StateManager + tool action for persisting brain entries (schema exists in schemas/brain.ts but no code writes to this file)",
@@ -39,7 +39,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Brain index: create codemap.json write path via client.find.symbols() with fs fallback — schema exists in schemas/codemap.ts but no code writes this file",
@@ -55,7 +55,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Brain index: create project-map.json write path via client.find.files() with fs fallback — schema exists in schemas/project-map.ts but no code writes this file",
@@ -71,7 +71,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Auto-invoke migrateV2ToV3() on TaskStore load: the function is exported and tested but never called at runtime — users with v2 task data get no automatic migration",
@@ -85,7 +85,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Unify duplicate path constants: persistence.ts and state-reader.ts define the SAME file paths independently — if one changes, reads and writes target different files",
@@ -97,7 +97,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= previous baseline"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "E2E validation: all brain index files are populated after init, all 4 dashboard panels show real data, no mocked content remains",
@@ -113,6 +113,6 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with all suites green"
     ],
-    "passes": false
+    "passes": true
   }
 ]

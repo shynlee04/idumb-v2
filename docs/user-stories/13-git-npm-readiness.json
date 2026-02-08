@@ -26,7 +26,7 @@
       "Run git rm --cached for all newly-ignored files that are currently tracked",
       "Verify git status shows the files as deleted from index but still present on disk"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Remove personal brain data from git history: .idumb/brain/ contains 155KB of author's personal tasks/state that should not be in the repository",
@@ -37,7 +37,7 @@
       "Verify .idumb/brain/ files still exist on disk (only removed from git tracking)",
       "Verify the plugin still works correctly (persistence.ts reads from disk, not from git)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Fix package.json for npm publish: workspaces field causes dashboard deps to interfere, postinstall is a no-op for consumers, files field includes non-existent bin/ directory, missing publishConfig",
@@ -50,6 +50,6 @@
       "Verify the packed tarball includes dist/, bin/cli.mjs, README.md, LICENSE — and does NOT include src/dashboard/, .idumb/, .opencode/, planning/, docs/",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   }
 ]

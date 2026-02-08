@@ -84,27 +84,91 @@ async function startBackend(config: DashboardConfig): Promise<void> {
   await startServer(config)
 }
 
-/**
- * Start the Vite dev server for the frontend
- */
-function startFrontend(config: DashboardConfig): Promise<void> {
-  return new Promise((resolve) => {
-    const vitePath = join(__dirname, "../dashboard/frontend")
-    const viteConfig = join(vitePath, "vite.config.ts")
+// ─── Story 12-04: Frontend directory resolution ─────────────────────────
 
-    // Check if frontend exists
-    if (!existsSync(viteConfig)) {
-      print(`  ${C.yellow}⚠ Frontend not found. Run build first:${C.reset}`)
-      print(`  ${C.dim}  npm run build:dashboard${C.reset}`)
+/**
+ * Resolve the frontend directory using multiple strategies:
+ *  1. Relative to source — when running via tsx (src/cli/dashboard.ts)
+ *  2. Relative to dist — when running from compiled (dist/cli/dashboard.js)
+ *  3. Package root fallback — search from import.meta.url up to package.json
+ *
+ * Returns { srcDir, distDir } where srcDir is the source frontend dir
+ * and distDir is the built frontend assets dir. Either may be null.
+ */
+function resolveFrontendDirs(projectDir: string): { srcDir: string | null; distDir: string | null } {
+  // Strategy 1: Relative to __dirname (works for both src/ and dist/)
+  const candidates = [
+    join(__dirname, "../dashboard/frontend"),           // from src/cli/ or dist/cli/
+    join(__dirname, "../../src/dashboard/frontend"),     // from dist/cli/ → package root → src/
+    join(projectDir, "src/dashboard/frontend"),          // absolute fallback via project dir
+  ]
+
+  let srcDir: string | null = null
+  for (const candidate of candidates) {
+    if (existsSync(join(candidate, "vite.config.ts")) || existsSync(join(candidate, "package.json"))) {
+      srcDir = candidate
+      break
+    }
+  }
+
+  // Built frontend dist — check inside the resolved srcDir or known locations
+  let distDir: string | null = null
+  const distCandidates = [
+    srcDir ? join(srcDir, "dist") : null,
+    join(projectDir, "src/dashboard/frontend/dist"),
+  ].filter(Boolean) as string[]
+
+  for (const candidate of distCandidates) {
+    if (existsSync(join(candidate, "index.html"))) {
+      distDir = candidate
+      break
+    }
+  }
+
+  return { srcDir, distDir }
+}
+
+/**
+ * Start the Vite dev server for the frontend.
+ * Story 12-01: Passes VITE_BACKEND_PORT env so Vite proxy targets the actual backend port.
+ * Story 12-02: Skips Vite entirely if pre-built frontend dist exists (production serve mode).
+ * Story 12-04: Uses resolveFrontendDirs() for robust path resolution.
+ */
+function startFrontend(config: DashboardConfig, actualBackendPort: number): Promise<void> {
+  return new Promise((resolve) => {
+    const { srcDir, distDir } = resolveFrontendDirs(config.projectDir)
+
+    // Story 12-02: If pre-built frontend exists, Express already serves it via static middleware.
+    // Skip spawning Vite dev server entirely.
+    if (distDir) {
+      print(`  ${C.green}✅ Frontend served from pre-built assets${C.reset}`)
+      print(`  ${C.dim}  ${distDir}${C.reset}`)
       resolve()
       return
     }
 
+    // Need source dir to run Vite dev server
+    if (!srcDir) {
+      print(`  ${C.yellow}⚠ Frontend not found. Tried:${C.reset}`)
+      print(`  ${C.dim}  - Relative to running file: ${join(__dirname, "../dashboard/frontend")}${C.reset}`)
+      print(`  ${C.dim}  - Package root: ${join(config.projectDir, "src/dashboard/frontend")}${C.reset}`)
+      print(`  ${C.dim}  Build the frontend first or run from the source tree.${C.reset}`)
+      resolve()
+      return
+    }
+
+    // Story 12-01: Pass actual backend port via env so vite.config.ts proxy targets it
+    const env = {
+      ...process.env,
+      VITE_BACKEND_PORT: String(actualBackendPort),
+    }
+
     // Spawn Vite dev server
     const vite = spawn("npx", ["vite", "--port", String(config.port)], {
-      cwd: vitePath,
+      cwd: srcDir,
       stdio: "inherit",
       shell: true,
+      env,
     }) as unknown as {
       on(event: string, handler: (...args: unknown[]) => void): void
       kill(): void
@@ -154,11 +218,15 @@ export async function startDashboard(_projectDir: string, args: string[]): Promi
   // Start backend server
   print(`  ${C.yellow}⏳ Starting backend server...${C.reset}`)
   await startBackend(config)
-  print(`  ${C.green}✅ Backend running on port ${config.backendPort}${C.reset}`)
 
-  // Start frontend dev server
-  print(`  ${C.yellow}⏳ Starting frontend dev server...${C.reset}`)
-  await startFrontend(config)
+  // Story 12-01: Get the actual backend port (may differ from config if port was retried)
+  const { getActualPort } = await import("../dashboard/backend/server.js")
+  const actualBackendPort = getActualPort() ?? config.backendPort
+  print(`  ${C.green}✅ Backend running on port ${actualBackendPort}${C.reset}`)
+
+  // Start frontend dev server (or skip if pre-built — Story 12-02)
+  print(`  ${C.yellow}⏳ Starting frontend...${C.reset}`)
+  await startFrontend(config, actualBackendPort)
   print(`  ${C.green}✅ Frontend running on port ${config.port}${C.reset}`)
 
   // Open browser if requested

@@ -26,29 +26,6 @@ function getStatusIcon(status?: string) {
   }
 }
 
-// Mock metadata - in production this would come from the backend
-function getMockMetadata(artifactPath: string, status?: string): ArtifactMetadataType {
-  const statsMatch = artifactPath.match(/impl-plan\/(.+)/)
-  const isN4 = statsMatch?.[1]?.includes("n4")
-
-  return {
-    status: (status as ArtifactMetadataType["status"]) || (isN4 ? "active" : "superseded"),
-    stale: !isN4,
-    chainIntegrity: true,
-    relatedArtifacts: isN4
-      ? ["PROJECT.md", "GOVERNANCE.md"]
-      : undefined,
-    lastModified: Date.now() - (isN4 ? 3600000 : 86400000 * 7),
-    fileType: artifactPath.endsWith(".json")
-      ? "json"
-      : artifactPath.endsWith(".yaml") || artifactPath.endsWith(".yml")
-        ? "yaml"
-        : artifactPath.endsWith(".xml")
-          ? "xml"
-          : "md",
-  }
-}
-
 export function PlanningArtifactsPanel() {
   const [selectedArtifact, setSelectedArtifact] = useState<string | null>(null)
   const [selectedLine, setSelectedLine] = useState<number | undefined>(undefined)
@@ -77,10 +54,20 @@ export function PlanningArtifactsPanel() {
     enabled: !!selectedArtifact,
   })
 
+  // Story 12-03: Fetch real metadata from backend instead of mock
+  const { data: metadata } = useQuery<ArtifactMetadataType>({
+    queryKey: ["artifact-metadata", selectedArtifact],
+    queryFn: async (): Promise<ArtifactMetadataType> => {
+      const res = await fetch(
+        `/api/artifacts/metadata?path=${encodeURIComponent(selectedArtifact!)}`
+      )
+      if (!res.ok) throw new Error("Failed to fetch artifact metadata")
+      return res.json()
+    },
+    enabled: !!selectedArtifact,
+  })
+
   const selectedArtifactData = data?.artifacts.find((a) => a.path === selectedArtifact)
-  const metadata = selectedArtifactData
-    ? getMockMetadata(selectedArtifactData.path, selectedArtifactData.status)
-    : undefined
 
   // Save handler for inline editing
   const handleSave = async (content: string): Promise<boolean> => {
@@ -94,16 +81,14 @@ export function PlanningArtifactsPanel() {
       })
 
       if (!res.ok) {
-        const error = await res.json()
-        console.error("Failed to save artifact:", error.error)
         return false
       }
 
       // Invalidate queries to refresh content
       queryClient.invalidateQueries({ queryKey: ["artifact-content", selectedArtifact] })
+      queryClient.invalidateQueries({ queryKey: ["artifact-metadata", selectedArtifact] })
       return true
-    } catch (err) {
-      console.error("Failed to save artifact:", err)
+    } catch {
       return false
     }
   }
@@ -158,7 +143,7 @@ export function PlanningArtifactsPanel() {
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                ← Back to artifacts
+                &larr; Back to artifacts
               </button>
             </div>
 

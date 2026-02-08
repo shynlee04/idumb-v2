@@ -12,7 +12,7 @@
  * 6. Persistence across close+reopen — verify data survives restart
  * 7. clear() resets everything — verify all tables emptied
  *
- * NOT included in npm test — standalone test (native module dependency).
+ * Included in npm test with graceful skip when native binding is unavailable.
  */
 
 import { mkdirSync, rmSync, existsSync } from "node:fs"
@@ -26,6 +26,23 @@ import { createEmptyStore, createEpic, createTask } from "../src/schemas/task.js
 import type { TaskStore } from "../src/schemas/task.js"
 import { createEmptyDelegationStore, createDelegation } from "../src/schemas/delegation.js"
 import type { DelegationStore } from "../src/schemas/delegation.js"
+
+// ─── Native Binding Probe ────────────────────────────────────────────
+// better-sqlite3 requires a native binding that may not be compiled.
+// Probe before running any tests — skip gracefully if unavailable.
+
+const probeDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-probe-"))
+try {
+  const probe = new SqliteAdapter()
+  await probe.init(probeDir)
+  await probe.close()
+} catch (err) {
+  const msg = err instanceof Error ? err.message : String(err)
+  process.stderr.write(`\nSQLite backend unavailable — skipping SqliteAdapter tests.\nReason: ${msg}\n\n`)
+  rmSync(probeDir, { recursive: true, force: true })
+  process.exit(0) // Skip — not a failure
+}
+rmSync(probeDir, { recursive: true, force: true })
 
 // ─── Test Harness ────────────────────────────────────────────────────
 

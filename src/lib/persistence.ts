@@ -23,11 +23,18 @@ import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
 import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/task.js"
 import type { TaskGraph } from "../schemas/work-plan.js"
 import { createEmptyTaskGraph } from "../schemas/work-plan.js"
-import { purgeAbandonedPlans } from "../schemas/task-graph.js"
+import { purgeAbandonedPlans, migrateV2ToV3 } from "../schemas/task-graph.js"
 import type { DelegationStore } from "../schemas/delegation.js"
 import { createEmptyDelegationStore, expireStaleDelegations } from "../schemas/delegation.js"
 import type { PlanState } from "../schemas/plan-state.js"
 import { createPlanState } from "../schemas/plan-state.js"
+import type { BrainStore } from "../schemas/brain.js"
+import { createBrainStore } from "../schemas/brain.js"
+import type { CodeMapStore } from "../schemas/codemap.js"
+import { createCodeMapStore } from "../schemas/codemap.js"
+import type { ProjectMap } from "../schemas/project-map.js"
+import { createProjectMap } from "../schemas/project-map.js"
+import { BRAIN_PATHS } from "./paths.js"
 import type { Logger } from "./logging.js"
 import type { SqliteAdapter } from "./sqlite-adapter.js"
 import type { SessionState } from "./storage-adapter.js"
@@ -66,6 +73,30 @@ const PlanStateSchema = z.object({
   currentPhaseId: z.number().nullable(),
   phases: z.array(z.any()),
   lastModified: z.number(),
+})
+
+const BrainStoreSchema = z.object({
+  version: z.string(),
+  entries: z.array(z.any()),
+  lastSynthesisAt: z.number(),
+  exportCount: z.number(),
+})
+
+const CodeMapStoreSchema = z.object({
+  version: z.string(),
+  scannedAt: z.number(),
+  files: z.array(z.any()),
+  comments: z.array(z.any()),
+  inconsistencies: z.array(z.any()),
+  stats: z.any(),
+})
+
+const ProjectMapSchema = z.object({
+  version: z.string(),
+  scannedAt: z.number(),
+  frameworks: z.array(z.any()),
+  directories: z.array(z.any()),
+  stats: z.any(),
 })
 
 // ─── Safe Parse Helper ──────────────────────────────────────────────
@@ -110,16 +141,6 @@ interface PersistedState {
 
 const STATE_VERSION = "1.1.0"
 const DEBOUNCE_MS = 500
-const STATE_FILE = ".idumb/brain/state.json"
-const TASKS_FILE = ".idumb/brain/tasks.json"
-const TASK_GRAPH_FILE = ".idumb/brain/graph.json"
-const DELEGATIONS_FILE = ".idumb/brain/delegations.json"
-const PLAN_STATE_FILE = ".idumb/brain/plan.json"
-
-// Legacy filenames for migration (pre-Phase 8)
-const LEGACY_STATE_FILE = ".idumb/brain/hook-state.json"
-const LEGACY_TASK_GRAPH_FILE = ".idumb/brain/task-graph.json"
-const LEGACY_PLAN_STATE_FILE = ".idumb/brain/plan-state.json"
 
 // ─── Migration Helper ─────────────────────────────────────────────────
 
@@ -152,6 +173,9 @@ export class StateManager {
   private taskGraph: TaskGraph = createEmptyTaskGraph()
   private delegationStore: DelegationStore = createEmptyDelegationStore()
   private planState: PlanState = createPlanState()
+  private brainStore: BrainStore = createBrainStore()
+  private codeMap: CodeMapStore = createCodeMapStore("")
+  private projectMap: ProjectMap = createProjectMap("")
   private directory: string = ""
   private log: Logger | null = null
   private saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -159,6 +183,9 @@ export class StateManager {
   private delegationSaveTimer: ReturnType<typeof setTimeout> | null = null
   private taskGraphSaveTimer: ReturnType<typeof setTimeout> | null = null
   private planStateSaveTimer: ReturnType<typeof setTimeout> | null = null
+  private brainSaveTimer: ReturnType<typeof setTimeout> | null = null
+  private codeMapSaveTimer: ReturnType<typeof setTimeout> | null = null
+  private projectMapSaveTimer: ReturnType<typeof setTimeout> | null = null
   private initialized = false
   private degraded = false  // true if disk I/O failed
   private sqliteAdapter: SqliteAdapter | null = null
@@ -188,7 +215,7 @@ export class StateManager {
     // ─── JSON backend (default) ─────────────────────────────────────
 
     try {
-      const { raw, migrated } = await readWithLegacyFallback(directory, STATE_FILE, LEGACY_STATE_FILE)
+      const { raw, migrated } = await readWithLegacyFallback(directory, BRAIN_PATHS.state, BRAIN_PATHS.legacy.state)
       const defaultState: PersistedState = {
         version: STATE_VERSION,
         lastSaved: new Date().toISOString(),
@@ -219,7 +246,7 @@ export class StateManager {
 
         // Auto-migrate: save to new path if loaded from legacy
         if (migrated) {
-          log.info("Migrating state from legacy path", { from: LEGACY_STATE_FILE, to: STATE_FILE })
+          log.info("Migrating state from legacy path", { from: BRAIN_PATHS.legacy.state, to: BRAIN_PATHS.state })
           this.scheduleSave()
         }
       }
@@ -235,7 +262,7 @@ export class StateManager {
 
     // Load task store from separate file
     try {
-      const tasksPath = join(directory, TASKS_FILE)
+      const tasksPath = join(directory, BRAIN_PATHS.tasks)
       const tasksRaw = await readFile(tasksPath, "utf-8")
       const loaded = safeParse(tasksRaw, TaskStoreSchema, createEmptyStore(), log, "TaskStore") as TaskStore
       if (loaded.version && Array.isArray(loaded.epics)) {
@@ -255,7 +282,7 @@ export class StateManager {
 
     // Load delegation store from separate file
     try {
-      const delegPath = join(directory, DELEGATIONS_FILE)
+      const delegPath = join(directory, BRAIN_PATHS.delegations)
       const delegRaw = await readFile(delegPath, "utf-8")
       const loadedDeleg = safeParse(delegRaw, DelegationStoreSchema, createEmptyDelegationStore(), log, "DelegationStore") as DelegationStore
       if (loadedDeleg.version && Array.isArray(loadedDeleg.delegations)) {
@@ -278,7 +305,7 @@ export class StateManager {
 
     // Load task graph (v3) from separate file
     try {
-      const { raw: graphRaw, migrated } = await readWithLegacyFallback(directory, TASK_GRAPH_FILE, LEGACY_TASK_GRAPH_FILE)
+      const { raw: graphRaw, migrated } = await readWithLegacyFallback(directory, BRAIN_PATHS.taskGraph, BRAIN_PATHS.legacy.taskGraph)
       const loadedGraph = safeParse(graphRaw, TaskGraphSchema, createEmptyTaskGraph(), log, "TaskGraph") as TaskGraph
       if (loadedGraph.version && Array.isArray(loadedGraph.workPlans)) {
         this.taskGraph = loadedGraph
@@ -293,7 +320,7 @@ export class StateManager {
           migrated,
         })
         if (migrated) {
-          log.info("Migrating task graph from legacy path", { from: LEGACY_TASK_GRAPH_FILE, to: TASK_GRAPH_FILE })
+          log.info("Migrating task graph from legacy path", { from: BRAIN_PATHS.legacy.taskGraph, to: BRAIN_PATHS.taskGraph })
           this.scheduleTaskGraphSave()
         }
       }
@@ -304,9 +331,25 @@ export class StateManager {
       }
     }
 
+    // Auto-migrate v2 TaskStore → v3 TaskGraph if graph is empty but tasks exist
+    if (
+      this.taskGraph.workPlans.length === 0
+      && this.taskStore.epics.length > 0
+    ) {
+      log.info("Auto-migrating v2 TaskStore to v3 TaskGraph", {
+        epics: this.taskStore.epics.length,
+      })
+      this.taskGraph = migrateV2ToV3(this.taskStore)
+      this.scheduleTaskGraphSave()
+      log.info("v2→v3 migration complete", {
+        workPlans: this.taskGraph.workPlans.length,
+        activeWorkPlanId: this.taskGraph.activeWorkPlanId,
+      })
+    }
+
     // Load plan state from separate file
     try {
-      const { raw: planStateRaw, migrated } = await readWithLegacyFallback(directory, PLAN_STATE_FILE, LEGACY_PLAN_STATE_FILE)
+      const { raw: planStateRaw, migrated } = await readWithLegacyFallback(directory, BRAIN_PATHS.planState, BRAIN_PATHS.legacy.planState)
       const loadedPlanState = safeParse(planStateRaw, PlanStateSchema, createPlanState(), log, "PlanState") as PlanState
       if (loadedPlanState.version && Array.isArray(loadedPlanState.phases)) {
         this.planState = loadedPlanState
@@ -317,7 +360,7 @@ export class StateManager {
           migrated,
         })
         if (migrated) {
-          log.info("Migrating plan state from legacy path", { from: LEGACY_PLAN_STATE_FILE, to: PLAN_STATE_FILE })
+          log.info("Migrating plan state from legacy path", { from: BRAIN_PATHS.legacy.planState, to: BRAIN_PATHS.planState })
           this.schedulePlanStateSave()
         }
       }
@@ -325,6 +368,60 @@ export class StateManager {
       const msg = err instanceof Error ? err.message : String(err)
       if (!msg.includes("ENOENT")) {
         log.warn("Could not load plan state — starting fresh", { error: msg })
+      }
+    }
+
+    // Load brain store (knowledge entries)
+    try {
+      const brainPath = join(directory, BRAIN_PATHS.knowledge)
+      const brainRaw = await readFile(brainPath, "utf-8")
+      const loadedBrain = safeParse(brainRaw, BrainStoreSchema, createBrainStore(), log, "BrainStore") as BrainStore
+      if (loadedBrain.version && Array.isArray(loadedBrain.entries)) {
+        this.brainStore = loadedBrain
+        log.info("Brain store loaded from disk", {
+          entries: loadedBrain.entries.length,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load brain store — starting fresh", { error: msg })
+      }
+    }
+
+    // Load code map
+    try {
+      const codeMapPath = join(directory, BRAIN_PATHS.codemap)
+      const codeMapRaw = await readFile(codeMapPath, "utf-8")
+      const loadedCodeMap = safeParse(codeMapRaw, CodeMapStoreSchema, createCodeMapStore(""), log, "CodeMapStore") as CodeMapStore
+      if (loadedCodeMap.version && Array.isArray(loadedCodeMap.files)) {
+        this.codeMap = loadedCodeMap
+        log.info("Code map loaded from disk", {
+          files: loadedCodeMap.files.length,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load code map — starting fresh", { error: msg })
+      }
+    }
+
+    // Load project map
+    try {
+      const projectMapPath = join(directory, BRAIN_PATHS.projectMap)
+      const projectMapRaw = await readFile(projectMapPath, "utf-8")
+      const loadedProjectMap = safeParse(projectMapRaw, ProjectMapSchema, createProjectMap(""), log, "ProjectMap") as ProjectMap
+      if (loadedProjectMap.version && Array.isArray(loadedProjectMap.directories)) {
+        this.projectMap = loadedProjectMap
+        log.info("Project map loaded from disk", {
+          directories: loadedProjectMap.directories.length,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load project map — starting fresh", { error: msg })
       }
     }
 
@@ -494,6 +591,39 @@ export class StateManager {
     this.schedulePlanStateSave()
   }
 
+  // ─── Brain Store (knowledge entries) ────────────────────────────
+
+  getBrainStore(): BrainStore {
+    return this.brainStore
+  }
+
+  saveBrainStore(store: BrainStore): void {
+    this.brainStore = store
+    this.scheduleBrainSave()
+  }
+
+  // ─── Code Map (symbol extraction) ─────────────────────────────
+
+  getCodeMap(): CodeMapStore {
+    return this.codeMap
+  }
+
+  saveCodeMap(store: CodeMapStore): void {
+    this.codeMap = store
+    this.scheduleCodeMapSave()
+  }
+
+  // ─── Project Map (directory/framework mapping) ─────────────────
+
+  getProjectMap(): ProjectMap {
+    return this.projectMap
+  }
+
+  saveProjectMap(map: ProjectMap): void {
+    this.projectMap = map
+    this.scheduleProjectMapSave()
+  }
+
   // ─── Anchor State (compaction) ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
@@ -588,6 +718,48 @@ export class StateManager {
     }, DEBOUNCE_MS)
   }
 
+  /** Schedule a debounced brain store save. */
+  private scheduleBrainSave(): void {
+    if (this.degraded) return
+
+    if (this.brainSaveTimer) {
+      clearTimeout(this.brainSaveTimer)
+    }
+
+    this.brainSaveTimer = setTimeout(() => {
+      this.brainSaveTimer = null
+      this.saveBrainToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
+  /** Schedule a debounced code map save. */
+  private scheduleCodeMapSave(): void {
+    if (this.degraded) return
+
+    if (this.codeMapSaveTimer) {
+      clearTimeout(this.codeMapSaveTimer)
+    }
+
+    this.codeMapSaveTimer = setTimeout(() => {
+      this.codeMapSaveTimer = null
+      this.saveCodeMapToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
+  /** Schedule a debounced project map save. */
+  private scheduleProjectMapSave(): void {
+    if (this.degraded) return
+
+    if (this.projectMapSaveTimer) {
+      clearTimeout(this.projectMapSaveTimer)
+    }
+
+    this.projectMapSaveTimer = setTimeout(() => {
+      this.projectMapSaveTimer = null
+      this.saveProjectMapToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
   /** Write current state to disk. */
   private async saveToDisk(): Promise<void> {
     if (!this.directory) return
@@ -599,7 +771,7 @@ export class StateManager {
       anchors: Object.fromEntries(this.anchors),
     }
 
-    const statePath = join(this.directory, STATE_FILE)
+    const statePath = join(this.directory, BRAIN_PATHS.state)
 
     try {
       // Ensure directory exists
@@ -620,7 +792,7 @@ export class StateManager {
   private async saveTasksToDisk(): Promise<void> {
     if (!this.directory) return
 
-    const tasksPath = join(this.directory, TASKS_FILE)
+    const tasksPath = join(this.directory, BRAIN_PATHS.tasks)
 
     try {
       await mkdir(dirname(tasksPath), { recursive: true })
@@ -639,7 +811,7 @@ export class StateManager {
   private async saveDelegationsToDisk(): Promise<void> {
     if (!this.directory) return
 
-    const delegPath = join(this.directory, DELEGATIONS_FILE)
+    const delegPath = join(this.directory, BRAIN_PATHS.delegations)
 
     try {
       await mkdir(dirname(delegPath), { recursive: true })
@@ -658,7 +830,7 @@ export class StateManager {
   private async saveTaskGraphToDisk(): Promise<void> {
     if (!this.directory) return
 
-    const graphPath = join(this.directory, TASK_GRAPH_FILE)
+    const graphPath = join(this.directory, BRAIN_PATHS.taskGraph)
 
     try {
       await mkdir(dirname(graphPath), { recursive: true })
@@ -677,7 +849,7 @@ export class StateManager {
   private async savePlanStateToDisk(): Promise<void> {
     if (!this.directory) return
 
-    const planStatePath = join(this.directory, PLAN_STATE_FILE)
+    const planStatePath = join(this.directory, BRAIN_PATHS.planState)
 
     try {
       await mkdir(dirname(planStatePath), { recursive: true })
@@ -689,6 +861,63 @@ export class StateManager {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       this.log?.error("Failed to save plan state — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
+  /** Write brain store (knowledge entries) to disk. */
+  private async saveBrainToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const brainPath = join(this.directory, BRAIN_PATHS.knowledge)
+
+    try {
+      await mkdir(dirname(brainPath), { recursive: true })
+      await writeFile(brainPath, JSON.stringify(this.brainStore, null, 2) + "\n", "utf-8")
+      this.log?.info("Brain store saved to disk", {
+        entries: this.brainStore.entries.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save brain store — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
+  /** Write code map to disk. */
+  private async saveCodeMapToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const codeMapPath = join(this.directory, BRAIN_PATHS.codemap)
+
+    try {
+      await mkdir(dirname(codeMapPath), { recursive: true })
+      await writeFile(codeMapPath, JSON.stringify(this.codeMap, null, 2) + "\n", "utf-8")
+      this.log?.info("Code map saved to disk", {
+        files: this.codeMap.files.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save code map — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
+  /** Write project map to disk. */
+  private async saveProjectMapToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const projectMapPath = join(this.directory, BRAIN_PATHS.projectMap)
+
+    try {
+      await mkdir(dirname(projectMapPath), { recursive: true })
+      await writeFile(projectMapPath, JSON.stringify(this.projectMap, null, 2) + "\n", "utf-8")
+      this.log?.info("Project map saved to disk", {
+        directories: this.projectMap.directories.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save project map — degrading to in-memory only", { error: msg })
       this.degraded = true
     }
   }
@@ -719,11 +948,26 @@ export class StateManager {
       clearTimeout(this.planStateSaveTimer)
       this.planStateSaveTimer = null
     }
+    if (this.brainSaveTimer) {
+      clearTimeout(this.brainSaveTimer)
+      this.brainSaveTimer = null
+    }
+    if (this.codeMapSaveTimer) {
+      clearTimeout(this.codeMapSaveTimer)
+      this.codeMapSaveTimer = null
+    }
+    if (this.projectMapSaveTimer) {
+      clearTimeout(this.projectMapSaveTimer)
+      this.projectMapSaveTimer = null
+    }
     await this.saveToDisk()
     await this.saveTasksToDisk()
     await this.saveDelegationsToDisk()
     await this.saveTaskGraphToDisk()
     await this.savePlanStateToDisk()
+    await this.saveBrainToDisk()
+    await this.saveCodeMapToDisk()
+    await this.saveProjectMapToDisk()
   }
 
   /** Check if persistence is degraded (disk I/O failed). */
@@ -754,6 +998,9 @@ export class StateManager {
     this.anchors.clear()
     this.taskStore = createEmptyStore()
     this.delegationStore = createEmptyDelegationStore()
+    this.brainStore = createBrainStore()
+    this.codeMap = createCodeMapStore("")
+    this.projectMap = createProjectMap("")
   }
 
   /** Close underlying storage — for cleanup (e.g., SQLite connection). */
