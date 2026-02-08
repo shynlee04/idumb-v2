@@ -25,21 +25,13 @@ async function exists(path: string): Promise<boolean> {
 
 /** All directories that must exist under .idumb/ */
 const SCAFFOLD_DIRS = [
-  "anchors",
   "brain",
-  "governance",
-  "idumb-modules",
-  "idumb-modules/agents",
-  "idumb-modules/schemas",
-  "idumb-modules/templates",
-  "idumb-modules/commands",
-  "idumb-modules/workflows",
-  "idumb-modules/prompts",
-  "idumb-modules/scripts",
+  "brain/index",
   "modules",
-  "project-core",
-  "project-output",
-  "sessions",
+  "modules/agents",
+  "modules/schemas",
+  "modules/templates",
+  "modules/skills",
 ]
 
 export interface ScaffoldResult {
@@ -97,14 +89,6 @@ export async function scaffoldProject(
       await writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
       result.created.push("config.json")
       log.info("Wrote config.json")
-    }
-
-    // 3. Create .gitkeep in empty dirs so git tracks them
-    for (const dir of SCAFFOLD_DIRS) {
-      const gitkeep = join(idumbRoot, dir, ".gitkeep")
-      if (!(await exists(gitkeep))) {
-        await writeFile(gitkeep, "", "utf-8")
-      }
     }
 
     result.success = true

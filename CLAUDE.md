@@ -28,7 +28,7 @@ npm run dev            # tsc --watch
 # Type check (no emit)
 npm run typecheck      # tsc --noEmit — must be zero errors
 
-# Run ALL tests (11 suites, 613 assertions, sequential chain)
+# Run ALL tests (12 suites, sequential chain)
 npm test
 
 # Run a single test file
@@ -43,6 +43,7 @@ npx tsx tests/delegation.test.ts
 npx tsx tests/planning-registry.test.ts
 npx tsx tests/work-plan.test.ts
 npx tsx tests/task-graph.test.ts
+npx tsx tests/plan-state.test.ts
 
 # Link for local development
 npm link
@@ -52,7 +53,7 @@ idumb-v2 init          # Interactive setup
 idumb-v2 init -y       # Non-interactive defaults
 ```
 
-**Important:** `npm test` chains 11 `tsx` commands with `&&`. If an early suite fails, later suites don't run. When debugging, run the failing suite individually.
+**Important:** `npm test` chains 12 `tsx` commands with `&&`. If an early suite fails, later suites don't run. When debugging, run the failing suite individually.
 
 ## Architecture
 
@@ -168,11 +169,14 @@ Agent templates live in `src/templates.ts`. Delegation routing is defined in `sc
 
 ### Persistence
 
-Runtime state lives in `.idumb/brain/` (created by `idumb-v2 init`):
-- `state.json` — governance state (phase, anchors, validation count)
-- `config.json` — user settings (language, governance mode, experience level)
-- `tasks.json` — legacy hierarchical task store (Epic→Task→Subtask)
-- `task-graph.json` — v3 task graph (WorkPlan→TaskNode)
+Runtime state lives in `.idumb/` and `.idumb/brain/` (created by `idumb-v2 init`):
+- `.idumb/config.json` — user settings (language, governance mode, experience level)
+- `.idumb/brain/state.json` — session/anchor state (captured agent, active task by session)
+- `.idumb/brain/tasks.json` — legacy hierarchical task store (Epic→Task→Subtask)
+- `.idumb/brain/graph.json` — v3 task graph (WorkPlan→TaskNode)
+- `.idumb/brain/plan.json` — current MASTER-PLAN phase state
+- `.idumb/brain/delegations.json` — delegation records
+- `.idumb/brain/registry.json` — planning artifact registry
 
 `StateManager` in `lib/persistence.ts` is a singleton that handles all disk I/O with debounced writes. SQLite adapter (`lib/sqlite-adapter.ts`) exists as a migration path but is lazy-imported to avoid native module crashes.
 
@@ -196,11 +200,11 @@ function assert(condition: boolean, name: string) { ... }
 assert(someFunction() === expected, "description")
 
 // Summary
-console.log(`Results: ${passed}/${passed + failed} passed, ${failed} failed`)
+process.stderr.write(`Results: ${passed}/${passed + failed} passed, ${failed} failed\n`)
 if (failed > 0) process.exit(1)
 ```
 
-**Current baseline:** 613/613 assertions across 11 suites.
+**Current baseline:** `npm test` runs 12 suites; assertion count is environment-dependent when SQLite native binding is unavailable.
 
 **Standalone tests** (not in `npm test`): `sqlite-adapter.test.ts`, `smoke-code-quality.ts`.
 
@@ -237,5 +241,5 @@ When resuming work on this codebase:
 1. Read `MASTER-PLAN.md` — it is the active implementation plan and planning SOT
 2. Read `AGENTS.md` — it's the ground truth for what exists
 3. Run `npm run typecheck` — must be zero errors
-4. Run `npm test` — must be 657+ baseline (12 suites)
-5. Check `.idumb/brain/plan-state.json` for current phase state
+4. Run `npm test` — must pass baseline suites (12 suites)
+5. Check `.idumb/brain/plan.json` for current phase state

@@ -130,14 +130,9 @@ export interface IdumbConfig {
   paths: {
     root: string                  // ".idumb/"
     config: string                // ".idumb/config.json"
-    anchors: string               // ".idumb/anchors/"
     brain: string                 // ".idumb/brain/"
-    governance: string            // ".idumb/governance/"
-    modules: string               // ".idumb/idumb-modules/"
-    projectModules: string        // ".idumb/modules/"
-    projectCore: string           // ".idumb/project-core/"
-    projectOutput: string         // ".idumb/project-output/"
-    sessions: string              // ".idumb/sessions/"
+    index: string                 // ".idumb/brain/index/"
+    modules: string               // ".idumb/modules/"
   }
 }
 
@@ -148,14 +143,9 @@ export const CONFIG_VERSION = "1.0.0"
 export const DEFAULT_PATHS: IdumbConfig["paths"] = {
   root: ".idumb/",
   config: ".idumb/config.json",
-  anchors: ".idumb/anchors/",
   brain: ".idumb/brain/",
-  governance: ".idumb/governance/",
-  modules: ".idumb/idumb-modules/",
-  projectModules: ".idumb/modules/",
-  projectCore: ".idumb/project-core/",
-  projectOutput: ".idumb/project-output/",
-  sessions: ".idumb/sessions/",
+  index: ".idumb/brain/index/",
+  modules: ".idumb/modules/",
 }
 
 export const DEFAULT_DETECTION: FrameworkDetection = {

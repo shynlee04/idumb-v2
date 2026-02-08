@@ -150,11 +150,11 @@ ${govNote}
 ## Your Knowledge Base
 
 Your templates, schemas, and reference materials are in:
-- \`.idumb/idumb-modules/\` — agent profiles, schemas, command/workflow templates (READ-ONLY reference)
-- \`.idumb/idumb-modules/agents/\` — reference profiles for sub-agents
+- \`.idumb/modules/\` — agent profiles, schemas, command/workflow templates (READ-ONLY reference)
+- \`.idumb/modules/agents/\` — reference profiles for sub-agents
 - \`.idumb/config.json\` — current configuration (**read this FIRST on every session**)
-- \`.idumb/idumb-modules/skills/delegation-protocol.md\` — delegation rules
-- \`.idumb/idumb-modules/skills/governance-protocol.md\` — governance rules
+- \`.idumb/modules/skills/delegation-protocol.md\` — delegation rules
+- \`.idumb/modules/skills/governance-protocol.md\` — governance rules
 
 The iDumb plugin hooks are loaded from: \`${config.pluginPath}\`
 
@@ -453,7 +453,7 @@ Be concise and clear.
 }
 
 
-// ─── Sub-Agent Profile Templates (deployed to .idumb/idumb-modules/agents/) ──
+// ─── Sub-Agent Profile Templates (deployed to .idumb/modules/agents/) ──
 
 /**
  * Coordinator profile — reference template for documentation purposes.
@@ -461,7 +461,7 @@ Be concise and clear.
  */
 export const COORDINATOR_PROFILE = `# Supreme Coordinator — Reference Profile
 
-This is a reference profile deployed to \`.idumb/idumb-modules/agents/\` for documentation.
+This is a reference profile deployed to \`.idumb/modules/agents/\` for documentation.
 The actual agent file is pre-deployed to \`.opencode/agents/\` by \`idumb-v2 init\`.
 
 ## Role
@@ -492,7 +492,7 @@ NEVER writes files, runs bash, or researches. Delegates everything.
  */
 export const INVESTIGATOR_PROFILE = `# Investigator — Reference Profile
 
-This is a reference profile deployed to \`.idumb/idumb-modules/agents/\` for documentation.
+This is a reference profile deployed to \`.idumb/modules/agents/\` for documentation.
 The actual agent file is pre-deployed to \`.opencode/agents/\` by \`idumb-v2 init\`.
 
 ## OpenCode Frontmatter
@@ -558,7 +558,7 @@ You are the **iDumb Investigator** — the context-gathering and analysis agent.
  */
 export const EXECUTOR_PROFILE = `# Executor — Reference Profile
 
-This is a reference profile deployed to \`.idumb/idumb-modules/agents/\` for documentation.
+This is a reference profile deployed to \`.idumb/modules/agents/\` for documentation.
 The actual agent file is pre-deployed to \`.opencode/agents/\` by \`idumb-v2 init\`.
 
 ## OpenCode Frontmatter
@@ -633,7 +633,7 @@ You are the **iDumb Executor** — the precision implementation agent. You write
 
 // ─── Deployable Agent Templates (deployed directly to .opencode/agents/) ─────
 // These generate READY-TO-USE agent files. Deployed on install. No user steps needed.
-// The profiles above remain as reference docs in .idumb/idumb-modules/agents/.
+// The profiles above remain as reference docs in .idumb/modules/agents/.
 
 /**
  * Investigator agent — deployed to .opencode/agents/idumb-investigator.md
@@ -828,11 +828,11 @@ When creating agents, commands, or workflows, read these references first:
 
 
 
-// ─── Module Templates (deployed to .idumb/idumb-modules/) ────────────
+// ─── Module Templates (deployed to .idumb/modules/) ────────────
 
 /**
  * Agent contract — the schema every iDumb-created agent must follow.
- * Deployed to .idumb/idumb-modules/schemas/agent-contract.md
+ * Deployed to .idumb/modules/schemas/agent-contract.md
  */
 export const AGENT_CONTRACT_TEMPLATE = `# iDumb Agent Contract
 
@@ -927,8 +927,8 @@ Examples: \`idumb-supreme-coordinator.md\`, \`idumb-investigator.md\`, \`idumb-e
 `
 
 /**
- * Modules README — explains the .idumb/idumb-modules/ structure.
- * Deployed to .idumb/idumb-modules/README.md
+ * Modules README — explains the .idumb/modules/ structure.
+ * Deployed to .idumb/modules/README.md
  */
 export const MODULES_README_TEMPLATE = `# iDumb Modules
 
@@ -937,14 +937,11 @@ This directory contains the templates, schemas, and reference materials used by 
 ## Structure
 
 \`\`\`
-idumb-modules/
+modules/
 ├── agents/          # Agent profile templates
 ├── schemas/         # Schema definitions and contracts
 ├── templates/       # Template files for generated content
-├── commands/        # Command templates
-├── workflows/       # Workflow templates
-├── prompts/         # Prompt templates
-└── scripts/         # Script templates
+└── skills/          # Delegation + governance protocols
 \`\`\`
 
 ## How It Works
@@ -952,7 +949,7 @@ idumb-modules/
 1. The **Supreme Coordinator** reads these modules to understand governance and coordinate delegation.
 2. Modules are **read-only references** — the Supreme Coordinator reads them but doesn't modify them.
 3. Generated agents, commands, and workflows are placed in \`.opencode/agents/\`, \`.opencode/commands/\`, etc.
-4. Project-specific outputs go to \`.idumb/modules/\` (not here).
+4. User extensions can be added alongside the installed templates.
 
 ## Updating Modules
 
@@ -961,7 +958,7 @@ Modules are installed by \`npx idumb-v2 init\` and can be updated by running ini
 
 /**
  * Command template — reference for creating OpenCode commands.
- * Deployed to .idumb/idumb-modules/commands/command-template.md
+ * Deployed to .idumb/modules/templates/command-template.md
  */
 export const COMMAND_TEMPLATE = `# Command Template
 
@@ -1031,7 +1028,7 @@ Use kebab-case: \`idumb-<action>.md\`
 
 /**
  * Workflow template — reference for creating workflows.
- * Deployed to .idumb/idumb-modules/workflows/workflow-template.md
+ * Deployed to .idumb/modules/templates/workflow-template.md
  */
 export const WORKFLOW_TEMPLATE = `# Workflow Template
 
@@ -1084,11 +1081,11 @@ This ensures every step goes through the delegation + validation loop.
 `
 
 
-// ─── Skill Templates (deployed to .idumb/idumb-modules/skills/) ──────────
+// ─── Skill Templates (deployed to .idumb/modules/skills/) ──────────
 
 /**
  * Delegation skill — reference protocol for agent-to-agent delegation.
- * Deployed to .idumb/idumb-modules/skills/delegation-protocol.md
+ * Deployed to .idumb/modules/skills/delegation-protocol.md
  *
  * This is the PP-01 workaround: since subagent hooks don't fire,
  * ALL delegation governance travels via this skill + disk-persisted records.
@@ -1254,7 +1251,7 @@ Level 1: idumb-investigator, idumb-executor (research + implementation — leaf 
 
 /**
  * Governance skill — reference protocol for operating within iDumb governance.
- * Deployed to .idumb/idumb-modules/skills/governance-protocol.md
+ * Deployed to .idumb/modules/skills/governance-protocol.md
  */
 export const GOVERNANCE_SKILL_TEMPLATE = `# Governance Protocol
 
@@ -1373,11 +1370,15 @@ Check \\\`.idumb/\\\` directory integrity:
 \\\`\\\`\\\`
 .idumb/
 ├── brain/
+│   ├── state.json         # Plugin state (sessions, anchors)
 │   ├── tasks.json         # Task hierarchy (TaskStore v2)
+│   ├── graph.json         # Task graph (WorkPlan/TaskNode)
+│   ├── plan.json          # Phase tracking
 │   ├── delegations.json   # Delegation records
-│   ├── hook-state.json    # Plugin state
-│   └── governance/        # Logs
-└── anchors/               # Optional
+│   ├── registry.json      # Planning artifact registry
+│   └── index/             # Codebase intelligence (populated by fullscan)
+├── modules/               # Agent profiles, schemas, skills
+└── config.json            # User settings
 \\\`\\\`\\\`
 
 ### Completion Validation
@@ -1482,4 +1483,3 @@ Delegate a task to the appropriate sub-agent with full context tracking.
 $ARGUMENTS
 `
 }
-

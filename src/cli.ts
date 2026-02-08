@@ -10,7 +10,7 @@
  * 3. Scaffold .idumb/ directory + config.json
  * 4. Deploy Supreme Coordinator agent to .opencode/agents/
  * 5. Deploy commands to .opencode/commands/
- * 6. Deploy module templates to .idumb/idumb-modules/
+ * 6. Deploy module templates to .idumb/modules/
  * 7. Update opencode.json with plugin path
  * 8. Print greeting + next steps
  */

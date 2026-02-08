@@ -2,7 +2,7 @@
  * Planning Registry schema — governed lifecycle for planning artifacts.
  *
  * Part of Group 4: Planning / Artifact Governance
- * Entities persist to `.idumb/brain/planning-registry.json`
+ * Entities persist to `.idumb/brain/registry.json`
  *
  * Key properties:
  * - Hierarchical: artifacts belong to chains (n1→n2→n3), sections within artifacts

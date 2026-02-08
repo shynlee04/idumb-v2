@@ -102,7 +102,7 @@ export interface WorkPlan {
     purgedAt?: number               // when abandoned + purged from context
 }
 
-/** Top-level store — persisted to .idumb/brain/task-graph.json */
+/** Top-level store — persisted to .idumb/brain/graph.json */
 export interface TaskGraph {
     version: string
     activeWorkPlanId: string | null

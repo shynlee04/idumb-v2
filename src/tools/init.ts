@@ -28,12 +28,13 @@ import {
   type OutlierEntry,
 } from "../schemas/planning-registry.js"
 
-const PLANNING_REGISTRY_PATH = ".idumb/brain/planning-registry.json"
+const PLANNING_REGISTRY_PATH = ".idumb/brain/registry.json"
+const LEGACY_PLANNING_REGISTRY_PATH = ".idumb/brain/planning-registry.json"
 const PLANNING_SCAN_ROOTS = [".idumb", "planning"]
 const IGNORED_OUTLIER_PREFIXES = [
   ".idumb/backups/",
   ".idumb/brain/audit/",
-  ".idumb/idumb-modules/",
+  ".idumb/modules/",
 ]
 
 interface PlanningOutlierScanResult {
@@ -47,25 +48,36 @@ function normalizePath(path: string): string {
 
 function shouldIgnoreOutlierPath(path: string): boolean {
   const normalized = normalizePath(path)
-  if (normalized === PLANNING_REGISTRY_PATH) return true
+  if (normalized === PLANNING_REGISTRY_PATH || normalized === LEGACY_PLANNING_REGISTRY_PATH) return true
   return IGNORED_OUTLIER_PREFIXES.some(prefix => normalized.startsWith(prefix))
 }
 
-async function readPlanningRegistry(projectDir: string): Promise<PlanningRegistry> {
-  const registryPath = join(projectDir, PLANNING_REGISTRY_PATH)
+function normalizePlanningRegistry(parsed: Partial<PlanningRegistry>): PlanningRegistry {
+  const empty = createPlanningRegistry()
+  return {
+    version: typeof parsed.version === "string" ? parsed.version : empty.version,
+    artifacts: Array.isArray(parsed.artifacts) ? parsed.artifacts : [],
+    chains: Array.isArray(parsed.chains) ? parsed.chains : [],
+    outliers: Array.isArray(parsed.outliers) ? parsed.outliers : [],
+    lastScanAt: typeof parsed.lastScanAt === "number" ? parsed.lastScanAt : 0,
+  }
+}
 
+async function readPlanningRegistry(
+  projectDir: string,
+): Promise<{ registry: PlanningRegistry; migrated: boolean }> {
+  const registryPath = join(projectDir, PLANNING_REGISTRY_PATH)
+  const legacyRegistryPath = join(projectDir, LEGACY_PLANNING_REGISTRY_PATH)
   try {
     const raw = await readFile(registryPath, "utf-8")
-    const parsed = JSON.parse(raw) as Partial<PlanningRegistry>
-    return {
-      version: typeof parsed.version === "string" ? parsed.version : createPlanningRegistry().version,
-      artifacts: Array.isArray(parsed.artifacts) ? parsed.artifacts : [],
-      chains: Array.isArray(parsed.chains) ? parsed.chains : [],
-      outliers: Array.isArray(parsed.outliers) ? parsed.outliers : [],
-      lastScanAt: typeof parsed.lastScanAt === "number" ? parsed.lastScanAt : 0,
-    }
+    return { registry: normalizePlanningRegistry(JSON.parse(raw) as Partial<PlanningRegistry>), migrated: false }
   } catch {
-    return createPlanningRegistry()
+    try {
+      const raw = await readFile(legacyRegistryPath, "utf-8")
+      return { registry: normalizePlanningRegistry(JSON.parse(raw) as Partial<PlanningRegistry>), migrated: true }
+    } catch {
+      return { registry: createPlanningRegistry(), migrated: false }
+    }
   }
 }
 
@@ -107,7 +119,7 @@ async function scanPlanningOutliers(
   projectDir: string,
   persist: boolean,
 ): Promise<PlanningOutlierScanResult> {
-  const registry = await readPlanningRegistry(projectDir)
+  const { registry } = await readPlanningRegistry(projectDir)
   const registeredPaths = new Set(registry.artifacts.map(a => normalizePath(a.path)))
   const candidateFiles: string[] = []
 

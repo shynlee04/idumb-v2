@@ -1,8 +1,8 @@
 /**
  * Deploy module — deploys agents, commands, and module templates to the user's project.
- * 
+ *
  * Called by the CLI after interactive setup.
- * Writes to .opencode/agents/, .opencode/commands/, and .idumb/idumb-modules/.
+ * Writes to .opencode/agents/, .opencode/commands/, and .idumb/modules/.
  * Non-destructive: skips existing files unless force=true.
  */
 
@@ -207,7 +207,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
   const openCodeDir = getOpenCodeDir(projectDir, scope)
   const agentsDir = join(openCodeDir, "agents")
   const commandsDir = join(openCodeDir, "commands")
-  const modulesDir = join(projectDir, ".idumb", "idumb-modules")
+  const modulesDir = join(projectDir, ".idumb", "modules")
 
   try {
     // ─── Deploy 3-Agent Team (all auto-deployed on install) ──────
@@ -281,13 +281,13 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       result,
     )
     await writeIfNew(
-      join(modulesDir, "commands", "command-template.md"),
+      join(modulesDir, "templates", "command-template.md"),
       COMMAND_TEMPLATE,
       force,
       result,
     )
     await writeIfNew(
-      join(modulesDir, "workflows", "workflow-template.md"),
+      join(modulesDir, "templates", "workflow-template.md"),
       WORKFLOW_TEMPLATE,
       force,
       result,
@@ -341,7 +341,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     )
 
     // ─── Bootstrap Task Graph (v3) ──────────────────────────────
-    const taskGraphPath = join(projectDir, ".idumb", "brain", "task-graph.json")
+    const taskGraphPath = join(projectDir, ".idumb", "brain", "graph.json")
     const bootstrapGraph = createBootstrapTaskGraph()
     await writeIfNew(
         taskGraphPath,
@@ -350,7 +350,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
         result,
     )
 
-    const planningRegistryPath = join(projectDir, ".idumb", "brain", "planning-registry.json")
+    const planningRegistryPath = join(projectDir, ".idumb", "brain", "registry.json")
     const emptyRegistry = createPlanningRegistry()
     await writeIfNew(
       planningRegistryPath,
@@ -359,7 +359,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       result,
     )
 
-    const planStatePath = join(projectDir, ".idumb", "brain", "plan-state.json")
+    const planStatePath = join(projectDir, ".idumb", "brain", "plan.json")
     const defaultPlanState = createDefaultPlanState()
     await writeIfNew(
       planStatePath,

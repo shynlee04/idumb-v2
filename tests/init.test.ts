@@ -158,15 +158,22 @@ function assert(name: string, condition: boolean): void {
 
   // Verify directory structure
   assert("scaffold: .idumb/ exists", existsSync(join(scaffoldDir, ".idumb")))
-  assert("scaffold: anchors/ exists", existsSync(join(scaffoldDir, ".idumb/anchors")))
   assert("scaffold: brain/ exists", existsSync(join(scaffoldDir, ".idumb/brain")))
-  assert("scaffold: governance/ exists", existsSync(join(scaffoldDir, ".idumb/governance")))
-  assert("scaffold: idumb-modules/ exists", existsSync(join(scaffoldDir, ".idumb/idumb-modules")))
-  assert("scaffold: idumb-modules/agents/ exists", existsSync(join(scaffoldDir, ".idumb/idumb-modules/agents")))
-  assert("scaffold: idumb-modules/schemas/ exists", existsSync(join(scaffoldDir, ".idumb/idumb-modules/schemas")))
-  assert("scaffold: sessions/ exists", existsSync(join(scaffoldDir, ".idumb/sessions")))
-  assert("scaffold: project-core/ exists", existsSync(join(scaffoldDir, ".idumb/project-core")))
-  assert("scaffold: project-output/ exists", existsSync(join(scaffoldDir, ".idumb/project-output")))
+  assert("scaffold: brain/index/ exists", existsSync(join(scaffoldDir, ".idumb/brain/index")))
+  assert("scaffold: modules/ exists", existsSync(join(scaffoldDir, ".idumb/modules")))
+  assert("scaffold: modules/agents/ exists", existsSync(join(scaffoldDir, ".idumb/modules/agents")))
+  assert("scaffold: modules/schemas/ exists", existsSync(join(scaffoldDir, ".idumb/modules/schemas")))
+  assert("scaffold: modules/templates/ exists", existsSync(join(scaffoldDir, ".idumb/modules/templates")))
+  assert("scaffold: modules/skills/ exists", existsSync(join(scaffoldDir, ".idumb/modules/skills")))
+  // Verify dead dirs are NOT created
+  assert("scaffold: no anchors/", !existsSync(join(scaffoldDir, ".idumb/anchors")))
+  assert("scaffold: no governance/", !existsSync(join(scaffoldDir, ".idumb/governance")))
+  assert("scaffold: no sessions/", !existsSync(join(scaffoldDir, ".idumb/sessions")))
+  assert("scaffold: no project-core/", !existsSync(join(scaffoldDir, ".idumb/project-core")))
+  assert("scaffold: no project-output/", !existsSync(join(scaffoldDir, ".idumb/project-output")))
+  assert("scaffold: no idumb-modules/", !existsSync(join(scaffoldDir, ".idumb/idumb-modules")))
+  assert("scaffold: no modules/commands/", !existsSync(join(scaffoldDir, ".idumb/modules/commands")))
+  assert("scaffold: no modules/workflows/", !existsSync(join(scaffoldDir, ".idumb/modules/workflows")))
 
   // Verify config.json written
   assert("scaffold: config.json exists", existsSync(join(scaffoldDir, ".idumb/config.json")))

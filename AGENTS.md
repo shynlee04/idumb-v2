@@ -2,7 +2,7 @@
 
 **Version:** 7.0.0
 **Last Updated:** 2026-02-08
-**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE. v3 governance tools (govern_plan, govern_task, govern_delegate, govern_shell) DONE.
+**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE. Phase 8 `.idumb` structure redesign DONE. v3 governance tools (govern_plan, govern_task, govern_delegate, govern_shell) DONE.
 
 ---
 
@@ -117,8 +117,8 @@ v2/
 │   ├── compaction.test.ts          # 16 assertions — all pass ✅
 │   ├── message-transform.test.ts   # 13 assertions — all pass ✅
 │   ├── system.test.ts              # 43 assertions — all pass ✅
-│   ├── init.test.ts                # 60 assertions — all pass ✅
-│   ├── persistence.test.ts         # 91 assertions — all pass ✅
+│   ├── init.test.ts                # 66 assertions — all pass ✅
+│   ├── persistence.test.ts         # 47 core assertions (+46 SQLite assertions when native binding available) — all pass ✅
 │   ├── task.test.ts                # 54 assertions — all pass ✅
 │   ├── delegation.test.ts          # 44 assertions — all pass ✅
 │   ├── planning-registry.test.ts   # 52 assertions — all pass ✅
@@ -143,7 +143,7 @@ v2/
 ```
 
 **Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **658/658** assertions across **12** test files
+**Test baseline:** `npm test` → **620+ assertions** across **12** test files (SQLite-dependent assertions run when native binding is available)
 **TypeScript:** `tsc --noEmit` clean, zero errors  
 **Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `schemas/task.ts` (530)
 
@@ -162,7 +162,7 @@ v2/
 | Message transform — prunes old tool outputs | `hooks/message-transform.ts` | 13/13 unit tests |
 | Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness |
 | TUI-safe file logging | `lib/logging.ts` | Zero console.log |
-| **StateManager** | `lib/persistence.ts` | **91/91** assertions |
+| **StateManager** | `lib/persistence.ts` | Core persistence assertions always run; SQLite assertions run when native binding is available |
 | **Hook verification harness** | `index.ts` | Every hook logs to debug |
 
 ### Level 2: Agent System (3 Agents — CLI-deployed)
@@ -196,7 +196,7 @@ v2/
 |---|---|---|
 | **Code quality scanner** | `lib/code-quality.ts` | 9 smell types, A-F grading, 42 roasts |
 | **CLI integration** | `cli.ts` | Health grade box, stats, roasts |
-| **Init output** | `tools/init.ts` | 60/60 tests |
+| **Init output** | `tools/init.ts` | 66/66 tests |
 
 ### Level 5: Planning Registry
 
@@ -207,7 +207,7 @@ v2/
 | **Helpers** | `schemas/planning-registry.ts` | `resolveChainHead`, `getChainHistory`, `findStaleSections`, `computeSectionHash`, `linkTaskToArtifact`, `findOutliers` |
 | **Test file** | `tests/planning-registry.test.ts` | **52/52** assertions in `npm test` ✅ |
 | **Init integration** | `tools/init.ts` | Outlier scan on install, pending outlier reporting |
-| **Deploy bootstrap** | `cli/deploy.ts` | Empty `planning-registry.json` created on `idumb-v2 init` |
+| **Deploy bootstrap** | `cli/deploy.ts` | Empty `registry.json` created on `idumb-v2 init` |
 
 > **⚠️ CAUTION:** Planning Registry is **schema + factory functions + outlier scan only**. Chain lifecycle and section-level staleness tracking are implemented as pure functions but are NOT wired into runtime hooks or tools. No chain updates happen automatically.
 
@@ -234,7 +234,7 @@ All agents are deployed to `.opencode/agents/` by `idumb-v2 init` via `cli/deplo
 | `spec-kit` | investigator |
 | `ad-hoc` | executor, investigator |
 
-Reference profiles deployed to `.idumb/idumb-modules/agents/` as documentation.
+Reference profiles deployed to `.idumb/modules/agents/` as documentation.
 
 ---
 
@@ -305,11 +305,11 @@ npx idumb-v2 init
     ├─→ deploy.ts (ALL agents + commands + modules pre-deployed)
     │   ├── .opencode/agents/ (3 agents: coordinator, investigator, executor)
     │   ├── .opencode/commands/ (4 commands: init, settings, status, delegate)
-    │   ├── .idumb/idumb-modules/agents/ (3 agent reference profiles)
-    │   ├── .idumb/idumb-modules/schemas/agent-contract.md
-    │   ├── .idumb/idumb-modules/skills/ (delegation + governance protocols)
-    │   ├── .idumb/idumb-modules/commands/command-template.md
-    │   ├── .idumb/idumb-modules/workflows/workflow-template.md
+    │   ├── .idumb/modules/agents/ (3 agent reference profiles)
+    │   ├── .idumb/modules/schemas/agent-contract.md
+    │   ├── .idumb/modules/skills/ (delegation + governance protocols)
+    │   ├── .idumb/modules/templates/command-template.md
+    │   ├── .idumb/modules/templates/workflow-template.md
     │   └── opencode.json (plugin path auto-added)
     │
     └─→ Supreme Coordinator runs in OpenCode
@@ -344,7 +344,7 @@ Turn-based plans live in `planning/implamentation-plan-turn-based/`. Highest `n`
 ## Roadmap
 
 > **See `MASTER-PLAN.md` for the active implementation plan.**
-> The plan state is also available at runtime via `.idumb/brain/plan-state.json`.
+> The plan state is also available at runtime via `.idumb/brain/plan.json`.
 
 ### Historical Phases (Completed)
 
@@ -359,7 +359,7 @@ Turn-based plans live in `planning/implamentation-plan-turn-based/`. Highest `n`
 
 ### Current Plan
 
-See `MASTER-PLAN.md` — Phases 1-6 of the "One True Plan + Self-Enforcement" plan.
+See `MASTER-PLAN.md` — Phases 1-10 of the "One True Plan + Self-Enforcement" plan.
 
 ---
 
@@ -396,7 +396,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 12 test files via tsx (657+ assertions)
+npm test             # 12 test files via tsx (620+ assertions; SQLite-dependent assertions are conditional)
 ```
 
 ---
@@ -408,5 +408,5 @@ When resuming work:
 1. Read `MASTER-PLAN.md` — it is the active implementation plan
 2. Read this file (AGENTS.md) — it reflects what exists in the codebase
 3. Run `npm run typecheck` — must be zero errors
-4. Run `npm test` — must be 657+ baseline
-5. Check `.idumb/brain/plan-state.json` for current phase
+4. Run `npm test` — must pass baseline suites
+5. Check `.idumb/brain/plan.json` for current phase

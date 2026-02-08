@@ -1,16 +1,17 @@
 /**
  * StateManager — disk persistence for hook state.
- * 
+ *
  * Wraps the in-memory Maps from tool-gate.ts and compaction.ts.
- * Adds load/save to `.idumb/brain/hook-state.json`.
- * 
+ * Adds load/save to `.idumb/brain/state.json`.
+ *
  * Design:
  * - Singleton pattern — one instance per plugin lifecycle
  * - Write-through: in-memory is authoritative, disk is backup
  * - Debounced save (500ms) to avoid I/O storms on rapid mutations
  * - P3: Graceful degradation — if disk fails, in-memory still works
  * - Never blocks hot path — save is async fire-and-forget
- * 
+ * - Migration: reads old filenames (hook-state.json, task-graph.json, etc.) if new names don't exist
+ *
  * Consumers: tool-gate.ts, compaction.ts, index.ts
  */
 
@@ -47,11 +48,38 @@ interface PersistedState {
 
 const STATE_VERSION = "1.1.0"
 const DEBOUNCE_MS = 500
-const STATE_FILE = ".idumb/brain/hook-state.json"
+const STATE_FILE = ".idumb/brain/state.json"
 const TASKS_FILE = ".idumb/brain/tasks.json"
-const TASK_GRAPH_FILE = ".idumb/brain/task-graph.json"
+const TASK_GRAPH_FILE = ".idumb/brain/graph.json"
 const DELEGATIONS_FILE = ".idumb/brain/delegations.json"
-const PLAN_STATE_FILE = ".idumb/brain/plan-state.json"
+const PLAN_STATE_FILE = ".idumb/brain/plan.json"
+
+// Legacy filenames for migration (pre-Phase 8)
+const LEGACY_STATE_FILE = ".idumb/brain/hook-state.json"
+const LEGACY_TASK_GRAPH_FILE = ".idumb/brain/task-graph.json"
+const LEGACY_PLAN_STATE_FILE = ".idumb/brain/plan-state.json"
+
+// ─── Migration Helper ─────────────────────────────────────────────────
+
+/**
+ * Try reading a file from the new path first, then fall back to legacy path.
+ * If legacy path succeeds, the caller should save to the new path on next write.
+ */
+async function readWithLegacyFallback(
+  directory: string,
+  newPath: string,
+  legacyPath: string | null,
+): Promise<{ raw: string; migrated: boolean }> {
+  try {
+    const raw = await readFile(join(directory, newPath), "utf-8")
+    return { raw, migrated: false }
+  } catch {
+    // New path not found — try legacy
+    if (!legacyPath) throw new Error("ENOENT")
+    const raw = await readFile(join(directory, legacyPath), "utf-8")
+    return { raw, migrated: true }
+  }
+}
 
 // ─── StateManager ────────────────────────────────────────────────────
 
@@ -98,8 +126,7 @@ export class StateManager {
     // ─── JSON backend (default) ─────────────────────────────────────
 
     try {
-      const statePath = join(directory, STATE_FILE)
-      const raw = await readFile(statePath, "utf-8")
+      const { raw, migrated } = await readWithLegacyFallback(directory, STATE_FILE, LEGACY_STATE_FILE)
       const persisted = JSON.parse(raw) as PersistedState
 
       if (persisted.version && persisted.sessions) {
@@ -119,7 +146,14 @@ export class StateManager {
           sessions: Object.keys(persisted.sessions).length,
           anchors: Object.keys(persisted.anchors ?? {}).length,
           lastSaved: persisted.lastSaved,
+          migrated,
         })
+
+        // Auto-migrate: save to new path if loaded from legacy
+        if (migrated) {
+          log.info("Migrating state from legacy path", { from: LEGACY_STATE_FILE, to: STATE_FILE })
+          this.scheduleSave()
+        }
       }
     } catch (err) {
       // No state file or parse error — start fresh (not an error on first run)
@@ -176,8 +210,7 @@ export class StateManager {
 
     // Load task graph (v3) from separate file
     try {
-      const graphPath = join(directory, TASK_GRAPH_FILE)
-      const graphRaw = await readFile(graphPath, "utf-8")
+      const { raw: graphRaw, migrated } = await readWithLegacyFallback(directory, TASK_GRAPH_FILE, LEGACY_TASK_GRAPH_FILE)
       const loadedGraph = JSON.parse(graphRaw) as TaskGraph
       if (loadedGraph.version && Array.isArray(loadedGraph.workPlans)) {
         this.taskGraph = loadedGraph
@@ -189,7 +222,12 @@ export class StateManager {
         log.info("Task graph loaded from disk", {
           workPlans: loadedGraph.workPlans.length,
           activeWorkPlanId: loadedGraph.activeWorkPlanId,
+          migrated,
         })
+        if (migrated) {
+          log.info("Migrating task graph from legacy path", { from: LEGACY_TASK_GRAPH_FILE, to: TASK_GRAPH_FILE })
+          this.scheduleTaskGraphSave()
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -200,8 +238,7 @@ export class StateManager {
 
     // Load plan state from separate file
     try {
-      const planStatePath = join(directory, PLAN_STATE_FILE)
-      const planStateRaw = await readFile(planStatePath, "utf-8")
+      const { raw: planStateRaw, migrated } = await readWithLegacyFallback(directory, PLAN_STATE_FILE, LEGACY_PLAN_STATE_FILE)
       const loadedPlanState = JSON.parse(planStateRaw) as PlanState
       if (loadedPlanState.version && Array.isArray(loadedPlanState.phases)) {
         this.planState = loadedPlanState
@@ -209,7 +246,12 @@ export class StateManager {
           planName: loadedPlanState.planName,
           phases: loadedPlanState.phases.length,
           currentPhaseId: loadedPlanState.currentPhaseId,
+          migrated,
         })
+        if (migrated) {
+          log.info("Migrating plan state from legacy path", { from: LEGACY_PLAN_STATE_FILE, to: PLAN_STATE_FILE })
+          this.schedulePlanStateSave()
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)

@@ -3,8 +3,8 @@
 > **This document is the SINGLE SOURCE OF TRUTH for all iDumb v2 planning.**
 > No other document may claim planning SOT status. All superseded docs are archived in `planning/_archived-2026-02-08/`.
 
-**Last Updated:** 2026-02-09
-**Plan State Runtime:** `.idumb/brain/plan-state.json` (machine-readable projection read by hooks)
+**Last Updated:** 2026-02-08
+**Plan State Runtime:** `.idumb/brain/plan.json` (machine-readable projection read by hooks)
 
 ---
 
@@ -43,7 +43,7 @@
 
 ### 2.2 StateManager integration
 - **File:** `src/lib/persistence.ts`
-- **Added:** `planState` field, `getPlanState()`, `setPlanState()`, load/save to `.idumb/brain/plan-state.json`
+- **Added:** `planState` field, `getPlanState()`, `setPlanState()`, load/save to `.idumb/brain/plan.json` (with legacy fallback from `plan-state.json`)
 
 ### 2.3 System hook wiring
 - **File:** `src/hooks/system.ts`
@@ -59,7 +59,7 @@
 
 ### 2.6 Bootstrap during init
 - **File:** `src/cli/deploy.ts`
-- **Change:** Creates `plan-state.json` with default 6 phases during `idumb-v2 init`
+- **Change:** Creates `plan.json` with default 6 phases during `idumb-v2 init`
 
 ### 2.7 Tests
 - **File:** `tests/plan-state.test.ts`
@@ -149,7 +149,7 @@
 ### Results
 - `grep -ri "meta.builder" src/` returns zero (excluding `_archived/`) ✅
 - All orphaned code has status documentation ✅
-- `npm run typecheck && npm test` passes (658/658) ✅
+- `npm run typecheck && npm test` passes ✅
 
 ---
 
@@ -201,14 +201,14 @@
 - **Result:** Only 2 active docs remain in docs/plans/ ✅
 
 ### Results
-- 658/658 tests, zero typecheck errors ✅
+- `npm run typecheck` clean, `npm test` passing ✅
 - Commit: `b306972` docs: Phase 7 documentation hygiene
 
 ---
 
-## Phase 8: .idumb/ Structure Redesign
+## Phase 8: .idumb/ Structure Redesign ✅
 
-**Status:** Pending
+**Status:** Completed
 **Goal:** Remove 6 empty directories, restructure for purpose, add brain/index/ for intelligence layer.
 **Depends on:** Phase 7
 
@@ -260,6 +260,7 @@ Current scaffolder creates 15 directories. **6 are permanently empty** (anchors/
 
 ### 8.4 Migration Strategy
 - `persistence.ts init()` checks for old filenames → reads them → saves to new filenames → logs migration
+- `init.ts` outlier scan reads `registry.json` first and falls back to legacy `planning-registry.json`
 - Old files left in place (user can delete manually)
 - Scaffolder skips existing directories gracefully (already does this)
 - No `.gitkeep` files — only create directories that will be populated
@@ -270,7 +271,8 @@ Current scaffolder creates 15 directories. **6 are permanently empty** (anchors/
 - `ls .idumb/brain/index/` is empty (populated by Phase 9 fullscan)
 - Zero empty directories with only `.gitkeep`
 - Old installs with `hook-state.json` still load correctly (migration)
-- 657+ tests pass with path updates
+- `npm run typecheck` passes
+- `npm test` passes with path updates (core suites + SQLite-aware persistence coverage)
 
 ---
 

@@ -10,7 +10,7 @@
  *
  * Files read:
  * - .idumb/brain/tasks.json     → TaskStore (active task, epics, hierarchy)
- * - .idumb/brain/hook-state.json → SessionState (captured agent, blocks)
+ * - .idumb/brain/state.json     → SessionState (captured agent, blocks)
  * - .idumb/brain/delegations.json → DelegationStore (active delegations)
  * - .idumb/brain/knowledge.json  → BrainStore (knowledge entries)
  * - .idumb/brain/codemap.json    → CodeMapStore (codebase map)
@@ -30,12 +30,17 @@ import type { ProjectMap } from "../schemas/project-map.js"
 
 const STATE_FILES = {
     tasks: ".idumb/brain/tasks.json",
-    hookState: ".idumb/brain/hook-state.json",
+    hookState: ".idumb/brain/state.json",
     delegations: ".idumb/brain/delegations.json",
     knowledge: ".idumb/brain/knowledge.json",
     codemap: ".idumb/brain/codemap.json",
     projectMap: ".idumb/brain/project-map.json",
     config: ".idumb/config.json",
+} as const
+
+// Legacy filenames for backward compatibility
+const LEGACY_STATE_FILES = {
+    hookState: ".idumb/brain/hook-state.json",
 } as const
 
 // ─── Safe JSON Reader ────────────────────────────────────────────────
@@ -94,11 +99,14 @@ export function readGovernanceState(projectDir: string): GovernanceSnapshot {
         }
     }
 
-    // Read hook state for captured agent
+    // Read hook state for captured agent (try new path, then legacy)
     let capturedAgent: string | null = null
     const hookState = safeReadJSON<{
         sessions?: Record<string, { capturedAgent?: string | null }>
     }>(join(projectDir, STATE_FILES.hookState))
+        ?? safeReadJSON<{
+            sessions?: Record<string, { capturedAgent?: string | null }>
+        }>(join(projectDir, LEGACY_STATE_FILES.hookState))
     if (hookState?.sessions) {
         // Get the most recent session's captured agent
         const sessions = Object.values(hookState.sessions)
@@ -149,10 +157,13 @@ export function readCapturedAgent(
     // Primary: use context.agent from ToolContext
     if (contextAgent) return contextAgent
 
-    // Fallback: read from hook state on disk
+    // Fallback: read from hook state on disk (try new path, then legacy)
     const hookState = safeReadJSON<{
         sessions?: Record<string, { capturedAgent?: string | null }>
     }>(join(projectDir, STATE_FILES.hookState))
+        ?? safeReadJSON<{
+            sessions?: Record<string, { capturedAgent?: string | null }>
+        }>(join(projectDir, LEGACY_STATE_FILES.hookState))
 
     if (hookState?.sessions) {
         const sessions = Object.values(hookState.sessions)

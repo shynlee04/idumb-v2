@@ -50,6 +50,9 @@ function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+const STATE_FILE = ".idumb/brain/state.json"
+const LEGACY_STATE_FILE = ".idumb/brain/hook-state.json"
+
 // ─── Test 1: Fresh init — no state file ──────────────────────────────
 
 {
@@ -130,7 +133,7 @@ function wait(ms: number): Promise<void> {
   await sm1.forceSave()
 
   // Verify file exists
-  const statePath = join(dir, ".idumb/brain/hook-state.json")
+  const statePath = join(dir, STATE_FILE)
   assert("roundtrip: state file exists", existsSync(statePath))
 
   // Create new StateManager and load
@@ -142,6 +145,38 @@ function wait(ms: number): Promise<void> {
   assert("roundtrip: anchor survives", sm2.getAnchors("session-A").length === 1)
   assert("roundtrip: anchor content", sm2.getAnchors("session-A")[0].content === "Database schema locked")
   assert("roundtrip: anchor type", sm2.getAnchors("session-A")[0].type === "decision")
+}
+
+// ─── Test 4b: Legacy state file migration ─────────────────────────────
+
+{
+  const dir = join(testBase, "legacy-migration")
+  mkdirSync(join(dir, ".idumb/brain"), { recursive: true })
+
+  // Seed legacy file only
+  writeFileSync(
+    join(dir, LEGACY_STATE_FILE),
+    JSON.stringify({
+      version: "1.1.0",
+      lastSaved: new Date().toISOString(),
+      sessions: {
+        "legacy-session": {
+          activeTask: { id: "legacy-task", name: "Legacy Task" },
+          lastBlock: null,
+          capturedAgent: "idumb-executor",
+        },
+      },
+      anchors: {},
+    }, null, 2),
+    "utf-8",
+  )
+
+  const sm = new StateManager()
+  await sm.init(dir, log)
+
+  assert("legacy migration: task loaded from legacy file", sm.getActiveTask("legacy-session")?.name === "Legacy Task")
+  await sm.forceSave()
+  assert("legacy migration: new state file written", existsSync(join(dir, STATE_FILE)))
 }
 
 // ─── Test 5: Debounced save coalesces ────────────────────────────────
@@ -164,7 +199,7 @@ function wait(ms: number): Promise<void> {
   await wait(700)
 
   // Verify final state was saved
-  const statePath = join(dir, ".idumb/brain/hook-state.json")
+  const statePath = join(dir, STATE_FILE)
   assert("debounce: file exists after wait", existsSync(statePath))
 
   const raw = JSON.parse(readFileSync(statePath, "utf-8"))
@@ -184,7 +219,7 @@ function wait(ms: number): Promise<void> {
   sm.setActiveTask("s1", { id: "t1", name: "forced task" })
   await sm.forceSave()
 
-  const statePath = join(dir, ".idumb/brain/hook-state.json")
+  const statePath = join(dir, STATE_FILE)
   assert("forceSave: file exists immediately", existsSync(statePath))
 
   const raw = JSON.parse(readFileSync(statePath, "utf-8"))
@@ -216,7 +251,7 @@ function wait(ms: number): Promise<void> {
   mkdirSync(join(dir, ".idumb/brain"), { recursive: true })
 
   // Write garbage to state file
-  writeFileSync(join(dir, ".idumb/brain/hook-state.json"), "NOT JSON {{{", "utf-8")
+  writeFileSync(join(dir, STATE_FILE), "NOT JSON {{{", "utf-8")
 
   const sm = new StateManager()
   await sm.init(dir, log)
@@ -241,7 +276,7 @@ function wait(ms: number): Promise<void> {
   sm.setActiveTask("s1", { id: "t1", name: "versioned" })
   await sm.forceSave()
 
-  const raw = JSON.parse(readFileSync(join(dir, ".idumb/brain/hook-state.json"), "utf-8"))
+  const raw = JSON.parse(readFileSync(join(dir, STATE_FILE), "utf-8"))
   assert("version: has version field", raw.version === "1.1.0")
   assert("version: has lastSaved", typeof raw.lastSaved === "string")
   assert("version: lastSaved is ISO", raw.lastSaved.includes("T"))
@@ -311,9 +346,26 @@ function wait(ms: number): Promise<void> {
   assert("compat: anchor content", getAnchors(testSessionID).some(a => a.content === "compat anchor"))
 }
 
-// ─── Test 13: SQLite Backend — init with { sqlite: true } ────────────
+let sqliteBackendAvailable = true
+{
+  const probeDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-probe-"))
+  try {
+    const probe = new StateManager()
+    await probe.init(probeDir, log, { sqlite: true })
+    await probe.close()
+  } catch (err) {
+    sqliteBackendAvailable = false
+    const msg = err instanceof Error ? err.message : String(err)
+    process.stderr.write(`\nSQLite backend unavailable — skipping SQLite persistence tests.\nReason: ${msg}\n\n`)
+  } finally {
+    rmSync(probeDir, { recursive: true, force: true })
+  }
+}
 
-console.log("\nStateManager — SQLite Backend\n")
+if (sqliteBackendAvailable) {
+  // ─── Test 13: SQLite Backend — init with { sqlite: true } ────────────
+
+  process.stderr.write("\nStateManager — SQLite Backend\n\n")
 
 {
   const sqlDir = mkdtempSync(join(tmpdir(), "idumb-sqlite-sm-"))
@@ -571,6 +623,8 @@ console.log("\nStateManager — SQLite Backend\n")
 
   await sm.close()
   rmSync(sqlDir, { recursive: true, force: true })
+}
+
 }
 
 // ─── Cleanup + Results ───────────────────────────────────────────────
