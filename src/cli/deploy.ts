@@ -29,6 +29,7 @@ import {
 } from "../templates.js"
 import { createBootstrapStore } from "../schemas/task.js"
 import { createPlanningRegistry } from "../schemas/planning-registry.js"
+import { createBootstrapTaskGraph } from "../schemas/work-plan.js"
 
 export interface DeployOptions {
   projectDir: string
@@ -336,6 +337,16 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       JSON.stringify(bootstrapStore, null, 2) + "\n",
       force,
       result,
+    )
+
+    // ─── Bootstrap Task Graph (v3) ──────────────────────────────
+    const taskGraphPath = join(projectDir, ".idumb", "brain", "task-graph.json")
+    const bootstrapGraph = createBootstrapTaskGraph()
+    await writeIfNew(
+        taskGraphPath,
+        JSON.stringify(bootstrapGraph, null, 2) + "\n",
+        force,
+        result,
     )
 
     const planningRegistryPath = join(projectDir, ".idumb", "brain", "planning-registry.json")

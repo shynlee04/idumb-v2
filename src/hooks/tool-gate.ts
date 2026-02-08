@@ -16,6 +16,7 @@
 
 import type { Logger } from "../lib/index.js"
 import { stateManager } from "../lib/persistence.js"
+import { shouldCreateCheckpoint, createCheckpoint } from "../schemas/index.js"
 
 /** Write tools that require an active task */
 const WRITE_TOOLS = new Set(["write", "edit"])
@@ -48,12 +49,14 @@ interface AgentToolRule {
 export const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
   // Supreme Coordinator: orchestrator — plans, delegates, monitors status
   // CAN: govern_plan (all), govern_delegate (all), govern_task (status only),
-  //      govern_shell (inspection only — internal gating), idumb_anchor, idumb_scan, idumb_codemap
-  // CANNOT: govern_task (start/complete/fail/review), idumb_init, idumb_write, idumb_bash, idumb_webfetch
+  //      govern_shell (inspection only — internal gating), idumb_anchor, idumb_scan, idumb_codemap,
+  //      idumb_init (status, scan — but NOT install)
+  // CANNOT: govern_task (start/complete/fail/review), idumb_init install, idumb_write, idumb_bash, idumb_webfetch
   "idumb-supreme-coordinator": {
-    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash", "idumb_webfetch"]),
+    blockedTools: new Set(["idumb_write", "idumb_bash", "idumb_webfetch"]),
     blockedActions: {
       "idumb_task": new Set(["create_epic"]),
+      "idumb_init": new Set(["install"]),  // can status/scan but not install
       "govern_task": new Set(["start", "complete", "fail", "review"]),
     },
   },
@@ -281,65 +284,117 @@ export function createToolGateBefore(log: Logger) {
 }
 
 /**
- * Creates the tool.execute.after hook (defense-in-depth fallback).
- * 
- * If tool.execute.before throw didn't block the tool (edge case),
- * this replaces the output with the governance message.
+ * Creates the tool.execute.after hook (defense-in-depth fallback + checkpoint recording).
+ *
+ * Two responsibilities:
+ * 1. If tool.execute.before throw didn't block a write tool (edge case),
+ *    replaces the output with the governance message.
+ * 2. Auto-records checkpoints in the TaskGraph for checkpoint-worthy tools
+ *    (write, edit) when there's an active task.
  */
 export function createToolGateAfter(log: Logger) {
   return async (
     input: { tool: string; sessionID: string; callID: string },
     output: { title: string; output: string; metadata: unknown },
   ): Promise<void> => {
-    try {
-      const { tool, sessionID } = input
+    const { tool, sessionID } = input
 
-      if (!WRITE_TOOLS.has(tool)) return
+    // ─── Defense-in-depth for write tools ────────────────────────────
+    if (WRITE_TOOLS.has(tool)) {
+      try {
+        // If there's an active task, tool was legitimately allowed
+        if (!stateManager.getActiveTask(sessionID)) {
+          // ─── Auto-inherit from TaskGraph (v3) ──────────────────────
+          const graph = stateManager.getTaskGraph()
+          const activeWP = graph.workPlans.find(wp => wp.status === "active")
+          if (activeWP) {
+            const activeNode = activeWP.tasks.find(t => t.status === "active")
+            if (activeNode) {
+              stateManager.setActiveTask(sessionID, {
+                id: activeNode.id,
+                name: activeNode.name,
+              })
+              log.info(`AUTO-INHERIT (after/graph): inherited TaskNode "${activeNode.name}"`, { sessionID })
+              // Fall through to checkpoint recording below
+            }
+          }
 
-      // If there's an active task, tool was legitimately allowed
-      if (stateManager.getActiveTask(sessionID)) return
+          // ─── Auto-inherit from task store (mirror before-hook logic) ──
+          if (!stateManager.getActiveTask(sessionID)) {
+            const store = stateManager.getTaskStore()
+            if (store.activeEpicId) {
+              const activeEpic = store.epics.find(e => e.id === store.activeEpicId)
+              if (activeEpic) {
+                const activeStoreTask = activeEpic.tasks.find(t => t.status === "active")
+                if (activeStoreTask) {
+                  stateManager.setActiveTask(sessionID, {
+                    id: activeStoreTask.id,
+                    name: activeStoreTask.name,
+                  })
+                  log.info(`AUTO-INHERIT (after): inherited task "${activeStoreTask.name}" from store`, { sessionID })
+                  // Fall through to checkpoint recording below
+                }
+              }
+            }
+          }
 
-      // ─── Auto-inherit from TaskGraph (v3) ──────────────────────
-      const graph = stateManager.getTaskGraph()
-      const activeWP = graph.workPlans.find(wp => wp.status === "active")
-      if (activeWP) {
-        const activeNode = activeWP.tasks.find(t => t.status === "active")
-        if (activeNode) {
-          stateManager.setActiveTask(sessionID, {
-            id: activeNode.id,
-            name: activeNode.name,
-          })
-          log.info(`AUTO-INHERIT (after/graph): inherited TaskNode "${activeNode.name}"`, { sessionID })
-          return
+          // If still no active task after auto-inherit attempts,
+          // defense in depth: replace output with governance message.
+          if (!stateManager.getActiveTask(sessionID)) {
+            const message = buildBlockMessage(tool, true)
+            output.output = message
+            output.title = `GOVERNANCE BLOCK: ${tool} denied`
+            log.warn(`FALLBACK BLOCK: ${tool} after-hook replacing output`, { sessionID })
+            return // Don't record checkpoint for blocked tools
+          }
         }
+      } catch (error) {
+        // P3: Never crash in after-hook
+        log.error(`tool-gate after unexpected error: ${error}`)
       }
+    }
 
-      // ─── Auto-inherit from task store (mirror before-hook logic) ──
-      const store = stateManager.getTaskStore()
-      if (store.activeEpicId) {
-        const activeEpic = store.epics.find(e => e.id === store.activeEpicId)
-        if (activeEpic) {
-          const activeStoreTask = activeEpic.tasks.find(t => t.status === "active")
-          if (activeStoreTask) {
-            stateManager.setActiveTask(sessionID, {
-              id: activeStoreTask.id,
-              name: activeStoreTask.name,
-            })
-            log.info(`AUTO-INHERIT (after): inherited task "${activeStoreTask.name}" from store`, { sessionID })
-            return
+    // ─── Checkpoint auto-recording ──────────────────────────────────
+    // When a tool call succeeds AND there's an active task AND the tool
+    // is checkpoint-worthy, auto-record a Checkpoint in the TaskGraph.
+    try {
+      const activeTaskForCheckpoint = stateManager.getActiveTask(sessionID)
+      if (activeTaskForCheckpoint) {
+        // After-hook output shape: { title, output, metadata }
+        // We don't have reliable access to tool args here.
+        // For write/edit: always checkpoint (args not needed for filtering).
+        // For bash: we'd need the command string from args, which isn't
+        // available in the after-hook output. Skip bash checkpointing
+        // until we can validate the runtime metadata shape (Phase 1b).
+        const toolArgs: Record<string, unknown> | undefined = undefined
+        if (shouldCreateCheckpoint(tool, toolArgs)) {
+          const graph = stateManager.getTaskGraph()
+          const activeWP = graph.workPlans.find(wp => wp.status === "active")
+          if (activeWP) {
+            const activeNode = activeWP.tasks.find(t => t.status === "active")
+            if (activeNode) {
+              const summary = output.title || `${tool} operation`
+              const filesModified: string[] = []
+              // Extract file paths from metadata if available
+              const meta = output.metadata as Record<string, unknown> | undefined
+              if (meta) {
+                if (typeof meta.file_path === "string") filesModified.push(meta.file_path)
+                if (typeof meta.path === "string") filesModified.push(meta.path)
+              }
+
+              const cp = createCheckpoint(activeNode.id, tool, summary, filesModified)
+              activeNode.checkpoints.push(cp)
+              activeNode.artifacts = [...new Set([...activeNode.artifacts, ...filesModified])]
+              activeNode.modifiedAt = Date.now()
+              stateManager.saveTaskGraph(graph)
+              log.debug(`CHECKPOINT: ${tool} → "${summary}" (${activeNode.checkpoints.length} total)`, { sessionID })
+            }
           }
         }
       }
-
-      // Defense in depth: if we're here with no active task, the before-hook
-      // should have blocked. Replace output with governance message.
-      const message = buildBlockMessage(tool, true)
-      output.output = message
-      output.title = `GOVERNANCE BLOCK: ${tool} denied`
-      log.warn(`FALLBACK BLOCK: ${tool} after-hook replacing output`, { sessionID })
-    } catch (error) {
-      // P3: Never crash in after-hook
-      log.error(`tool-gate after unexpected error: ${error}`)
+    } catch (cpError) {
+      // P3: Never crash for checkpoint recording failure
+      log.error(`tool-gate checkpoint recording error: ${cpError}`)
     }
   }
 }

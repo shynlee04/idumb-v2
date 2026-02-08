@@ -12,6 +12,7 @@
 
 import { createToolGateBefore, createToolGateAfter, setActiveTask, AGENT_TOOL_RULES } from "../src/hooks/index.js"
 import { createLogger } from "../src/lib/index.js"
+import { shouldCreateCheckpoint, createCheckpoint } from "../src/schemas/index.js"
 import { mkdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
@@ -135,17 +136,20 @@ function test7_agentToolRulesHas3Agents(): void {
 
 function test8_supremeCoordinatorRules(): void {
   const rules = AGENT_TOOL_RULES["idumb-supreme-coordinator"]
-  assert("supreme-coordinator blocks idumb_init", rules.blockedTools.has("idumb_init"))
+  // DRIFT-04: idumb_init moved from blockedTools to blockedActions (only install blocked)
+  assert("supreme-coordinator does NOT block idumb_init at tool level", !rules.blockedTools.has("idumb_init"))
   assert("supreme-coordinator blocks idumb_write", rules.blockedTools.has("idumb_write"))
   assert("supreme-coordinator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
   assert("supreme-coordinator blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
-  assert("supreme-coordinator has 4 blocked tools", rules.blockedTools.size === 4)
+  assert("supreme-coordinator has 3 blocked tools", rules.blockedTools.size === 3)
   // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
   assert("supreme-coordinator blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  assert("supreme-coordinator blocks install on idumb_init", rules.blockedActions["idumb_init"]?.has("install") === true)
   assert("supreme-coordinator blocks start on govern_task", rules.blockedActions["govern_task"]?.has("start") === true)
   assert("supreme-coordinator blocks complete on govern_task", rules.blockedActions["govern_task"]?.has("complete") === true)
   assert("supreme-coordinator blocks fail on govern_task", rules.blockedActions["govern_task"]?.has("fail") === true)
   assert("supreme-coordinator blocks review on govern_task", rules.blockedActions["govern_task"]?.has("review") === true)
+  assert("supreme-coordinator has 3 tools with action blocks", Object.keys(rules.blockedActions).length === 3)
 }
 
 function test9_investigatorRules(): void {
@@ -198,6 +202,51 @@ function test11_oldAgentsRemoved(): void {
   }
 }
 
+// ─── DRIFT-04: idumb_init unblocked for coordinator ─────────────
+
+function test12_coordinatorCanCallIdumbInitStatus(): void {
+  // Coordinator should be able to call idumb_init with action=status
+  const rules = AGENT_TOOL_RULES["idumb-supreme-coordinator"]
+  const blocked = rules.blockedTools.has("idumb_init")
+  assert("coordinator idumb_init NOT in blockedTools", !blocked)
+  // The install action should still be blocked
+  const installBlocked = rules.blockedActions["idumb_init"]?.has("install") === true
+  assert("coordinator idumb_init install IS action-blocked", installBlocked)
+  // The status action should NOT be blocked
+  const statusBlocked = rules.blockedActions["idumb_init"]?.has("status") === true
+  assert("coordinator idumb_init status is NOT action-blocked", !statusBlocked)
+}
+
+// ─── Checkpoint schema imports ──────────────────────────────────
+
+function test13_checkpointFunctionsImportable(): void {
+  assert("shouldCreateCheckpoint is a function", typeof shouldCreateCheckpoint === "function")
+  assert("createCheckpoint is a function", typeof createCheckpoint === "function")
+  // Verify shouldCreateCheckpoint returns true for write/edit
+  assert("shouldCreateCheckpoint('write') returns true", shouldCreateCheckpoint("write") === true)
+  assert("shouldCreateCheckpoint('edit') returns true", shouldCreateCheckpoint("edit") === true)
+  assert("shouldCreateCheckpoint('read') returns false", shouldCreateCheckpoint("read") === false)
+  assert("shouldCreateCheckpoint('grep') returns false", shouldCreateCheckpoint("grep") === false)
+  // Bash without args returns false (can't determine command)
+  assert("shouldCreateCheckpoint('bash') without args returns false", shouldCreateCheckpoint("bash") === false)
+  // Bash with build command returns true
+  assert("shouldCreateCheckpoint('bash', {command:'npm run build'}) returns true",
+    shouldCreateCheckpoint("bash", { command: "npm run build" }) === true)
+  // Bash with grep command returns false
+  assert("shouldCreateCheckpoint('bash', {command:'grep foo'}) returns false",
+    shouldCreateCheckpoint("bash", { command: "grep foo" }) === false)
+}
+
+function test14_createCheckpointProducesValidObject(): void {
+  const cp = createCheckpoint("tn-123", "write", "created auth.ts", ["/src/auth.ts"])
+  assert("checkpoint has id", typeof cp.id === "string" && cp.id.startsWith("cp-"))
+  assert("checkpoint has taskNodeId", cp.taskNodeId === "tn-123")
+  assert("checkpoint has tool", cp.tool === "write")
+  assert("checkpoint has summary", cp.summary === "created auth.ts")
+  assert("checkpoint has filesModified", cp.filesModified.length === 1 && cp.filesModified[0] === "/src/auth.ts")
+  assert("checkpoint has timestamp", typeof cp.timestamp === "number" && cp.timestamp > 0)
+}
+
 // Run all tests
 async function main(): Promise<void> {
   await test1_writeBlockedWithoutTask()
@@ -211,6 +260,9 @@ async function main(): Promise<void> {
   test9_investigatorRules()
   test10_executorRules()
   test11_oldAgentsRemoved()
+  test12_coordinatorCanCallIdumbInitStatus()
+  test13_checkpointFunctionsImportable()
+  test14_createCheckpointProducesValidObject()
 
   const total = passed + failed
   const summary = `\nResults: ${passed}/${total} passed, ${failed} failed`
