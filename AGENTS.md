@@ -1,8 +1,8 @@
 # AGENTS.md — iDumb v2 (Ground Truth)
 
 **Version:** 7.0.0
-**Last Updated:** 2026-02-08
-**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE. Phase 8 `.idumb` structure redesign DONE. v3 governance tools (govern_plan, govern_task, govern_delegate, govern_shell) DONE.
+**Last Updated:** 2026-02-09
+**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE. Phase 8 `.idumb` structure redesign DONE. v3 governance tools (govern_plan, govern_task, govern_delegate, govern_shell) DONE. govern_task quick_start (1-call ceremony) DONE.
 
 ---
 
@@ -143,7 +143,7 @@ v2/
 ```
 
 **Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **620+ assertions** across **12** test files (SQLite-dependent assertions run when native binding is available)
+**Test baseline:** `npm test` → **637+ assertions** across **12** test files (SQLite-dependent assertions run when native binding is available)
 **TypeScript:** `tsc --noEmit` clean, zero errors  
 **Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `schemas/task.ts` (530)
 
@@ -157,7 +157,7 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | 93/93 assertions |
+| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | 94/94 assertions |
 | Compaction anchor injection | `hooks/compaction.ts` | 16/16 unit tests |
 | Message transform — prunes old tool outputs | `hooks/message-transform.ts` | 13/13 unit tests |
 | Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness |
@@ -183,10 +183,10 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| **Task graph schema** | `schemas/task-graph.ts` | TaskNode, Checkpoint, TaskGraph. 96/96 tests |
+| **Task graph schema** | `schemas/task-graph.ts` | TaskNode, Checkpoint, TaskGraph. 112/112 tests |
 | **Work plan schema** | `schemas/work-plan.ts` | WorkPlan lifecycle. 56/56 tests |
 | **govern_plan tool** | `tools/govern-plan.ts` | Work plan management: create, plan_tasks, status, archive, abandon |
-| **govern_task tool** | `tools/govern-task.ts` | Task lifecycle: start, complete, fail, status, review |
+| **govern_task tool** | `tools/govern-task.ts` | Task lifecycle: quick_start, start, complete, fail, status, review |
 | **Legacy task schema** | `schemas/task.ts` | Epic/Task/Subtask, WorkStream categories, v1→v2 migration |
 | **Persistence** | `lib/persistence.ts` | Separate `tasks.json`. Auto-migration. Agent identity capture |
 
@@ -283,7 +283,7 @@ Reference profiles deployed to `.idumb/modules/agents/` as documentation.
 | Tool | Description |
 |---|---|
 | `govern_plan` | Work plan management — create, plan_tasks, status, archive, abandon |
-| `govern_task` | Task lifecycle — start, complete, fail, status, review |
+| `govern_task` | Task lifecycle — quick_start, start, complete, fail, review, status |
 | `govern_delegate` | Structured delegation — assign, recall, status |
 | `govern_shell` | Governed shell command execution with classification |
 | `idumb_anchor` | Context anchors that survive compaction |

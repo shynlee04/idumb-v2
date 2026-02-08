@@ -526,6 +526,90 @@ assert(mtn2.status === "active", "migrateV2ToV3: active task remains active")
 assert(mtn2.result === undefined, "migrateV2ToV3: no evidence → no result")
 assert(mtn2.expectedOutput.includes("Migrated from v2"), "migrateV2ToV3: fallback expectedOutput for missing evidence")
 
+// ─── Quick Start Scenario Tests ───────────────────────────────────
+
+// Simulate the quick_start workflow: create plan + task + activate in one go
+const qsGraph = {
+    version: "3.0.0",
+    activeWorkPlanId: null,
+    workPlans: [],
+} as TaskGraph
+
+// Step 1: Create plan when none exists
+const qsPlan = {
+    id: "wp-qs-1",
+    name: "Quick: Fix auth bug",
+    acceptance: [],
+    category: "ad-hoc" as const,
+    governanceLevel: "standard" as const,
+    status: "active" as const,
+    dependsOn: [],
+    ownedBy: "idumb-executor",
+    tasks: [],
+    planAhead: [],
+    createdAt: NOW,
+    modifiedAt: NOW,
+} satisfies WorkPlan
+qsGraph.workPlans.push(qsPlan)
+qsGraph.activeWorkPlanId = qsPlan.id
+
+// Step 2: Create task node with no dependencies
+const qsNode: TaskNode = {
+    id: "tn-qs-1",
+    workPlanId: qsPlan.id,
+    name: "Fix auth bug",
+    expectedOutput: "Fix auth bug",
+    status: "active",
+    delegatedBy: "idumb-executor",
+    assignedTo: "idumb-executor",
+    allowedTools: [],
+    dependsOn: [],
+    temporalGate: null,
+    checkpoints: [],
+    artifacts: [],
+    createdAt: NOW,
+    modifiedAt: NOW,
+    startedAt: NOW,
+}
+qsPlan.tasks.push(qsNode)
+
+// Verify quick_start scenario produces valid graph state
+assert(qsGraph.activeWorkPlanId === "wp-qs-1", "quick_start: active work plan set")
+assert(qsGraph.workPlans.length === 1, "quick_start: exactly one work plan")
+assert(qsPlan.status === "active", "quick_start: plan is active")
+assert(qsPlan.tasks.length === 1, "quick_start: exactly one task")
+assert(qsNode.status === "active", "quick_start: task is active")
+assert(qsNode.startedAt !== undefined, "quick_start: startedAt set")
+assert(qsNode.dependsOn.length === 0, "quick_start: no dependencies")
+assert(qsNode.temporalGate === null, "quick_start: no temporal gate")
+
+// Verify graph helpers work on quick_start-created state
+const qsChain = getActiveWorkChain(qsGraph)
+assert(qsChain.workPlan !== null, "quick_start: getActiveWorkChain finds plan")
+assert(qsChain.taskNode !== null, "quick_start: getActiveWorkChain finds active task")
+assert(qsChain.taskNode?.id === "tn-qs-1", "quick_start: correct task node in chain")
+
+// Verify findTaskNode works
+assert(findTaskNode(qsGraph, "tn-qs-1") === qsNode, "quick_start: findTaskNode works")
+assert(findParentPlan(qsGraph, "tn-qs-1") === qsPlan, "quick_start: findParentPlan works")
+
+// Verify graph breaks detection on quick_start state (should be clean)
+const qsWarnings = detectGraphBreaks(qsGraph)
+assert(qsWarnings.length === 0, "quick_start: no graph breaks on clean quick_start state")
+
+// Quick_start reuse: add second task to existing active plan
+const qsNode2: TaskNode = {
+    ...qsNode,
+    id: "tn-qs-2",
+    name: "Fix logout bug",
+    expectedOutput: "Logout button works",
+    status: "planned",
+    startedAt: undefined,
+}
+qsPlan.tasks.push(qsNode2)
+assert(qsPlan.tasks.length === 2, "quick_start reuse: second task added to existing plan")
+assert(findTaskNode(qsGraph, "tn-qs-2")?.name === "Fix logout bug", "quick_start reuse: second task findable")
+
 // ─── Summary ───────────────────────────────────────────────────────
 
 console.log(`\nResults: ${passed}/${passed + failed} passed, ${failed} failed`)

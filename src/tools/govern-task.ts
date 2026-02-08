@@ -1,10 +1,12 @@
 /**
  * govern_task — TaskNode lifecycle management (All agents, scoped).
  *
- * 5 actions: start, complete, fail, review, status
+ * 6 actions: quick_start, start, complete, fail, review, status
  *
- * This tool manages individual TaskNode lifecycle. The `start` action is
- * the critical bridge to the tool-gate — without it, write/edit are blocked.
+ * This tool manages individual TaskNode lifecycle. The `quick_start` action
+ * creates a plan + task + activates it in ONE call (no ceremony).
+ * The `start` action activates an existing planned task.
+ * Both bridge to the tool-gate — without an active task, write/edit are blocked.
  *
  * Shadow: "Unlike the innate todo tool, this enforces temporal gates,
  * auto-records checkpoints from your tool usage, and bridges to the write
@@ -17,17 +19,25 @@ import {
     validateTaskStart, validateTaskCompletion,
     getActiveWorkChain,
     detectGraphBreaks,
+    createWorkPlan, createTaskNode,
 } from "../schemas/index.js"
+import type { WorkPlan } from "../schemas/work-plan.js"
 import { stateManager } from "../lib/persistence.js"
 
 export const govern_task = tool({
-    description: "Check or advance your current task. Unlike the innate todo tool, this enforces temporal gates (tasks can't start before dependencies complete), auto-records checkpoints from your tool usage, and bridges to the write gate — without an active task from this tool, all write/edit calls are blocked.",
+    description: "Start or manage tasks that unlock write/edit permissions. Use 'quick_start' to create a plan+task and start working immediately (ONE call instead of three). Use 'start' to activate an existing planned task. Use 'complete'/'fail' to finish. Use 'status' to check state. Without an active task, all write/edit calls are blocked.",
     args: {
-        action: tool.schema.enum(["start", "complete", "fail", "review", "status"]).describe(
-            "Action: 'start' activates a planned task, 'complete' closes with evidence, 'fail' marks failed, 'review' requests review, 'status' shows current state"
+        action: tool.schema.enum(["quick_start", "start", "complete", "fail", "review", "status"]).describe(
+            "Action: 'quick_start' creates plan+task+starts in one call (fastest path to writing), 'start' activates a planned task, 'complete' closes with evidence, 'fail' marks failed, 'review' requests review, 'status' shows current state"
         ),
         target_id: tool.schema.string().optional().describe(
-            "TaskNode ID to operate on. Required for start/complete/fail/review. Omit for status (shows active)."
+            "TaskNode ID to operate on. Required for start/fail. Optional for complete/review (falls back to active). Not needed for quick_start/status."
+        ),
+        name: tool.schema.string().optional().describe(
+            "Task name (for 'quick_start'). What you're about to work on. Example: 'Fix auth login flow'"
+        ),
+        expected_output: tool.schema.string().optional().describe(
+            "What the task must produce (for 'quick_start'). Optional — defaults to the task name. Example: 'Login page works with SSO'"
         ),
         evidence: tool.schema.string().optional().describe(
             "Proof of completion (for 'complete'). Examples: 'All tests passing', 'Feature renders correctly', file paths."
@@ -41,6 +51,63 @@ export const govern_task = tool({
         const { sessionID } = context
 
         switch (action) {
+            case "quick_start": {
+                // ── One-call ceremony killer ──────────────────────────────
+                // Creates plan + task + starts it in a single call.
+                // Replaces: govern_plan create → govern_plan plan_tasks → govern_task start
+                if (!args.name) {
+                    return "ERROR: 'quick_start' requires name. Example: govern_task action=quick_start name=\"Fix auth login flow\""
+                }
+
+                const graph = stateManager.getTaskGraph()
+                const agent = stateManager.getCapturedAgent(sessionID) ?? "idumb-executor"
+
+                // Find or create active WorkPlan
+                let wp: WorkPlan | undefined
+                if (graph.activeWorkPlanId) {
+                    wp = graph.workPlans.find(w => w.id === graph.activeWorkPlanId)
+                }
+                if (!wp) {
+                    wp = createWorkPlan({
+                        name: `Quick: ${args.name}`,
+                        category: "ad-hoc",
+                        ownedBy: agent,
+                    })
+                    wp.status = "active"
+                    graph.workPlans.push(wp)
+                    graph.activeWorkPlanId = wp.id
+                }
+
+                // Create TaskNode — no dependencies, no temporal gates
+                const node = createTaskNode({
+                    workPlanId: wp.id,
+                    name: args.name,
+                    expectedOutput: args.expected_output ?? args.name,
+                    delegatedBy: agent,
+                    assignedTo: agent,
+                })
+
+                // Auto-start immediately
+                node.status = "active"
+                node.startedAt = Date.now()
+                wp.tasks.push(node)
+                wp.modifiedAt = Date.now()
+
+                // Bridge to tool-gate: unlock writes
+                stateManager.setActiveTask(sessionID, {
+                    id: node.id,
+                    name: node.name,
+                })
+
+                stateManager.saveTaskGraph(graph)
+
+                return [
+                    `Quick start: "${node.name}" [${node.id}]`,
+                    `Plan: "${wp.name}" [${wp.id}]`,
+                    `Write/edit UNLOCKED.`,
+                ].join("\n")
+            }
+
             case "start": {
                 if (!args.target_id) {
                     return "ERROR: 'start' requires target_id. Use govern_plan action=status to see available tasks."
@@ -301,7 +368,7 @@ export const govern_task = tool({
             }
 
             default:
-                return `Unknown action: ${action}. Valid: start, complete, fail, review, status.`
+                return `Unknown action: ${action}. Valid: quick_start, start, complete, fail, review, status.`
         }
     },
 })

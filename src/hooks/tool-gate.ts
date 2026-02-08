@@ -72,12 +72,12 @@ export const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
   // CAN: govern_plan (all), govern_delegate (all), govern_task (status only),
   //      govern_shell (inspection only — internal gating), idumb_anchor,
   //      idumb_init (status, scan — but NOT install)
-  // CANNOT: govern_task (start/complete/fail/review), idumb_init install
+  // CANNOT: govern_task (start/quick_start/complete/fail/review), idumb_init install
   "idumb-supreme-coordinator": {
     blockedTools: new Set<string>(),
     blockedActions: {
       "idumb_init": new Set(["install"]),
-      "govern_task": new Set(["start", "complete", "fail", "review"]),
+      "govern_task": new Set(["start", "quick_start", "complete", "fail", "review"]),
     },
   },
 
@@ -176,7 +176,7 @@ function buildBlockMessage(tool: string, isRetry: boolean): string {
       }
     } else {
       stateLines.push(`CURRENT STATE: No active plan or task.`)
-      stateLines.push(`USE INSTEAD: Call "govern_plan" with action "create" to start a plan, then add tasks with "plan_tasks", then start a task with "govern_task" action "start".`)
+      stateLines.push(`USE INSTEAD: Call "govern_task" with action "quick_start" and name="your task" to create a plan+task and start immediately. Or use the full ceremony: govern_plan create → plan_tasks → govern_task start.`)
     }
   }
 

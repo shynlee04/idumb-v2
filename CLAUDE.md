@@ -105,7 +105,7 @@ src/
 │   └── system.ts         # Unit-tested — config-aware governance context (UNVERIFIED in live OpenCode)
 ├── tools/                # 6 tool implementations (+ barrel index.ts)
 │   ├── govern-plan.ts    # Work plan management: create, plan_tasks, status, archive, abandon
-│   ├── govern-task.ts    # Task lifecycle: start, complete, fail, status, review
+│   ├── govern-task.ts    # Task lifecycle: quick_start, start, complete, fail, review, status
 │   ├── govern-delegate.ts # Structured delegation: assign, recall, status
 │   ├── govern-shell.ts   # Governed shell execution with classification
 │   ├── anchor.ts         # Context anchors surviving compaction
