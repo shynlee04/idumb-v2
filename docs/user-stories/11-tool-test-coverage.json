@@ -17,7 +17,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with total assertions >= previous baseline + new assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "govern_task tool tests: test all 6 actions (quick_start, start, complete, fail, review, status) with mocked stateManager",
@@ -39,7 +39,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with total assertions >= previous baseline + new assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "govern_delegate tool tests: test all 3 actions (assign, recall, status) with mocked stateManager",
@@ -55,7 +55,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with total assertions >= previous baseline + new assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "govern_shell tool tests: test command classification, execution, blocking, and timeout handling",
@@ -72,7 +72,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with total assertions >= previous baseline + new assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Anchor and init tool tests: test anchor CRUD operations and init tool's scan/initialize/report actions",
@@ -91,7 +91,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with total assertions >= previous baseline + new assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Add standalone test files to npm test script: smoke-code-quality.ts and sqlite-adapter.test.ts are not chained in the npm test command",
@@ -103,6 +103,6 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with all suites green"
     ],
-    "passes": false
+    "passes": true
   }
 ]

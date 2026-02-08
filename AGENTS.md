@@ -125,7 +125,13 @@ v2/
 │   ├── work-plan.test.ts           # 56 assertions — all pass ✅
 │   ├── task-graph.test.ts          # 112 assertions — all pass ✅
 │   ├── plan-state.test.ts          # 40 assertions — all pass ✅
-│   ├── sqlite-adapter.test.ts      # SQLite adapter tests (standalone, not in npm test)
+│   ├── govern-plan.test.ts         # 52 assertions — all pass ✅
+│   ├── govern-task.test.ts         # 58 assertions — all pass ✅
+│   ├── govern-delegate.test.ts     # 17 assertions — all pass ✅
+│   ├── govern-shell.test.ts        # 31 assertions — all pass ✅
+│   ├── anchor-tool.test.ts         # 32 assertions — all pass ✅
+│   ├── init-tool.test.ts           # 32 assertions — all pass ✅
+│   ├── sqlite-adapter.test.ts      # SQLite adapter tests (conditional on native binding)
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
 ├── planning/
 │   ├── implamentation-plan-turn-based/   # Turn-based plan chain (n3→n4→n5→n6)

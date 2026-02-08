@@ -28,7 +28,7 @@ npm run dev            # tsc --watch
 # Type check (no emit)
 npm run typecheck      # tsc --noEmit — must be zero errors
 
-# Run ALL tests (12 suites, sequential chain)
+# Run ALL tests (20 suites, sequential chain)
 npm test
 
 # Run a single test file
@@ -44,6 +44,12 @@ npx tsx tests/planning-registry.test.ts
 npx tsx tests/work-plan.test.ts
 npx tsx tests/task-graph.test.ts
 npx tsx tests/plan-state.test.ts
+npx tsx tests/govern-plan.test.ts
+npx tsx tests/govern-task.test.ts
+npx tsx tests/govern-delegate.test.ts
+npx tsx tests/govern-shell.test.ts
+npx tsx tests/anchor-tool.test.ts
+npx tsx tests/init-tool.test.ts
 
 # Link for local development
 npm link
@@ -206,9 +212,9 @@ process.stderr.write(`Results: ${passed}/${passed + failed} passed, ${failed} fa
 if (failed > 0) process.exit(1)
 ```
 
-**Current baseline:** `npm test` runs 12 suites; assertion count is environment-dependent when SQLite native binding is unavailable.
+**Current baseline:** `npm test` runs 20 suites; assertion count is environment-dependent when SQLite native binding is unavailable.
 
-**Standalone tests** (not in `npm test`): `sqlite-adapter.test.ts`, `smoke-code-quality.ts`.
+**Important:** `npm test` chains 20 `tsx` commands with `&&`. If an early suite fails, later suites don't run. When debugging, run the failing suite individually.
 
 ## Code Style
 
@@ -243,5 +249,5 @@ When resuming work on this codebase:
 1. Read `MASTER-PLAN.md` — it is the active implementation plan and planning SOT
 2. Read `AGENTS.md` — it's the ground truth for what exists
 3. Run `npm run typecheck` — must be zero errors
-4. Run `npm test` — must pass baseline suites (12 suites)
+4. Run `npm test` — must pass baseline suites (20 suites)
 5. Check `.idumb/brain/plan.json` for current phase state

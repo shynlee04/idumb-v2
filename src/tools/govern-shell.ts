@@ -27,7 +27,7 @@ const MAX_OUTPUT_CHARS = 100_000  // 100KB output cap
  * Which command categories each agent can execute.
  * 3-agent model — mirrors AGENT_HIERARCHY in schemas/delegation.ts
  */
-const ROLE_PERMISSIONS: Record<string, Set<string>> = {
+export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
     "idumb-supreme-coordinator": new Set(["inspection"]),
     "idumb-investigator": new Set(["validation", "inspection"]),
     "idumb-executor": new Set(["validation", "build", "git", "inspection", "runtime", "filesystem", "general"]),
@@ -96,7 +96,7 @@ const CATEGORY_PATTERNS: Record<string, RegExp[]> = {
 
 // ─── Destructive Command Blacklist (ALWAYS blocked) ─────────────────
 
-const DESTRUCTIVE_BLACKLIST: RegExp[] = [
+export const DESTRUCTIVE_BLACKLIST: RegExp[] = [
     /rm\s+(-rf|-r)\s/,
     /rm\s+-rf$/,
     /git\s+push\s+--force/,
@@ -234,7 +234,7 @@ export const govern_shell = tool({
 // ─── Helpers ────────────────────────────────────────────────────────
 
 /** Classify a command into a category */
-function classifyCommand(command: string): string {
+export function classifyCommand(command: string): string {
     for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
         if (patterns.some(p => p.test(command))) {
             return category

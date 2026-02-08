@@ -2,7 +2,7 @@
 export { govern_plan } from "./govern-plan.js"
 export { govern_task } from "./govern-task.js"
 export { govern_delegate } from "./govern-delegate.js"
-export { govern_shell } from "./govern-shell.js"
+export { govern_shell, classifyCommand, ROLE_PERMISSIONS, DESTRUCTIVE_BLACKLIST } from "./govern-shell.js"
 
 // ─── Context & Bootstrap Tools ───────────────────────────────────────
 export { idumb_anchor } from "./anchor.js"
