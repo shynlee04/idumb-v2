@@ -7,7 +7,7 @@
  * - Governance mode context injected
  * - Active task included in injection
  * - Critical anchors included (max 2)
- * - Budget cap enforced (≤800 chars)
+ * - Budget cap enforced (≤1000 chars)
  * - Graceful degradation when config missing
  * - No deny language ("RULE: Do not...")
  * - Instructive language used instead
@@ -254,7 +254,7 @@ async function test11_budgetEnforced(): Promise<void> {
   const system = await runHook(dir, "sys-test-11")
   const injection = system[0]
 
-  assert("injection under budget (≤800 chars)", injection.length <= 800)
+  assert("injection under budget (≤1000 chars)", injection.length <= 1000)
   assert("closing tag preserved after truncation", injection.includes("</idumb-governance>"))
 }
 
@@ -443,7 +443,7 @@ async function test17_budgetStillEnforcedWithChain(): Promise<void> {
 
   const system = await runHook(dir, "sys-test-17")
 
-  assert("budget: injection under 800 chars with chain", system[0].length <= 800)
+  assert("budget: injection under 1000 chars with chain", system[0].length <= 1000)
   assert("budget: closing tag preserved", system[0].includes("</idumb-governance>"))
 }
 

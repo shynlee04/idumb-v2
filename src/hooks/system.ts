@@ -11,7 +11,7 @@
  * - INSTRUCTIVE, not restrictive — no "you cannot" / "RULE: Do not"
  * - PULL model — agents query tools when THEY need context
  * - Framework WRAPPER — overlays match detected governance framework
- * - Budget-capped: ≤200 tokens (~800 chars). ADD, not REPLACE.
+ * - Budget-capped: ≤250 tokens (~1000 chars). ADD, not REPLACE.
  *
  * P3: try/catch — never break message delivery
  * P5: Config cached in closure — single disk read on first call
@@ -22,12 +22,35 @@ import { join } from "node:path"
 import { getActiveTask } from "./tool-gate.js"
 import { getAnchors } from "./compaction.js"
 import { stateManager } from "../lib/persistence.js"
-import { getActiveWorkChain } from "../schemas/task-graph.js"
+import { getActiveWorkChain, detectGraphBreaks } from "../schemas/task-graph.js"
+import { formatPlanStateCompact } from "../schemas/plan-state.js"
 import type { Logger } from "../lib/index.js"
 import type { IdumbConfig, GovernanceFramework } from "../schemas/config.js"
 
-/** Hard budget: ~200 tokens at ~4 chars/token */
-const BUDGET_CHARS = 800
+/** Hard budget: ~250 tokens at ~4 chars/token.
+ * Increased from 800 → 1000 after gap analysis showed worst-case
+ * injection (plan + task + checkpoints + framework + mode + anchors)
+ * could reach ~945 chars, causing critical anchors to be truncated. */
+const BUDGET_CHARS = 1000
+
+/** Default English "no active task" message — extracted to constant
+ * so i18n replacement uses identity check instead of fragile indexOf. */
+const NO_ACTIVE_TASK_MSG = "No active task. Use govern_task to start one before writing files."
+
+/**
+ * Translation map for governance strings.
+ * Supports Vietnamese + English (the two configured languages).
+ */
+const TRANSLATIONS: Record<string, Record<string, string>> = {
+  "vi": {
+    "no_active_task": "Chưa có task. Dùng govern_task để bắt đầu trước khi viết file.",
+    "balanced_mode": "Cân bằng: đề xuất trước khi dừng. Cho phép hoàn thành, kiểm soát ở quyết định.",
+    "strict_mode": "Nghiêm ngặt: xác minh mỗi bước. Cần bằng chứng trước khi tiếp tục.",
+    "autonomous_mode": "Tự trị: bạn quyết định. Ghi lại hành động để xem lại sau.",
+    "retard_mode": "Tối đa: thách thức mọi giả định. Xác minh mọi tuyên bố.",
+  },
+  "en": {}, // English is the default — uses existing strings
+}
 
 /**
  * Framework-specific overlay messages.
@@ -48,17 +71,19 @@ function getFrameworkOverlay(frameworks: GovernanceFramework[]): string {
 
 /**
  * Governance mode context — instructs the agent on behavior expectations.
+ * Supports language-aware injection (Vietnamese + English).
  */
-function getModeContext(mode: string): string {
+function getModeContext(mode: string, lang: string = "en"): string {
+  const t = TRANSLATIONS[lang] ?? {}
   switch (mode) {
     case "strict":
-      return "Strict governance: validate at every step. Evidence required before proceeding."
+      return t["strict_mode"] ?? "Strict governance: validate at every step. Evidence required before proceeding."
     case "autonomous":
-      return "Autonomous governance: you decide freely. Log actions for post-session review."
+      return t["autonomous_mode"] ?? "Autonomous governance: you decide freely. Log actions for post-session review."
     case "retard":
-      return "Maximum autonomy. Challenge every assumption. Verify every claim. Trust nothing."
+      return t["retard_mode"] ?? "Maximum autonomy. Challenge every assumption. Verify every claim. Trust nothing."
     default: // "balanced"
-      return "Balanced governance: recommend before stopping. Full completion allowed, governed at decisions."
+      return t["balanced_mode"] ?? "Balanced governance: recommend before stopping. Full completion allowed, governed at decisions."
   }
 }
 
@@ -138,7 +163,7 @@ export function createSystemHook(log: Logger, directory: string) {
             lines.push(`Checkpoints: ${chain.taskNode.checkpoints.length} (${recent.map(c => c.tool + ": " + c.summary.slice(0, 30)).join("; ")})`)
           }
         } else {
-          lines.push("No active task. Use govern_task to start one before writing files.")
+          lines.push(NO_ACTIVE_TASK_MSG)
         }
 
         // Plan-ahead visibility (next planned task)
@@ -149,20 +174,46 @@ export function createSystemHook(log: Logger, directory: string) {
         // Fallback: legacy TaskStore-based task (no WorkPlan active)
         lines.push(`Active task: ${task.name}`)
       } else {
-        lines.push("No active task. Use govern_task to start one before writing files.")
+        lines.push(NO_ACTIVE_TASK_MSG)
+      }
+
+      // ─── Plan state awareness ─────────────────────────────────────
+      const planState = stateManager.getPlanState()
+      if (planState.phases.length > 0) {
+        lines.push(formatPlanStateCompact(planState))
+      }
+
+      // ─── Graph warnings (first only, to stay in budget) ───────────
+      const graphWarnings = detectGraphBreaks(graph)
+      if (graphWarnings.length > 0) {
+        lines.push(`⚠ ${graphWarnings[0].message}`)
+      }
+
+      // ─── Critical anchors (max 2, HIGH PRIORITY — injected before framework
+      //     overlay so they survive budget truncation) ──────────────────────
+      if (criticalAnchors.length > 0) {
+        for (const a of criticalAnchors.slice(0, 2)) {
+          lines.push(`Decision: ${a.content}`)
+        }
       }
 
       // ─── Config-driven context ──────────────────────────────────────
       if (config) {
         const frameworks = config.detection?.governance ?? []
+        const lang = config.user?.language?.communication ?? "en"
         lines.push(getFrameworkOverlay(frameworks))
-        lines.push(getModeContext(config.governance?.mode ?? "balanced"))
-      }
+        lines.push(getModeContext(config.governance?.mode ?? "balanced", lang))
 
-      // ─── Critical anchors (max 2 to stay in budget) ─────────────────
-      if (criticalAnchors.length > 0) {
-        for (const a of criticalAnchors.slice(0, 2)) {
-          lines.push(`Decision: ${a.content}`)
+        // Language-aware "no active task" (replace default if Vietnamese)
+        if (lang !== "en" && !task && !chain.taskNode) {
+          const t = TRANSLATIONS[lang]
+          if (t?.["no_active_task"]) {
+            // Use constant reference instead of fragile string matching
+            const idx = lines.indexOf(NO_ACTIVE_TASK_MSG)
+            if (idx !== -1) {
+              lines[idx] = t["no_active_task"]
+            }
+          }
         }
       }
 

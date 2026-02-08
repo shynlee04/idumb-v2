@@ -24,6 +24,8 @@ import { createEmptyTaskGraph } from "../schemas/work-plan.js"
 import { purgeAbandonedPlans } from "../schemas/task-graph.js"
 import type { DelegationStore } from "../schemas/delegation.js"
 import { createEmptyDelegationStore, expireStaleDelegations } from "../schemas/delegation.js"
+import type { PlanState } from "../schemas/plan-state.js"
+import { createPlanState } from "../schemas/plan-state.js"
 import type { Logger } from "./logging.js"
 import type { SqliteAdapter } from "./sqlite-adapter.js"
 
@@ -49,6 +51,7 @@ const STATE_FILE = ".idumb/brain/hook-state.json"
 const TASKS_FILE = ".idumb/brain/tasks.json"
 const TASK_GRAPH_FILE = ".idumb/brain/task-graph.json"
 const DELEGATIONS_FILE = ".idumb/brain/delegations.json"
+const PLAN_STATE_FILE = ".idumb/brain/plan-state.json"
 
 // ─── StateManager ────────────────────────────────────────────────────
 
@@ -58,12 +61,14 @@ export class StateManager {
   private taskStore: TaskStore = createEmptyStore()
   private taskGraph: TaskGraph = createEmptyTaskGraph()
   private delegationStore: DelegationStore = createEmptyDelegationStore()
+  private planState: PlanState = createPlanState()
   private directory: string = ""
   private log: Logger | null = null
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private taskSaveTimer: ReturnType<typeof setTimeout> | null = null
   private delegationSaveTimer: ReturnType<typeof setTimeout> | null = null
   private taskGraphSaveTimer: ReturnType<typeof setTimeout> | null = null
+  private planStateSaveTimer: ReturnType<typeof setTimeout> | null = null
   private initialized = false
   private degraded = false  // true if disk I/O failed
   private sqliteAdapter: SqliteAdapter | null = null
@@ -190,6 +195,26 @@ export class StateManager {
       const msg = err instanceof Error ? err.message : String(err)
       if (!msg.includes("ENOENT")) {
         log.warn("Could not load task graph — starting fresh", { error: msg })
+      }
+    }
+
+    // Load plan state from separate file
+    try {
+      const planStatePath = join(directory, PLAN_STATE_FILE)
+      const planStateRaw = await readFile(planStatePath, "utf-8")
+      const loadedPlanState = JSON.parse(planStateRaw) as PlanState
+      if (loadedPlanState.version && Array.isArray(loadedPlanState.phases)) {
+        this.planState = loadedPlanState
+        log.info("Plan state loaded from disk", {
+          planName: loadedPlanState.planName,
+          phases: loadedPlanState.phases.length,
+          currentPhaseId: loadedPlanState.currentPhaseId,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load plan state — starting fresh", { error: msg })
       }
     }
 
@@ -347,6 +372,18 @@ export class StateManager {
     this.scheduleTaskGraphSave()
   }
 
+  // ─── Plan State (global, not per-session) ──────────────────────────
+
+  getPlanState(): PlanState {
+    return this.planState
+  }
+
+  setPlanState(state: PlanState): void {
+    this.planState = state
+    this.planState.lastModified = Date.now()
+    this.schedulePlanStateSave()
+  }
+
   // ─── Anchor State (compaction) ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
@@ -424,6 +461,20 @@ export class StateManager {
     this.taskGraphSaveTimer = setTimeout(() => {
       this.taskGraphSaveTimer = null
       this.saveTaskGraphToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
+  /** Schedule a debounced plan state save. */
+  private schedulePlanStateSave(): void {
+    if (this.degraded) return
+
+    if (this.planStateSaveTimer) {
+      clearTimeout(this.planStateSaveTimer)
+    }
+
+    this.planStateSaveTimer = setTimeout(() => {
+      this.planStateSaveTimer = null
+      this.savePlanStateToDisk().catch(() => { })
     }, DEBOUNCE_MS)
   }
 
@@ -512,6 +563,26 @@ export class StateManager {
     }
   }
 
+  /** Write plan state to separate disk file. */
+  private async savePlanStateToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const planStatePath = join(this.directory, PLAN_STATE_FILE)
+
+    try {
+      await mkdir(dirname(planStatePath), { recursive: true })
+      await writeFile(planStatePath, JSON.stringify(this.planState, null, 2) + "\n", "utf-8")
+      this.log?.info("Plan state saved to disk", {
+        planName: this.planState.planName,
+        phases: this.planState.phases.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save plan state — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
   /** Force immediate save — use on shutdown/cleanup. */
   async forceSave(): Promise<void> {
     if (this.useSqlite && this.sqliteAdapter) {
@@ -534,10 +605,15 @@ export class StateManager {
       clearTimeout(this.taskGraphSaveTimer)
       this.taskGraphSaveTimer = null
     }
+    if (this.planStateSaveTimer) {
+      clearTimeout(this.planStateSaveTimer)
+      this.planStateSaveTimer = null
+    }
     await this.saveToDisk()
     await this.saveTasksToDisk()
     await this.saveDelegationsToDisk()
     await this.saveTaskGraphToDisk()
+    await this.savePlanStateToDisk()
   }
 
   /** Check if persistence is degraded (disk I/O failed). */

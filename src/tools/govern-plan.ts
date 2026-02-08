@@ -20,6 +20,8 @@ import {
     formatTaskGraph, formatWorkPlanDetail,
     buildGraphReminder,
 } from "../schemas/index.js"
+import { getCurrentPhase, getNextPhase } from "../schemas/plan-state.js"
+import type { PlanPhaseStatus } from "../schemas/plan-state.js"
 import { stateManager } from "../lib/persistence.js"
 
 const VALID_CATEGORIES: WorkStreamCategory[] = [
@@ -29,8 +31,8 @@ const VALID_CATEGORIES: WorkStreamCategory[] = [
 export const govern_plan = tool({
     description: "Manage work plans — the top-level governance unit. Create plans with acceptance criteria, add tasks with dependencies and temporal gates, and track plan lifecycle. Unlike innate todo, this enforces temporal gates (tasks can't start before dependencies complete), scopes tool permissions per task, and bridges to the write gate — without an active task from a plan, all writes are blocked.",
     args: {
-        action: tool.schema.enum(["create", "plan_tasks", "status", "archive", "abandon"]).describe(
-            "Action: 'create' new plan, 'plan_tasks' add tasks to a plan, 'status' show graph, 'archive' completed plan, 'abandon' failed plan"
+        action: tool.schema.enum(["create", "plan_tasks", "status", "archive", "abandon", "phase"]).describe(
+            "Action: 'create' new plan, 'plan_tasks' add tasks to a plan, 'status' show graph, 'archive' completed plan, 'abandon' failed plan, 'phase' update plan-state phase"
         ),
         name: tool.schema.string().optional().describe(
             "Plan name (for 'create') or task name (for 'plan_tasks')"
@@ -62,6 +64,16 @@ export const govern_plan = tool({
         ),
         plan_ahead: tool.schema.boolean().optional().describe(
             "If true, add to planAhead array instead of tasks (for 'plan_tasks'). Default: false"
+        ),
+        // phase specific
+        phase_id: tool.schema.number().optional().describe(
+            "Phase number to operate on (for 'phase' action). Required for 'phase'."
+        ),
+        phase_status: tool.schema.string().optional().describe(
+            "New status for the phase (for 'phase' action): pending, in_progress, completed, blocked, skipped"
+        ),
+        next_action: tool.schema.string().optional().describe(
+            "Next action description for the phase (for 'phase' action)"
         ),
     },
     async execute(args, context) {
@@ -272,8 +284,60 @@ export const govern_plan = tool({
                 ].join("\n")
             }
 
+            case "phase": {
+                const phaseId = args.phase_id
+                if (phaseId === undefined || phaseId === null) {
+                    return "ERROR: 'phase' requires phase_id. Example: govern_plan action=phase phase_id=2 phase_status=in_progress"
+                }
+
+                const planState = stateManager.getPlanState()
+                const phase = planState.phases.find(p => p.id === phaseId)
+                if (!phase) {
+                    const available = planState.phases.map(p => `${p.id}: ${p.name}`).join(", ")
+                    return `ERROR: Phase ${phaseId} not found. Available: ${available}`
+                }
+
+                const validStatuses: PlanPhaseStatus[] = ["pending", "in_progress", "completed", "blocked", "skipped"]
+                if (args.phase_status) {
+                    if (!validStatuses.includes(args.phase_status as PlanPhaseStatus)) {
+                        return `ERROR: Invalid status "${args.phase_status}". Valid: ${validStatuses.join(", ")}`
+                    }
+                    phase.status = args.phase_status as PlanPhaseStatus
+
+                    if (phase.status === "completed") {
+                        phase.completedAt = Date.now()
+                    }
+
+                    // Auto-update currentPhaseId
+                    if (phase.status === "in_progress") {
+                        planState.currentPhaseId = phaseId
+                    } else if (phase.status === "completed" && planState.currentPhaseId === phaseId) {
+                        // Move to next pending phase
+                        const next = getNextPhase(planState)
+                        planState.currentPhaseId = next?.id ?? null
+                    }
+                }
+
+                if (args.next_action) {
+                    phase.nextAction = args.next_action
+                }
+
+                stateManager.setPlanState(planState)
+
+                const current = getCurrentPhase(planState)
+                const completed = planState.phases.filter(p => p.status === "completed").length
+                return [
+                    `Phase ${phaseId} "${phase.name}" updated.`,
+                    `  Status: ${phase.status}`,
+                    phase.nextAction ? `  Next action: ${phase.nextAction}` : "",
+                    "",
+                    `Progress: ${completed}/${planState.phases.length} phases complete`,
+                    current ? `Current: Phase ${current.id} "${current.name}" [${current.status}]` : "All phases complete.",
+                ].filter(Boolean).join("\n")
+            }
+
             default:
-                return `Unknown action: ${action}. Valid: create, plan_tasks, status, archive, abandon.`
+                return `Unknown action: ${action}. Valid: create, plan_tasks, status, archive, abandon, phase.`
         }
     },
 })

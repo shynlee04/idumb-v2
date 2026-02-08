@@ -28,7 +28,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsx tests/tool-gate.test.ts && tsx tests/compaction.test.ts && tsx tests/message-transform.test.ts && tsx tests/system.test.ts && tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts && tsx tests/work-plan.test.ts && tsx tests/task-graph.test.ts",
+    "test": "tsx tests/tool-gate.test.ts && tsx tests/compaction.test.ts && tsx tests/message-transform.test.ts && tsx tests/system.test.ts && tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts && tsx tests/work-plan.test.ts && tsx tests/task-graph.test.ts && tsx tests/plan-state.test.ts",
     "postinstall": "tsc || true",
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },

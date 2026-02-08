@@ -11,6 +11,8 @@
 
 import type { Anchor } from "../schemas/index.js"
 import { selectAnchors } from "../schemas/index.js"
+import type { PlanState } from "../schemas/plan-state.js"
+import { formatPlanStateCompact } from "../schemas/plan-state.js"
 import { getActiveTask } from "./tool-gate.js"
 import type { Logger } from "../lib/index.js"
 import { stateManager } from "../lib/persistence.js"
@@ -32,13 +34,20 @@ export function getAnchors(sessionID: string): Anchor[] {
 function formatCompactionContext(
   anchors: Anchor[],
   activeTask: { id: string; name: string } | null,
+  planState?: PlanState,
 ): string {
   const lines: string[] = []
 
   lines.push("=== iDumb Governance Context (post-compaction) ===")
   lines.push("")
 
-  // Active task first (primacy effect — LLM attends to first content)
+  // Plan state first (project-level orientation)
+  if (planState && planState.phases.length > 0) {
+    lines.push(`## CURRENT PHASE: ${formatPlanStateCompact(planState)}`)
+    lines.push("")
+  }
+
+  // Active task (primacy effect — LLM attends to first content)
   if (activeTask) {
     lines.push(`## CURRENT TASK: ${activeTask.name}`)
     lines.push(`Task ID: ${activeTask.id}`)
@@ -56,6 +65,21 @@ function formatCompactionContext(
     }
   } else {
     lines.push("## No active anchors.")
+  }
+
+  // Delegation chain (who delegated, to whom)
+  try {
+    const delegStore = stateManager.getDelegationStore()
+    const activeDelegations = delegStore.delegations.filter(d => d.status === "pending" || d.status === "accepted")
+    if (activeDelegations.length > 0) {
+      lines.push("")
+      lines.push(`## ACTIVE DELEGATIONS (${activeDelegations.length}):`)
+      for (const d of activeDelegations.slice(0, 3)) { // max 3 for budget
+        lines.push(`- ${d.fromAgent} → ${d.toAgent}: ${d.context.slice(0, 60)}`)
+      }
+    }
+  } catch {
+    // P3: Delegation context is optional — don't crash compaction
   }
 
   lines.push("")
@@ -84,8 +108,11 @@ export function createCompactionHook(log: Logger) {
       // Get active task
       const activeTask = getActiveTask(sessionID)
 
+      // Get plan state
+      const planState = stateManager.getPlanState()
+
       // Format and inject
-      const context = formatCompactionContext(selected, activeTask)
+      const context = formatCompactionContext(selected, activeTask, planState)
       output.context.push(context)
 
       log.info(`Compaction: injected ${selected.length}/${allAnchors.length} anchors`, {

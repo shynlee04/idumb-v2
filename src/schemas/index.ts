@@ -111,3 +111,13 @@ export type {
     PlanningRegistry,
 } from "./planning-registry.js"
 
+// ─── Plan State Schema (self-enforcement) ────────────────────────────
+export {
+    createPlanPhase, createPlanState, createDefaultPlanState,
+    getCurrentPhase, getNextPhase, formatPlanStateCompact,
+    PLAN_STATE_VERSION,
+} from "./plan-state.js"
+export type {
+    PlanPhaseStatus, PlanPhase, PlanState,
+} from "./plan-state.js"
+

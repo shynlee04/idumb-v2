@@ -29,6 +29,7 @@ import {
 } from "../templates.js"
 import { createBootstrapStore } from "../schemas/task.js"
 import { createPlanningRegistry } from "../schemas/planning-registry.js"
+import { createDefaultPlanState } from "../schemas/plan-state.js"
 import { createBootstrapTaskGraph } from "../schemas/work-plan.js"
 
 export interface DeployOptions {
@@ -327,7 +328,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     )
 
     // ─── Bootstrap Task Provisioning ─────────────────────────────
-    // Pre-create an active epic+task so the meta-builder can write
+    // Pre-create an active epic+task so agents can write
     // immediately without needing to call govern_task first.
     // The tool-gate auto-inherits from the task store on first write.
     const tasksPath = join(projectDir, ".idumb", "brain", "tasks.json")
@@ -354,6 +355,15 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     await writeIfNew(
       planningRegistryPath,
       JSON.stringify(emptyRegistry, null, 2) + "\n",
+      force,
+      result,
+    )
+
+    const planStatePath = join(projectDir, ".idumb", "brain", "plan-state.json")
+    const defaultPlanState = createDefaultPlanState()
+    await writeIfNew(
+      planStatePath,
+      JSON.stringify(defaultPlanState, null, 2) + "\n",
       force,
       result,
     )
