@@ -41,16 +41,10 @@ const MAX_OUTPUT_CHARS = 100_000  // 100KB output cap
  * Agents not listed here can only use 'inspection'.
  */
 const ROLE_PERMISSIONS: Record<string, Set<string>> = {
-    "idumb-validator": new Set(["validation", "inspection"]),
-    "idumb-low-validator": new Set(["validation", "inspection"]),
-    "idumb-builder": new Set(["validation", "build", "git", "inspection"]),
-    "idumb-meta-builder": new Set(["validation", "build", "git", "inspection", "general"]),
+    // 3-agent model — must mirror AGENT_HIERARCHY in schemas/delegation.ts
     "idumb-supreme-coordinator": new Set(["inspection"]),
-    "idumb-planner": new Set(["inspection"]),
-    "idumb-researcher": new Set(["inspection"]),
-    "idumb-research-synthesizer": new Set(["inspection"]),
-    "idumb-phase-researcher": new Set(["inspection"]),
-    "idumb-roadmapper": new Set(["inspection"]),
+    "idumb-investigator": new Set(["validation", "inspection"]),
+    "idumb-executor": new Set(["validation", "build", "git", "inspection"]),
 }
 
 // ─── Purpose → Command Pattern Matching ─────────────────────────────
@@ -75,7 +69,7 @@ const PURPOSE_PATTERNS: Record<string, RegExp[]> = {
         /^npm\s+run\s+build/,
         /^tsc$/,
         /^npx\s+tsc$/,
-        /^npx\s+/,
+        /^npx\s+(vite|esbuild|rollup|webpack|turbo|tsup)\b/,
         /^npm\s+run\s+dev/,
     ],
     git: [
@@ -387,7 +381,8 @@ function getPurposeExamples(purpose: string): string[] {
         build: [
             "  • npm run build",
             "  • tsc",
-            "  • npx <tool>",
+            "  • npx vite build",
+            "  • npx tsc",
         ],
         git: [
             "  • git status",

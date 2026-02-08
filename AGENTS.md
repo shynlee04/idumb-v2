@@ -61,8 +61,7 @@ v2/
 │   │   ├── deploy.ts               # Deploys 3 agents + 3 profiles + commands + modules + planning registry bootstrap (411 LOC)
 │   │   └── dashboard.ts            # Dashboard server launcher
 │   ├── templates.ts                # All deployable templates — coordinator + investigator + executor (1510 LOC ⚠️)
-│   ├── index.ts                    # Plugin entry — wires 6 hooks + 5 tools
-│   ├── tools-plugin.ts             # Plugin tool registration
+│   ├── index.ts                    # Plugin entry — wires 7 hooks + 9 tools (single plugin)
 │   ├── hooks/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── tool-gate.ts            # VALIDATED — blocks write/edit without active task

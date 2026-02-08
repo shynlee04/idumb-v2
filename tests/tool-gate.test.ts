@@ -52,7 +52,7 @@ async function test1_writeBlockedWithoutTask(): Promise<void> {
   assert("write without task → throws", threw)
   assert("error starts with GOVERNANCE BLOCK", errorMsg.startsWith("GOVERNANCE BLOCK:"))
   assert("error contains REDIRECT (USE INSTEAD)", errorMsg.includes("USE INSTEAD"))
-  assert("error mentions idumb_task", errorMsg.includes("idumb_task"))
+  assert("error mentions govern_plan or govern_task", errorMsg.includes("govern_plan") || errorMsg.includes("govern_task"))
 }
 
 async function test2_writeAllowedWithTask(): Promise<void> {
@@ -140,8 +140,12 @@ function test8_supremeCoordinatorRules(): void {
   assert("supreme-coordinator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
   assert("supreme-coordinator blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
   assert("supreme-coordinator has 4 blocked tools", rules.blockedTools.size === 4)
-  assert("supreme-coordinator blocks create_epic action", rules.blockedActions.has("create_epic"))
-  assert("supreme-coordinator has 1 blocked action", rules.blockedActions.size === 1)
+  // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
+  assert("supreme-coordinator blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  assert("supreme-coordinator blocks start on govern_task", rules.blockedActions["govern_task"]?.has("start") === true)
+  assert("supreme-coordinator blocks complete on govern_task", rules.blockedActions["govern_task"]?.has("complete") === true)
+  assert("supreme-coordinator blocks fail on govern_task", rules.blockedActions["govern_task"]?.has("fail") === true)
+  assert("supreme-coordinator blocks review on govern_task", rules.blockedActions["govern_task"]?.has("review") === true)
 }
 
 function test9_investigatorRules(): void {
@@ -149,23 +153,35 @@ function test9_investigatorRules(): void {
   assert("investigator blocks idumb_init", rules.blockedTools.has("idumb_init"))
   assert("investigator blocks idumb_write", rules.blockedTools.has("idumb_write"))
   assert("investigator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
+  assert("investigator blocks govern_delegate", rules.blockedTools.has("govern_delegate"))
   assert("investigator does NOT block idumb_webfetch", !rules.blockedTools.has("idumb_webfetch"))
-  assert("investigator has 3 blocked tools", rules.blockedTools.size === 3)
-  assert("investigator blocks delegate action", rules.blockedActions.has("delegate"))
-  assert("investigator blocks create_epic action", rules.blockedActions.has("create_epic"))
-  assert("investigator has 2 blocked actions", rules.blockedActions.size === 2)
+  assert("investigator has 4 blocked tools", rules.blockedTools.size === 4)
+  // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
+  assert("investigator blocks delegate on idumb_task", rules.blockedActions["idumb_task"]?.has("delegate") === true)
+  assert("investigator blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  assert("investigator blocks create on govern_plan", rules.blockedActions["govern_plan"]?.has("create") === true)
+  assert("investigator blocks plan_tasks on govern_plan", rules.blockedActions["govern_plan"]?.has("plan_tasks") === true)
+  assert("investigator blocks archive on govern_plan", rules.blockedActions["govern_plan"]?.has("archive") === true)
+  assert("investigator blocks abandon on govern_plan", rules.blockedActions["govern_plan"]?.has("abandon") === true)
+  assert("investigator has 2 tools with action blocks", Object.keys(rules.blockedActions).length === 2)
 }
 
 function test10_executorRules(): void {
   const rules = AGENT_TOOL_RULES["idumb-executor"]
   assert("executor blocks idumb_init", rules.blockedTools.has("idumb_init"))
   assert("executor blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
+  assert("executor blocks govern_delegate", rules.blockedTools.has("govern_delegate"))
   assert("executor does NOT block idumb_write", !rules.blockedTools.has("idumb_write"))
   assert("executor does NOT block idumb_bash", !rules.blockedTools.has("idumb_bash"))
-  assert("executor has 2 blocked tools", rules.blockedTools.size === 2)
-  assert("executor blocks delegate action", rules.blockedActions.has("delegate"))
-  assert("executor blocks create_epic action", rules.blockedActions.has("create_epic"))
-  assert("executor has 2 blocked actions", rules.blockedActions.size === 2)
+  assert("executor has 3 blocked tools", rules.blockedTools.size === 3)
+  // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
+  assert("executor blocks delegate on idumb_task", rules.blockedActions["idumb_task"]?.has("delegate") === true)
+  assert("executor blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  assert("executor blocks create on govern_plan", rules.blockedActions["govern_plan"]?.has("create") === true)
+  assert("executor blocks plan_tasks on govern_plan", rules.blockedActions["govern_plan"]?.has("plan_tasks") === true)
+  assert("executor blocks archive on govern_plan", rules.blockedActions["govern_plan"]?.has("archive") === true)
+  assert("executor blocks abandon on govern_plan", rules.blockedActions["govern_plan"]?.has("abandon") === true)
+  assert("executor has 2 tools with action blocks", Object.keys(rules.blockedActions).length === 2)
 }
 
 function test11_oldAgentsRemoved(): void {

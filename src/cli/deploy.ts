@@ -359,30 +359,16 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
         config = JSON.parse(raw) as Record<string, unknown>
       }
 
-      // Clean stale idumb-v2 entries, then add fresh paths
-      // Plugin A: governance + intelligence (main package entry)
-      // Plugin B: entity-aware tools (subpath export: idumb-v2/tools-plugin)
+      // Clean stale idumb-v2 entries, then add single plugin entry
+      // All 9 tools + all hooks are registered via the main package entry
       const existingPlugins = (config.plugin as string[] | undefined) ?? []
       const cleanedPlugins = cleanStalePluginPaths(existingPlugins)
       cleanedPlugins.push(resolution.path)
 
-      // Resolve Plugin B path:
-      //   npm resolution → subpath export works: "idumb-v2/tools-plugin"
-      //   local-dev/npx → must use actual dist path: "/abs/path/dist/tools-plugin.js"
-      let pluginBPath: string
-      if (resolution.method === "npm") {
-        // Subpath exports resolve via package.json "exports" field
-        pluginBPath = `${resolution.path}/tools-plugin`
-      } else {
-        // Absolute/relative path — must point to actual built file
-        pluginBPath = `${resolution.path.replace(/\/?$/, "/dist/tools-plugin.js")}`
-      }
-      cleanedPlugins.push(pluginBPath)
-
       config.plugin = cleanedPlugins
 
       // Log stale entries that were removed
-      const removedCount = existingPlugins.length - (cleanedPlugins.length - 2)
+      const removedCount = existingPlugins.length - (cleanedPlugins.length - 1)
       if (removedCount > 0) {
         result.warnings.push(
           `Removed ${removedCount} stale idumb-v2 plugin path(s) from opencode.json`

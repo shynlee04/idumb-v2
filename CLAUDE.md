@@ -28,7 +28,7 @@ npm run dev            # tsc --watch
 # Type check (no emit)
 npm run typecheck      # tsc --noEmit — must be zero errors
 
-# Run ALL tests (8 suites, 294 assertions, sequential chain)
+# Run ALL tests (8 suites, 373 assertions, sequential chain)
 npm test
 
 # Run a single test file
@@ -53,12 +53,11 @@ idumb-v2 init -y       # Non-interactive defaults
 
 ## Architecture
 
-### Plugin Entry Points
+### Plugin Entry Point
 
-Two exports serve different integration paths:
+Single entry point for all hooks and tools:
 
-- **`src/index.ts`** — Main plugin export. Wires 6 event hooks + 5 custom tools into OpenCode's plugin system. This is the `"main"` entry in package.json.
-- **`src/tools-plugin.ts`** — Separate tool registration export (`"./tools-plugin"` in package.json exports). Used when tools need to be registered independently of hooks.
+- **`src/index.ts`** — Main plugin export. Wires 7 event hooks + 9 tools into OpenCode's plugin system. This is the `"main"` entry in package.json. All governance (5 tools) and entity-aware (4 tools) functionality in one plugin.
 
 ### Hook Factory Pattern
 
@@ -90,13 +89,12 @@ Chat turn → chat.params (captures agent name, auto-assigns to active task)
 
 ```
 src/
-├── index.ts              # Plugin entry: hooks + tools wiring
-├── tools-plugin.ts       # Separate tool registration export
+├── index.ts              # Plugin entry: hooks + 9 tools wiring
 ├── cli.ts                # CLI entry for `npx idumb-v2`
 ├── cli/deploy.ts         # Deploys agents/commands/modules to target project
 ├── templates.ts          # Agent markdown templates (1510 LOC — splitting planned)
 ├── hooks/                # 4 event handlers (tool-gate, compaction, message-transform, system)
-├── tools/                # 11 tool implementations (~5000 LOC)
+├── tools/                # 9 tool implementations (~5000 LOC)
 ├── lib/                  # Shared utilities (logging, persistence, code-quality, etc.)
 └── schemas/              # Zod schemas — source of truth for all data structures
 ```
@@ -182,7 +180,7 @@ if (failed > 0) process.exit(1)
 
 ## Known Issues
 
-- `src/index.ts` has `VERSION = "2.1.0"` hardcoded while `package.json` is at `2.2.0` — version string drift
+- `src/index.ts` has `VERSION = "2.2.0"` which should track package.json — verify on version bumps
 - `system.ts` hook is registered but **unverified** in live OpenCode — may not fire
 - `experimental.chat.system.transform` and `experimental.chat.messages.transform` are registered but **unverified** in live OpenCode
 - Dashboard exists but is not integrated into the main CLI workflow
@@ -193,5 +191,5 @@ if (failed > 0) process.exit(1)
 When resuming work on this codebase:
 1. Read `AGENTS.md` — it's the ground truth for what exists
 2. Run `npm run typecheck` — must be zero errors
-3. Run `npm test` — must be 294/294 baseline
+3. Run `npm test` — must be 373/373 baseline
 4. Check `planning/implamentation-plan-turn-based/` for the highest `n`-suffix plan (currently n6)

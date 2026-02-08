@@ -21,7 +21,15 @@ import { stateManager } from "../lib/persistence.js"
 const WRITE_TOOLS = new Set(["write", "edit"])
 
 /** Plugin tools that need agent-scoped access control */
-const PLUGIN_TOOLS = new Set(["idumb_task", "idumb_anchor", "idumb_init", "idumb_scan", "idumb_codemap"])
+const PLUGIN_TOOLS = new Set([
+  // v3 governance tools
+  "govern_plan", "govern_task", "govern_delegate", "govern_shell",
+  // Retained tools
+  "idumb_anchor", "idumb_init",
+  // Legacy tools (backward compat)
+  "idumb_task", "idumb_scan", "idumb_codemap",
+  "idumb_read", "idumb_write", "idumb_bash", "idumb_webfetch",
+])
 
 /**
  * Agent → Plugin tool access matrix.
@@ -33,35 +41,45 @@ const PLUGIN_TOOLS = new Set(["idumb_task", "idumb_anchor", "idumb_init", "idumb
 interface AgentToolRule {
   /** Plugin tools this agent cannot call at all */
   blockedTools: Set<string>
-  /** idumb_task actions this agent cannot use */
-  blockedActions: Set<string>
+  /** Per-tool action blocks. Key = tool name, value = set of blocked action names */
+  blockedActions: Record<string, Set<string>>
 }
 
 export const AGENT_TOOL_RULES: Record<string, AgentToolRule> = {
-  // Supreme Coordinator: governance-only orchestrator
-  // CAN: idumb_task (status, delegate), idumb_scan, idumb_codemap (high-level)
-  // CANNOT: idumb_init (only on first run), idumb_write, idumb_bash, idumb_webfetch
+  // Supreme Coordinator: orchestrator — plans, delegates, monitors status
+  // CAN: govern_plan (all), govern_delegate (all), govern_task (status only),
+  //      govern_shell (inspection only — internal gating), idumb_anchor, idumb_scan, idumb_codemap
+  // CANNOT: govern_task (start/complete/fail/review), idumb_init, idumb_write, idumb_bash, idumb_webfetch
   "idumb-supreme-coordinator": {
     blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash", "idumb_webfetch"]),
-    blockedActions: new Set(["create_epic"]),
+    blockedActions: {
+      "idumb_task": new Set(["create_epic"]),
+      "govern_task": new Set(["start", "complete", "fail", "review"]),
+    },
   },
 
   // Investigator: research, analysis, brain entries
-  // CAN: idumb_read, idumb_scan, idumb_codemap, idumb_anchor, idumb_webfetch
-  // CANNOT: idumb_write (except brain), idumb_init, idumb_bash
-  // CANNOT: delegate or create epics — leaf node for research
+  // CAN: govern_task (all), govern_shell (validation+inspection — internal gating),
+  //      idumb_anchor, idumb_read, idumb_scan, idumb_codemap, idumb_webfetch
+  // CANNOT: govern_plan (except status), govern_delegate, idumb_init, idumb_write, idumb_bash
   "idumb-investigator": {
-    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash"]),
-    blockedActions: new Set(["delegate", "create_epic"]),
+    blockedTools: new Set(["idumb_init", "idumb_write", "idumb_bash", "govern_delegate"]),
+    blockedActions: {
+      "idumb_task": new Set(["delegate", "create_epic"]),
+      "govern_plan": new Set(["create", "plan_tasks", "archive", "abandon"]),
+    },
   },
 
-  // Executor: precision writes, implementation
-  // CAN: idumb_write, idumb_task (complete/evidence)
-  // CANNOT: idumb_init, idumb_webfetch (delegate research to investigator)
-  // CANNOT: delegate or create epics — leaf node for execution
+  // Executor: precision writes, builds, tests, git
+  // CAN: govern_task (all), govern_shell (all categories — internal gating),
+  //      idumb_anchor, idumb_write, idumb_bash, idumb_read
+  // CANNOT: govern_plan (except status), govern_delegate, idumb_init, idumb_webfetch
   "idumb-executor": {
-    blockedTools: new Set(["idumb_init", "idumb_webfetch"]),
-    blockedActions: new Set(["delegate", "create_epic"]),
+    blockedTools: new Set(["idumb_init", "idumb_webfetch", "govern_delegate"]),
+    blockedActions: {
+      "idumb_task": new Set(["delegate", "create_epic"]),
+      "govern_plan": new Set(["create", "plan_tasks", "archive", "abandon"]),
+    },
   },
 }
 
@@ -96,25 +114,45 @@ function buildBlockMessage(tool: string, isRetry: boolean): string {
     ? " (ALREADY BLOCKED — do NOT retry the same tool)"
     : ""
 
-  // Include smart task state if available
-  const store = stateManager.getTaskStore()
-  const activeEpic = store.activeEpicId
-    ? store.epics.find(e => e.id === store.activeEpicId)
-    : null
-
   const stateLines: string[] = []
-  if (activeEpic) {
-    const activeTask = activeEpic.tasks.find(t => t.status === "active")
-    if (activeTask) {
-      stateLines.push(`CURRENT STATE: Epic "${activeEpic.name}" is active with task "${activeTask.name}" but it hasn't been started in this session.`)
-      stateLines.push(`USE INSTEAD: Call "idumb_task" with action "start" and task_id="${activeTask.id}" to activate it in this session, then retry your ${tool}.`)
+
+  // Check new TaskGraph first (v3)
+  const graph = stateManager.getTaskGraph()
+  const activeWP = graph.workPlans.find(wp => wp.status === "active")
+  if (activeWP) {
+    const activeNode = activeWP.tasks.find(t => t.status === "active")
+    if (activeNode) {
+      stateLines.push(`CURRENT STATE: WorkPlan "${activeWP.name}" has active task "${activeNode.name}" but it hasn't been started in this session.`)
+      stateLines.push(`USE INSTEAD: Call "govern_task" with action "start" and task_id="${activeNode.id}" to activate it, then retry your ${tool}.`)
     } else {
-      stateLines.push(`CURRENT STATE: Epic "${activeEpic.name}" is active, but no task is marked active.`)
-      stateLines.push(`USE INSTEAD: Call "idumb_task" with action "start" and a task_id, OR action "create_task" with a name, then retry your ${tool}.`)
+      const plannedNode = activeWP.tasks.find(t => t.status === "planned")
+      stateLines.push(`CURRENT STATE: WorkPlan "${activeWP.name}" is active but no task is started.`)
+      if (plannedNode) {
+        stateLines.push(`USE INSTEAD: Call "govern_task" with action "start" and task_id="${plannedNode.id}" to start "${plannedNode.name}", then retry your ${tool}.`)
+      } else {
+        stateLines.push(`USE INSTEAD: Call "govern_plan" with action "plan_tasks" to add tasks to the plan.`)
+      }
     }
   } else {
-    stateLines.push(`CURRENT STATE: No active epic or task.`)
-    stateLines.push(`USE INSTEAD: Call "idumb_task" with action "create_epic" and a name to start, then create and start a task.`)
+    // Fall back to old TaskStore check
+    const store = stateManager.getTaskStore()
+    const activeEpic = store.activeEpicId
+      ? store.epics.find(e => e.id === store.activeEpicId)
+      : null
+
+    if (activeEpic) {
+      const activeTask = activeEpic.tasks.find(t => t.status === "active")
+      if (activeTask) {
+        stateLines.push(`CURRENT STATE: Epic "${activeEpic.name}" is active with task "${activeTask.name}" but it hasn't been started in this session.`)
+        stateLines.push(`USE INSTEAD: Call "govern_task" with action "start" and task_id="${activeTask.id}" to activate it, then retry your ${tool}.`)
+      } else {
+        stateLines.push(`CURRENT STATE: Epic "${activeEpic.name}" is active, but no task is marked active.`)
+        stateLines.push(`USE INSTEAD: Call "govern_task" with action "start" and a task_id, OR call "govern_plan" to create a new plan.`)
+      }
+    } else {
+      stateLines.push(`CURRENT STATE: No active plan or task.`)
+      stateLines.push(`USE INSTEAD: Call "govern_plan" with action "create" to start a plan, then add tasks with "plan_tasks", then start a task with "govern_task" action "start".`)
+    }
   }
 
   return [
@@ -152,11 +190,12 @@ export function createToolGateBefore(log: Logger) {
               throw new Error(message)
             }
 
-            // Check action-level block (idumb_task only)
-            if (tool === "idumb_task" && rules.blockedActions.size > 0) {
+            // Check action-level block (any tool with action parameter)
+            const toolBlockedActions = rules.blockedActions[tool]
+            if (toolBlockedActions && toolBlockedActions.size > 0) {
               const args = _output.args as Record<string, unknown> | undefined
               const action = args?.action as string | undefined
-              if (action && rules.blockedActions.has(action)) {
+              if (action && toolBlockedActions.has(action)) {
                 const message = buildAgentScopeBlock(agent, tool, action)
                 log.warn(`AGENT SCOPE BLOCK: ${tool} action=${action} denied for ${agent}`, { sessionID })
                 throw new Error(message)
@@ -178,7 +217,24 @@ export function createToolGateBefore(log: Logger) {
         return
       }
 
-      // ─── Auto-inherit from task store ─────────────────────────
+      // ─── Auto-inherit from TaskGraph (v3) ───────────────────
+      // If no session-level task but TaskGraph has an active WorkPlan+TaskNode,
+      // auto-set it. Takes priority over old TaskStore.
+      const graph = stateManager.getTaskGraph()
+      const activeWP = graph.workPlans.find(wp => wp.status === "active")
+      if (activeWP) {
+        const activeNode = activeWP.tasks.find(t => t.status === "active")
+        if (activeNode) {
+          stateManager.setActiveTask(sessionID, {
+            id: activeNode.id,
+            name: activeNode.name,
+          })
+          log.info(`AUTO-INHERIT (graph): ${tool} allowed — inherited TaskNode "${activeNode.name}"`, { sessionID })
+          return
+        }
+      }
+
+      // ─── Auto-inherit from task store (legacy fallback) ─────
       // If no session-level task but the task store has an active
       // epic+task (e.g. bootstrap from init), auto-set it.
       // This is the "smarter task" fix: system handles it, not LLM.
@@ -242,6 +298,21 @@ export function createToolGateAfter(log: Logger) {
 
       // If there's an active task, tool was legitimately allowed
       if (stateManager.getActiveTask(sessionID)) return
+
+      // ─── Auto-inherit from TaskGraph (v3) ──────────────────────
+      const graph = stateManager.getTaskGraph()
+      const activeWP = graph.workPlans.find(wp => wp.status === "active")
+      if (activeWP) {
+        const activeNode = activeWP.tasks.find(t => t.status === "active")
+        if (activeNode) {
+          stateManager.setActiveTask(sessionID, {
+            id: activeNode.id,
+            name: activeNode.name,
+          })
+          log.info(`AUTO-INHERIT (after/graph): inherited TaskNode "${activeNode.name}"`, { sessionID })
+          return
+        }
+      }
 
       // ─── Auto-inherit from task store (mirror before-hook logic) ──
       const store = stateManager.getTaskStore()

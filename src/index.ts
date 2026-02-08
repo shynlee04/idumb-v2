@@ -9,21 +9,45 @@
  */
 
 import type { Plugin } from "@opencode-ai/plugin"
+import { existsSync } from "node:fs"
+import { join } from "node:path"
 import { createLogger } from "./lib/index.js"
 import { stateManager } from "./lib/persistence.js"
 import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
-import { idumb_task, idumb_anchor, idumb_init, idumb_scan, idumb_codemap } from "./tools/index.js"
+import {
+  // v3 governance tools
+  govern_plan, govern_task, govern_delegate, govern_shell,
+  // Retained tools
+  idumb_anchor, idumb_init,
+  // Legacy tools (backward compat — removal pending)
+  idumb_task, idumb_scan, idumb_codemap,
+  idumb_read, idumb_write, idumb_bash, idumb_webfetch,
+} from "./tools/index.js"
 
 const VERSION = "2.2.0"
 
 /**
  * Plugin factory following hook factory pattern (P5: captured state).
- * 
+ *
  * P2: Platform native — uses directory from PluginInput
  * P3: Graceful degradation — try/catch on init
  * P7: Composable — hooks and tools are isolated modules
+ *
+ * GUARD: If .idumb/ doesn't exist, the plugin was not initialized.
+ * Return empty hooks to avoid zombie directory creation, logger
+ * pollution, and TUI breakage. The user must run `idumb-v2 init` first.
  */
 const idumb: Plugin = async ({ directory }) => {
+  // ─── Init guard: skip governance if not initialized ────────────────
+  const idumbDir = join(directory, ".idumb")
+  if (!existsSync(idumbDir)) {
+    // Not initialized — return empty hooks object.
+    // This prevents: zombie .opencode/ creation via logger,
+    // hooks firing on an uninitialized project, and TUI breakage
+    // when agents are missing from .opencode/agents/.
+    return {}
+  }
+
   const log = createLogger(directory, "idumb-core")
   const verifyLog = createLogger(directory, "hook-verification", "debug")
 
@@ -129,6 +153,18 @@ const idumb: Plugin = async ({ directory }) => {
             stateManager.setTaskStore(store) // trigger save
             log.info(`Auto-assigned ${agent} to task "${activeTask.name}"`, { sessionID })
           }
+
+          // Auto-assign agent to active TaskNode in TaskGraph
+          const graph = stateManager.getTaskGraph()
+          const activeWP = graph.workPlans.find(wp => wp.status === "active")
+          if (activeWP) {
+            const activeNode = activeWP.tasks.find(t => t.status === "active")
+            if (activeNode && !activeNode.assignedTo) {
+              activeNode.assignedTo = agent
+              stateManager.saveTaskGraph(graph)
+              log.info(`Auto-assigned ${agent} to TaskNode "${activeNode.name}"`, { sessionID })
+            }
+          }
         }
       } catch (err) {
         // P3: Never crash on hook
@@ -137,16 +173,29 @@ const idumb: Plugin = async ({ directory }) => {
     },
 
     /**
-     * Custom tools — max 5 for Phase 0 (Pitfall 5: tool menu explosion).
-     * μ1: idumb_task — create/complete/status for active task
-     * μ2: idumb_anchor — add/list context anchors that survive compaction
+     * v3 governance tools + retained + legacy.
+     * v3: govern_plan, govern_task, govern_delegate, govern_shell
+     * Retained: idumb_anchor, idumb_init
+     * Legacy (removal pending): idumb_task, idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_bash, idumb_webfetch
+     * Agent-scoped access enforced via AGENT_TOOL_RULES in tool-gate.ts.
      */
     tool: {
-      idumb_task,
+      // v3 governance tools
+      govern_plan,
+      govern_task,
+      govern_delegate,
+      govern_shell,
+      // Retained tools
       idumb_anchor,
       idumb_init,
+      // Legacy tools (backward compat — removal pending)
+      idumb_task,
       idumb_scan,
       idumb_codemap,
+      idumb_read,
+      idumb_write,
+      idumb_bash,
+      idumb_webfetch,
     },
   }
 }

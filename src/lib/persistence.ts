@@ -19,10 +19,13 @@ import { join, dirname } from "node:path"
 import type { Anchor } from "../schemas/anchor.js"
 import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
 import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/task.js"
+import type { TaskGraph } from "../schemas/work-plan.js"
+import { createEmptyTaskGraph } from "../schemas/work-plan.js"
+import { purgeAbandonedPlans } from "../schemas/task-graph.js"
 import type { DelegationStore } from "../schemas/delegation.js"
 import { createEmptyDelegationStore, expireStaleDelegations } from "../schemas/delegation.js"
 import type { Logger } from "./logging.js"
-import { SqliteAdapter } from "./sqlite-adapter.js"
+import type { SqliteAdapter } from "./sqlite-adapter.js"
 
 // ─── State Shape ─────────────────────────────────────────────────────
 
@@ -44,6 +47,7 @@ const STATE_VERSION = "1.1.0"
 const DEBOUNCE_MS = 500
 const STATE_FILE = ".idumb/brain/hook-state.json"
 const TASKS_FILE = ".idumb/brain/tasks.json"
+const TASK_GRAPH_FILE = ".idumb/brain/task-graph.json"
 const DELEGATIONS_FILE = ".idumb/brain/delegations.json"
 
 // ─── StateManager ────────────────────────────────────────────────────
@@ -52,12 +56,14 @@ export class StateManager {
   private sessions = new Map<string, SessionState>()
   private anchors = new Map<string, Anchor[]>()
   private taskStore: TaskStore = createEmptyStore()
+  private taskGraph: TaskGraph = createEmptyTaskGraph()
   private delegationStore: DelegationStore = createEmptyDelegationStore()
   private directory: string = ""
   private log: Logger | null = null
   private saveTimer: ReturnType<typeof setTimeout> | null = null
   private taskSaveTimer: ReturnType<typeof setTimeout> | null = null
   private delegationSaveTimer: ReturnType<typeof setTimeout> | null = null
+  private taskGraphSaveTimer: ReturnType<typeof setTimeout> | null = null
   private initialized = false
   private degraded = false  // true if disk I/O failed
   private sqliteAdapter: SqliteAdapter | null = null
@@ -73,6 +79,7 @@ export class StateManager {
 
     // ─── SQLite backend (feature-flagged) ───────────────────────────
     if (options?.sqlite) {
+      const { SqliteAdapter } = await import("./sqlite-adapter.js")
       this.sqliteAdapter = new SqliteAdapter()
       await this.sqliteAdapter.init(directory)
       this.useSqlite = true
@@ -159,6 +166,30 @@ export class StateManager {
       const msg = err instanceof Error ? err.message : String(err)
       if (!msg.includes("ENOENT")) {
         log.warn("Could not load delegation store — starting fresh", { error: msg })
+      }
+    }
+
+    // Load task graph (v3) from separate file
+    try {
+      const graphPath = join(directory, TASK_GRAPH_FILE)
+      const graphRaw = await readFile(graphPath, "utf-8")
+      const loadedGraph = JSON.parse(graphRaw) as TaskGraph
+      if (loadedGraph.version && Array.isArray(loadedGraph.workPlans)) {
+        this.taskGraph = loadedGraph
+        // Scan-based purge on session start
+        const purged = purgeAbandonedPlans(this.taskGraph)
+        if (purged > 0) {
+          log.info("Purged abandoned work plans on load", { purged })
+        }
+        log.info("Task graph loaded from disk", {
+          workPlans: loadedGraph.workPlans.length,
+          activeWorkPlanId: loadedGraph.activeWorkPlanId,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("ENOENT")) {
+        log.warn("Could not load task graph — starting fresh", { error: msg })
       }
     }
 
@@ -300,6 +331,22 @@ export class StateManager {
     this.scheduleDelegationSave()
   }
 
+  // Alias for tools that use "save" naming convention
+  saveDelegationStore(store: DelegationStore): void {
+    this.setDelegationStore(store)
+  }
+
+  // ─── Task Graph v3 (global, not per-session) ────────────────────────
+
+  getTaskGraph(): TaskGraph {
+    return this.taskGraph
+  }
+
+  saveTaskGraph(graph: TaskGraph): void {
+    this.taskGraph = graph
+    this.scheduleTaskGraphSave()
+  }
+
   // ─── Anchor State (compaction) ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
@@ -363,6 +410,20 @@ export class StateManager {
     this.delegationSaveTimer = setTimeout(() => {
       this.delegationSaveTimer = null
       this.saveDelegationsToDisk().catch(() => { })
+    }, DEBOUNCE_MS)
+  }
+
+  /** Schedule a debounced task graph save. */
+  private scheduleTaskGraphSave(): void {
+    if (this.degraded) return
+
+    if (this.taskGraphSaveTimer) {
+      clearTimeout(this.taskGraphSaveTimer)
+    }
+
+    this.taskGraphSaveTimer = setTimeout(() => {
+      this.taskGraphSaveTimer = null
+      this.saveTaskGraphToDisk().catch(() => { })
     }, DEBOUNCE_MS)
   }
 
@@ -432,6 +493,25 @@ export class StateManager {
     }
   }
 
+  /** Write task graph (v3) to separate disk file. */
+  private async saveTaskGraphToDisk(): Promise<void> {
+    if (!this.directory) return
+
+    const graphPath = join(this.directory, TASK_GRAPH_FILE)
+
+    try {
+      await mkdir(dirname(graphPath), { recursive: true })
+      await writeFile(graphPath, JSON.stringify(this.taskGraph, null, 2) + "\n", "utf-8")
+      this.log?.info("Task graph saved to disk", {
+        workPlans: this.taskGraph.workPlans.length,
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      this.log?.error("Failed to save task graph — degrading to in-memory only", { error: msg })
+      this.degraded = true
+    }
+  }
+
   /** Force immediate save — use on shutdown/cleanup. */
   async forceSave(): Promise<void> {
     if (this.useSqlite && this.sqliteAdapter) {
@@ -450,9 +530,14 @@ export class StateManager {
       clearTimeout(this.delegationSaveTimer)
       this.delegationSaveTimer = null
     }
+    if (this.taskGraphSaveTimer) {
+      clearTimeout(this.taskGraphSaveTimer)
+      this.taskGraphSaveTimer = null
+    }
     await this.saveToDisk()
     await this.saveTasksToDisk()
     await this.saveDelegationsToDisk()
+    await this.saveTaskGraphToDisk()
   }
 
   /** Check if persistence is degraded (disk I/O failed). */

@@ -62,6 +62,33 @@ export type {
     DelegationStore, DelegationValidation, CreateDelegationOptions,
 } from "./delegation.js"
 
+// ─── Task Graph (v3 — replaces Epic→Task→Subtask) ───────────────────
+export {
+    createWorkPlan, createTaskNode, createCheckpoint,
+    createEmptyTaskGraph, createBootstrapTaskGraph,
+    shouldCreateCheckpoint, isBashCheckpointWorthy,
+    TASK_GRAPH_VERSION, CHECKPOINT_TOOLS, CHECKPOINT_BASH_PATTERNS, SESSION_STALE_MS as GRAPH_SESSION_STALE_MS,
+} from "./work-plan.js"
+export type {
+    WorkPlanStatus, TaskNodeStatus,
+    TemporalGate, Checkpoint, TaskResult, TaskNode, WorkPlan, TaskGraph,
+    CreateWorkPlanOptions, CreateTaskNodeOptions,
+} from "./work-plan.js"
+
+export {
+    findWorkPlan, findTaskNode, findTaskNodeInPlan, findParentPlan, findCheckpoint,
+    getActiveWorkChain,
+    checkTemporalGate, checkDependencies, validateTaskStart,
+    validateTaskCompletion,
+    detectGraphBreaks,
+    purgeAbandonedPlans, archiveChainBreakers,
+    formatTaskGraph, formatWorkPlanDetail, buildGraphReminder,
+    migrateV2ToV3,
+} from "./task-graph.js"
+export type {
+    ActiveWorkChain, GateCheckResult, CompletionCheckResult, GraphWarning,
+} from "./task-graph.js"
+
 // ─── Planning Registry Schema ────────────────────────────────────────
 export {
     createPlanningRegistry, createPlanningArtifact, createArtifactSection,

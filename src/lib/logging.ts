@@ -27,13 +27,17 @@ export interface Logger {
 }
 
 /**
- * Creates a file-based logger that writes to .opencode/idumb/logs/
- * 
- * P2: Platform native — uses .opencode/ directory
+ * Creates a file-based logger that writes to .idumb/logs/
+ *
+ * Logs live inside .idumb/ (the governance directory) — NOT .opencode/.
+ * This prevents zombie .opencode/ resurrection if user deletes .opencode/
+ * but the plugin is still registered in opencode.json.
+ *
+ * P2: Platform native — uses .idumb/ directory
  * P3: Graceful degradation — all writes wrapped in try/catch
  */
 export function createLogger(directory: string, service: string, minLevel: LogLevel = "info"): Logger {
-  const logDir = join(directory, ".opencode", "idumb", "logs")
+  const logDir = join(directory, ".idumb", "logs")
   const logFile = join(logDir, `${service}.log`)
   const minLevelNum = LOG_LEVELS[minLevel]
 

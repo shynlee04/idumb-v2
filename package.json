@@ -12,10 +12,6 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./tools-plugin": {
-      "import": "./dist/tools-plugin.js",
-      "types": "./dist/tools-plugin.d.ts"
     }
   },
   "files": [
@@ -33,6 +29,7 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "test": "tsx tests/tool-gate.test.ts && tsx tests/compaction.test.ts && tsx tests/message-transform.test.ts && tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts",
+    "postinstall": "tsc || true",
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "keywords": [
