@@ -41,7 +41,7 @@
 An OpenCode plugin + agent system that enforces governance on AI agents by:
 - **Level 1 (Plugin)**: Blocking file writes without an active task, preserving context across compaction, pruning stale tool outputs
 - **Level 2 (Agents)**: **3 innate agents** (supreme-coordinator, investigator, executor) — all auto-deployed on install, enforcing delegation workflows
-- **Level 3 (Task Graph)**: v3 task graph system (WorkPlan→TaskNode→Checkpoint) with governed plan lifecycle (create, plan_tasks, status, archive, abandon), task lifecycle (start, complete, fail, review), and legacy Smart TODO (Epic→Task→Subtask) for backward compatibility
+- **Level 3 (Task Graph)**: v3 task graph system (WorkPlan→TaskNode→Checkpoint) with governed plan lifecycle (create, plan_tasks, status, archive, abandon), task lifecycle (start, complete, fail, status, review), and legacy Smart TODO (Epic→Task→Subtask) for backward compatibility
 - **Level 4 (Code Intelligence)**: Real-time code quality scanner with grading (A-F), smell detection, and roast commentary
 - **Level 5 (Planning Registry)**: Schema-validated planning artifacts with tier hierarchy, chain versioning, section-level staleness tracking, and outlier detection
 
@@ -67,16 +67,15 @@ v2/
 │   │   ├── tool-gate.ts            # VALIDATED — blocks write/edit without active task
 │   │   ├── compaction.ts           # Unit-tested — anchor injection via output.context.push()
 │   │   ├── message-transform.ts    # Unit-tested — DCP-pattern context pruning
-│   │   └── system.ts               # UNVERIFIED — hook may not fire in OpenCode
+│   │   └── system.ts               # Unit-tested — config-aware governance context (UNVERIFIED in live OpenCode)
 │   ├── lib/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── logging.ts              # TUI-safe file-based logger
 │   │   ├── framework-detector.ts   # Read-only brownfield scanner + code quality integration (445 LOC)
 │   │   ├── code-quality.ts         # Code quality scanner — smell detection, grading (701 LOC ⚠️)
 │   │   ├── scaffolder.ts           # Creates .idumb/ directory tree + config.json
-│   │   ├── persistence.ts          # StateManager — disk persistence for hook state + TaskStore (407 LOC)
-│   │   ├── chain-validator.ts      # Delegation chain validation (300 LOC)
-│   │   ├── entity-resolver.ts      # Entity resolution logic — 3-agent write permissions (545 LOC ⚠️)
+│   │   ├── persistence.ts          # StateManager — disk persistence for hook state + TaskStore (584 LOC ⚠️)
+│   │   ├── _archived-2026-02-08/   # Archived dead code: entity-resolver.ts (545), chain-validator.ts (300)
 │   │   ├── state-reader.ts         # State reading utilities
 │   │   ├── sdk-client.ts           # OpenCode SDK client singleton for shared hook/tool access (47 LOC)
 │   │   ├── sqlite-adapter.ts       # SQLite storage adapter for persistence (318 LOC)
@@ -97,8 +96,8 @@ v2/
 │   │   ├── index.ts                # Barrel exports
 │   │   ├── anchor.ts               # idumb_anchor — context anchors surviving compaction (86 LOC)
 │   │   ├── govern-plan.ts          # govern_plan — work plan management: create, plan_tasks, status, archive, abandon (279 LOC)
-│   │   ├── govern-task.ts          # govern_task — task lifecycle: start, complete, fail, status, review (328 LOC)
-│   │   ├── govern-delegate.ts      # govern_delegate — structured delegation: assign, recall, status (231 LOC)
+│   │   ├── govern-task.ts          # govern_task — task lifecycle: start, complete, fail, status, review (307 LOC)
+│   │   ├── govern-delegate.ts      # govern_delegate — structured delegation: assign, recall, status (243 LOC)
 │   │   ├── govern-shell.ts         # govern_shell — governed shell execution with classification (231 LOC)
 │   │   └── init.ts                 # idumb_init — project initialization + code quality report + planning outlier detection (441 LOC)
 │   ├── modules/
@@ -107,20 +106,20 @@ v2/
 │   │   └── schemas/                # Module schema templates
 │   └── dashboard/
 │       ├── backend/
-│       │   └── server.ts           # Dashboard backend — Express server (667 LOC ⚠️)
+│       │   └── server.ts           # Dashboard backend — Express server (721 LOC ⚠️)
 │       ├── frontend/
 │       │   └── src/                # React + Vite dashboard app
 │       └── shared/
 │           └── types.ts            # Shared types between frontend and backend
 ├── tests/
-│   ├── tool-gate.test.ts           # 82 assertions — all pass ✅
+│   ├── tool-gate.test.ts           # 93 assertions — all pass ✅
 │   ├── compaction.test.ts          # 16 assertions — all pass ✅
 │   ├── message-transform.test.ts   # 13 assertions — all pass ✅
-│   ├── system.test.ts              # 34 assertions — all pass ✅
+│   ├── system.test.ts              # 43 assertions — all pass ✅
 │   ├── init.test.ts                # 60 assertions — all pass ✅
 │   ├── persistence.test.ts         # 91 assertions — all pass ✅
 │   ├── task.test.ts                # 54 assertions — all pass ✅
-│   ├── delegation.test.ts          # 38 assertions — all pass ✅
+│   ├── delegation.test.ts          # 44 assertions — all pass ✅
 │   ├── planning-registry.test.ts   # 52 assertions — all pass ✅
 │   ├── work-plan.test.ts           # 56 assertions — all pass ✅
 │   ├── task-graph.test.ts          # 96 assertions — all pass ✅
@@ -128,6 +127,9 @@ v2/
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
 ├── planning/
 │   └── implamentation-plan-turn-based/   # Turn-based plan chain (n3→n4→n5→n6)
+├── docs/
+│   ├── plans/                            # Design documents (dated 2026-02-08)
+│   └── user-stories/                     # User story JSON artifacts
 ├── AGENTS.md                       # THIS FILE
 ├── CLAUDE.md                       # Claude-specific context
 ├── STRATEGIC-PLANNING-PROMPT.md    # Planning SOT
@@ -138,24 +140,26 @@ v2/
 ```
 
 **Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **604/604** assertions across **11** test files
+**Test baseline:** `npm test` → **657/657** assertions across **12** test files
 **TypeScript:** `tsc --noEmit` clean, zero errors  
-**Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (701), `dashboard/backend/server.ts` (667), `schemas/task-graph.ts` (605), `lib/entity-resolver.ts` (545), `schemas/task.ts` (530)
+**Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `schemas/task.ts` (530)
 
 ---
 
 ## What Works (Verified)
 
+> **⚠️ CAUTION:** "Verified" in this table means **unit tests pass**, not **verified in live OpenCode**. The plugin has never been installed in a real OpenCode instance. Hooks that say "unit-tested" may behave differently at runtime. See "What Does NOT Work" section for known gaps.
+
 ### Level 1: Plugin Hooks & Tools
 
 | Component | File | Evidence |
 |---|---|---|
-| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | 16/16 unit tests |
+| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | 93/93 assertions |
 | Compaction anchor injection | `hooks/compaction.ts` | 16/16 unit tests |
 | Message transform — prunes old tool outputs | `hooks/message-transform.ts` | 13/13 unit tests |
 | Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness |
 | TUI-safe file logging | `lib/logging.ts` | Zero console.log |
-| **StateManager** | `lib/persistence.ts` | **45/45** tests |
+| **StateManager** | `lib/persistence.ts` | **91/91** assertions |
 | **Hook verification harness** | `index.ts` | Every hook logs to debug |
 
 ### Level 2: Agent System (3 Agents — CLI-deployed)
@@ -169,8 +173,8 @@ v2/
 | **4 commands** | `templates.ts` | `/idumb-init`, `/idumb-settings`, `/idumb-status`, `/idumb-delegate` |
 | **Agent contract schema** | `templates.ts` | OpenCode YAML frontmatter with permissions |
 | **CLI deployment** | `cli/deploy.ts` | Deploys 3 agents + 4 commands + 3 profiles + 2 skills + modules |
-| **Delegation schema** | `schemas/delegation.ts` | 3-agent hierarchy, category routing. 38/38 tests |
-| **Entity resolver** | `lib/entity-resolver.ts` | `canWrite` permissions mapped to 3 agents |
+| **Delegation schema** | `schemas/delegation.ts` | 3-agent hierarchy, category routing. 44/44 tests |
+| **Entity resolver** | `lib/_archived-2026-02-08/entity-resolver.ts` | ARCHIVED — 545 LOC dead code. `canAgentWrite()` never called. Restore when entity-level governance is wired. |
 
 ### Level 3: Task Graph + Smart TODO System
 
@@ -187,7 +191,7 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| **Code quality scanner** | `lib/code-quality.ts` | 7 smell types, A-F grading, 50+ roasts |
+| **Code quality scanner** | `lib/code-quality.ts` | 9 smell types, A-F grading, 42 roasts |
 | **CLI integration** | `cli.ts` | Health grade box, stats, roasts |
 | **Init output** | `tools/init.ts` | 60/60 tests |
 
@@ -202,11 +206,13 @@ v2/
 | **Init integration** | `tools/init.ts` | Outlier scan on install, pending outlier reporting |
 | **Deploy bootstrap** | `cli/deploy.ts` | Empty `planning-registry.json` created on `idumb-v2 init` |
 
+> **⚠️ CAUTION:** Planning Registry is **schema + factory functions + outlier scan only**. Chain lifecycle and section-level staleness tracking are implemented as pure functions but are NOT wired into runtime hooks or tools. No chain updates happen automatically.
+
 ---
 
-## Agent Team (3 Agents — All Auto-Deployed)
+## Agent Team (3 Agents — CLI-deployed on `idumb-v2 init`)
 
-All agents are pre-deployed to `.opencode/agents/` by `idumb-v2 init` via `cli/deploy.ts`.
+All agents are deployed to `.opencode/agents/` by `idumb-v2 init` via `cli/deploy.ts`. They do NOT exist until the user runs the init command in their target project.
 
 | Agent | Level | Role | Key Tools |
 |---|---|---|---|
@@ -221,8 +227,8 @@ All agents are pre-deployed to `.opencode/agents/` by `idumb-v2 init` via `cli/d
 | `development` | executor |
 | `governance` | coordinator |
 | `research` | investigator |
-| `planning` | investigator |
-| `documentation` | investigator |
+| `maintenance` | executor, investigator |
+| `spec-kit` | investigator |
 | `ad-hoc` | executor, investigator |
 
 Reference profiles deployed to `.idumb/idumb-modules/agents/` as documentation.
@@ -236,7 +242,7 @@ Reference profiles deployed to `.idumb/idumb-modules/agents/` as documentation.
 | Live hook verification | **Not yet tested.** Never installed in real OpenCode. |
 | `experimental.chat.system.transform` | **Unit-tested.** Config-aware injection with framework overlay + mode context. Not yet confirmed firing in live OpenCode. |
 | `experimental.chat.messages.transform` | **Unverified.** SDK input is `{}` (empty!). |
-| `chat.params` hook | **REGISTERED.** Captures `agent` field. Auto-assigns to active task and TaskNode. |
+| `chat.params` hook | **IMPLEMENTED but UNVERIFIED in live OpenCode.** Captures `agent` field. Auto-assigns to active task and TaskNode. Code is complete in `index.ts:140-174`. |
 | `chat.message` hook | **NOT REGISTERED.** Available with optional `agent?` field. |
 | Framework agent interception | **Not implemented.** BMAD/GSD/Agent-OS agents not intercepted yet. |
 | Command splitting | **Not implemented.** Agent prompts still monolithic in `templates.ts`. |
@@ -309,7 +315,7 @@ npx idumb-v2 init
         └── Validates completion before accepting
 ```
 
-**This pipeline is COMPLETE and WORKING.** All 3 agents auto-deployed on install.
+**This pipeline is COMPLETE and WORKING in CLI.** Agents deploy on `idumb-v2 init`. Live OpenCode verification is pending.
 
 ---
 
@@ -332,7 +338,12 @@ Turn-based plans live in `planning/implamentation-plan-turn-based/`. Highest `n`
 
 ---
 
-## Roadmap (Sequential)
+## Roadmap
+
+> **See `MASTER-PLAN.md` for the active implementation plan.**
+> The plan state is also available at runtime via `.idumb/brain/plan-state.json`.
+
+### Historical Phases (Completed)
 
 | Phase | Goal | Status |
 |---|---|---|
@@ -340,10 +351,12 @@ Turn-based plans live in `planning/implamentation-plan-turn-based/`. Highest `n`
 | **Phase 1b-β** | Entity schemas + scan/codemap tools | **DONE** ✅ |
 | **Phase α2** | Foundation fixes — WorkStream, chat.params, docs | **DONE** ✅ |
 | **Phase δ2** | Delegation schema + validation | **DONE** ✅ |
-| **Phase n6-Iter1** | 3-agent model refactor + planning registry schema | **Cycle 1 DONE** ✅ |
-| **Phase n6-Iter1** | Integration cycle — wire planning registry into `npm test`, `write.ts`, `init.ts` | **Cycle 2 DONE** ✅ |
-| **Phase n6-Iter2** | Framework interception + command splitting | Planned |
-| **Phase n6-Iter3** | Dashboard data layer | Planned |
+| **Phase n6-Iter1** | 3-agent model refactor + planning registry schema | **DONE** ✅ |
+| **Phase n6-Iter1** | Integration cycle — wire planning registry into `npm test`, `write.ts`, `init.ts` | **DONE** ✅ |
+
+### Current Plan
+
+See `MASTER-PLAN.md` — Phases 1-6 of the "One True Plan + Self-Enforcement" plan.
 
 ---
 
@@ -355,10 +368,10 @@ These files need future splitting. Listed in severity order:
 |---|---|---|
 | `templates.ts` | 1482 | Split into `templates/coordinator.ts`, `templates/investigator.ts`, `templates/executor.ts`, `templates/modules.ts` |
 | `schemas/planning-registry.ts` | 729 | Split schema types from helper functions |
+| `dashboard/backend/server.ts` | 721 | Extract route handlers |
 | `lib/code-quality.ts` | 701 | Extract smell detectors into separate modules |
-| `dashboard/backend/server.ts` | 667 | Extract route handlers |
 | `schemas/task-graph.ts` | 605 | Split schema definitions from factory/helper functions |
-| `lib/entity-resolver.ts` | 545 | Extract classification rules into data file |
+| `lib/persistence.ts` | 584 | Extract TaskStore and SQLite concerns into separate modules |
 | `schemas/task.ts` | 530 | Split types from helpers |
 
 ---
@@ -380,7 +393,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 11 test files via tsx (604 assertions)
+npm test             # 12 test files via tsx (657+ assertions)
 ```
 
 ---
@@ -389,10 +402,8 @@ npm test             # 11 test files via tsx (604 assertions)
 
 When resuming work:
 
-1. Read this file (AGENTS.md) — it reflects reality
-2. Read `planning/implamentation-plan-turn-based/implementation_plan-n6.md` — current active plan
-3. Read `planning/implamentation-plan-turn-based/walkthrough-n6.md` — latest changes walkthrough
-4. Check which Phase is current (see Roadmap above)
-5. Run `npm run typecheck` — must be zero errors
-6. Run `npm test` — must be 604/604 baseline
-7. **NEXT WORK**: Phase n6-Iter2: framework interception + command splitting.
+1. Read `MASTER-PLAN.md` — it is the active implementation plan
+2. Read this file (AGENTS.md) — it reflects what exists in the codebase
+3. Run `npm run typecheck` — must be zero errors
+4. Run `npm test` — must be 657+ baseline
+5. Check `.idumb/brain/plan-state.json` for current phase

@@ -234,8 +234,8 @@ if (failed > 0) process.exit(1)
 ## Session Handoff
 
 When resuming work on this codebase:
-1. Read `AGENTS.md` — it's the ground truth for what exists
-2. Run `npm run typecheck` — must be zero errors
-3. Run `npm test` — must be 613/613 baseline
-4. Check `planning/implamentation-plan-turn-based/` for the highest `n`-suffix plan (currently n6)
-5. Check `docs/plans/` for recent design documents (dated 2026-02-08)
+1. Read `MASTER-PLAN.md` — it is the active implementation plan and planning SOT
+2. Read `AGENTS.md` — it's the ground truth for what exists
+3. Run `npm run typecheck` — must be zero errors
+4. Run `npm test` — must be 657+ baseline (12 suites)
+5. Check `.idumb/brain/plan-state.json` for current phase state
