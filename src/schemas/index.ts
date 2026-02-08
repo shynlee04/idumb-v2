@@ -8,8 +8,8 @@ export {
     getActiveChain, validateCompletion, findOrphanTasks, findStaleTasks,
     detectChainBreaks, formatTaskTree, buildGovernanceReminder,
     migrateTaskStore,
-    TASK_STORE_VERSION, SESSION_STALE_MS,
-    CATEGORY_DEFAULTS, CATEGORY_SKIP_SUBTASKS,
+    TASK_STORE_VERSION,
+    CATEGORY_DEFAULTS,
 } from "./task.js"
 export type {
     EpicStatus, TaskStatus, SubtaskStatus,
@@ -67,7 +67,7 @@ export {
     createWorkPlan, createTaskNode, createCheckpoint,
     createEmptyTaskGraph, createBootstrapTaskGraph,
     shouldCreateCheckpoint, isBashCheckpointWorthy,
-    TASK_GRAPH_VERSION, CHECKPOINT_TOOLS, CHECKPOINT_BASH_PATTERNS, SESSION_STALE_MS as GRAPH_SESSION_STALE_MS,
+    TASK_GRAPH_VERSION, CHECKPOINT_TOOLS, CHECKPOINT_BASH_PATTERNS, SESSION_STALE_MS,
 } from "./work-plan.js"
 export type {
     WorkPlanStatus, TaskNodeStatus,

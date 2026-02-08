@@ -30,7 +30,7 @@ const MAX_OUTPUT_CHARS = 100_000  // 100KB output cap
 const ROLE_PERMISSIONS: Record<string, Set<string>> = {
     "idumb-supreme-coordinator": new Set(["inspection"]),
     "idumb-investigator": new Set(["validation", "inspection"]),
-    "idumb-executor": new Set(["validation", "build", "git", "inspection"]),
+    "idumb-executor": new Set(["validation", "build", "git", "inspection", "runtime", "filesystem", "general"]),
 }
 
 // ─── Command Classification ─────────────────────────────────────────
@@ -71,6 +71,26 @@ const CATEGORY_PATTERNS: Record<string, RegExp[]> = {
         /^du\s/,
         /^file\s/,
         /^stat\s/,
+    ],
+    runtime: [
+        /^node\b/,
+        /^python3?\b/,
+        /^docker\b/,
+        /^bun\b/,
+        /^deno\b/,
+        /^tsx\b/,
+        /^ts-node\b/,
+        /^npx\s+tsx\b/,
+    ],
+    filesystem: [
+        /^mv\s/,
+        /^cp\s/,
+        /^mkdir\b/,
+        /^touch\s/,
+        /^rmdir\b/,
+        /^ln\s/,
+        /^chmod\s/,
+        /^chown\s/,
     ],
 }
 

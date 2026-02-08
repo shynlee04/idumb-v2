@@ -3,10 +3,15 @@
  *
  * Called by the CLI after interactive setup.
  * Writes to .opencode/agents/, .opencode/commands/, and .idumb/modules/.
- * Non-destructive: skips existing files unless force=true.
+ *
+ * Two write strategies:
+ *   - Derived files (agents, commands, module templates): ALWAYS overwritten —
+ *     they are regenerated from source templates and should track the latest plugin version.
+ *   - State files (tasks.json, graph.json, registry.json, plan.json): created if missing,
+ *     preserved if existing (writeIfNew). These contain user work and must not be clobbered.
  */
 
-import { mkdir, writeFile, stat, readFile } from "node:fs/promises"
+import { mkdir, writeFile, stat, readFile, rename } from "node:fs/promises"
 import { join, dirname, resolve } from "node:path"
 import type { Language, GovernanceMode, ExperienceLevel } from "../schemas/config.js"
 import {
@@ -73,6 +78,20 @@ async function writeIfNew(path: string, content: string, force: boolean, result:
     result.skipped.push(path)
     return
   }
+  await mkdir(dirname(path), { recursive: true })
+  await writeFile(path, content, "utf-8")
+  result.deployed.push(path)
+}
+
+/**
+ * Write a derived file — ALWAYS overwrites, regardless of force flag.
+ *
+ * Derived files (agents, commands, module templates) are regenerated from
+ * source templates on every init. They should always reflect the latest
+ * plugin version. Unlike state files (tasks.json, config.json), losing
+ * a derived file's previous content is harmless — it's just a template.
+ */
+async function writeDerived(path: string, content: string, result: DeployResult): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, content, "utf-8")
   result.deployed.push(path)
@@ -157,14 +176,24 @@ async function resolvePluginPath(projectDir: string): Promise<PluginResolution> 
 /**
  * Clean stale idumb-v2 entries from an existing plugin array.
  * Removes duplicates and paths that reference idumb-v2 in any form.
+ * Also removes legacy 'tools-plugin' entries from earlier iDumb versions.
  * Non-idumb plugins are preserved untouched.
  */
 function cleanStalePluginPaths(plugins: string[]): string[] {
+  const seen = new Set<string>()
   return plugins.filter(p => {
-    // Keep non-idumb-v2 entries
+    // Remove idumb-v2 entries (any form: package name or path)
     if (p === PLUGIN_PACKAGE_NAME) return false
     if (p.includes(`/${PLUGIN_PACKAGE_NAME}`)) return false
     if (p.includes(`\\${PLUGIN_PACKAGE_NAME}`)) return false // Windows
+
+    // Remove legacy tools-plugin entries from earlier iDumb versions
+    if (p.includes("tools-plugin")) return false
+
+    // Deduplicate: if the same resolved path appears twice, skip the duplicate
+    if (seen.has(p)) return false
+    seen.add(p)
+
     return true
   })
 }
@@ -218,112 +247,96 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       ...agentConfig,
       pluginPath: resolution.path,
     })
-    await writeIfNew(
+    await writeDerived(
       join(agentsDir, "idumb-supreme-coordinator.md"),
       coordinatorContent,
-      force,
       result,
     )
 
     // Investigator — research, analysis, planning (Level 1)
-    await writeIfNew(
+    await writeDerived(
       join(agentsDir, "idumb-investigator.md"),
       getInvestigatorAgent(agentConfig),
-      force,
       result,
     )
 
     // Executor — code implementation, builds, tests (Level 1)
-    await writeIfNew(
+    await writeDerived(
       join(agentsDir, "idumb-executor.md"),
       getExecutorAgent(agentConfig),
-      force,
       result,
     )
 
     // ─── Deploy Commands ────────────────────────────────────────
-    await writeIfNew(
+    await writeDerived(
       join(commandsDir, "idumb-init.md"),
       getInitCommand(language),
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(commandsDir, "idumb-settings.md"),
       getSettingsCommand(language),
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(commandsDir, "idumb-status.md"),
       getStatusCommand(language),
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(commandsDir, "idumb-delegate.md"),
       getDelegateCommand(language),
-      force,
       result,
     )
 
     // ─── Deploy Module Templates ────────────────────────────────
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "README.md"),
       MODULES_README_TEMPLATE,
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "schemas", "agent-contract.md"),
       AGENT_CONTRACT_TEMPLATE,
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "templates", "command-template.md"),
       COMMAND_TEMPLATE,
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "templates", "workflow-template.md"),
       WORKFLOW_TEMPLATE,
-      force,
       result,
     )
 
     // ─── Deploy Agent Profile Templates (reference docs) ─────────
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "agents", "coordinator-profile.md"),
       COORDINATOR_PROFILE,
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "agents", "investigator-profile.md"),
       INVESTIGATOR_PROFILE,
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "agents", "executor-profile.md"),
       EXECUTOR_PROFILE,
-      force,
       result,
     )
 
     // ─── Deploy Skill Protocol Templates ─────────────────────────
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "skills", "delegation-protocol.md"),
       DELEGATION_SKILL_TEMPLATE,
-      force,
       result,
     )
-    await writeIfNew(
+    await writeDerived(
       join(modulesDir, "skills", "governance-protocol.md"),
       GOVERNANCE_SKILL_TEMPLATE,
-      force,
       result,
     )
 
@@ -342,13 +355,22 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
 
     // ─── Bootstrap Task Graph (v3) ──────────────────────────────
     const taskGraphPath = join(projectDir, ".idumb", "brain", "graph.json")
-    const bootstrapGraph = createBootstrapTaskGraph()
-    await writeIfNew(
-        taskGraphPath,
-        JSON.stringify(bootstrapGraph, null, 2) + "\n",
-        force,
-        result,
-    )
+    const legacyTaskGraphPath = join(projectDir, ".idumb", "brain", "task-graph.json")
+
+    // Migrate legacy task-graph.json → graph.json if it exists and graph.json does not
+    if (!(await exists(taskGraphPath)) && await exists(legacyTaskGraphPath)) {
+      await rename(legacyTaskGraphPath, taskGraphPath)
+      result.deployed.push(taskGraphPath)
+      result.warnings.push("Migrated legacy task-graph.json to graph.json")
+    } else {
+      const bootstrapGraph = createBootstrapTaskGraph()
+      await writeIfNew(
+          taskGraphPath,
+          JSON.stringify(bootstrapGraph, null, 2) + "\n",
+          force,
+          result,
+      )
+    }
 
     const planningRegistryPath = join(projectDir, ".idumb", "brain", "registry.json")
     const emptyRegistry = createPlanningRegistry()

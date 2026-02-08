@@ -7,7 +7,7 @@
  * the client through every function signature.
  *
  * P3: Graceful degradation — tryGetClient() returns null when unavailable.
- *     All consumers should use tryGetClient() + null checks, not getClient().
+ *     All consumers should use tryGetClient() + null checks.
  *
  * CRITICAL: NO console.log anywhere — breaks TUI rendering.
  */
@@ -25,17 +25,6 @@ let _client: SdkClient | null = null
  */
 export function setClient(client: SdkClient): void {
   _client = client
-}
-
-/**
- * Get the client reference. Throws if not initialized.
- * Prefer tryGetClient() in hooks/tools for graceful degradation.
- */
-export function getClient(): SdkClient {
-  if (!_client) {
-    throw new Error("SDK client not initialized. Was setClient() called during plugin init?")
-  }
-  return _client
 }
 
 /**

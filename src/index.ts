@@ -11,6 +11,7 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
+import { createRequire } from "node:module"
 import { createLogger } from "./lib/index.js"
 import { setClient } from "./lib/sdk-client.js"
 import { stateManager } from "./lib/persistence.js"
@@ -22,7 +23,9 @@ import {
   idumb_anchor, idumb_init,
 } from "./tools/index.js"
 
-const VERSION = "2.2.0"
+const _require = createRequire(import.meta.url)
+const _pkg = _require("../package.json") as { version: string }
+const VERSION = _pkg.version
 
 /**
  * Plugin factory following hook factory pattern (P5: captured state).

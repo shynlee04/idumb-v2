@@ -17,6 +17,7 @@
 
 import { readFile, writeFile, mkdir } from "node:fs/promises"
 import { join, dirname } from "node:path"
+import { z } from "zod"
 import type { Anchor } from "../schemas/anchor.js"
 import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
 import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/task.js"
@@ -29,14 +30,75 @@ import type { PlanState } from "../schemas/plan-state.js"
 import { createPlanState } from "../schemas/plan-state.js"
 import type { Logger } from "./logging.js"
 import type { SqliteAdapter } from "./sqlite-adapter.js"
+import type { SessionState } from "./storage-adapter.js"
+
+// ─── Zod Validation Schemas (structural guards for disk reads) ──────
+
+/** Permissive schema — validates top-level shape, passes through nested data. */
+const PersistedStateSchema = z.object({
+  version: z.string(),
+  lastSaved: z.string(),
+  sessions: z.record(z.string(), z.any()),
+  anchors: z.record(z.string(), z.array(z.any())).optional().default({}),
+  tasks: z.any().optional(),
+})
+
+const TaskStoreSchema = z.object({
+  version: z.string(),
+  activeEpicId: z.string().nullable(),
+  epics: z.array(z.any()),
+})
+
+const DelegationStoreSchema = z.object({
+  version: z.string(),
+  delegations: z.array(z.any()),
+})
+
+const TaskGraphSchema = z.object({
+  version: z.string(),
+  activeWorkPlanId: z.string().nullable(),
+  workPlans: z.array(z.any()),
+})
+
+const PlanStateSchema = z.object({
+  version: z.string(),
+  planName: z.string(),
+  currentPhaseId: z.number().nullable(),
+  phases: z.array(z.any()),
+  lastModified: z.number(),
+})
+
+// ─── Safe Parse Helper ──────────────────────────────────────────────
+
+/**
+ * Parse JSON with Zod validation, falling back to a default on failure.
+ * Logs a warning when validation fails so corrupted state is visible.
+ */
+function safeParse<T>(
+  raw: string,
+  schema: z.ZodType,
+  fallback: T,
+  log: Logger,
+  label: string,
+): T {
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    const result = schema.safeParse(parsed)
+    if (result.success) {
+      return result.data as T
+    }
+    log.warn(`Zod validation failed for ${label} — using fallback`, {
+      errors: result.error.issues.map(i => `${i.path.join(".")}: ${i.message}`),
+    })
+    return fallback
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    log.warn(`JSON parse failed for ${label} — using fallback`, { error: msg })
+    return fallback
+  }
+}
 
 // ─── State Shape ─────────────────────────────────────────────────────
-
-interface SessionState {
-  activeTask: { id: string; name: string } | null
-  lastBlock: { tool: string; timestamp: number } | null
-  capturedAgent: string | null  // n3: agent name from chat.params hook
-}
 
 interface PersistedState {
   version: string
@@ -127,7 +189,13 @@ export class StateManager {
 
     try {
       const { raw, migrated } = await readWithLegacyFallback(directory, STATE_FILE, LEGACY_STATE_FILE)
-      const persisted = JSON.parse(raw) as PersistedState
+      const defaultState: PersistedState = {
+        version: STATE_VERSION,
+        lastSaved: new Date().toISOString(),
+        sessions: {},
+        anchors: {},
+      }
+      const persisted = safeParse(raw, PersistedStateSchema, defaultState, log, "PersistedState") as PersistedState
 
       if (persisted.version && persisted.sessions) {
         // Restore sessions
@@ -169,7 +237,7 @@ export class StateManager {
     try {
       const tasksPath = join(directory, TASKS_FILE)
       const tasksRaw = await readFile(tasksPath, "utf-8")
-      const loaded = JSON.parse(tasksRaw) as TaskStore
+      const loaded = safeParse(tasksRaw, TaskStoreSchema, createEmptyStore(), log, "TaskStore") as TaskStore
       if (loaded.version && Array.isArray(loaded.epics)) {
         this.taskStore = migrateTaskStore(loaded)
         log.info("Task store loaded from disk", {
@@ -189,7 +257,7 @@ export class StateManager {
     try {
       const delegPath = join(directory, DELEGATIONS_FILE)
       const delegRaw = await readFile(delegPath, "utf-8")
-      const loadedDeleg = JSON.parse(delegRaw) as DelegationStore
+      const loadedDeleg = safeParse(delegRaw, DelegationStoreSchema, createEmptyDelegationStore(), log, "DelegationStore") as DelegationStore
       if (loadedDeleg.version && Array.isArray(loadedDeleg.delegations)) {
         this.delegationStore = loadedDeleg
         // Expire stale delegations on load
@@ -211,7 +279,7 @@ export class StateManager {
     // Load task graph (v3) from separate file
     try {
       const { raw: graphRaw, migrated } = await readWithLegacyFallback(directory, TASK_GRAPH_FILE, LEGACY_TASK_GRAPH_FILE)
-      const loadedGraph = JSON.parse(graphRaw) as TaskGraph
+      const loadedGraph = safeParse(graphRaw, TaskGraphSchema, createEmptyTaskGraph(), log, "TaskGraph") as TaskGraph
       if (loadedGraph.version && Array.isArray(loadedGraph.workPlans)) {
         this.taskGraph = loadedGraph
         // Scan-based purge on session start
@@ -239,7 +307,7 @@ export class StateManager {
     // Load plan state from separate file
     try {
       const { raw: planStateRaw, migrated } = await readWithLegacyFallback(directory, PLAN_STATE_FILE, LEGACY_PLAN_STATE_FILE)
-      const loadedPlanState = JSON.parse(planStateRaw) as PlanState
+      const loadedPlanState = safeParse(planStateRaw, PlanStateSchema, createPlanState(), log, "PlanState") as PlanState
       if (loadedPlanState.version && Array.isArray(loadedPlanState.phases)) {
         this.planState = loadedPlanState
         log.info("Plan state loaded from disk", {

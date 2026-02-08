@@ -896,10 +896,9 @@ prompt: "./path/to/prompt.md"                     # optional — external prompt
 
 | Role | Permission Level | Can Write? | Can Bash? | Can Delegate? | Tool Access |
 |------|-----------------|-----------|----------|---------------|-----------------|
-| meta | read + delegate | no (delegates) | no (delegates) | yes — all agents | read + governance tools only |
 | coordinator | read + delegate | no | no | yes — investigator/executor | read + governance tools only |
-| investigator | read + research + plan | yes (brain entries via write) | inspection only (bash) | no (leaf) | read + governance tools only |
-| executor | read + write + build | yes (write) | yes (govern_shell) | no (leaf) | read + write + edit + govern_shell |
+| investigator | read + research + plan | no (uses idumb_anchor for context) | inspection only (govern_shell) | no (leaf) | read + governance tools only |
+| executor | read + write + build | yes (edit) | yes (govern_shell) | no (leaf) | read + edit + govern_shell |
 
 **IMPORTANT:** Innate tools (read/write/bash/webfetch) are governed by the tool-gate hook and AGENT_TOOL_RULES.
 They cannot be controlled via the \`tools:\` frontmatter alone — the hook enforces active task requirements.
@@ -953,7 +952,7 @@ modules/
 
 ## Updating Modules
 
-Modules are installed by \`npx idumb-v2 init\` and can be updated by running init again with \`--force\`.
+Modules are installed by \`npx idumb-v2 init\` and are automatically updated to the latest version on every init run.
 `
 
 /**
@@ -1075,7 +1074,7 @@ $ARGUMENTS
 ## Delegation Pattern
 
 Workflows ALWAYS route through the coordinator to enforce governance:
-\`User → Command → Coordinator → Builder/Validator → Report\`
+\`User → Command → Coordinator → Executor/Investigator → Report\`
 
 This ensures every step goes through the delegation + validation loop.
 `

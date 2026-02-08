@@ -78,6 +78,7 @@ export function createPlanState(options?: {
 
 /**
  * Create the default plan state matching MASTER-PLAN.md phases.
+ * Phase names and IDs are defined in MASTER-PLAN.md — keep in sync.
  */
 export function createDefaultPlanState(): PlanState {
   return createPlanState({

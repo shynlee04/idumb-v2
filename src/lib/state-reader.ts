@@ -58,7 +58,7 @@ function safeReadJSON<T>(absPath: string): T | null {
 // ─── State Reader ────────────────────────────────────────────────────
 
 /**
- * Read-only snapshot of Plugin A's governance state.
+ * Read-only snapshot of iDumb's governance state.
  *
  * Usage:
  *   const state = readGovernanceState(projectDir)
@@ -80,7 +80,7 @@ export interface GovernanceSnapshot {
 }
 
 /**
- * Read Plugin A's persisted governance state from disk.
+ * Read iDumb's persisted governance state from disk.
  *
  * Returns a read-only snapshot — no mutations, no writes.
  * Each field is null if the corresponding file doesn't exist or is invalid.

@@ -9,8 +9,8 @@
  * Consumers: init tool
  */
 
-import { mkdir, writeFile, stat } from "node:fs/promises"
-import { join, dirname } from "node:path"
+import { mkdir, writeFile, stat, copyFile } from "node:fs/promises"
+import { join, dirname, basename } from "node:path"
 import type { IdumbConfig } from "../schemas/config.js"
 import type { Logger } from "./logging.js"
 
@@ -20,6 +20,23 @@ async function exists(path: string): Promise<boolean> {
     return true
   } catch {
     return false
+  }
+}
+
+/** Backup a file before overwriting with --force */
+async function backupFile(filePath: string, idumbRoot: string, log: Logger): Promise<void> {
+  if (!(await exists(filePath))) return
+  const backupDir = join(idumbRoot, "backups")
+  await mkdir(backupDir, { recursive: true })
+  const name = basename(filePath)
+  const timestamp = Date.now()
+  const backupPath = join(backupDir, `${name}.${timestamp}.bak`)
+  try {
+    await copyFile(filePath, backupPath)
+    log.info(`Backed up ${name} to backups/${name}.${timestamp}.bak`)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    log.warn(`Failed to backup ${name}`, { error: msg })
   }
 }
 
@@ -85,6 +102,9 @@ export async function scaffoldProject(
       result.skipped.push("config.json")
       log.info("config.json already exists, skipping (use force to overwrite)")
     } else {
+      if (force && await exists(configPath)) {
+        await backupFile(configPath, idumbRoot, log)
+      }
       await mkdir(dirname(configPath), { recursive: true })
       await writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
       result.created.push("config.json")

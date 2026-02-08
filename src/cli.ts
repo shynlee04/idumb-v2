@@ -18,6 +18,7 @@
 import { createInterface } from "node:readline/promises"
 import { stdin, stdout } from "node:process"
 import { resolve } from "node:path"
+import { readFileSync, existsSync } from "node:fs"
 import type { Language, ExperienceLevel, GovernanceMode, InstallScope } from "./schemas/config.js"
 import { createConfig } from "./schemas/config.js"
 import { scanProject } from "./lib/framework-detector.js"
@@ -193,6 +194,27 @@ async function main(): Promise<void> {
   banner()
 
   const projectDir = resolve(process.cwd())
+
+  // ─── Self-install detection ─────────────────────────────────────
+  // Prevent installing idumb-v2 inside its own repository
+  const targetPkgPath = resolve(projectDir, "package.json")
+  if (existsSync(targetPkgPath)) {
+    try {
+      const targetPkg = JSON.parse(readFileSync(targetPkgPath, "utf-8")) as { name?: string }
+      if (targetPkg.name === "idumb-v2") {
+        if (!force) {
+          print(`  ${C.red}${C.bold}ERROR: You are trying to install idumb-v2 inside its own repository.${C.reset}`)
+          print(`  ${C.red}This would overwrite source files and corrupt the project.${C.reset}`)
+          print(`  ${C.dim}If you really want this, use: idumb-v2 init --force${C.reset}`)
+          process.exit(1)
+        }
+        print(`  ${C.yellow}${C.bold}WARNING: Installing inside idumb-v2 repository (--force).${C.reset}`)
+      }
+    } catch {
+      // Ignore parse errors — proceed with install
+    }
+  }
+
   print(`  ${C.dim}Project: ${projectDir}${C.reset}`)
   divider()
 

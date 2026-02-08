@@ -44,16 +44,6 @@ export const CATEGORY_DEFAULTS: Record<WorkStreamCategory, GovernanceLevel> = {
     "ad-hoc": "minimal",
 }
 
-/** Maps category → whether subtasks can be skipped */
-export const CATEGORY_SKIP_SUBTASKS: Record<WorkStreamCategory, boolean> = {
-    development: false,
-    research: true,
-    governance: false,
-    maintenance: true,
-    "spec-kit": false,
-    "ad-hoc": true,
-}
-
 // ─── Core Interfaces ─────────────────────────────────────────────────
 
 export interface Subtask {
@@ -103,9 +93,6 @@ export const TASK_STORE_VERSION = "2.0.0"
 
 /** Stale threshold in ms — task active >4h with no subtask progress */
 const STALE_THRESHOLD_MS = 4 * 60 * 60 * 1000
-
-/** Quick stale threshold for in-session warnings (30 min) */
-export const SESSION_STALE_MS = 30 * 60 * 1000
 
 // ─── Factory Helpers ─────────────────────────────────────────────────
 
