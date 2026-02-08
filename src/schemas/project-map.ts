@@ -11,6 +11,12 @@
  * - Drift detection (changes since last scan)
  */
 
+/**
+ * STATUS: Schema-only. Not wired into runtime hooks or tools.
+ * These schemas define ProjectMap for directory/file mapping.
+ * Planned for future integration when project mapping is implemented.
+ */
+
 // ─── Framework & Tech Detection ─────────────────────────────────────
 
 export type FrameworkCategory =

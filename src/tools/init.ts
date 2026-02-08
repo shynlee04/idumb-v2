@@ -285,10 +285,10 @@ function buildNextSteps(config: IdumbConfig, lang: Language): string {
 
     if (hasGovernance) {
       lines.push(`1. **Framework đã phát hiện:** ${detection.governance.join(", ")} — iDumb sẽ tích hợp với cấu trúc hiện có`)
-      lines.push("2. **Meta builder** sẽ phân tích sâu codebase để tạo agent profiles phù hợp")
+      lines.push("2. **Supreme Coordinator** sẽ phân tích sâu codebase để tạo agent profiles phù hợp")
     } else {
       lines.push("1. **Không phát hiện governance framework** — iDumb sẽ thiết lập từ đầu")
-      lines.push("2. **Meta builder** sẽ quét codebase và đề xuất cấu trúc phù hợp")
+      lines.push("2. **Supreme Coordinator** sẽ quét codebase và đề xuất cấu trúc phù hợp")
     }
 
     if (detection.conflicts.length > 0) {
@@ -304,10 +304,10 @@ function buildNextSteps(config: IdumbConfig, lang: Language): string {
 
     if (hasGovernance) {
       lines.push(`1. **Detected framework(s):** ${detection.governance.join(", ")} — iDumb will integrate with existing structure`)
-      lines.push("2. **Meta builder** will deep-scan codebase to create matching agent profiles")
+      lines.push("2. **Supreme Coordinator** will deep-scan codebase to create matching agent profiles")
     } else {
       lines.push("1. **No governance framework detected** — iDumb will set up fresh governance")
-      lines.push("2. **Meta builder** will scan codebase and propose matching structure")
+      lines.push("2. **Supreme Coordinator** will scan codebase and propose matching structure")
     }
 
     if (hasAgentDirs) {

@@ -8,7 +8,7 @@
  * 1. Interactive prompts (scope, language, experience, governance)
  * 2. Brownfield scan (detect frameworks, tech, gaps)
  * 3. Scaffold .idumb/ directory + config.json
- * 4. Deploy meta-builder agent to .opencode/agents/
+ * 4. Deploy Supreme Coordinator agent to .opencode/agents/
  * 5. Deploy commands to .opencode/commands/
  * 6. Deploy module templates to .idumb/idumb-modules/
  * 7. Update opencode.json with plugin path
@@ -392,7 +392,7 @@ async function main(): Promise<void> {
   if (choices.language === "vi") {
     print(`  ${C.bold}Bước tiếp theo:${C.reset}`)
     print(`  ${C.cyan}1.${C.reset} Khởi động OpenCode: ${C.bold}opencode${C.reset}`)
-    print(`  ${C.cyan}2.${C.reset} Chuyển sang Meta Builder agent (nhấn ${C.bold}Tab${C.reset})`)
+    print(`  ${C.cyan}2.${C.reset} Chuyển sang Supreme Coordinator agent (nhấn ${C.bold}Tab${C.reset})`)
     print(`  ${C.cyan}3.${C.reset} Hoặc chạy: ${C.bold}/idumb-init${C.reset}`)
     print("")
     print(`  ${C.dim}Plugin path: ${deployResult.pluginPath}${C.reset}`)
@@ -406,7 +406,7 @@ async function main(): Promise<void> {
   } else {
     print(`  ${C.bold}Next steps:${C.reset}`)
     print(`  ${C.cyan}1.${C.reset} Start OpenCode: ${C.bold}opencode${C.reset}`)
-    print(`  ${C.cyan}2.${C.reset} Switch to the Meta Builder agent (press ${C.bold}Tab${C.reset})`)
+    print(`  ${C.cyan}2.${C.reset} Switch to the Supreme Coordinator agent (press ${C.bold}Tab${C.reset})`)
     print(`  ${C.cyan}3.${C.reset} Or run: ${C.bold}/idumb-init${C.reset}`)
     print("")
     print(`  ${C.dim}Plugin path: ${deployResult.pluginPath}${C.reset}`)

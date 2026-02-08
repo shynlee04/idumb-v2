@@ -1,11 +1,11 @@
 /**
  * Agent Profile Schema — defines the contract for all iDumb-created agents.
  * 
- * This is a REFERENCE schema used by the meta-builder when generating
+ * This is a REFERENCE schema used by the CLI deployer when generating
  * agent profiles. It is NOT runtime-validated with Zod — it's a plain
  * TypeScript interface that documents the structure.
- * 
- * Consumers: meta-builder (reads this to know what to generate)
+ *
+ * Consumers: CLI deployer (reads this to know what to generate)
  */
 
 /** Agent roles in the iDumb governance hierarchy */
@@ -22,7 +22,7 @@ export type PermissionLevel = "full" | "write" | "read-validate" | "read-only"
 /** Tool categories for permission mapping */
 export type ToolCategory = "read" | "write" | "execute" | "delegate" | "validate"
 
-/** An agent profile — what the meta-builder generates */
+/** An agent profile — what the CLI deployer generates */
 export interface AgentProfile {
   id: string
   name: string

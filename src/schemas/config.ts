@@ -6,7 +6,7 @@
  * Responsibility: Define installation config structure, governance modes,
  * language preferences, and experience levels.
  * 
- * Consumers: init tool (creates), meta-builder (reads), all hooks (reference)
+ * Consumers: init tool (creates), supreme coordinator (reads), all hooks (reference)
  */
 
 // ─── Enums ───────────────────────────────────────────────────────────

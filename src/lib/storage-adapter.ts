@@ -6,6 +6,11 @@
  * without changing any consumer code.
  */
 
+/**
+ * STATUS: Feature-flagged. Storage adapter interface for SQLite backend.
+ * Not active by default. See sqlite-adapter.ts for implementation.
+ */
+
 import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
 import type { DelegationStore } from "../schemas/delegation.js"
 import type { Anchor } from "../schemas/anchor.js"

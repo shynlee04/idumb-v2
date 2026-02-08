@@ -8,6 +8,11 @@
  * Tables: sessions, anchors, task_store (JSON blob), delegation_store (JSON blob), schema_version
  */
 
+/**
+ * STATUS: Feature-flagged. Activate via `{ sqlite: true }` in stateManager.init().
+ * Not active by default. JSON file backend is the default persistence layer.
+ */
+
 import Database from "better-sqlite3"
 import type { Database as DatabaseType } from "better-sqlite3"
 import { join } from "node:path"

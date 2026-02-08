@@ -12,7 +12,7 @@
  * 5. Potential conflicts with .idumb/
  * 6. Gaps and drift signals
  * 
- * Consumers: init tool (first run), meta-builder greeting
+ * Consumers: init tool (first run), supreme coordinator greeting
  */
 
 import { readFile, stat } from "node:fs/promises"

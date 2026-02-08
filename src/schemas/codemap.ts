@@ -11,6 +11,12 @@
  * - Dependency graph (who imports whom)
  */
 
+/**
+ * STATUS: Schema-only. Not wired into runtime hooks or tools.
+ * These schemas define CodeMapStore for symbol extraction.
+ * Planned for future integration when code mapping is implemented.
+ */
+
 // ─── Code Item Types ────────────────────────────────────────────────
 
 export type CodeItemType =

@@ -168,9 +168,9 @@ export function createEmptyStore(): TaskStore {
 /**
  * Creates a pre-provisioned task store for first-time init.
  * 
- * The meta-builder needs write access from its very first session,
+ * Agents need write access from their very first session,
  * but tool-gate blocks writes without an active task. This creates
- * a bootstrap epic+task that's already active, so the meta-builder
+ * a bootstrap epic+task that's already active, so agents
  * can write immediately without needing to call govern_task first.
  * 
  * Used by: deploy.ts (written to .idumb/brain/tasks.json during init)
@@ -184,7 +184,7 @@ export function createBootstrapStore(): TaskStore {
         activeEpicId: epicId,
         epics: [{
             id: epicId,
-            name: "Meta Builder Initialization",
+            name: "Bootstrap Initialization",
             status: "active",
             category: "governance" as WorkStreamCategory,
             governanceLevel: "strict" as GovernanceLevel,

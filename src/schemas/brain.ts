@@ -11,6 +11,12 @@
  * - Typed: entries are classified for intelligent retrieval
  */
 
+/**
+ * STATUS: Schema-only. Not wired into runtime hooks or tools.
+ * These schemas define BrainEntry and BrainStore for knowledge persistence.
+ * Planned for future integration when brain entry lifecycle is implemented.
+ */
+
 // ─── Brain Entry Types ──────────────────────────────────────────────
 
 export type BrainEntryType =
