@@ -736,6 +736,15 @@ ${langNote}
 /**
  * Executor agent — deployed to .opencode/agents/idumb-executor.md
  * Ready-to-use agent file with full frontmatter + body.
+ *
+ * TWO-TRACK PERMISSION MODEL (DRIFT-03 documentation):
+ * - Innate `edit: true` in frontmatter gives the executor direct file editing.
+ *   This bypasses plugin governance but is still gated by the tool-gate hook
+ *   which blocks write/edit without an active task.
+ * - Plugin tools (govern_shell, govern_task) provide governed execution with
+ *   purpose-based gating and checkpoint auto-recording.
+ * - Net effect: executor CAN use innate edit, but ONLY when a task is active.
+ *   The tool-gate hook enforces this regardless of frontmatter permissions.
  */
 export function getExecutorAgent(config: {
   language: Language
@@ -1099,7 +1108,7 @@ This ensures every step goes through the delegation + validation loop.
 export const DELEGATION_SKILL_TEMPLATE = `# Delegation Protocol
 
 Reference protocol for structured task delegation between iDumb agents.
-All agents are pre-deployed by \`idumb-v2 init\`. The meta-builder references this
+All agents are pre-deployed by \`idumb-v2 init\`. The coordinator references this
 protocol when coordinating delegation and embeds the relevant rules in task handoffs.
 
 ## Key Insight
@@ -1119,15 +1128,12 @@ flows through agent profiles + this protocol + disk-persisted delegation records
 
 | Your Role | Delegate To | When |
 |-----------|------------|------|
-| \`meta-builder\` | \`supreme-coordinator\`, \`planner\` | Complex work requiring decomposition, planning |
-| \`supreme-coordinator\` | \`builder\`, \`validator\`, \`skills-creator\`, \`research-synthesizer\` | Implementation, validation, skills, research |
-| \`builder\` | \`validator\` | Post-implementation validation |
-| \`planner\` | \`research-synthesizer\` | Research needed for planning |
+| \`supreme-coordinator\` | \`investigator\`, \`executor\` | Research/analysis or implementation |
 
-**NEVER delegate:**
+**NEVER delegate:** Investigator and executor cannot sub-delegate in the 3-agent model.
 - To yourself
-- Upward (builder → coordinator, coordinator → meta-builder)
-- Beyond depth 3 (meta-builder → coordinator → builder → validator STOP)
+- Upward (executor → coordinator)
+- Beyond depth 1 (coordinator → investigator/executor STOP)
 - Cross-category without coordinator approval
 
 ---
@@ -1137,9 +1143,9 @@ flows through agent profiles + this protocol + disk-persisted delegation records
 ### Step 1: Create the Delegation
 
 \`\`\`
-idumb_task action=delegate
+govern_delegate action=assign
   task_id=task-123
-  to_agent="idumb-builder"
+  to_agent="idumb-executor"
   context="Implement the login form component with email validation..."
   expected_output="Working LoginForm component with unit tests"
 \`\`\`
@@ -1153,7 +1159,7 @@ The tool returns a structured delegation instruction. Pass it verbatim to the ta
 The delegate completes with evidence:
 
 \\\`\\\`\\\`
-idumb_task action=complete target_id=task-123 evidence="LoginForm implemented, 8/8 tests passing"
+govern_task action=complete target_id=task-123 evidence="LoginForm implemented, 8/8 tests passing"
 \\\`\\\`\\\`
 
 ---
@@ -1207,12 +1213,12 @@ result:
 
 | Category | Allowed Agents | Reason |
 |----------|---------------|--------|
-| \\\`development\\\` | builder | Write + bash permissions needed |
-| \\\`research\\\` | meta-builder, skills-creator | Read access and synthesis |
-| \\\`governance\\\` | validator, coordinator | Validation authority |
-| \\\`maintenance\\\` | builder, validator | Write + validation |
-| \\\`spec-kit\\\` | meta-builder, skills-creator | Structured output generation |
-| \\\`ad-hoc\\\` | any agent | Minimal routing constraints |
+| \\\`development\\\` | executor | Write + bash permissions needed |
+| \\\`research\\\` | investigator | Read access and synthesis |
+| \\\`governance\\\` | coordinator | Governance authority |
+| \\\`planning\\\` | investigator | Read + brain write |
+| \\\`documentation\\\` | investigator | Analysis and brain entries |
+| \\\`ad-hoc\\\` | executor, investigator | Minimal routing constraints |
 
 ---
 
@@ -1221,17 +1227,14 @@ result:
 ### Hierarchy Levels
 
 \`\`\`
-Level 0: idumb-meta-builder (pure orchestrator — creates tasks, delegates, tracks status)
-Level 1: idumb-supreme-coordinator, idumb-planner (decompose + route + plan)
-Level 2: idumb-builder, idumb-validator, idumb-skills-creator, idumb-research-synthesizer (execute)
+Level 0: idumb-supreme-coordinator (pure orchestrator — creates plans, delegates, tracks status)
+Level 1: idumb-investigator, idumb-executor (research + implementation — leaf nodes)
 \`\`\`
 
 ### Depth Limits
 
-- Depth 0 → 1: meta-builder delegates to coordinator/planner ✅
-- Depth 1 → 2: coordinator delegates to builder/validator/skills/researcher ✅
-- Depth 2 → 3: builder delegates to validator ✅ (MAX)
-- Depth 3 → ❌: BLOCKED
+- Depth 0 → 1: coordinator delegates to investigator/executor ✅ (MAX)
+- Depth 1 → ❌: BLOCKED (no sub-delegation in 3-agent model)
 
 ### Conflict Resolution
 
@@ -1242,23 +1245,23 @@ Level 2: idumb-builder, idumb-validator, idumb-skills-creator, idumb-research-sy
 
 ## Quick Reference
 
-### For Delegators
+### For Delegators (Coordinator)
 
-1. Identify the right agent for the task category
+1. Identify the right agent for the task category (investigator or executor)
 2. Provide clear context with file paths and constraints
 3. Define specific expected output and acceptance criteria
-4. Use \\\`idumb_task action=delegate\\\` with all required args
+4. Use \\\`govern_delegate action=assign\\\` with all required args
 5. Pass the handoff instruction to \\\`@target-agent\\\`
-6. Monitor delegation status via \\\`idumb_task action=status\\\`
+6. Monitor delegation status via \\\`govern_task action=status\\\`
 
-### For Delegates
+### For Delegates (Investigator / Executor)
 
 1. Read the full delegation instruction
 2. Verify you have the required permissions
 3. Work within allowed tools and actions
-4. Complete with evidence via \\\`idumb_task action=complete\\\`
+4. Complete with evidence via \\\`govern_task action=complete\\\`
 5. Include filesModified, testsRun in your evidence
-6. Do NOT delegate beyond your remaining depth
+6. Do NOT sub-delegate (leaf nodes in the 3-agent model)
 `
 
 /**
@@ -1286,7 +1289,7 @@ the authoritative reference for governance rules and agent behavior.
 
 Before ANY action:
 
-1. Run \\\`idumb_task action=status\\\` — see full governance state
+1. Run \\\`govern_task action=status\\\` — see full governance state
 2. Check current active epic/task
 3. Identify stale tasks (>4h active with no subtask progress)
 4. Anchor decisions that must survive compaction via \\\`idumb_anchor\\\`
@@ -1296,79 +1299,66 @@ Before ANY action:
 Every completion must include evidence:
 
 \\\`\\\`\\\`
-idumb_task action=complete target_id=<id> evidence="<proof of work>"
+govern_task action=complete target_id=<id> evidence="<proof of work>"
 \\\`\\\`\\\`
 
 ---
 
-## Agent Hierarchy
+## Agent Hierarchy (3-Agent Model)
 
-### Level 0: Meta Builder (Pure Orchestrator)
-
-**Agent:** \\\`@idumb-meta-builder\\\`
-**Role:** Creates tasks, delegates to specialists, tracks status
-- NEVER write files — delegates to builder
-- NEVER run bash — delegates to builder/validator
-- NEVER research — delegates to researcher
-- Creates epics, tracks all task status
-- Uses \\\`idumb_read\\\` for entity inspection, \\\`idumb_task\\\` for governance
-
-### Level 1: Supreme Coordinator (Delegation Router)
+### Level 0: Supreme Coordinator (Pure Orchestrator)
 
 **Agent:** \\\`@idumb-supreme-coordinator\\\`
-**Role:** Decomposes complex work, routes to specialists
-- NEVER execute code directly
-- NEVER write files directly
-- Decomposes tasks and delegates to Level 2 agents
-- Uses \\\`idumb_read\\\` for entity state, \\\`idumb_task\\\` for delegation
+**Role:** Plans via \\\`govern_plan\\\`, delegates via \\\`govern_delegate\\\`, tracks status
+- NEVER write files — delegates to executor
+- NEVER run bash — delegates to executor
+- NEVER research directly — delegates to investigator
+- Creates epics, tracks all task status
+- Uses innate \\\`read\\\`/\\\`grep\\\` for inspection, \\\`govern_task\\\` for governance
 
-### Level 2: Execution Agents
+### Level 1: Leaf Agents (No Sub-Delegation)
 
-**Builder** (\\\`@idumb-builder\\\`): File creation via \\\`idumb_write\\\`, builds via \\\`idumb_bash\\\`, editing via innate \\\`edit\\\`
-**Validator** (\\\`@idumb-validator\\\`): Tests via \\\`idumb_bash purpose=validation\\\`, entity chain checks via \\\`idumb_read\\\`
-**Skills Creator** (\\\`@idumb-skills-creator\\\`): Skill discovery via \\\`idumb_bash\\\` + \\\`idumb_webfetch\\\`, creation via \\\`idumb_write\\\`
-**Research Synthesizer** (\\\`@idumb-research-synthesizer\\\`): Research via \\\`idumb_webfetch\\\`, brain entries via \\\`idumb_write\\\`
-**Planner** (\\\`@idumb-planner\\\`): Plans via \\\`idumb_read\\\` + \\\`idumb_write\\\`
+**Investigator** (\\\`@idumb-investigator\\\`): Research via innate \\\`read\\\`/\\\`grep\\\`, brain entries via anchors
+**Executor** (\\\`@idumb-executor\\\`): Code via innate \\\`edit\\\`, builds/tests via \\\`govern_shell\\\`, task lifecycle via \\\`govern_task\\\`
 
 ---
 
 ## Tool Reference
 
-### Plugin A Tools (Governance + Intelligence)
+### Governance Tools
 
 | Tool | Purpose | Key Actions |
 |------|---------|-------------|
-| \\\`idumb_task\\\` | Task hierarchy CRUD + governance | create_epic, create_task, add_subtask, assign, start, complete, defer, abandon, **delegate**, status, list |
+| \\\`govern_task\\\` | Task hierarchy CRUD + lifecycle | create_epic, create_task, add_subtask, start, complete, defer, abandon, status, list |
+| \\\`govern_delegate\\\` | Agent-to-agent delegation | assign, status, recall |
+| \\\`govern_plan\\\` | Plan creation and tracking | create, update, status |
+| \\\`govern_shell\\\` | Purpose-gated command execution | build, test, validation, git |
 | \\\`idumb_anchor\\\` | Context anchoring for compaction survival | create, list, prune |
-| \\\`idumb_scan\\\` | Project scanning and discovery | scan, status |
-| \\\`idumb_codemap\\\` | Code structure mapping | map, query, todos |
-| \\\`idumb_init\\\` | First-run initialization | init |
 
-### Plugin B Tools (Entity-Aware Operations)
+### Innate Tools (Preferred for Direct Work)
 
 | Tool | Purpose | Who Uses |
 |------|---------|----------|
-| \\\`idumb_read\\\` | Entity-aware file reading with classification | ALL agents |
-| \\\`idumb_write\\\` | Schema-regulated artifact writing with backup | builder, skills-creator, researcher, planner |
-| \\\`idumb_bash\\\` | Purpose-restricted command execution with evidence | builder, validator, skills-creator |
-| \\\`idumb_webfetch\\\` | Research ingestion with classification + caching | skills-creator, researcher, planner |
+| \\\`read\\\` | Direct file reading (faster than plugin) | ALL agents |
+| \\\`grep\\\` / \\\`glob\\\` | Code search and file discovery | ALL agents |
+| \\\`edit\\\` | Direct file editing (gated by tool-gate hook) | executor only |
 
 ### Task Workflow
 
 \\\`\\\`\\\`
-1. idumb_task action=create_epic name="Feature" category="development"
-2. idumb_task action=create_task name="Implementation step"
-3. idumb_task action=start task_id=<id>
+1. govern_task action=create_epic name="Feature" category="development"
+2. govern_task action=create_task name="Implementation step"
+3. govern_task action=start task_id=<id>
 4. [do work, add subtasks as you go]
-5. idumb_task action=complete target_id=<id> evidence="proof"
+5. govern_task action=complete target_id=<id> evidence="proof"
 \\\`\\\`\\\`
 
 ### Delegation Workflow
 
 \\\`\\\`\\\`
-1. idumb_task action=delegate task_id=<id> to_agent="idumb-builder" context="..." expected_output="..."
+1. govern_delegate action=assign task_id=<id> to_agent="idumb-executor" context="..." expected_output="..."
 2. Pass the handoff instruction to @target-agent
-3. Delegate completes: idumb_task action=complete target_id=<id> evidence="..."
+3. Delegate completes: govern_task action=complete target_id=<id> evidence="..."
 \\\`\\\`\\\`
 
 ---
@@ -1377,12 +1367,12 @@ idumb_task action=complete target_id=<id> evidence="<proof of work>"
 
 | Category | Governance | Required Artifacts | Delegatable To |
 |----------|-----------|-------------------|----------------|
-| \\\`development\\\` | balanced | impl plan + tests + code review | builder |
-| \\\`research\\\` | minimal | research doc + synthesis + evidence | meta-builder, skills-creator |
-| \\\`governance\\\` | strict | spec + validation + deployment | validator, coordinator |
-| \\\`maintenance\\\` | balanced | before/after evidence | builder, validator |
-| \\\`spec-kit\\\` | balanced | API contract + schema defs | meta-builder, skills-creator |
-| \\\`ad-hoc\\\` | minimal | just evidence | any agent |
+| \\\`development\\\` | balanced | impl plan + tests + code review | executor |
+| \\\`research\\\` | minimal | research doc + synthesis + evidence | investigator |
+| \\\`governance\\\` | strict | spec + validation + deployment | coordinator |
+| \\\`planning\\\` | balanced | plan document + dependencies | investigator |
+| \\\`documentation\\\` | minimal | analysis + brain entries | investigator |
+| \\\`ad-hoc\\\` | minimal | just evidence | executor, investigator |
 
 ---
 
@@ -1433,22 +1423,22 @@ Create anchors for:
 
 ## Best Practices
 
-### For Coordinators
+### For Coordinator
 1. Always check status before delegating
 2. Provide full context in delegation
 3. Synthesize results before reporting
 4. Anchor significant outcomes
 
-### For Validators
+### For Investigator
 1. Never assume — verify everything
-2. Return structured evidence
-3. Be specific about failures
-4. Include timestamps
+2. Return structured research with evidence
+3. Be specific about findings and gaps
+4. Write brain entries for context preservation
 
-### For Builders
+### For Executor
 1. Report all file changes
 2. Complete subtasks incrementally
-3. Return evidence with file lists
+3. Return evidence with file lists and test results
 4. Stay within allowed tools/actions
 
 ### For All Agents
@@ -1456,7 +1446,7 @@ Create anchors for:
 2. Evidence-based conclusions only
 3. Anchor critical discoveries
 4. Respect the hierarchy
-5. Use \\\`idumb_task\\\` for ALL task operations
+5. Use \\\`govern_task\\\` for ALL task operations
 `
 
 
@@ -1491,17 +1481,14 @@ Delegate a task to the appropriate sub-agent with full context tracking.
 
 ## Available Targets
 
-- \`idumb-builder\` — code implementation, file writes, test execution
-- \`idumb-validator\` — validation, compliance checks, evidence review
-- \`idumb-skills-creator\` — skill discovery, installation, custom skill creation
-- \`idumb-research-synthesizer\` — web research, documentation analysis, brain entries
-- \`idumb-planner\` — implementation plans, strategy documents
+- \`idumb-investigator\` — research, analysis, planning, brain entries
+- \`idumb-executor\` — code implementation, file writes, builds, tests, validation
 
 ## Rules
 
-- Only the coordinator and meta-builder can delegate
-- Delegation depth max = 3
-- Category routing is enforced (development → builder, research → researcher, governance → validator)
+- Only the coordinator can delegate
+- Delegation depth max = 1 (coordinator → investigator/executor STOP)
+- Category routing is enforced (development → executor, research → investigator, governance → coordinator)
 - Delegations expire after 30 minutes if not accepted
 
 $ARGUMENTS

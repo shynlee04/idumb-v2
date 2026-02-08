@@ -112,14 +112,17 @@ v2/
 │       └── shared/
 │           └── types.ts            # Shared types between frontend and backend
 ├── tests/
-│   ├── tool-gate.test.ts           # 16 assertions — all pass ✅
+│   ├── tool-gate.test.ts           # 82 assertions — all pass ✅
 │   ├── compaction.test.ts          # 16 assertions — all pass ✅
 │   ├── message-transform.test.ts   # 13 assertions — all pass ✅
+│   ├── system.test.ts              # 34 assertions — all pass ✅
 │   ├── init.test.ts                # 60 assertions — all pass ✅
-│   ├── persistence.test.ts         # 45 assertions — all pass ✅
+│   ├── persistence.test.ts         # 91 assertions — all pass ✅
 │   ├── task.test.ts                # 54 assertions — all pass ✅
 │   ├── delegation.test.ts          # 38 assertions — all pass ✅
 │   ├── planning-registry.test.ts   # 52 assertions — all pass ✅
+│   ├── work-plan.test.ts           # 56 assertions — all pass ✅
+│   ├── task-graph.test.ts          # 96 assertions — all pass ✅
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
 ├── planning/
 │   └── implamentation-plan-turn-based/   # Turn-based plan chain (n3→n4→n5→n6)
@@ -133,7 +136,7 @@ v2/
 ```
 
 **Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **294/294** assertions across **8** test files  
+**Test baseline:** `npm test` → **592/592** assertions across **11** test files
 **TypeScript:** `tsc --noEmit` clean, zero errors  
 **Files above 500 LOC (⚠️):** `templates.ts` (1510), `tools/write.ts` (1174 ⚠️⚠️), `tools/task.ts` (826), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (701), `tools/read.ts` (568), `dashboard/backend/server.ts` (563), `lib/entity-resolver.ts` (545), `schemas/task.ts` (530), `tools/codemap.ts` (521)
 
@@ -227,7 +230,7 @@ Reference profiles deployed to `.idumb/idumb-modules/agents/` as documentation.
 | Item | Reality |
 |---|---|
 | Live hook verification | **Not yet tested.** Never installed in real OpenCode. |
-| `experimental.chat.system.transform` | **Unverified.** Registered but not confirmed firing. |
+| `experimental.chat.system.transform` | **Unit-tested.** Config-aware injection with framework overlay + mode context. Not yet confirmed firing in live OpenCode. |
 | `experimental.chat.messages.transform` | **Unverified.** SDK input is `{}` (empty!). |
 | `chat.params` hook | **REGISTERED.** Captures `agent` field. Auto-assigns to active task. |
 | `chat.message` hook | **NOT REGISTERED.** Available with optional `agent?` field. |
@@ -258,7 +261,7 @@ Reference profiles deployed to `.idumb/idumb-modules/agents/` as documentation.
 | `tool.execute.before` | **VALIDATED** | Blocks write/edit without active task |
 | `tool.execute.after` | **VALIDATED** | Defense-in-depth replacement |
 | `experimental.session.compacting` | Unit-tested | Injects anchors + active task |
-| `experimental.chat.system.transform` | **UNVERIFIED** | Governance directive injection |
+| `experimental.chat.system.transform` | **Unit-tested** | Config-aware governance context injection (framework overlay, mode context, budget-capped) |
 | `experimental.chat.messages.transform` | **UNVERIFIED** | Prunes old tool outputs |
 | `chat.params` | **REGISTERED** | Captures agent name, auto-assigns |
 
@@ -375,7 +378,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 8 test files via tsx (294 assertions)
+npm test             # 11 test files via tsx (592 assertions)
 ```
 
 ---

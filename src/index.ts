@@ -68,7 +68,7 @@ const idumb: Plugin = async ({ directory }) => {
   const toolGateBefore = createToolGateBefore(log)
   const toolGateAfter = createToolGateAfter(log)
   const compactionHook = createCompactionHook(log)
-  const systemHook = createSystemHook(log)
+  const systemHook = createSystemHook(log, directory)
   const messageTransformHook = createMessageTransformHook(log)
 
   return {

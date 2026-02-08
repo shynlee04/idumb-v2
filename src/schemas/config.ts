@@ -41,6 +41,9 @@ export type ExperienceLevel = "beginner" | "guided" | "expert"
  */
 export type GovernanceMode = "balanced" | "strict" | "autonomous" | "retard"
 
+/** Dashboard service state — set at init (Q6), changeable via /idumb-settings */
+export type DashboardMode = "enabled" | "disabled" | "deferred"
+
 // ─── Detected Frameworks ─────────────────────────────────────────────
 
 /** Known governance/methodology frameworks we detect */
@@ -120,6 +123,10 @@ export interface IdumbConfig {
 
   detection: FrameworkDetection   // snapshot of what init found
 
+  services: {
+    dashboard: DashboardMode      // "enabled" | "disabled" | "deferred" — set at init Q6
+  }
+
   paths: {
     root: string                  // ".idumb/"
     config: string                // ".idumb/config.json"
@@ -169,6 +176,7 @@ export function createConfig(overrides: {
   communicationLanguage?: Language
   documentsLanguage?: Language
   governanceMode?: GovernanceMode
+  dashboard?: DashboardMode
   detection?: FrameworkDetection
 }): IdumbConfig {
   return {
@@ -187,6 +195,9 @@ export function createConfig(overrides: {
       personality: overrides.governanceMode === "retard" ? "savage" : "professional",
     },
     detection: overrides.detection ?? DEFAULT_DETECTION,
+    services: {
+      dashboard: overrides.dashboard ?? "disabled",
+    },
     paths: { ...DEFAULT_PATHS },
   }
 }

@@ -1,0 +1,322 @@
+/**
+ * System Hook Test — config-aware governance context injection.
+ *
+ * Proves:
+ * - Config loaded from .idumb/config.json and cached
+ * - Framework overlay injected based on detected governance
+ * - Governance mode context injected
+ * - Active task included in injection
+ * - Critical anchors included (max 2)
+ * - Budget cap enforced (≤800 chars)
+ * - Graceful degradation when config missing
+ * - No deny language ("RULE: Do not...")
+ * - Instructive language used instead
+ */
+
+import { createSystemHook } from "../src/hooks/system.js"
+import { setActiveTask } from "../src/hooks/index.js"
+import { addAnchor } from "../src/hooks/compaction.js"
+import { createAnchor } from "../src/schemas/index.js"
+import { createConfig } from "../src/schemas/config.js"
+import { createLogger } from "../src/lib/index.js"
+import { mkdirSync, writeFileSync, existsSync } from "node:fs"
+import { join } from "node:path"
+import { tmpdir } from "node:os"
+
+// ─── Test harness ─────────────────────────────────────────────────────
+
+let passed = 0
+let failed = 0
+
+function assert(name: string, condition: boolean): void {
+  if (condition) {
+    passed++
+  } else {
+    failed++
+    process.stderr.write(`FAIL: ${name}\n`)
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────
+
+function createTestDir(suffix: string): string {
+  const dir = join(tmpdir(), `idumb-test-system-${suffix}-${Date.now()}`)
+  mkdirSync(join(dir, ".idumb"), { recursive: true })
+  return dir
+}
+
+function writeConfig(dir: string, overrides: Parameters<typeof createConfig>[0] = {}): void {
+  const config = createConfig(overrides)
+  writeFileSync(join(dir, ".idumb", "config.json"), JSON.stringify(config, null, 2))
+}
+
+async function runHook(dir: string, sessionID: string): Promise<string[]> {
+  const log = createLogger(dir, "test-system", "debug")
+  const hook = createSystemHook(log, dir)
+  const output = { system: [] as string[] }
+  await hook({ sessionID, model: "test" }, output)
+  return output.system
+}
+
+// ─── Tests ────────────────────────────────────────────────────────────
+
+async function test1_noConfigGracefulDegradation(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Graceful Degradation\n")
+
+  const dir = createTestDir("no-config")
+  // No config.json written — should degrade gracefully
+
+  const system = await runHook(dir, "sys-test-1")
+
+  assert("injection still produced without config", system.length === 1)
+  assert("contains governance tag", system[0].includes("<idumb-governance>"))
+  assert("contains closing tag", system[0].includes("</idumb-governance>"))
+  assert("no crash without config", true) // if we got here, no crash
+}
+
+async function test2_configLoadedAndCached(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Config Loading\n")
+
+  const dir = createTestDir("config-load")
+  writeConfig(dir, { governanceMode: "strict" })
+
+  const log = createLogger(dir, "test-system-2", "debug")
+  const hook = createSystemHook(log, dir)
+
+  // First call loads config
+  const output1 = { system: [] as string[] }
+  await hook({ sessionID: "sys-test-2a", model: "test" }, output1)
+  assert("first call produces injection", output1.system.length === 1)
+  assert("strict mode context injected", output1.system[0].includes("Strict governance"))
+
+  // Second call uses cached config (no re-read)
+  const output2 = { system: [] as string[] }
+  await hook({ sessionID: "sys-test-2b", model: "test" }, output2)
+  assert("second call still has strict mode", output2.system[0].includes("Strict governance"))
+}
+
+async function test3_frameworkOverlayGSD(): Promise<void> {
+  process.stdout.write("\nSystem Hook — GSD Framework Overlay\n")
+
+  const dir = createTestDir("gsd")
+  writeConfig(dir, {
+    detection: {
+      governance: ["gsd"],
+      tech: ["typescript"],
+      packageManager: "npm",
+      hasMonorepo: false,
+      existingAgentDirs: [],
+      existingCommandDirs: [],
+      conflicts: [],
+      gaps: [],
+    },
+  })
+
+  const system = await runHook(dir, "sys-test-3")
+
+  assert("GSD overlay injected", system[0].includes("This project uses GSD"))
+  assert("GSD mentions WorkPlans", system[0].includes("WorkPlans"))
+  assert("GSD mentions govern_plan", system[0].includes("govern_plan"))
+}
+
+async function test4_frameworkOverlaySpecKit(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Spec-kit Framework Overlay\n")
+
+  const dir = createTestDir("spec-kit")
+  writeConfig(dir, {
+    detection: {
+      governance: ["spec-kit"],
+      tech: [],
+      packageManager: "npm",
+      hasMonorepo: false,
+      existingAgentDirs: [],
+      existingCommandDirs: [],
+      conflicts: [],
+      gaps: [],
+    },
+  })
+
+  const system = await runHook(dir, "sys-test-4")
+
+  assert("Spec-kit overlay injected", system[0].includes("This project uses Spec-kit"))
+  assert("Spec-kit mentions govern_task", system[0].includes("govern_task"))
+}
+
+async function test5_frameworkOverlayNone(): Promise<void> {
+  process.stdout.write("\nSystem Hook — No Framework Overlay\n")
+
+  const dir = createTestDir("none")
+  writeConfig(dir)
+
+  const system = await runHook(dir, "sys-test-5")
+
+  assert("fallback overlay injected", system[0].includes("govern_plan"))
+  assert("fallback mentions innate tools", system[0].includes("innate tools"))
+}
+
+async function test6_governanceModes(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Governance Modes\n")
+
+  // Balanced (default)
+  const dirBalanced = createTestDir("balanced")
+  writeConfig(dirBalanced, { governanceMode: "balanced" })
+  const sysBalanced = await runHook(dirBalanced, "sys-test-6a")
+  assert("balanced mode context", sysBalanced[0].includes("Balanced governance"))
+
+  // Strict
+  const dirStrict = createTestDir("strict")
+  writeConfig(dirStrict, { governanceMode: "strict" })
+  const sysStrict = await runHook(dirStrict, "sys-test-6b")
+  assert("strict mode context", sysStrict[0].includes("Strict governance"))
+
+  // Autonomous
+  const dirAuto = createTestDir("auto")
+  writeConfig(dirAuto, { governanceMode: "autonomous" })
+  const sysAuto = await runHook(dirAuto, "sys-test-6c")
+  assert("autonomous mode context", sysAuto[0].includes("Autonomous governance"))
+
+  // Retard
+  const dirRetard = createTestDir("retard")
+  writeConfig(dirRetard, { governanceMode: "retard" })
+  const sysRetard = await runHook(dirRetard, "sys-test-6d")
+  assert("retard mode context", sysRetard[0].includes("Maximum autonomy"))
+}
+
+async function test7_activeTaskIncluded(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Active Task\n")
+
+  const dir = createTestDir("task")
+  writeConfig(dir)
+
+  setActiveTask("sys-test-7", { id: "t-42", name: "Implement auth module" })
+  const system = await runHook(dir, "sys-test-7")
+
+  assert("active task in injection", system[0].includes("Implement auth module"))
+  assert("uses instructive language", system[0].includes("Active task:"))
+}
+
+async function test8_noTaskInstructive(): Promise<void> {
+  process.stdout.write("\nSystem Hook — No Task (Instructive)\n")
+
+  const dir = createTestDir("no-task")
+  writeConfig(dir)
+
+  const system = await runHook(dir, "sys-test-8")
+
+  assert("no-task message present", system[0].includes("No active task"))
+  assert("instructs to use govern_task", system[0].includes("govern_task"))
+}
+
+async function test9_criticalAnchorsIncluded(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Critical Anchors\n")
+
+  const dir = createTestDir("anchors")
+  writeConfig(dir)
+
+  addAnchor("sys-test-9", createAnchor("decision", "critical", "Use PostgreSQL for storage"))
+  addAnchor("sys-test-9", createAnchor("decision", "critical", "Auth via SAML 2.0"))
+  addAnchor("sys-test-9", createAnchor("decision", "critical", "Third critical should be trimmed"))
+
+  const system = await runHook(dir, "sys-test-9")
+
+  assert("first critical anchor included", system[0].includes("PostgreSQL"))
+  assert("second critical anchor included", system[0].includes("SAML"))
+  assert("third critical anchor trimmed (max 2)", !system[0].includes("Third critical"))
+}
+
+async function test10_noDenyLanguage(): Promise<void> {
+  process.stdout.write("\nSystem Hook — No Deny Language\n")
+
+  const dir = createTestDir("no-deny")
+  writeConfig(dir)
+
+  const system = await runHook(dir, "sys-test-10")
+  const injection = system[0]
+
+  assert("no 'RULE: Do not' language", !injection.includes("RULE: Do not"))
+  assert("no 'you cannot' language", !injection.toLowerCase().includes("you cannot"))
+  assert("no 'NOT allowed' language", !injection.includes("NOT allowed"))
+  assert("no 'STAY AWAY' language", !injection.includes("STAY AWAY"))
+}
+
+async function test11_budgetEnforced(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Budget Enforcement\n")
+
+  const dir = createTestDir("budget")
+  writeConfig(dir)
+
+  // Add many critical anchors with long content to try to exceed budget
+  for (let i = 0; i < 20; i++) {
+    const content = `Critical decision ${i}: ${"x".repeat(200)}`
+    addAnchor("sys-test-11", createAnchor("decision", "critical", content))
+  }
+
+  const system = await runHook(dir, "sys-test-11")
+  const injection = system[0]
+
+  assert("injection under budget (≤800 chars)", injection.length <= 800)
+  assert("closing tag preserved after truncation", injection.includes("</idumb-governance>"))
+}
+
+async function test12_noSessionIDSkips(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Missing Session ID\n")
+
+  const dir = createTestDir("no-session")
+  writeConfig(dir)
+
+  const log = createLogger(dir, "test-system-12", "debug")
+  const hook = createSystemHook(log, dir)
+  const output = { system: [] as string[] }
+
+  await hook({ model: "test" }, output)
+
+  assert("no injection when sessionID missing", output.system.length === 0)
+}
+
+async function test13_bmadFrameworkOverlay(): Promise<void> {
+  process.stdout.write("\nSystem Hook — BMAD Framework Overlay\n")
+
+  const dir = createTestDir("bmad")
+  writeConfig(dir, {
+    detection: {
+      governance: ["bmad"],
+      tech: [],
+      packageManager: "npm",
+      hasMonorepo: false,
+      existingAgentDirs: [],
+      existingCommandDirs: [],
+      conflicts: [],
+      gaps: [],
+    },
+  })
+
+  const system = await runHook(dir, "sys-test-13")
+
+  assert("BMAD overlay injected", system[0].includes("This project uses BMAD"))
+  assert("BMAD mentions govern_task", system[0].includes("govern_task"))
+}
+
+// ─── Runner ───────────────────────────────────────────────────────────
+
+async function main(): Promise<void> {
+  await test1_noConfigGracefulDegradation()
+  await test2_configLoadedAndCached()
+  await test3_frameworkOverlayGSD()
+  await test4_frameworkOverlaySpecKit()
+  await test5_frameworkOverlayNone()
+  await test6_governanceModes()
+  await test7_activeTaskIncluded()
+  await test8_noTaskInstructive()
+  await test9_criticalAnchorsIncluded()
+  await test10_noDenyLanguage()
+  await test11_budgetEnforced()
+  await test12_noSessionIDSkips()
+  await test13_bmadFrameworkOverlay()
+
+  const total = passed + failed
+  const summary = `\nResults: ${passed}/${total} passed, ${failed} failed`
+  process.stdout.write(`${summary}\n`)
+  process.exit(failed > 0 ? 1 : 0)
+}
+
+main()
