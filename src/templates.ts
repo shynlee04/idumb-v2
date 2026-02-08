@@ -319,7 +319,7 @@ After validation completes:
 | Agent | Mode | Role | Delegates To |
 |-------|------|------|-------------|
 | \`idumb-supreme-coordinator\` (you) | primary | Pure orchestrator, task creation, delegation, status tracking | investigator, executor |
-| \`idumb-investigator\` | subagent | Research, analyze, plan via innate read + webfetch | nobody (leaf node) |
+| \`idumb-investigator\` | subagent | Research, analyze, plan via innate read tools | nobody (leaf node) |
 | \`idumb-executor\` | subagent | Write code, run builds via innate write + govern_shell | nobody (leaf node) |
 
 **Delegation depth limit: 1** (coordinator → investigator/executor STOP)
@@ -499,7 +499,7 @@ The actual agent file is pre-deployed to \`.opencode/agents/\` by \`idumb-v2 ini
 
 \`\`\`yaml
 ---
-description: "iDumb Investigator — context gathering, research, analysis, planning. Uses innate read + webfetch for operations. Produces plans, brain entries, analysis reports."
+description: "iDumb Investigator — context gathering, research, analysis, planning. Uses innate read tools for operations. Produces plans, brain entries, analysis reports."
 mode: subagent
 tools:
   read: true
@@ -649,7 +649,7 @@ export function getInvestigatorAgent(config: {
     : "Communicate in English."
 
   return `---
-description: "iDumb Investigator — context gathering, research, analysis, planning. Uses innate read + webfetch for operations."
+description: "iDumb Investigator — context gathering, research, analysis, planning. Uses innate read tools for operations."
 mode: subagent
 tools:
   read: true
@@ -898,7 +898,7 @@ prompt: "./path/to/prompt.md"                     # optional — external prompt
 |------|-----------------|-----------|----------|---------------|-----------------|
 | meta | read + delegate | no (delegates) | no (delegates) | yes — all agents | read + governance tools only |
 | coordinator | read + delegate | no | no | yes — investigator/executor | read + governance tools only |
-| investigator | read + research + plan | yes (brain entries via write) | inspection only (bash) | no (leaf) | read + write + bash + webfetch |
+| investigator | read + research + plan | yes (brain entries via write) | inspection only (bash) | no (leaf) | read + governance tools only |
 | executor | read + write + build | yes (write) | yes (govern_shell) | no (leaf) | read + write + edit + govern_shell |
 
 **IMPORTANT:** Innate tools (read/write/bash/webfetch) are governed by the tool-gate hook and AGENT_TOOL_RULES.

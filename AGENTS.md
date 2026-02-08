@@ -89,6 +89,7 @@ v2/
 │   │   ├── work-plan.ts            # v3 work plan schema — WorkPlan lifecycle (291 LOC)
 │   │   ├── delegation.ts           # Delegation schema — 3-agent hierarchy + category routing (363 LOC)
 │   │   ├── planning-registry.ts    # Planning artifact registry — tiers, chains, sections, outliers (729 LOC ⚠️)
+│   │   ├── plan-state.ts           # Plan phase tracking — machine-readable MASTER-PLAN projection (138 LOC)
 │   │   ├── brain.ts                # Brain entry schema — knowledge persistence
 │   │   ├── project-map.ts          # Project map schema — directory/file mapping
 │   │   └── codemap.ts              # Code map schema — symbol extraction
@@ -123,16 +124,18 @@ v2/
 │   ├── planning-registry.test.ts   # 52 assertions — all pass ✅
 │   ├── work-plan.test.ts           # 56 assertions — all pass ✅
 │   ├── task-graph.test.ts          # 96 assertions — all pass ✅
+│   ├── plan-state.test.ts          # 40 assertions — all pass ✅
 │   ├── sqlite-adapter.test.ts      # SQLite adapter tests (standalone, not in npm test)
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
 ├── planning/
-│   └── implamentation-plan-turn-based/   # Turn-based plan chain (n3→n4→n5→n6)
+│   ├── implamentation-plan-turn-based/   # Turn-based plan chain (n3→n4→n5→n6)
+│   └── diagrams/                         # System architecture mind maps (vision reference)
 ├── docs/
 │   ├── plans/                            # Design documents (dated 2026-02-08)
 │   └── user-stories/                     # User story JSON artifacts
 ├── AGENTS.md                       # THIS FILE
 ├── CLAUDE.md                       # Claude-specific context
-├── STRATEGIC-PLANNING-PROMPT.md    # Planning SOT
+├── MASTER-PLAN.md                  # Planning SOT (Phases 1-10)
 ├── CHANGELOG.md
 ├── README.md
 ├── package.json
@@ -140,7 +143,7 @@ v2/
 ```
 
 **Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **657/657** assertions across **12** test files
+**Test baseline:** `npm test` → **658/658** assertions across **12** test files
 **TypeScript:** `tsc --noEmit` clean, zero errors  
 **Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `schemas/task.ts` (530)
 
