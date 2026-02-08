@@ -145,6 +145,40 @@
   - Critical path to Phase 9: Wave 1 → Wave 2 (docs) → Wave 3 (tests) → Wave 4 (SDK+brain index)
   - Dashboard (Wave 5) and git/npm (Wave 5) are optional — not on Phase 9 critical path
 
+### Session 8 — Wave 1: Foundation (Groups 06+08+09) (2026-02-09)
+- **Task**: Execute all Wave 1 stories in parallel — 3 groups, 15 stories total
+- **Execution**: 3 parallel agents with strict file ownership boundaries
+- **Changes (Group 06 — Installation Channel Integrity)**:
+  - **deploy.ts**: Added `writeDerived()` helper for always-overwrite of template-generated files. Split file deployment into derived (agents, commands, modules — always overwrite) vs state (tasks.json, graph.json, etc. — create-if-new). Added `cleanStalePluginPaths()` with tools-plugin pattern matching and deduplication.
+  - **templates.ts**: Fixed 'Meta Builder' → 'Supreme Coordinator', 'Builder/Validator' → 'Executor/Investigator', removed 'meta' role from hierarchy table.
+  - **bin/cli.mjs** (NEW): Created ESM shim with `#!/usr/bin/env node` shebang importing `../dist/cli.js`.
+  - **config.ts**: Fixed 'meta-builder' comment → 'supreme-coordinator'.
+- **Changes (Group 08 — Critical Fixes)**:
+  - **govern-shell.ts**: Added 'runtime' category (node/python/docker/bun/deno), 'filesystem' category (mv/cp/mkdir/touch/rm), and 'general' to executor's ROLE_PERMISSIONS.
+  - **cli.ts**: Added self-install detection (package.json name === 'idumb-v2' aborts unless --force).
+  - **deploy.ts**: Added backup-on-force logic (copies state files to `.idumb/backups/{filename}.{timestamp}.bak`). Added graph.json migration from legacy task-graph.json.
+  - **scaffolder.ts**: Added `backupFile()` helper for creating timestamped backups.
+  - **persistence.ts**: Added 5 Zod validation schemas + `safeParse()` helper. Replaced all 5 `JSON.parse(raw) as Type` casts with validated parsing with graceful fallback.
+  - **index.ts**: Replaced hardcoded `VERSION = "2.2.0"` with dynamic `createRequire(import.meta.url)('../package.json')`.
+- **Changes (Group 09 — Dead Code Purge)**:
+  - **agent-profile.ts** (DELETED): 89 LOC orphan, never imported.
+  - **sdk-client.ts**: Removed dead `getClient()` export, kept `tryGetClient()` and `setClient()`.
+  - **task.ts**: Removed `CATEGORY_SKIP_SUBTASKS` export and `SESSION_STALE_MS` constant.
+  - **schemas/index.ts**: Removed `GRAPH_SESSION_STALE_MS` re-export.
+  - **lib/index.ts**: Added code-quality barrel export, updated archived comment, removed getClient re-export.
+  - **persistence.ts**: Removed duplicate `SessionState` interface (now imports from storage-adapter.ts).
+  - **planning-registry.ts**: Removed 'chain-validator' from JSDoc.
+  - **state-reader.ts**: Changed 'Plugin A' to 'iDumb' in JSDoc.
+  - **plan-state.ts**: Added MASTER-PLAN.md sync comment to createDefaultPlanState().
+- **Post-wave fixes**:
+  - Fixed 7 TypeScript errors in persistence.ts: `z.record()` requires explicit key type (`z.record(z.string(), z.any())`), removed `.passthrough()` from Zod schemas (creates index signatures incompatible with TS interfaces).
+  - Fixed `tests/task.test.ts`: Changed legacy "idumb-builder" test fixture to "idumb-executor".
+  - Fixed `opencode.json`: Replaced broken `idumb-v2/idumb-v2` path + stale `tools-plugin.js` entry with correct project root path.
+  - Rebuilt dist/ to match updated source.
+- **Status**: 39/64 stories passing. Wave 1 COMPLETE (all 15 stories).
+- **Baseline**: 637/637 tests across 12 suites. TypeScript clean.
+- **Delta**: 0 new test assertions (infrastructure and cleanup only).
+
 ## Summary
 
 | Group | Stories | Session | Status |
@@ -154,13 +188,13 @@
 | 03 — Dashboard Completion | 3/3 | Session 4 | DONE |
 | 04 — SDK Client Integration | 4/4 | Session 3 | DONE |
 | 05 — Integration Validation | 3/3 | Session 4 | DONE |
-| 06 — Installation Channel Integrity | 0/6 | Session 5 | WAVE 1 |
+| 06 — Installation Channel Integrity | 6/6 | Session 8 | DONE |
 | 07 — Post-Cleanup Safety | 4/4 | Session 6 | DONE |
-| 08 — Critical Fixes | 0/4 | — | WAVE 1 |
-| 09 — Dead Code Purge | 0/5 | — | WAVE 1 |
+| 08 — Critical Fixes | 4/4 | Session 8 | DONE |
+| 09 — Dead Code Purge | 5/5 | Session 8 | DONE |
 | 10 — Documentation Alignment | 0/3 | — | WAVE 2 |
 | 11 — Tool Test Coverage | 0/6 | — | WAVE 3 |
 | 12 — Dashboard Maturation | 0/4 | — | WAVE 5 |
 | 13 — Git + npm Readiness | 0/4 | — | WAVE 5 |
 | 14 — SDK + Phase 9 Foundation | 0/8 | — | WAVE 4 |
-| **Total** | **24/64** | — | **IN PROGRESS** |
+| **Total** | **39/64** | — | **IN PROGRESS** |
