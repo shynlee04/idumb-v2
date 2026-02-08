@@ -149,7 +149,7 @@ v2/
 ```
 
 **Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **637+ assertions** across **12** test files (SQLite-dependent assertions run when native binding is available)
+**Test baseline:** `npm test` → **859+ assertions** across **20** test files (SQLite-dependent assertions run when native binding is available)
 **TypeScript:** `tsc --noEmit` clean, zero errors  
 **Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `schemas/task.ts` (530)
 
@@ -402,7 +402,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 12 test files via tsx (637+ assertions; SQLite-dependent assertions are conditional)
+npm test             # 20 test files via tsx (859+ assertions; SQLite-dependent assertions are conditional)
 ```
 
 ---

@@ -179,6 +179,26 @@
 - **Baseline**: 637/637 tests across 12 suites. TypeScript clean.
 - **Delta**: 0 new test assertions (infrastructure and cleanup only).
 
+### Session 9 — Wave 2+3: Documentation + Tool Tests (2026-02-09)
+- **Task**: Execute Wave 2 (Group 10 — 3 stories) and Wave 3 (Group 11 — 6 stories)
+- **Changes (Wave 2 — Documentation Alignment)**:
+  - **CLAUDE.md (v2)**: Updated LOC counts, added cli/dashboard.ts to source layout, fixed govern-plan action list, updated modules description, removed fixed Known Issues, added cors/open to deps
+  - **AGENTS.md**: Fixed test counts (tool-gate 93→94, task-graph 96→112), removed nonexistent modules/commands/, fixed dashboard/shared/types.ts listing
+  - **CLAUDE.md (v1)**: Added deprecation header redirecting to v2
+- **Changes (Wave 3 — Tool Test Coverage)**:
+  - **tests/govern-plan.test.ts** (NEW): 52 assertions — all 6 actions (create, plan_tasks, status, archive, abandon, phase)
+  - **tests/govern-task.test.ts** (NEW): 58 assertions — all 6 actions (quick_start, start, complete, fail, review, status)
+  - **tests/govern-delegate.test.ts** (NEW): 17 assertions — all 3 actions (assign, recall, status)
+  - **tests/govern-shell.test.ts** (NEW): 31 assertions — classifyCommand, ROLE_PERMISSIONS, DESTRUCTIVE_BLACKLIST, tool integration
+  - **tests/anchor-tool.test.ts** (NEW): 32 assertions — anchor CRUD via tool.execute()
+  - **tests/init-tool.test.ts** (NEW): 32 assertions — scan, initialize, report actions via tool.execute()
+  - **govern-shell.ts**: Exported classifyCommand, ROLE_PERMISSIONS, DESTRUCTIVE_BLACKLIST for testability
+  - **package.json**: Updated test script — 20 suites (12 original + 6 new tool tests + 2 previously standalone)
+  - **CLAUDE.md + AGENTS.md**: Updated test counts (12→20 suites, 637→859 assertions)
+- **Status**: 48/64 stories passing. Waves 1-3 COMPLETE.
+- **Baseline**: 859/859 assertions across 20 suites. TypeScript clean.
+- **Delta**: +222 new test assertions (52+58+17+31+32+32).
+
 ## Summary
 
 | Group | Stories | Session | Status |
@@ -192,9 +212,9 @@
 | 07 — Post-Cleanup Safety | 4/4 | Session 6 | DONE |
 | 08 — Critical Fixes | 4/4 | Session 8 | DONE |
 | 09 — Dead Code Purge | 5/5 | Session 8 | DONE |
-| 10 — Documentation Alignment | 0/3 | — | WAVE 2 |
-| 11 — Tool Test Coverage | 0/6 | — | WAVE 3 |
+| 10 — Documentation Alignment | 3/3 | Session 9 | DONE |
+| 11 — Tool Test Coverage | 6/6 | Session 9 | DONE |
 | 12 — Dashboard Maturation | 0/4 | — | WAVE 5 |
 | 13 — Git + npm Readiness | 0/4 | — | WAVE 5 |
 | 14 — SDK + Phase 9 Foundation | 0/8 | — | WAVE 4 |
-| **Total** | **39/64** | — | **IN PROGRESS** |
+| **Total** | **48/64** | — | **IN PROGRESS** |
