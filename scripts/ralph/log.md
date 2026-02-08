@@ -199,6 +199,42 @@
 - **Baseline**: 859/859 assertions across 20 suites. TypeScript clean.
 - **Delta**: +222 new test assertions (52+58+17+31+32+32).
 
+### Session 10 — Wave 4: SDK + Phase 9 Foundation (Group 14) (2026-02-09)
+- **Task**: Execute all 8 Wave 4 stories — SDK wiring, brain index population, migration, path unification, E2E validation
+- **Changes**:
+  - **tools/init.ts**: Replaced `listFilesRecursively()` with `listProjectFiles()` — tries `client.find.files()` first, falls back to fs-based recursive scan
+  - **hooks/tool-gate.ts**: Added `getAgentRules()` helper — tries `client.app.agents()` for dynamic agent rules, caches per-session, falls back to static `AGENT_TOOL_RULES`. Uses `context.agent` as primary identity source.
+  - **lib/brain-indexer.ts** (NEW): `populateCodeMap()` (regex-based export extraction with SDK fallback) + `populateProjectMap()` (directory tree builder with SDK fallback)
+  - **lib/paths.ts** (NEW): Shared `BRAIN_PATHS` constant — single source of truth for all `.idumb/` file paths, imported by persistence.ts and state-reader.ts
+  - **lib/persistence.ts**: Added `saveBrainStore()`, `getBrainStore()`, `saveCodeMap()`, `getCodeMap()`, `saveProjectMap()`, `getProjectMap()`. Added auto-migration: `getTaskGraph()` checks for empty graph + populated tasks.json → calls `migrateV2ToV3()`
+  - **lib/state-reader.ts**: Imports paths from `lib/paths.ts` instead of defining independently
+  - **tools/anchor.ts**: Added `learn` action — creates BrainEntry from user input, saves via StateManager
+  - **tools/init.ts**: Wired `populateCodeMap()` and `populateProjectMap()` into scan action
+  - **dashboard/backend/server.ts**: Added `/api/artifacts/metadata` endpoint returning real file stats
+  - **dashboard/shared/schema-types.ts**: Added `ArtifactMetadata` type
+  - **dashboard/frontend/PlanningArtifactsPanel.tsx**: Fetches real metadata from `/api/artifacts/metadata` (replaced `getMockMetadata()`)
+- **Status**: 56/64 stories passing. Wave 4 COMPLETE (all 8 stories).
+- **Baseline**: 859/859 assertions across 20 suites. TypeScript clean.
+
+### Session 11 — Wave 5: Dashboard Maturation + Git/npm Readiness (Groups 12+13) (2026-02-09)
+- **Task**: Execute all Wave 5 stories — 4 dashboard stories + 4 git/npm stories
+- **Changes (Group 12 — Dashboard Maturation)**:
+  - **cli/dashboard.ts**: Major rewrite of `startFrontend()`:
+    - Story 12-01: After `startBackend()`, imports `getActualPort()` and passes `VITE_BACKEND_PORT` env var to Vite spawn
+    - Story 12-02: `resolveFrontendDirs()` checks for pre-built `dist/index.html` — if found, skips Vite entirely (Express serves static assets via middleware already in server.ts)
+    - Story 12-04: `resolveFrontendDirs()` uses 3 resolution strategies: relative to `__dirname`, relative to `dist/cli/` → package root, and absolute fallback via project dir. Validates via `vite.config.ts` or `package.json` existence.
+  - **frontend/App.tsx**: Story 12-03 — removed dead `state-update` event type from WebSocket listener (server never sends it; `file-changed` covers all `.idumb/brain/*.json` changes)
+  - **frontend/vite.config.ts**: Already reads `VITE_BACKEND_PORT` env var (done in prior session)
+  - **server.ts**: Already has `express.static` + SPA catch-all (done in prior session)
+- **Changes (Group 13 — Git/npm Readiness)**:
+  - **Story 13-01**: Created backup branches (`main-backup-pre-merge`, `dev-backup-pre-merge`). Force-aligned main to dev via `git checkout main && git reset --hard dev`. Pushed both branches to origin.
+  - **Story 13-02**: Updated `.gitignore` — added `.idumb/brain/`, `.idumb/sessions/`, `.idumb/logs/`, `.opencode/agents/`, `.opencode/commands/`. Keeps `.idumb/config.json` and `.idumb/idumb-modules/` tracked.
+  - **Story 13-03**: `git rm --cached -r .idumb/brain/ .opencode/agents/ .opencode/commands/` — removed 16 files from git tracking. Files remain on disk.
+  - **Story 13-04**: Removed `workspaces` field from package.json. Changed `postinstall` → `prepare`. Updated `files` field to exclude `src/dashboard/frontend/`. Added `publishConfig`. Added `user-stories:verify` script. Package size: 3.8MB → 418KB (330 → 266 files). Dashboard frontend, .idumb/, .opencode/, planning/, docs/ all excluded from tarball.
+- **Status**: **64/64 stories passing. ALL RALPH LOOP STORIES COMPLETE.**
+- **Baseline**: 859/859 assertions across 20 suites. TypeScript clean.
+- **Branch state**: main = dev (identical), both pushed to origin. Backup branches preserved locally.
+
 ## Summary
 
 | Group | Stories | Session | Status |
@@ -214,7 +250,7 @@
 | 09 — Dead Code Purge | 5/5 | Session 8 | DONE |
 | 10 — Documentation Alignment | 3/3 | Session 9 | DONE |
 | 11 — Tool Test Coverage | 6/6 | Session 9 | DONE |
-| 12 — Dashboard Maturation | 0/4 | — | WAVE 5 |
-| 13 — Git + npm Readiness | 0/4 | — | WAVE 5 |
-| 14 — SDK + Phase 9 Foundation | 0/8 | — | WAVE 4 |
-| **Total** | **48/64** | — | **IN PROGRESS** |
+| 12 — Dashboard Maturation | 4/4 | Session 11 | DONE |
+| 13 — Git + npm Readiness | 4/4 | Session 11 | DONE |
+| 14 — SDK + Phase 9 Foundation | 8/8 | Session 10 | DONE |
+| **Total** | **64/64** | — | **ALL COMPLETE** |

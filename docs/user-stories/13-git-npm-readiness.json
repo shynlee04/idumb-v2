@@ -12,7 +12,7 @@
       "Document the branch strategy in CLAUDE.md: main = release, dev = development",
       "Verify all CI/CD references (if any) point to the correct branch"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Align .gitignore: stop tracking personal governance state (.idumb/brain/) on dev, ensure .opencode/ deployment artifacts are also gitignored",
