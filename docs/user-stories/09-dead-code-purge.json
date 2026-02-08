@@ -7,7 +7,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Remove dead exports: getClient() in sdk-client.ts (never called), CATEGORY_SKIP_SUBTASKS in task.ts (never used), GRAPH_SESSION_STALE_MS re-export in schemas/index.ts (never imported)",
@@ -19,7 +19,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Consolidate duplicate constants: SESSION_STALE_MS defined in both task.ts:108 and work-plan.ts:128, SessionState interface defined in both persistence.ts:35 and storage-adapter.ts:18",
@@ -31,7 +31,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Exclude archived files from build + add code-quality.ts to lib barrel: tsconfig includes src/**/* which compiles _archived/ dead code into dist/, and code-quality.ts (701 LOC) is missing from lib/index.ts",
@@ -42,7 +42,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Clean stale comments: 'chain-validator (integrity)' in planning-registry.ts:15, 'Plugin A's governance state' in state-reader.ts:61, archived file comment in lib/index.ts:11, hardcoded phase names in plan-state.ts:82-98",
@@ -56,6 +56,6 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   }
 ]

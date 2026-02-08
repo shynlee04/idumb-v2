@@ -12,7 +12,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Self-install detection + backup on --force: detect running init inside the idumb-v2 repo itself (warn and abort), create .idumb/backups/ before --force overwrites state files, handle parallel brain file naming",
@@ -27,7 +27,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Zod validation on JSON.parse disk reads: all 5 JSON.parse → as Type casts in persistence.ts should use Zod schema parse with graceful fallback instead of blind structural casts",
@@ -44,7 +44,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Auto-sync VERSION from package.json: src/index.ts hardcodes VERSION = '2.2.0' which drifts from package.json on version bumps",
@@ -56,6 +56,6 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 637 assertions"
     ],
-    "passes": false
+    "passes": true
   }
 ]

@@ -1,7 +1,6 @@
 {
   "plugin": [
-    "/Users/apple/Documents/coding-projects/idumb/v2/idumb-v2",
-    "/Users/apple/Documents/coding-projects/idumb/v2/idumb-v2/dist/tools-plugin.js"
+    "/Users/apple/Documents/coding-projects/idumb/v2"
   ],
   "$schema": "https://opencode.ai/config.json"
 }

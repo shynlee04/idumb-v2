@@ -345,7 +345,7 @@ function wait(ms: number): Promise<void> {
 
     const task = createTask(epic.id, "Display Task")
     task.status = "active"
-    task.assignee = "idumb-builder"
+    task.assignee = "idumb-executor"
     epic.tasks.push(task)
 
     const sub1 = createSubtask(task.id, "Sub A")
@@ -355,7 +355,7 @@ function wait(ms: number): Promise<void> {
 
     const tree = formatTaskTree(store)
     assert("display: tree shows epic name", tree.includes("Display Epic"))
-    assert("display: tree shows task with assignee", tree.includes("idumb-builder"))
+    assert("display: tree shows task with assignee", tree.includes("idumb-executor"))
 
     const reminder = buildGovernanceReminder(store)
     assert("display: reminder shows active epic", reminder.includes("Display Epic"))

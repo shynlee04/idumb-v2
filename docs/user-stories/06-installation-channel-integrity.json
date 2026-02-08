@@ -10,7 +10,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 604 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Fix all remaining legacy agent references in source code templates and comments",
@@ -26,7 +26,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 604 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Create bin/cli.mjs shim to enable npm install -g and npx installation channels",
@@ -38,7 +38,7 @@
       "Verify package.json bin field correctly points to ./bin/cli.mjs",
       "Verify .gitignore does NOT exclude the bin/ directory"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Fix opencode.json plugin cleanup: catch tools-plugin.js references, handle duplicates, prevent stale entries",
@@ -49,7 +49,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with >= 604 assertions"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Redeploy dev project: delete stale deployed artifacts and verify fresh deployment matches current templates",
@@ -64,7 +64,7 @@
       "Grep all files in .opencode/ and .idumb/idumb-modules/ for legacy agent names (meta-builder, idumb-builder, idumb-validator, idumb-skills-creator, idumb-research-synthesizer, idumb-planner) — zero matches",
       "Verify opencode.json has exactly 1 valid plugin entry pointing to the dev project root, no tools-plugin.js entries"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "End-to-end verification: typecheck, full test suite, zero legacy references in active source code",
@@ -75,6 +75,6 @@
       "Grep src/ for legacy tool names (idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_bash, idumb_webfetch, idumb_task) — zero matches in active code (dead imports, comments referencing old names as historical context are acceptable)",
       "Verify AGENTS.md lists exactly 3 agents (supreme-coordinator, investigator, executor) and 6 tools (govern_plan, govern_task, govern_delegate, govern_shell, idumb_anchor, idumb_init)"
     ],
-    "passes": false
+    "passes": true
   }
 ]
