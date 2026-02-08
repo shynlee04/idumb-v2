@@ -6,10 +6,11 @@
 
 <p align="center">
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.7-blue.svg" alt="TypeScript"></a>
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-373%2F373-brightgreen.svg" alt="Tests"></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-859%2F859-brightgreen.svg" alt="Tests"></a>
   <a href="https://opencode.ai/docs/plugins/"><img src="https://img.shields.io/badge/OpenCode-Plugin-green.svg" alt="OpenCode Plugin"></a>
   <a href="#"><img src="https://img.shields.io/badge/Agents-3-purple.svg" alt="3 Agents"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Hooks-6-orange.svg" alt="6 Hooks"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Hooks-7-orange.svg" alt="7 Hooks"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Tools-6-blue.svg" alt="6 Tools"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -135,12 +136,11 @@ Press **Tab** → pick `idumb-supreme-coordinator` → governance is live.
 ```
 Agent: "Let me create that file for you"
 → ❌ GOVERNANCE BLOCK: write denied
-→ CURRENT STATE: No active epic or task.
-→ USE INSTEAD: Call "idumb_task" with action "create_epic"
+→ CURRENT STATE: No active work plan or task.
+→ USE INSTEAD: Call "govern_plan" with action "create"
 
-Agent: idumb_task create_epic "Feature: user auth"
-Agent: idumb_task create_task "Add login page"
-Agent: idumb_task start <task_id>
+Agent: govern_plan create "Feature: user auth"
+Agent: govern_task start <task_id>
 → ✅ Now writes are allowed.
 ```
 
@@ -235,24 +235,26 @@ In `retard` governance mode (expert only), the scan adds roasts:
 
 ## 🏗️ Architecture
 
-### Dual Plugin Design
+### Single Plugin Design
 
 ```
-Plugin A (index.ts)          Plugin B (tools-plugin.ts)
-├── 6 Hooks                  ├── 0 Hooks
-│   ├── tool.execute.before  │   (self-governed)
-│   ├── tool.execute.after   │
-│   ├── session.compacting   └── 4 Entity-Aware Tools
-│   ├── chat.system.transform    ├── idumb_read
-│   ├── chat.messages.transform  ├── idumb_write
-│   └── chat.params              ├── idumb_bash
-│                                └── idumb_webfetch
-└── 5 Intelligence Tools
-    ├── idumb_task
-    ├── idumb_anchor
-    ├── idumb_init
-    ├── idumb_scan
-    └── idumb_codemap
+idumb (index.ts)
+├── 7 Hooks
+│   ├── event                              # Session lifecycle events
+│   ├── tool.execute.before                # Block write/edit without task + agent scoping
+│   ├── tool.execute.after                 # Defense-in-depth fallback
+│   ├── experimental.session.compacting    # Anchor injection post-compaction
+│   ├── experimental.chat.system.transform # Governance directive in system prompt
+│   ├── experimental.chat.messages.transform # Context pruning (DCP pattern)
+│   └── chat.params                        # Agent identity capture + auto-assignment
+│
+└── 6 Governance Tools
+    ├── govern_plan      # WorkPlan lifecycle (create, plan_tasks, status, archive)
+    ├── govern_task      # TaskNode lifecycle (start, complete, fail, quick_start)
+    ├── govern_delegate  # Structured delegation (assign, recall, status)
+    ├── govern_shell     # Governed shell execution with classification
+    ├── idumb_anchor     # Context anchors that survive compaction + brain entries
+    └── idumb_init       # Project initialization + brownfield scan + brain population
 ```
 
 ### 3-Agent Hierarchy
@@ -277,6 +279,7 @@ Each agent has **scoped permissions**:
 
 | Hook | Purpose |
 |------|---------|
+| `event` | Session lifecycle logging |
 | `tool.execute.before` | Blocks write/edit without task + agent-scoped tool gating |
 | `tool.execute.after` | Defense-in-depth fallback |
 | `experimental.session.compacting` | Injects anchors + active task post-compaction |
@@ -288,44 +291,51 @@ Each agent has **scoped permissions**:
 
 ```
 src/
-├── index.ts                    # Plugin A — 6 hooks + 5 tools
-├── tools-plugin.ts             # Plugin B — 4 entity-aware tools
+├── index.ts                    # Single plugin — 7 hooks + 6 tools
 ├── cli.ts                      # CLI entry (idumb-v2 init, idumb-v2 dashboard)
 ├── cli/
-│   ├── deploy.ts               # Agent + command deployment
-│   └── dashboard.ts            # Dashboard server launcher
+│   ├── deploy.ts               # Agent + command + module deployment
+│   └── dashboard.ts            # Dashboard server launcher (dynamic port, production mode)
 ├── templates.ts                # 3 agent templates + commands + modules
 ├── hooks/
-│   ├── tool-gate.ts            # Block write/edit + agent scoping
+│   ├── tool-gate.ts            # Block write/edit + agent scoping + dynamic agent rules
 │   ├── compaction.ts           # Anchor injection post-compaction
 │   ├── message-transform.ts    # Stale output pruning (DCP)
 │   └── system.ts               # Governance system prompt
 ├── tools/
-│   ├── task.ts                 # Task hierarchy (Epic → Task → Subtask)
-│   ├── anchor.ts               # Context anchors
-│   ├── init.ts                 # Project initialization
-│   ├── scan.ts                 # Brownfield scanner
-│   ├── codemap.ts              # Code intelligence mapping
-│   ├── read.ts                 # Entity-aware read
-│   ├── write.ts                # Entity-aware write
-│   ├── bash.ts                 # Entity-aware bash
-│   └── webfetch.ts             # Entity-aware webfetch
+│   ├── govern-plan.ts          # WorkPlan lifecycle (create, plan_tasks, status, archive, abandon)
+│   ├── govern-task.ts          # TaskNode lifecycle (start, complete, fail, quick_start)
+│   ├── govern-delegate.ts      # Structured delegation (assign, recall, status)
+│   ├── govern-shell.ts         # Governed shell execution with classification
+│   ├── anchor.ts               # Context anchors + brain entries (learn action)
+│   └── init.ts                 # Project init + brownfield scan + brain population
 ├── schemas/
-│   ├── task.ts                 # TaskStore v2 (WorkStream categories)
+│   ├── task.ts                 # Smart TODO (Epic → Task → Subtask, legacy v2)
+│   ├── task-graph.ts           # v3 TaskNode + Checkpoint model
+│   ├── work-plan.ts            # v3 WorkPlan lifecycle
 │   ├── anchor.ts               # Anchor scoring & staleness
+│   ├── brain.ts                # Brain entry schema (knowledge persistence)
+│   ├── codemap.ts              # Code map schema (symbol extraction)
+│   ├── project-map.ts          # Project map schema (directory/file mapping)
 │   ├── config.ts               # IdumbConfig schema
-│   ├── delegation.ts           # Delegation chain schema
-│   └── planning-registry.ts    # Artifact tracking
+│   ├── delegation.ts           # Delegation chain + agent hierarchy
+│   ├── plan-state.ts           # Plan phase tracking
+│   └── planning-registry.ts    # Artifact registry (tiers, chains, sections)
 ├── lib/
 │   ├── logging.ts              # TUI-safe file logger (zero console.log)
-│   ├── persistence.ts          # StateManager — debounced disk I/O
-│   ├── entity-resolver.ts      # Entity type → permission mapping
-│   ├── code-quality.ts         # Brownfield code smell scanner
+│   ├── persistence.ts          # StateManager — debounced disk I/O + brain stores
+│   ├── paths.ts                # Shared BRAIN_PATHS constant (single source of truth)
+│   ├── brain-indexer.ts         # Code map + project map population
+│   ├── sdk-client.ts           # OpenCode SDK client singleton
+│   ├── state-reader.ts         # State reading utilities
+│   ├── code-quality.ts         # Brownfield code smell scanner + grading
 │   ├── framework-detector.ts   # Read-only project scanner
-│   └── scaffolder.ts           # .idumb/ directory creator
+│   ├── scaffolder.ts           # .idumb/ directory creator
+│   ├── sqlite-adapter.ts       # SQLite storage adapter (optional)
+│   └── storage-adapter.ts      # Storage adapter interface
 └── dashboard/
-    ├── backend/server.ts       # Express + WebSocket + chokidar
-    ├── frontend/               # React 18 + Vite + Tailwind v4
+    ├── backend/server.ts       # Express + WebSocket + chokidar + static serving
+    ├── frontend/               # React 18 + Vite + Tailwind v4 + TanStack Query
     └── shared/                 # Shared types between backend/frontend
 ```
 
@@ -352,26 +362,45 @@ src/
 | `governance_mode` | `balanced`, `strict`, `autonomous` | `balanced` |
 | `force` | `true`, `false` | `false` |
 
+### v3 Governance Tools
+
+| Tool | Actions | Purpose |
+|------|---------|---------|
+| `govern_plan` | `create`, `plan_tasks`, `status`, `archive`, `abandon` | WorkPlan lifecycle management |
+| `govern_task` | `start`, `complete`, `fail`, `status`, `review`, `quick_start` | TaskNode lifecycle (quick_start = 1-call ceremony) |
+| `govern_delegate` | `assign`, `recall`, `status` | Structured delegation between agents |
+| `govern_shell` | _(direct execution)_ | Shell command execution with classification + audit |
+
 ---
 
 ## 🧪 Tests
 
 ```bash
-npm test    # 373/373 assertions across 8 suites
+npm test    # 859/859 assertions across 20 suites
 ```
 
-| Suite | Coverage |
-|-------|----------|
-| `tool-gate.test.ts` | Block, allow, retry, fallback, agent scoping |
-| `compaction.test.ts` | Injection, budget caps, staleness, critical anchors |
-| `message-transform.test.ts` | Pruning, exempt tools, edge cases |
-| `init.test.ts` | Config, detection, scaffold, bilingual reports |
-| `persistence.test.ts` | Round-trip, debounce, degradation |
-| `task.test.ts` | Epic/task CRUD, WorkStream v2, migration |
-| `delegation.test.ts` | Delegation chains, expiry, hierarchy |
-| `planning-registry.test.ts` | Artifact tracking, lifecycle, queries |
-
-Additional: `sqlite-adapter.test.ts` (79 assertions, not in main suite)
+| Suite | Assertions | Coverage |
+|-------|-----------|----------|
+| `tool-gate.test.ts` | 94 | Block, allow, retry, fallback, agent scoping |
+| `compaction.test.ts` | 16 | Injection, budget caps, staleness, critical anchors |
+| `message-transform.test.ts` | 13 | Pruning, exempt tools, edge cases |
+| `system.test.ts` | 43 | Config-aware governance context |
+| `init.test.ts` | 66 | Config, detection, scaffold, bilingual reports |
+| `persistence.test.ts` | 47 | Round-trip, debounce, degradation, brain stores |
+| `task.test.ts` | 54 | Epic/task CRUD, WorkStream v2, migration |
+| `delegation.test.ts` | 44 | Delegation chains, expiry, hierarchy |
+| `planning-registry.test.ts` | 52 | Artifact tracking, lifecycle, queries |
+| `work-plan.test.ts` | 56 | WorkPlan lifecycle, task planning |
+| `task-graph.test.ts` | 112 | v3 TaskNode, Checkpoint, migration |
+| `plan-state.test.ts` | 40 | Plan phase tracking, projections |
+| `govern-plan.test.ts` | 52 | govern_plan tool integration |
+| `govern-task.test.ts` | 58 | govern_task tool integration |
+| `govern-delegate.test.ts` | 17 | govern_delegate tool integration |
+| `govern-shell.test.ts` | 31 | Command classification, execution, audit |
+| `anchor-tool.test.ts` | 32 | Anchor CRUD + brain entries via tool |
+| `init-tool.test.ts` | 32 | Scan, initialize, report actions via tool |
+| `smoke-code-quality.ts` | — | Smoke test against own codebase |
+| `sqlite-adapter.test.ts` | 46+ | SQLite storage (conditional on native binding) |
 
 ---
 
@@ -393,7 +422,6 @@ Additional: `sqlite-adapter.test.ts` (79 assertions, not in main suite)
 - **Subagent hook gap** — `tool.execute.before` does not fire for subagent tool calls in OpenCode
 - **Experimental hooks** — `system.transform` and `messages.transform` are registered but unverified in live OpenCode runtime
 - **Not on npm** — Requires `npm link` for now (publish coming soon™)
-- **Dashboard** — Requires Vite dev server; no production build workflow yet
 
 ---
 
@@ -401,7 +429,7 @@ Additional: `sqlite-adapter.test.ts` (79 assertions, not in main suite)
 
 ```bash
 npm run typecheck    # tsc --noEmit — zero errors
-npm test             # 373/373 — all must pass
+npm test             # 859/859 — all must pass
 npm run build        # tsc → dist/ — clean compile
 ```
 
@@ -522,8 +550,12 @@ Nhấn **Tab** → chọn `idumb-supreme-coordinator` → quản trị bắt đ�
 ```
 Agent: "Để tôi tạo file đó cho bạn"
 → ❌ CHẶN: write bị từ chối
-→ TRẠNG THÁI: Chưa có epic hoặc task nào
-→ THAY VÀO ĐÓ: Gọi "idumb_task" với action "create_epic"
+→ TRẠNG THÁI: Chưa có work plan hoặc task nào
+→ THAY VÀO ĐÓ: Gọi "govern_plan" với action "create"
+
+Agent: govern_plan create "Feature: user auth"
+Agent: govern_task start <task_id>
+→ ✅ Bây giờ write được phép.
 ```
 
 ---
@@ -624,7 +656,7 @@ Kết quả là điểm sức khỏe A–F (0–100):
 ## 🧪 Tests
 
 ```bash
-npm test    # 373/373 assertions — 8 suite — xanh lè hết 💚
+npm test    # 859/859 assertions — 20 suite — xanh lè hết 💚
 ```
 
 ---
@@ -646,7 +678,6 @@ npm test    # 373/373 assertions — 8 suite — xanh lè hết 💚
 - **Subagent hook gap** — `tool.execute.before` không fire cho subagent trong OpenCode
 - **Experimental hooks** — `system.transform` và `messages.transform` chưa verified
 - **Chưa lên npm** — Cần `npm link` (publish sắp tới™)
-- **Dashboard** — Cần Vite dev server; chưa có production build
 
 ---
 
