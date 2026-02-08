@@ -136,56 +136,44 @@ function test7_agentToolRulesHas3Agents(): void {
 
 function test8_supremeCoordinatorRules(): void {
   const rules = AGENT_TOOL_RULES["idumb-supreme-coordinator"]
-  // DRIFT-04: idumb_init moved from blockedTools to blockedActions (only install blocked)
+  // Coordinator: orchestrator — no tool-level blocks (legacy tools removed)
+  assert("supreme-coordinator has 0 blocked tools", rules.blockedTools.size === 0)
   assert("supreme-coordinator does NOT block idumb_init at tool level", !rules.blockedTools.has("idumb_init"))
-  assert("supreme-coordinator blocks idumb_write", rules.blockedTools.has("idumb_write"))
-  assert("supreme-coordinator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
-  assert("supreme-coordinator blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
-  assert("supreme-coordinator has 3 blocked tools", rules.blockedTools.size === 3)
-  // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
-  assert("supreme-coordinator blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  // Action-level blocks: idumb_init (install), govern_task (start/complete/fail/review)
   assert("supreme-coordinator blocks install on idumb_init", rules.blockedActions["idumb_init"]?.has("install") === true)
   assert("supreme-coordinator blocks start on govern_task", rules.blockedActions["govern_task"]?.has("start") === true)
   assert("supreme-coordinator blocks complete on govern_task", rules.blockedActions["govern_task"]?.has("complete") === true)
   assert("supreme-coordinator blocks fail on govern_task", rules.blockedActions["govern_task"]?.has("fail") === true)
   assert("supreme-coordinator blocks review on govern_task", rules.blockedActions["govern_task"]?.has("review") === true)
-  assert("supreme-coordinator has 3 tools with action blocks", Object.keys(rules.blockedActions).length === 3)
+  assert("supreme-coordinator has 2 tools with action blocks", Object.keys(rules.blockedActions).length === 2)
 }
 
 function test9_investigatorRules(): void {
   const rules = AGENT_TOOL_RULES["idumb-investigator"]
+  // Investigator: research agent — blocked from init and delegation
   assert("investigator blocks idumb_init", rules.blockedTools.has("idumb_init"))
-  assert("investigator blocks idumb_write", rules.blockedTools.has("idumb_write"))
-  assert("investigator blocks idumb_bash", rules.blockedTools.has("idumb_bash"))
   assert("investigator blocks govern_delegate", rules.blockedTools.has("govern_delegate"))
-  assert("investigator does NOT block idumb_webfetch", !rules.blockedTools.has("idumb_webfetch"))
-  assert("investigator has 4 blocked tools", rules.blockedTools.size === 4)
-  // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
-  assert("investigator blocks delegate on idumb_task", rules.blockedActions["idumb_task"]?.has("delegate") === true)
-  assert("investigator blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  assert("investigator has 2 blocked tools", rules.blockedTools.size === 2)
+  // Action-level blocks: govern_plan (create/plan_tasks/archive/abandon)
   assert("investigator blocks create on govern_plan", rules.blockedActions["govern_plan"]?.has("create") === true)
   assert("investigator blocks plan_tasks on govern_plan", rules.blockedActions["govern_plan"]?.has("plan_tasks") === true)
   assert("investigator blocks archive on govern_plan", rules.blockedActions["govern_plan"]?.has("archive") === true)
   assert("investigator blocks abandon on govern_plan", rules.blockedActions["govern_plan"]?.has("abandon") === true)
-  assert("investigator has 2 tools with action blocks", Object.keys(rules.blockedActions).length === 2)
+  assert("investigator has 1 tool with action blocks", Object.keys(rules.blockedActions).length === 1)
 }
 
 function test10_executorRules(): void {
   const rules = AGENT_TOOL_RULES["idumb-executor"]
+  // Executor: code writer — blocked from init and delegation
   assert("executor blocks idumb_init", rules.blockedTools.has("idumb_init"))
-  assert("executor blocks idumb_webfetch", rules.blockedTools.has("idumb_webfetch"))
   assert("executor blocks govern_delegate", rules.blockedTools.has("govern_delegate"))
-  assert("executor does NOT block idumb_write", !rules.blockedTools.has("idumb_write"))
-  assert("executor does NOT block idumb_bash", !rules.blockedTools.has("idumb_bash"))
-  assert("executor has 3 blocked tools", rules.blockedTools.size === 3)
-  // v3: blockedActions is Record<string, Set<string>> — per-tool action blocks
-  assert("executor blocks delegate on idumb_task", rules.blockedActions["idumb_task"]?.has("delegate") === true)
-  assert("executor blocks create_epic on idumb_task", rules.blockedActions["idumb_task"]?.has("create_epic") === true)
+  assert("executor has 2 blocked tools", rules.blockedTools.size === 2)
+  // Action-level blocks: govern_plan (create/plan_tasks/archive/abandon)
   assert("executor blocks create on govern_plan", rules.blockedActions["govern_plan"]?.has("create") === true)
   assert("executor blocks plan_tasks on govern_plan", rules.blockedActions["govern_plan"]?.has("plan_tasks") === true)
   assert("executor blocks archive on govern_plan", rules.blockedActions["govern_plan"]?.has("archive") === true)
   assert("executor blocks abandon on govern_plan", rules.blockedActions["govern_plan"]?.has("abandon") === true)
-  assert("executor has 2 tools with action blocks", Object.keys(rules.blockedActions).length === 2)
+  assert("executor has 1 tool with action blocks", Object.keys(rules.blockedActions).length === 1)
 }
 
 function test11_oldAgentsRemoved(): void {
@@ -247,6 +235,329 @@ function test14_createCheckpointProducesValidObject(): void {
   assert("checkpoint has timestamp", typeof cp.timestamp === "number" && cp.timestamp > 0)
 }
 
+// ─── Story 02-1: Temporal Gate Enforcement in Hook ──────────
+
+async function test15_temporalGateBlocksInHook(): Promise<void> {
+  // Setup: create a TaskGraph with a task that has an unmet dependency
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Test Plan" })
+  wp.status = "active"
+  const tn1 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Task A (dependency)",
+    expectedOutput: "output A",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+  })
+  tn1.status = "planned" // NOT completed
+  const tn2 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Task B (blocked)",
+    expectedOutput: "output B",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+    dependsOn: [tn1.id],
+  })
+  tn2.status = "planned"
+  wp.tasks = [tn1, tn2]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+
+  // Try to start tn2 via hook (should block because tn1 not completed)
+  const input = {
+    tool: "govern_task",
+    sessionID: "test-session-temporal",
+    callID: "call-temporal",
+  }
+  const output = { args: { action: "start", target_id: tn2.id } }
+
+  let threw = false
+  let errorMsg = ""
+  try {
+    await hookBefore(input, output)
+  } catch (e) {
+    threw = true
+    errorMsg = (e as Error).message
+  }
+
+  assert("temporal gate: blocks start when dep not completed", threw)
+  assert("temporal gate: error says GOVERNANCE BLOCK", errorMsg.includes("GOVERNANCE BLOCK"))
+  assert("temporal gate: mentions the dependency", errorMsg.includes("Task A") || errorMsg.includes(tn1.id))
+  assert("temporal gate: has USE INSTEAD", errorMsg.includes("USE INSTEAD"))
+}
+
+async function test16_temporalGateAllowsWhenDepsMet(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Test Plan Allowed" })
+  wp.status = "active"
+  const tn1 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Task A (completed)",
+    expectedOutput: "output A",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+  })
+  tn1.status = "completed" // dependency is met
+  const tn2 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Task B (ready)",
+    expectedOutput: "output B",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+    dependsOn: [tn1.id],
+  })
+  tn2.status = "planned"
+  wp.tasks = [tn1, tn2]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+
+  const input = {
+    tool: "govern_task",
+    sessionID: "test-session-temporal-ok",
+    callID: "call-temporal-ok",
+  }
+  const output = { args: { action: "start", target_id: tn2.id } }
+
+  let threw = false
+  try {
+    await hookBefore(input, output)
+  } catch {
+    threw = true
+  }
+
+  assert("temporal gate: allows start when deps completed", !threw)
+}
+
+// ─── Story 02-2: Per-TaskNode allowedTools Enforcement ──────
+
+async function test17_allowedToolsBlocksUnauthorized(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Scoped Tools Plan" })
+  wp.status = "active"
+  const tn = createTaskNode({
+    workPlanId: wp.id,
+    name: "Research only task",
+    expectedOutput: "research doc",
+    delegatedBy: "coordinator",
+    assignedTo: "investigator",
+    allowedTools: ["read", "grep", "glob"], // NO write/edit
+  })
+  tn.status = "active"
+  wp.tasks = [tn]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  stateManager.setActiveTask("test-session-allowed", { id: tn.id, name: tn.name })
+
+  // Try to use "write" — should be blocked
+  const input = { tool: "write", sessionID: "test-session-allowed", callID: "call-at-1" }
+  const output = { args: {} }
+
+  let threw = false
+  let errorMsg = ""
+  try {
+    await hookBefore(input, output)
+  } catch (e) {
+    threw = true
+    errorMsg = (e as Error).message
+  }
+
+  assert("allowedTools: blocks write when not in list", threw)
+  assert("allowedTools: error says GOVERNANCE BLOCK", errorMsg.includes("GOVERNANCE BLOCK"))
+  assert("allowedTools: mentions allowed tools list", errorMsg.includes("read") && errorMsg.includes("grep"))
+  assert("allowedTools: has USE INSTEAD", errorMsg.includes("USE INSTEAD"))
+}
+
+async function test18_allowedToolsAllowsAuthorized(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Scoped Tools Plan 2" })
+  wp.status = "active"
+  const tn = createTaskNode({
+    workPlanId: wp.id,
+    name: "Research task 2",
+    expectedOutput: "research doc",
+    delegatedBy: "coordinator",
+    assignedTo: "investigator",
+    allowedTools: ["read", "grep", "glob"],
+  })
+  tn.status = "active"
+  wp.tasks = [tn]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  stateManager.setActiveTask("test-session-allowed2", { id: tn.id, name: tn.name })
+
+  // Try to use "read" — should be allowed
+  const input = { tool: "read", sessionID: "test-session-allowed2", callID: "call-at-2" }
+  let threw = false
+  try {
+    await hookBefore(input, { args: {} })
+  } catch {
+    threw = true
+  }
+
+  assert("allowedTools: allows read when in list", !threw)
+}
+
+async function test19_emptyAllowedToolsNoRestriction(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "No Restriction Plan" })
+  wp.status = "active"
+  const tn = createTaskNode({
+    workPlanId: wp.id,
+    name: "Unrestricted task",
+    expectedOutput: "anything",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+    allowedTools: [], // empty = no restriction
+  })
+  tn.status = "active"
+  wp.tasks = [tn]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  stateManager.setActiveTask("test-session-norestrict", { id: tn.id, name: tn.name })
+
+  // Try any tool — should be allowed
+  const input = { tool: "write", sessionID: "test-session-norestrict", callID: "call-nr-1" }
+  let threw = false
+  try {
+    await hookBefore(input, { args: {} })
+  } catch {
+    threw = true
+  }
+
+  assert("allowedTools: empty list allows any tool", !threw)
+}
+
+// ─── Story 02-3: Checkpoint for govern_shell ────────────────
+
+function test20_shouldCreateCheckpointForGovernShell(): void {
+  // govern_shell with build command = checkpoint-worthy
+  assert("shouldCreateCheckpoint('govern_shell', {command:'npm run build'}) returns true",
+    shouldCreateCheckpoint("govern_shell", { command: "npm run build" }) === true)
+  // govern_shell with test command = checkpoint-worthy
+  assert("shouldCreateCheckpoint('govern_shell', {command:'npm test'}) returns true",
+    shouldCreateCheckpoint("govern_shell", { command: "npm test" }) === true)
+  // govern_shell with git commit = checkpoint-worthy
+  assert("shouldCreateCheckpoint('govern_shell', {command:'git commit -m fix'}) returns true",
+    shouldCreateCheckpoint("govern_shell", { command: "git commit -m fix" }) === true)
+  // govern_shell with grep = NOT checkpoint-worthy
+  assert("shouldCreateCheckpoint('govern_shell', {command:'grep foo bar'}) returns false",
+    shouldCreateCheckpoint("govern_shell", { command: "grep foo bar" }) === false)
+  // govern_shell with ls = NOT checkpoint-worthy
+  assert("shouldCreateCheckpoint('govern_shell', {command:'ls -la'}) returns false",
+    shouldCreateCheckpoint("govern_shell", { command: "ls -la" }) === false)
+  // govern_shell without args = NOT checkpoint-worthy (can't determine command)
+  assert("shouldCreateCheckpoint('govern_shell') without args returns false",
+    shouldCreateCheckpoint("govern_shell") === false)
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Tests 21-23: Executor Grace Mode
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Test 21: Executor write ALLOWED when no governance context (no active WorkPlans)
+ */
+async function test21_executorGraceMode_noContext(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+
+  const sessionID = "test-grace-no-context"
+  // Set captured agent to executor
+  stateManager.setCapturedAgent(sessionID, "idumb-executor")
+  // Ensure no active task
+  stateManager.setActiveTask(sessionID, null)
+  // Ensure graph has no active WorkPlans (default state)
+  const graph = stateManager.getTaskGraph()
+  for (const wp of graph.workPlans) {
+    if (wp.status === "active") wp.status = "completed" as "active" | "draft" | "completed"
+  }
+  stateManager.saveTaskGraph(graph)
+
+  const input = { tool: "write", sessionID, callID: "call-grace-1" }
+  const output = { args: {} }
+
+  let threw = false
+  try {
+    await hookBefore(input, output)
+  } catch {
+    threw = true
+  }
+
+  assert("test21: executor write allowed with no governance context", !threw)
+}
+
+/**
+ * Test 22: Executor write BLOCKED when governance context exists (active plan, no active task)
+ */
+async function test22_executorGraceMode_withContext(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan } = await import("../src/schemas/work-plan.js")
+
+  const sessionID = "test-grace-with-context"
+  stateManager.setCapturedAgent(sessionID, "idumb-executor")
+  stateManager.setActiveTask(sessionID, null)
+
+  // Create an active WorkPlan (governance context exists)
+  const graph = stateManager.getTaskGraph()
+  const wp = createWorkPlan({ name: "Active Plan" })
+  wp.status = "active"
+  graph.workPlans.push(wp)
+  stateManager.saveTaskGraph(graph)
+
+  const input = { tool: "write", sessionID, callID: "call-grace-2" }
+  const output = { args: {} }
+
+  let threw = false
+  try {
+    await hookBefore(input, output)
+  } catch {
+    threw = true
+  }
+
+  assert("test22: executor write blocked with active plan but no active task", threw)
+
+  // Cleanup: remove the added plan
+  graph.workPlans.pop()
+  stateManager.saveTaskGraph(graph)
+}
+
+/**
+ * Test 23: Non-executor (investigator) write BLOCKED regardless of graph state
+ */
+async function test23_nonExecutorNoGraceMode(): Promise<void> {
+  const { stateManager } = await import("../src/lib/persistence.js")
+
+  const sessionID = "test-grace-investigator"
+  stateManager.setCapturedAgent(sessionID, "idumb-investigator")
+  stateManager.setActiveTask(sessionID, null)
+
+  const input = { tool: "write", sessionID, callID: "call-grace-3" }
+  const output = { args: {} }
+
+  let threw = false
+  try {
+    await hookBefore(input, output)
+  } catch {
+    threw = true
+  }
+
+  assert("test23: investigator write blocked (no grace mode)", threw)
+}
+
 // Run all tests
 async function main(): Promise<void> {
   await test1_writeBlockedWithoutTask()
@@ -263,6 +574,15 @@ async function main(): Promise<void> {
   test12_coordinatorCanCallIdumbInitStatus()
   test13_checkpointFunctionsImportable()
   test14_createCheckpointProducesValidObject()
+  await test15_temporalGateBlocksInHook()
+  await test16_temporalGateAllowsWhenDepsMet()
+  await test17_allowedToolsBlocksUnauthorized()
+  await test18_allowedToolsAllowsAuthorized()
+  await test19_emptyAllowedToolsNoRestriction()
+  test20_shouldCreateCheckpointForGovernShell()
+  await test21_executorGraceMode_noContext()
+  await test22_executorGraceMode_withContext()
+  await test23_nonExecutorNoGraceMode()
 
   const total = passed + failed
   const summary = `\nResults: ${passed}/${total} passed, ${failed} failed`

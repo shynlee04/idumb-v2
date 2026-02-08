@@ -9,7 +9,7 @@
       "Write tests verifying temporal gate allows when deps are completed",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Wire per-TaskNode allowedTools enforcement in tool-gate.ts",
@@ -22,7 +22,7 @@
       "Verify empty allowedTools means no restriction (backward compatible)",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Wire checkpoint auto-recording in tool.execute.after",
@@ -36,7 +36,7 @@
       "Write tests verifying checkpoint NOT created on read/status",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Enhance system.ts to inject full active chain context",
@@ -49,6 +49,6 @@
       "Write tests verifying planAhead visibility",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   }
 ]

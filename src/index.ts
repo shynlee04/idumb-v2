@@ -12,6 +12,7 @@ import type { Plugin } from "@opencode-ai/plugin"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { createLogger } from "./lib/index.js"
+import { setClient } from "./lib/sdk-client.js"
 import { stateManager } from "./lib/persistence.js"
 import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
 import {
@@ -34,7 +35,7 @@ const VERSION = "2.2.0"
  * Return empty hooks to avoid zombie directory creation, logger
  * pollution, and TUI breakage. The user must run `idumb-v2 init` first.
  */
-const idumb: Plugin = async ({ directory }) => {
+const idumb: Plugin = async ({ directory, client }) => {
   // ─── Init guard: skip governance if not initialized ────────────────
   const idumbDir = join(directory, ".idumb")
   if (!existsSync(idumbDir)) {
@@ -44,6 +45,9 @@ const idumb: Plugin = async ({ directory }) => {
     // when agents are missing from .opencode/agents/.
     return {}
   }
+
+  // Store SDK client for shared access by hooks and tools
+  setClient(client)
 
   const log = createLogger(directory, "idumb-core")
   const verifyLog = createLogger(directory, "hook-verification", "debug")

@@ -1,0 +1,56 @@
+[
+  {
+    "description": "Auto-activate task on delegation: govern_delegate action=assign should set TaskNode status to active and startedAt, so the executor auto-inherits the task without needing govern_task action=start",
+    "steps": [
+      "In govern-delegate.ts action=assign, after validation passes and node is found, call validateTaskStart(graph, node) to check temporal gates",
+      "If temporal gates pass, set node.status = 'active' and node.startedAt = Date.now() before persisting",
+      "If temporal gates fail, still create delegation but warn that task cannot be auto-started (falls back to manual start)",
+      "Add test: after govern_delegate creates delegation, the TaskNode.status is 'active' and startedAt is set",
+      "Add test: tool-gate auto-inherit finds the delegated+activated task (write allowed without govern_task start)",
+      "Add test: delegation with blocked temporal gate creates delegation but leaves node status as 'planned'",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 604 assertions"
+    ],
+    "passes": true
+  },
+  {
+    "description": "Executor grace mode: tool-gate allows writes when executor agent has no governance context (no active plans, empty graph), logging instead of blocking",
+    "steps": [
+      "In tool-gate.ts createToolGateBefore, after auto-inherit fails, check captured agent via stateManager.getCapturedAgent(sessionID)",
+      "If captured agent is 'idumb-executor' AND task graph has no active WorkPlans (no governance context), allow with log.info('GRACE MODE: executor write allowed — no governance context')",
+      "If captured agent is 'idumb-executor' AND task graph HAS active WorkPlans but no active TaskNode, still BLOCK (governance context exists, task must be started)",
+      "Non-executor agents always blocked as before (no grace mode)",
+      "Add test: executor write allowed when graph has no active WorkPlans",
+      "Add test: executor write blocked when graph has active WorkPlan without active TaskNode",
+      "Add test: non-executor (investigator) write blocked regardless of graph state",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 604 assertions"
+    ],
+    "passes": true
+  },
+  {
+    "description": "Dashboard port resilience: server.ts handles EADDRINUSE with port increment retry up to 10 attempts",
+    "steps": [
+      "In server.ts startServer, wrap server.listen in a retry loop that catches EADDRINUSE errors",
+      "Try port, port+1, port+2, ... up to port+10. Log each retry attempt",
+      "On successful bind, store actual port in a shared variable accessible by the frontend proxy",
+      "Write actual port to .idumb/brain/dashboard-port.json for frontend discovery",
+      "On all 10 attempts failing, reject with clear error message listing all tried ports",
+      "Verify npm run typecheck passes with zero errors"
+    ],
+    "passes": true
+  },
+  {
+    "description": "Shorten custom tool output: reduce govern_task and govern_delegate responses to essential-only for TUI readability",
+    "steps": [
+      "govern_task action=start: reduce output to 3 lines max (task name, ID, unlock confirmation)",
+      "govern_task action=complete: reduce output to 3 lines max (task name, evidence summary, re-lock notice)",
+      "govern_task action=status: keep verbose (it's explicitly requested info)",
+      "govern_delegate action=assign: reduce to 4 lines max (delegation ID, from→to, task name, handoff instruction)",
+      "Remove buildGraphReminder() calls from start, complete, and assign responses (it's noise)",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 604 assertions"
+    ],
+    "passes": true
+  }
+]

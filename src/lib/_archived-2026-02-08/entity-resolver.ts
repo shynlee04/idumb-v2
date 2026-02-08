@@ -104,7 +104,7 @@ const CLASSIFICATION_RULES: ClassificationRule[] = [
         entityType: "task-store",
         governance: {
             canWrite: ["idumb-supreme-coordinator", "idumb-executor"],
-            requiresActiveTask: false,  // Tasks are managed by idumb_task tool
+            requiresActiveTask: false,  // Tasks are managed by govern_task tool
             requiresChainIntegrity: false,
             triggersUpstreamUpdate: false,
             isReadOnly: false,

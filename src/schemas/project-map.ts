@@ -4,7 +4,7 @@
  * Part of Group 3: Project Documents
  * Entities persist to `.idumb/brain/project-map.json`
  *
- * Built by `idumb_scan` tool. Contains:
+ * Built by project scanning tools. Contains:
  * - Framework/tech detection results
  * - Project structure map
  * - Document hierarchy

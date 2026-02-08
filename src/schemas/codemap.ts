@@ -4,7 +4,7 @@
  * Part of Group 2: Brain / Knowledge Graph (sub-entity)
  * Entities persist to `.idumb/brain/codemap.json`
  *
- * Built by `idumb_codemap` tool. Contains:
+ * Built by code scanning tools. Contains:
  * - File-level structure (exports, imports, classes, functions)
  * - TODO/FIXME/HACK comment extraction
  * - Inconsistency detection (naming, patterns)

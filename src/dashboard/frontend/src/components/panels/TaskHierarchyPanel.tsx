@@ -193,7 +193,7 @@ export function TaskHierarchyPanel() {
         <div className="text-center py-8">
           <p className="text-sm text-muted-foreground">No epics found</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Create one with: idumb_task action=create_epic
+            Create one with: govern_plan action=create
           </p>
         </div>
       )}

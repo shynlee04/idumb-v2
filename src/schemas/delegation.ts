@@ -131,7 +131,7 @@ export function createDelegation(opts: CreateDelegationOptions): DelegationRecor
         taskId: opts.taskId,
         context: opts.context,
         expectedOutput: opts.expectedOutput,
-        allowedTools: opts.allowedTools ?? ["idumb_task", "idumb_anchor"],
+        allowedTools: opts.allowedTools ?? ["govern_task", "idumb_anchor"],
         allowedActions: opts.allowedActions ?? ["status", "add_subtask", "complete"],
         maxDepth: remainingDepth,
         status: "pending",
@@ -357,7 +357,7 @@ export function buildDelegationInstruction(record: DelegationRecord): string {
         `### Rules`,
         `- Max delegation depth remaining: ${record.maxDepth}`,
         `- Report back with: evidence, files modified, tests run`,
-        `- Use \`idumb_task action=complete target_id=${record.taskId} evidence="..."\` when done`,
+        `- Use \`govern_task action=complete target_id=${record.taskId} evidence="..."\` when done`,
         `- Delegation expires in ${DELEGATION_EXPIRY_MS / 60000} minutes`,
     ].join("\n")
 }

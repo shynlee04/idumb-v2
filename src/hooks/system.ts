@@ -21,6 +21,8 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { getActiveTask } from "./tool-gate.js"
 import { getAnchors } from "./compaction.js"
+import { stateManager } from "../lib/persistence.js"
+import { getActiveWorkChain } from "../schemas/task-graph.js"
 import type { Logger } from "../lib/index.js"
 import type { IdumbConfig, GovernanceFramework } from "../schemas/config.js"
 
@@ -112,8 +114,39 @@ export function createSystemHook(log: Logger, directory: string) {
       const lines: string[] = []
       lines.push("<idumb-governance>")
 
-      // ─── Active task context ────────────────────────────────────────
-      if (task) {
+      // ─── Active chain context (WorkPlan + TaskNode + checkpoints) ────
+      const graph = stateManager.getTaskGraph()
+      const chain = getActiveWorkChain(graph)
+
+      if (chain.workPlan) {
+        const completedTasks = chain.workPlan.tasks.filter(t => t.status === "completed").length
+        const totalTasks = chain.workPlan.tasks.length
+        lines.push(`Plan: "${chain.workPlan.name}" (${completedTasks}/${totalTasks} tasks)`)
+
+        if (chain.taskNode) {
+          lines.push(`Task: "${chain.taskNode.name}" [${chain.taskNode.assignedTo}]`)
+          if (chain.taskNode.expectedOutput) {
+            lines.push(`Expected: ${chain.taskNode.expectedOutput}`)
+          }
+          // Delegation context
+          if (chain.taskNode.delegatedBy && chain.taskNode.delegatedBy !== chain.taskNode.assignedTo) {
+            lines.push(`Delegated by: ${chain.taskNode.delegatedBy}`)
+          }
+          // Recent checkpoints (last 2 for budget)
+          if (chain.recentCheckpoints.length > 0) {
+            const recent = chain.recentCheckpoints.slice(-2)
+            lines.push(`Checkpoints: ${chain.taskNode.checkpoints.length} (${recent.map(c => c.tool + ": " + c.summary.slice(0, 30)).join("; ")})`)
+          }
+        } else {
+          lines.push("No active task. Use govern_task to start one before writing files.")
+        }
+
+        // Plan-ahead visibility (next planned task)
+        if (chain.nextPlanned && chain.nextPlanned.id !== chain.taskNode?.id) {
+          lines.push(`Next: "${chain.nextPlanned.name}" -> ${chain.nextPlanned.assignedTo}`)
+        }
+      } else if (task) {
+        // Fallback: legacy TaskStore-based task (no WorkPlan active)
         lines.push(`Active task: ${task.name}`)
       } else {
         lines.push("No active task. Use govern_task to start one before writing files.")

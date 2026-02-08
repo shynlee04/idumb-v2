@@ -1,14 +1,17 @@
 /**
- * TUI-safe file-based logging.
- * 
+ * TUI-safe file-based logging with optional SDK backend.
+ *
  * CRITICAL: NO console.log anywhere — breaks TUI rendering.
  * Uses writeFileSync to append logs to a file in the project directory.
- * 
+ * When the SDK client is available, also logs to client.app.log()
+ * for centralized server-side logging.
+ *
  * P3: Graceful degradation — if logging fails, silently continue.
  */
 
 import { writeFileSync, mkdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
+import { tryGetClient } from "./sdk-client.js"
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
 
@@ -28,6 +31,10 @@ export interface Logger {
 
 /**
  * Creates a file-based logger that writes to .idumb/logs/
+ *
+ * When the SDK client is available (set via sdk-client.ts during plugin init),
+ * also logs to client.app.log() for centralized server-side logging.
+ * Falls back to file-only logging when client is unavailable (e.g. in tests).
  *
  * Logs live inside .idumb/ (the governance directory) — NOT .opencode/.
  * This prevents zombie .opencode/ resurrection if user deletes .opencode/
@@ -52,6 +59,7 @@ export function createLogger(directory: string, service: string, minLevel: LogLe
 
   function log(level: LogLevel, msg: string, meta?: Record<string, unknown>): void {
     if (LOG_LEVELS[level] < minLevelNum) return
+    // File-based logging (primary)
     try {
       const ts = new Date().toISOString()
       const metaStr = meta ? ` ${JSON.stringify(meta)}` : ""
@@ -59,6 +67,23 @@ export function createLogger(directory: string, service: string, minLevel: LogLe
       writeFileSync(logFile, line, { flag: "a" })
     } catch {
       // P3: Never crash on log failure
+    }
+
+    // SDK client logging (optional, fire-and-forget)
+    try {
+      const client = tryGetClient()
+      if (client) {
+        client.app.log({
+          body: {
+            service: `idumb:${service}`,
+            level,
+            message: msg,
+            extra: meta,
+          },
+        }).catch(() => {})
+      }
+    } catch {
+      // P3: Never crash on SDK log failure
     }
   }
 

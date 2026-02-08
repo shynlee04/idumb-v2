@@ -15,7 +15,7 @@ import { tool } from "@opencode-ai/plugin/tool"
 import {
     findTaskNode, findParentPlan,
     validateTaskStart, validateTaskCompletion,
-    getActiveWorkChain, buildGraphReminder,
+    getActiveWorkChain,
     detectGraphBreaks,
 } from "../schemas/index.js"
 import { stateManager } from "../lib/persistence.js"
@@ -83,13 +83,8 @@ export const govern_task = tool({
                 stateManager.saveTaskGraph(graph)
 
                 return [
-                    `Task started: "${node.name}"`,
-                    `  ID: ${node.id}`,
-                    `  Assigned: ${node.assignedTo}`,
-                    `  Expected output: ${node.expectedOutput}`,
-                    `  Write/edit tools are now UNLOCKED for this session.`,
-                    "",
-                    buildGraphReminder(graph),
+                    `Task started: "${node.name}" [${node.id}]`,
+                    `Write/edit UNLOCKED.`,
                 ].join("\n")
             }
 
@@ -170,13 +165,9 @@ export const govern_task = tool({
                     : []
 
                 return [
-                    `Task completed: "${node.name}"`,
-                    `  Evidence: ${args.evidence}`,
-                    `  Checkpoints: ${node.checkpoints.length}`,
-                    `  Artifacts: ${node.artifacts.length > 0 ? node.artifacts.join(", ") : "none"}`,
-                    `  Write/edit tools are now RE-LOCKED. Start another task to continue.`,
-                    "",
-                    buildGraphReminder(graph),
+                    `Task completed: "${node.name}" (${node.checkpoints.length} checkpoints, ${node.artifacts.length} artifacts)`,
+                    `Evidence: ${args.evidence}`,
+                    `Write/edit RE-LOCKED.`,
                     ...warningLines,
                 ].join("\n")
             }
@@ -226,12 +217,8 @@ export const govern_task = tool({
                 stateManager.saveTaskGraph(graph)
 
                 return [
-                    `Task FAILED: "${node.name}"`,
-                    `  Reason: ${args.reason}`,
-                    `  Dependent tasks have been blocked.`,
-                    `  Write/edit tools are now RE-LOCKED.`,
-                    "",
-                    buildGraphReminder(graph),
+                    `Task FAILED: "${node.name}" — ${args.reason}`,
+                    `Dependents blocked. Write/edit RE-LOCKED.`,
                 ].join("\n")
             }
 
@@ -259,15 +246,7 @@ export const govern_task = tool({
                 node.modifiedAt = Date.now()
                 stateManager.saveTaskGraph(graph)
 
-                return [
-                    `Task submitted for review: "${node.name}"`,
-                    `  Checkpoints: ${node.checkpoints.length}`,
-                    `  Artifacts: ${node.artifacts.join(", ") || "none"}`,
-                    `  Expected output: ${node.expectedOutput}`,
-                    "",
-                    `To complete: govern_task action=complete target_id=${node.id} evidence="..."`,
-                    `To fail: govern_task action=fail target_id=${node.id} reason="..."`,
-                ].join("\n")
+                return `Review: "${node.name}" [${node.id}] — ${node.checkpoints.length} checkpoints, ${node.artifacts.length} artifacts`
             }
 
             case "status": {

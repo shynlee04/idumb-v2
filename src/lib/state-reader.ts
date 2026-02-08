@@ -1,13 +1,12 @@
 /**
- * State Reader — cross-plugin state access for Plugin B tools.
+ * State Reader — cross-plugin state access for tools.
  *
- * Plugin B tools (idumb_read, idumb_write, idumb_bash, idumb_webfetch) need
- * to read Plugin A's governance state (tasks, anchors, brain) but don't
- * share Plugin A's in-memory StateManager.
+ * Tools need to read governance state (tasks, anchors, brain) but don't
+ * share the in-memory StateManager.
  *
  * This module reads the persisted JSON files directly from disk.
- * It's READ-ONLY — Plugin B tools never modify governance state files.
- * (The idumb_task tool in Plugin A handles all task mutations.)
+ * It's READ-ONLY — tools never modify governance state files.
+ * (The govern_task tool handles all task mutations.)
  *
  * Files read:
  * - .idumb/brain/tasks.json     → TaskStore (active task, epics, hierarchy)

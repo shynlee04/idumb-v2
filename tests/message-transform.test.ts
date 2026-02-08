@@ -4,7 +4,7 @@
  * Proves:
  * - Old tool outputs get truncated
  * - Recent tool outputs stay intact
- * - Exempt tools (idumb_*) never pruned
+ * - Exempt tools (govern_*) never pruned
  * - Empty/invalid messages don't break
  * - Non-tool parts untouched
  */
@@ -114,9 +114,9 @@ async function test3_exemptToolsNotPruned(): Promise<void> {
     parts.push(mockToolPart("bash", "x".repeat(500), i * 1000))
   }
   // Add governance tools early (should NOT be pruned even though old)
-  parts.splice(0, 0, mockToolPart("idumb_task", "Task created: Build auth", 0))
+  parts.splice(0, 0, mockToolPart("govern_task", "Task created: Build auth", 0))
   parts.splice(1, 0, mockToolPart("idumb_anchor", "Anchor added: Use PostgreSQL", 100))
-  parts.splice(2, 0, mockToolPart("idumb_status", "Status: active task", 200))
+  parts.splice(2, 0, mockToolPart("govern_plan", "Status: active plan", 200))
 
   const messages = [{ info: { role: "assistant" }, parts }]
   const output = { messages }
@@ -126,9 +126,9 @@ async function test3_exemptToolsNotPruned(): Promise<void> {
   const anchorState = (output.messages[0].parts[1] as any).state
   const statusState = (output.messages[0].parts[2] as any).state
 
-  assert("idumb_task not pruned", taskState.output === "Task created: Build auth")
+  assert("govern_task not pruned", taskState.output === "Task created: Build auth")
   assert("idumb_anchor not pruned", anchorState.output === "Anchor added: Use PostgreSQL")
-  assert("idumb_status not pruned", statusState.output === "Status: active task")
+  assert("govern_plan not pruned", statusState.output === "Status: active plan")
 }
 
 async function test4_emptyMessagesNoBreak(): Promise<void> {

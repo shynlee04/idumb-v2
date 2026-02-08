@@ -296,6 +296,157 @@ async function test13_bmadFrameworkOverlay(): Promise<void> {
   assert("BMAD mentions govern_task", system[0].includes("govern_task"))
 }
 
+// ─── Story 02-4: Full Active Chain Context ───────────────────────────
+
+async function test14_workPlanProgressInjected(): Promise<void> {
+  process.stdout.write("\nSystem Hook — WorkPlan Progress\n")
+
+  const dir = createTestDir("workplan")
+  writeConfig(dir)
+
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode, createCheckpoint } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Auth Feature" })
+  wp.status = "active"
+  const tn1 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Design API schema",
+    expectedOutput: "API schema document",
+    delegatedBy: "idumb-supreme-coordinator",
+    assignedTo: "idumb-investigator",
+  })
+  tn1.status = "completed"
+  const tn2 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Implement auth endpoints",
+    expectedOutput: "Working auth endpoints with tests",
+    delegatedBy: "idumb-supreme-coordinator",
+    assignedTo: "idumb-executor",
+  })
+  tn2.status = "active"
+  tn2.checkpoints.push(createCheckpoint(tn2.id, "write", "created auth.ts"))
+  wp.tasks = [tn1, tn2]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  setActiveTask("sys-test-14", { id: tn2.id, name: tn2.name })
+
+  const system = await runHook(dir, "sys-test-14")
+
+  assert("workplan: includes plan name", system[0].includes("Auth Feature"))
+  assert("workplan: includes progress", system[0].includes("1/2 tasks"))
+  assert("workplan: includes active task name", system[0].includes("Implement auth endpoints"))
+  assert("workplan: includes assigned agent", system[0].includes("idumb-executor"))
+  assert("workplan: includes expected output", system[0].includes("Working auth endpoints"))
+}
+
+async function test15_delegationContextInjected(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Delegation Context\n")
+
+  const dir = createTestDir("delegation")
+  writeConfig(dir)
+
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Delegation Test" })
+  wp.status = "active"
+  const tn = createTaskNode({
+    workPlanId: wp.id,
+    name: "Research caching",
+    expectedOutput: "Caching strategy doc",
+    delegatedBy: "idumb-supreme-coordinator",
+    assignedTo: "idumb-investigator",
+  })
+  tn.status = "active"
+  wp.tasks = [tn]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  setActiveTask("sys-test-15", { id: tn.id, name: tn.name })
+
+  const system = await runHook(dir, "sys-test-15")
+
+  assert("delegation: includes delegatedBy", system[0].includes("idumb-supreme-coordinator"))
+}
+
+async function test16_planAheadVisibility(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Plan Ahead Visibility\n")
+
+  const dir = createTestDir("plan-ahead")
+  writeConfig(dir)
+
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "Multi-task Plan" })
+  wp.status = "active"
+  const tn1 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Current task",
+    expectedOutput: "output 1",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+  })
+  tn1.status = "active"
+  const tn2 = createTaskNode({
+    workPlanId: wp.id,
+    name: "Next task in queue",
+    expectedOutput: "output 2",
+    delegatedBy: "coordinator",
+    assignedTo: "executor",
+  })
+  tn2.status = "planned"
+  wp.tasks = [tn1, tn2]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  setActiveTask("sys-test-16", { id: tn1.id, name: tn1.name })
+
+  const system = await runHook(dir, "sys-test-16")
+
+  assert("planAhead: includes next task", system[0].includes("Next task in queue"))
+}
+
+async function test17_budgetStillEnforcedWithChain(): Promise<void> {
+  process.stdout.write("\nSystem Hook — Budget with Chain Context\n")
+
+  const dir = createTestDir("budget-chain")
+  writeConfig(dir)
+
+  const { stateManager } = await import("../src/lib/persistence.js")
+  const { createWorkPlan, createTaskNode, createCheckpoint } = await import("../src/schemas/work-plan.js")
+
+  const wp = createWorkPlan({ name: "A".repeat(100) })
+  wp.status = "active"
+  const tn = createTaskNode({
+    workPlanId: wp.id,
+    name: "B".repeat(100),
+    expectedOutput: "C".repeat(200),
+    delegatedBy: "idumb-supreme-coordinator",
+    assignedTo: "idumb-executor",
+  })
+  tn.status = "active"
+  for (let i = 0; i < 20; i++) {
+    tn.checkpoints.push(createCheckpoint(tn.id, "write", `checkpoint ${i} ${"x".repeat(50)}`))
+  }
+  wp.tasks = [tn]
+
+  const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
+  stateManager.saveTaskGraph(graph)
+  setActiveTask("sys-test-17", { id: tn.id, name: tn.name })
+
+  for (let i = 0; i < 10; i++) {
+    addAnchor("sys-test-17", createAnchor("decision", "critical", `Decision ${i}: ${"y".repeat(100)}`))
+  }
+
+  const system = await runHook(dir, "sys-test-17")
+
+  assert("budget: injection under 800 chars with chain", system[0].length <= 800)
+  assert("budget: closing tag preserved", system[0].includes("</idumb-governance>"))
+}
+
 // ─── Runner ───────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -312,6 +463,10 @@ async function main(): Promise<void> {
   await test11_budgetEnforced()
   await test12_noSessionIDSkips()
   await test13_bmadFrameworkOverlay()
+  await test14_workPlanProgressInjected()
+  await test15_delegationContextInjected()
+  await test16_planAheadVisibility()
+  await test17_budgetStillEnforcedWithChain()
 
   const total = passed + failed
   const summary = `\nResults: ${passed}/${total} passed, ${failed} failed`

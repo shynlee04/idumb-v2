@@ -44,7 +44,7 @@ function formatCompactionContext(
     lines.push(`Task ID: ${activeTask.id}`)
     lines.push("")
   } else {
-    lines.push("## NO ACTIVE TASK — create one with idumb_task before writing files")
+    lines.push("## NO ACTIVE TASK — create one with govern_plan + govern_task before writing files")
     lines.push("")
   }
 

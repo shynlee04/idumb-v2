@@ -25,6 +25,11 @@ import {
     DELEGATION_STORE_VERSION, MAX_DELEGATION_DEPTH, DELEGATION_EXPIRY_MS,
 } from "../src/schemas/delegation.js"
 import type { DelegationStore } from "../src/schemas/delegation.js"
+import {
+    createWorkPlan, createTaskNode,
+} from "../src/schemas/work-plan.js"
+import { validateTaskStart } from "../src/schemas/task-graph.js"
+import type { TaskGraph } from "../src/schemas/task-graph.js"
 import { StateManager } from "../src/lib/persistence.js"
 import { createLogger } from "../src/lib/index.js"
 
@@ -298,6 +303,90 @@ function assert(name: string, condition: boolean): void {
 
     assert("persist: delegation survives roundtrip", store2.delegations.length === 1)
     assert("persist: delegation data correct", store2.delegations[0].context === "Persist this")
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// GROUP 10: Auto-Activation on Delegation (6 tests)
+// ══════════════════════════════════════════════════════════════════════
+
+{
+    // Simulate what govern_delegate does:
+    // 1. Create WorkPlan + TaskNode (status "planned")
+    // 2. Validate delegation
+    // 3. Auto-activate if temporal gates pass
+
+    // Test: planned task with no dependencies → auto-activates
+    const wp1 = createWorkPlan({
+        name: "Test Plan",
+        category: "development",
+        createdBy: "idumb-supreme-coordinator",
+    })
+    wp1.status = "active" // govern_plan sets this when plan is activated
+    const tn1 = createTaskNode({
+        workPlanId: wp1.id,
+        name: "Build login form",
+        expectedOutput: "Working form",
+        delegatedBy: "idumb-supreme-coordinator",
+        assignedTo: "idumb-executor",
+    })
+    wp1.tasks.push(tn1)
+    const graph1: TaskGraph = { version: "1.0.0", workPlans: [wp1] }
+
+    // Validate temporal gates
+    const check1 = validateTaskStart(graph1, tn1)
+    assert("auto-activate: planned task with no deps passes gate", check1.allowed)
+
+    // Simulate auto-activation (what govern_delegate now does)
+    if (check1.allowed) {
+        tn1.status = "active"
+        tn1.startedAt = Date.now()
+    }
+    assert("auto-activate: node status is active after delegation", tn1.status === "active")
+    assert("auto-activate: node startedAt is set", typeof tn1.startedAt === "number" && tn1.startedAt > 0)
+
+    // Test: task with unmet dependency → NOT auto-activated
+    const tn2 = createTaskNode({
+        workPlanId: wp1.id,
+        name: "Integration tests",
+        expectedOutput: "All tests pass",
+        delegatedBy: "idumb-supreme-coordinator",
+        assignedTo: "idumb-executor",
+        dependsOn: [tn1.id],
+    })
+    // Reset tn1 to planned to simulate unmet dep
+    const tn1Saved = tn1.status
+    const wp2 = createWorkPlan({
+        name: "Test Plan 2",
+        category: "development",
+        createdBy: "idumb-supreme-coordinator",
+    })
+    const tn2a = createTaskNode({
+        workPlanId: wp2.id,
+        name: "First task",
+        expectedOutput: "Done",
+        delegatedBy: "idumb-supreme-coordinator",
+        assignedTo: "idumb-executor",
+    })
+    const tn2b = createTaskNode({
+        workPlanId: wp2.id,
+        name: "Second task (depends on first)",
+        expectedOutput: "Done",
+        delegatedBy: "idumb-supreme-coordinator",
+        assignedTo: "idumb-executor",
+        dependsOn: [tn2a.id],
+    })
+    wp2.tasks.push(tn2a, tn2b)
+    const graph2: TaskGraph = { version: "1.0.0", workPlans: [wp2] }
+
+    const check2 = validateTaskStart(graph2, tn2b)
+    assert("auto-activate: task with unmet dep fails gate", !check2.allowed)
+    assert("auto-activate: blocked task stays planned", tn2b.status === "planned")
+
+    // Test: auto-inherit works — active WorkPlan with active TaskNode
+    // (simulates what tool-gate does when executor tries to write)
+    const activeWP = graph1.workPlans.find(wp => wp.status === "active")
+    const activeNode = activeWP?.tasks.find(t => t.status === "active")
+    assert("auto-activate: tool-gate can find auto-activated task", activeNode?.name === "Build login form")
 }
 
 // ─── Cleanup + Results ───────────────────────────────────────────────

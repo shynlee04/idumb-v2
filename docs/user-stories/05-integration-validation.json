@@ -10,7 +10,7 @@
       "Document hook behavior changes (temporal gates, checkpoints, allowedTools)",
       "Verify AGENTS.md accurately describes what exists in the codebase"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Run SOT contract cross-validation checks",
@@ -22,7 +22,7 @@
       "Verify schema versions are monotonically increasing",
       "Report any violations found"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Full integration smoke test passes",
@@ -34,6 +34,6 @@
       "Dashboard frontend builds successfully (npx vite build)",
       "Dashboard backend starts without errors"
     ],
-    "passes": false
+    "passes": true
   }
 ]

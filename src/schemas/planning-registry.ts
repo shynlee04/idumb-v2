@@ -11,7 +11,7 @@
  * - Tiered: T1 governance SOT, T2 planning chains, T3 evidence/walkthroughs
  * - Gated: unregistered files = outliers that init must escalate to user
  *
- * Consumers: idumb_write (registration), idumb_init (outlier detection),
+ * Consumers: govern_plan (registration), idumb_init (outlier detection),
  *            dashboard (chain visualization), chain-validator (integrity)
  */
 

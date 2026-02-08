@@ -171,7 +171,7 @@ export function createEmptyStore(): TaskStore {
  * The meta-builder needs write access from its very first session,
  * but tool-gate blocks writes without an active task. This creates
  * a bootstrap epic+task that's already active, so the meta-builder
- * can write immediately without needing to call idumb_task first.
+ * can write immediately without needing to call govern_task first.
  * 
  * Used by: deploy.ts (written to .idumb/brain/tasks.json during init)
  */
@@ -195,7 +195,7 @@ export function createBootstrapStore(): TaskStore {
                 epicId,
                 name: "Initial System Setup",
                 status: "active",
-                assignee: "idumb-meta-builder",
+                assignee: "idumb-supreme-coordinator",
                 createdAt: now,
                 modifiedAt: now,
                 subtasks: [],
@@ -285,7 +285,7 @@ export function validateCompletion(task: Task, evidence?: string): ValidationRes
                 `BLOCKED: Task has ${pending.length} pending subtask(s):`,
                 list,
                 `Complete or skip these first:`,
-                ...pending.map(s => `  - idumb_task action=complete target_id=${s.id} evidence='...'`),
+                ...pending.map(s => `  - govern_task action=complete target_id=${s.id} evidence='...'`),
                 `Or skip: action=complete target_id=${pending[0].id} evidence='skipped: not needed'`,
             ].join("\n"),
         }
@@ -296,7 +296,7 @@ export function validateCompletion(task: Task, evidence?: string): ValidationRes
             valid: false,
             reason: [
                 `BLOCKED: Cannot complete without evidence.`,
-                `Provide proof: idumb_task action=complete target_id=${task.id} evidence='All tests passing, feature works correctly'`,
+                `Provide proof: govern_task action=complete target_id=${task.id} evidence='All tests passing, feature works correctly'`,
                 `Evidence examples: test results, file paths created, behavior verified`,
             ].join("\n"),
         }
@@ -361,7 +361,7 @@ export function detectChainBreaks(store: TaskStore): ChainWarning[] {
                 type: "no_active_tasks",
                 epicId: epic.id,
                 message: `Epic "${epic.name}" is active but has no active tasks.${planned.length > 0
-                    ? ` ${planned.length} planned task(s) waiting. Start one with: idumb_task action=start task_id=${planned[0].id}`
+                    ? ` ${planned.length} planned task(s) waiting. Start one with: govern_task action=start task_id=${planned[0].id}`
                     : " Create a task first."
                     }`,
             })
@@ -394,9 +394,9 @@ export function detectChainBreaks(store: TaskStore): ChainWarning[] {
                         message: [
                             `⚠️ STALE WARNING: Task "${task.name}" has been active for ${mins} min with no subtask progress.`,
                             `  Options:`,
-                            `  - Add subtasks: idumb_task action=add_subtask task_id=${task.id} name="..."`,
-                            `  - Complete it: idumb_task action=complete target_id=${task.id} evidence="..."`,
-                            `  - Defer it: idumb_task action=defer target_id=${task.id} reason="..."`,
+                            `  - Add subtasks: govern_task action=add_subtask task_id=${task.id} name="..."`,
+                            `  - Complete it: govern_task action=complete target_id=${task.id} evidence="..."`,
+                            `  - Defer it: govern_task action=defer target_id=${task.id} reason="..."`,
                         ].join("\n"),
                     })
                 }
@@ -431,7 +431,7 @@ export function formatTaskTree(store: TaskStore): string {
             "=== Task Hierarchy ===",
             "",
             "No epics created yet.",
-            "Start with: idumb_task action=create_epic name='Your epic name'",
+            "Start with: govern_plan action=create name='Your plan name'",
         ].join("\n")
     }
 
@@ -469,7 +469,7 @@ export function formatTaskTree(store: TaskStore): string {
 export function buildGovernanceReminder(store: TaskStore): string {
     const chain = getActiveChain(store)
     if (!chain.epic) {
-        return "--- Governance Reminder ---\nNo active epic. Create one with: idumb_task action=create_epic name='...'"
+        return "--- Governance Reminder ---\nNo active plan. Create one with: govern_plan action=create name='...'"
     }
 
     const completedTasks = chain.epic.tasks.filter(t => t.status === "completed").length
@@ -493,9 +493,9 @@ export function buildGovernanceReminder(store: TaskStore): string {
     } else {
         const planned = chain.epic.tasks.filter(t => t.status === "planned")
         if (planned.length > 0) {
-            lines.push(`Next: Start task "${planned[0].name}" with: idumb_task action=start task_id=${planned[0].id}`)
+            lines.push(`Next: Start task "${planned[0].name}" with: govern_task action=start task_id=${planned[0].id}`)
         } else {
-            lines.push("Next: Create a task with: idumb_task action=create_task name='...'")
+            lines.push("Next: Create a task with: govern_task action=create name='...'")
         }
     }
 

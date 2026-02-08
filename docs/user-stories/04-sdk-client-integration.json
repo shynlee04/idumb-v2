@@ -11,7 +11,7 @@
       "Verify npm run typecheck passes",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Wire client.tui.showToast() for governance notifications",
@@ -23,7 +23,7 @@
       "Verify npm run typecheck passes",
       "Verify npm test passes (tests should not break since showToast is optional)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Wire client.app.log() as optional logging backend",
@@ -36,7 +36,7 @@
       "Verify npm run typecheck passes",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Wire delegation via client.session and client.tui for programmatic agent switching",
@@ -48,6 +48,6 @@
       "Verify npm run typecheck passes",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   }
 ]

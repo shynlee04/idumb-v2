@@ -571,6 +571,17 @@ function setupFileWatcher(projectDir: string) {
 let server: ReturnType<typeof createHttpServer> | null = null
 let watcher: ReturnType<typeof watch> | null = null
 
+/** Maximum number of port retry attempts on EADDRINUSE */
+const MAX_PORT_RETRIES = 10
+
+/** Tracks the actual port the backend is listening on (may differ from config if retried) */
+let actualPort: number | null = null
+
+/** Get the actual port the server is listening on */
+export function getActualPort(): number | null {
+  return actualPort
+}
+
 export async function startServer(config: DashboardConfig): Promise<void> {
   // Stop existing server if running
   if (server) {
@@ -593,6 +604,47 @@ export async function startServer(config: DashboardConfig): Promise<void> {
     adapter = null
   }
 
+  // Try binding to port with retry on EADDRINUSE
+  let lastError: Error | null = null
+  for (let attempt = 0; attempt <= MAX_PORT_RETRIES; attempt++) {
+    const port = config.backendPort + attempt
+    try {
+      await tryListenOnPort(config, port)
+      actualPort = port
+
+      // Write actual port to disk for frontend discovery
+      try {
+        const portFile = join(config.projectDir, ".idumb", "brain", "dashboard-port.json")
+        writeFileSync(portFile, JSON.stringify({ port, timestamp: Date.now() }))
+      } catch {
+        // Best-effort — frontend can fall back to default port
+      }
+
+      return // Success
+    } catch (err) {
+      const error = err as NodeJS.ErrnoException
+      if (error.code === "EADDRINUSE") {
+        log.warn(`Port ${port} in use, trying ${port + 1}...`)
+        lastError = error
+        continue
+      }
+      // Non-EADDRINUSE error — fail immediately
+      throw error
+    }
+  }
+
+  // All attempts exhausted
+  const triedPorts = Array.from(
+    { length: MAX_PORT_RETRIES + 1 },
+    (_, i) => config.backendPort + i,
+  )
+  const message = `Dashboard backend failed to start: all ports in use (tried ${triedPorts.join(", ")})`
+  log.error(message)
+  throw lastError ?? new Error(message)
+}
+
+/** Attempt to listen on a specific port. Rejects on error. */
+function tryListenOnPort(config: DashboardConfig, port: number): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       server = createHttpServer(app)
@@ -600,9 +652,8 @@ export async function startServer(config: DashboardConfig): Promise<void> {
       // Setup WebSocket
       setupWebSocket(server)
 
-      // Start listening
-      server.listen(config.backendPort, () => {
-        log.info(`Backend listening on port ${config.backendPort}`)
+      server.listen(port, () => {
+        log.info(`Backend listening on port ${port}`)
 
         // Setup file watcher
         watcher = setupFileWatcher(config.projectDir)
@@ -613,6 +664,9 @@ export async function startServer(config: DashboardConfig): Promise<void> {
 
       server.on("error", (err) => {
         log.error("Server error", { error: String(err) })
+        // Close the server on bind error so it's cleaned up for retry
+        server?.close()
+        server = null
         reject(err)
       })
     } catch (err) {

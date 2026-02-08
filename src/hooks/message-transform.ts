@@ -24,10 +24,12 @@ const TRUNCATE_TO = 150
 
 /** Tools whose output should never be pruned (governance tools). */
 const EXEMPT_TOOLS = new Set([
-  "idumb_task",
+  "govern_plan",
+  "govern_task",
+  "govern_delegate",
+  "govern_shell",
   "idumb_anchor",
-  "idumb_scan",
-  "idumb_codemap",
+  "idumb_init",
 ])
 
 interface ToolRef {

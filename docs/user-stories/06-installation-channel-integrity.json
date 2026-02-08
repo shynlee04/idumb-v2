@@ -1,0 +1,80 @@
+[
+  {
+    "description": "Deploy.ts smart overwrite: always update derived artifacts (agents, commands, modules), protect state files (tasks.json, task-graph.json, planning-registry.json)",
+    "steps": [
+      "In deploy.ts, split file deployment into two categories: 'derived' and 'state'",
+      "Derived files (agents/*.md, commands/*.md, idumb-modules/**/*.md) are ALWAYS written via writeFile, regardless of force flag — they are regenerated from templates on every init",
+      "State/bootstrap files (tasks.json, task-graph.json, planning-registry.json) keep current writeIfNew behavior — create if new, skip if existing",
+      "Remove the force parameter from writeIfNew calls for derived files (or create a separate writeAlways helper)",
+      "Add test assertions verifying: (a) derived files are overwritten on re-deploy even without force, (b) state files are preserved when they already exist",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 604 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Fix all remaining legacy agent references in source code templates and comments",
+    "steps": [
+      "Fix MODULES_README_TEMPLATE in templates.ts: change 'Meta Builder' to 'Supreme Coordinator' (lines 932, 949, 950)",
+      "Fix MODULES_README_TEMPLATE: update directory listing to match actual structure (add skills/, remove templates/, prompts/, scripts/ which don't exist)",
+      "Fix MODULES_README_TEMPLATE line 956: update text since smart deploy no longer requires --force for module updates",
+      "Fix WORKFLOW_TEMPLATE line 1078: change 'Builder/Validator' to 'Executor/Investigator'",
+      "Fix AGENT_CONTRACT_TEMPLATE lines 896-899: remove or merge 'meta' row since meta-builder is not a deployed agent — clarify the role table to match the deployed 3-agent reality",
+      "Fix task.ts comments at lines 171 and 173: change 'meta-builder' references to 'supreme-coordinator'",
+      "Fix config.ts comment at line 9: change 'meta-builder' reference to 'supreme-coordinator'",
+      "Grep src/ for 'meta.builder' and 'meta-builder' — only the deprecated tombstone file src/modules/agents/meta-builder.md should match",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 604 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Create bin/cli.mjs shim to enable npm install -g and npx installation channels",
+    "steps": [
+      "Create bin/cli.mjs with #!/usr/bin/env node shebang that imports ../dist/cli.js",
+      "Make the file executable (mode 0o755)",
+      "Run npm run build to ensure dist/cli.js exists",
+      "Verify the shim can be loaded: node bin/cli.mjs --help exits with code 0",
+      "Verify package.json bin field correctly points to ./bin/cli.mjs",
+      "Verify .gitignore does NOT exclude the bin/ directory"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Fix opencode.json plugin cleanup: catch tools-plugin.js references, handle duplicates, prevent stale entries",
+    "steps": [
+      "Update cleanStalePluginPaths in deploy.ts to also match 'tools-plugin' pattern when cleaning stale entries",
+      "Add deduplication: if the resolved plugin path already appears in the cleaned array, do not add it again",
+      "Add test verifying cleanStalePluginPaths removes: (a) entries containing 'tools-plugin', (b) duplicate entries, (c) entries matching 'idumb-v2' by name or path",
+      "Verify npm run typecheck passes with zero errors",
+      "Verify npm test passes with >= 604 assertions"
+    ],
+    "passes": false
+  },
+  {
+    "description": "Redeploy dev project: delete stale deployed artifacts and verify fresh deployment matches current templates",
+    "steps": [
+      "Delete all .opencode/agents/idumb-*.md and .opencode/commands/idumb-*.md files in the dev project",
+      "Delete .idumb/idumb-modules/ directory in the dev project",
+      "Run npm run build to ensure dist/ is current",
+      "Run idumb-v2 init -y to redeploy with smart deployment (from story 06-01)",
+      "Verify all 3 agent files exist and their content matches getCoordinatorAgent/getInvestigatorAgent/getExecutorAgent output",
+      "Verify all 4 command files exist and all route to idumb-supreme-coordinator (not idumb-meta-builder)",
+      "Verify all module templates exist and match the constants in templates.ts",
+      "Grep all files in .opencode/ and .idumb/idumb-modules/ for legacy agent names (meta-builder, idumb-builder, idumb-validator, idumb-skills-creator, idumb-research-synthesizer, idumb-planner) — zero matches",
+      "Verify opencode.json has exactly 1 valid plugin entry pointing to the dev project root, no tools-plugin.js entries"
+    ],
+    "passes": false
+  },
+  {
+    "description": "End-to-end verification: typecheck, full test suite, zero legacy references in active source code",
+    "steps": [
+      "npm run typecheck — zero errors",
+      "npm test — all 11 suites pass, total assertions >= 604",
+      "Grep src/ for legacy agent names (meta-builder, idumb-builder, idumb-validator, idumb-skills-creator, idumb-research-synthesizer, idumb-planner) — only tombstone file src/modules/agents/meta-builder.md and negative test assertions (tool-gate.test.ts test11) should match",
+      "Grep src/ for legacy tool names (idumb_scan, idumb_codemap, idumb_read, idumb_write, idumb_bash, idumb_webfetch, idumb_task) — zero matches in active code (dead imports, comments referencing old names as historical context are acceptable)",
+      "Verify AGENTS.md lists exactly 3 agents (supreme-coordinator, investigator, executor) and 6 tools (govern_plan, govern_task, govern_delegate, govern_shell, idumb_anchor, idumb_init)"
+    ],
+    "passes": false
+  }
+]

@@ -328,7 +328,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
 
     // ─── Bootstrap Task Provisioning ─────────────────────────────
     // Pre-create an active epic+task so the meta-builder can write
-    // immediately without needing to call idumb_task first.
+    // immediately without needing to call govern_task first.
     // The tool-gate auto-inherits from the task store on first write.
     const tasksPath = join(projectDir, ".idumb", "brain", "tasks.json")
     const bootstrapStore = createBootstrapStore()

@@ -277,14 +277,14 @@ export function isBashCheckpointWorthy(command: string): boolean {
 
 /**
  * Check if a tool invocation should create a checkpoint.
- * Only write, edit, and significant bash commands.
+ * Only write, edit, and significant bash/govern_shell commands.
  */
 export function shouldCreateCheckpoint(
     tool: string,
     args?: Record<string, unknown>,
 ): boolean {
     if (CHECKPOINT_TOOLS.has(tool)) return true
-    if (tool === "bash" && typeof args?.command === "string") {
+    if ((tool === "bash" || tool === "govern_shell") && typeof args?.command === "string") {
         return isBashCheckpointWorthy(args.command)
     }
     return false

@@ -16,10 +16,34 @@
 
 import type { Logger } from "../lib/index.js"
 import { stateManager } from "../lib/persistence.js"
-import { shouldCreateCheckpoint, createCheckpoint } from "../schemas/index.js"
+import { tryGetClient } from "../lib/sdk-client.js"
+import {
+  shouldCreateCheckpoint, createCheckpoint,
+  findTaskNode, validateTaskStart,
+  isBashCheckpointWorthy,
+} from "../schemas/index.js"
 
 /** Write tools that require an active task */
 const WRITE_TOOLS = new Set(["write", "edit"])
+
+/**
+ * Fire a toast notification via the SDK client (if available).
+ * P3: Graceful degradation — silently no-ops if TUI unavailable.
+ */
+function fireToast(
+  variant: "info" | "success" | "warning" | "error",
+  message: string,
+  title?: string,
+): void {
+  try {
+    const client = tryGetClient()
+    if (!client) return
+    // Fire-and-forget — don't await to avoid blocking the hook
+    client.tui.showToast({ body: { message, variant, title } }).catch(() => {})
+  } catch {
+    // P3: Never crash for toast failure
+  }
+}
 
 /** Plugin tools that need agent-scoped access control */
 const PLUGIN_TOOLS = new Set([
@@ -98,6 +122,10 @@ function buildAgentScopeBlock(agent: string, tool: string, action?: string): str
 /** Exported for task tool to update session state — delegates to StateManager */
 export function setActiveTask(sessionID: string, task: { id: string; name: string } | null): void {
   stateManager.setActiveTask(sessionID, task)
+  // Notify via TUI toast when task is activated (P3: graceful degradation)
+  if (task) {
+    fireToast("info", `Task "${task.name}" activated`, "Task Started")
+  }
 }
 
 /** Exported for status/debug — delegates to StateManager */
@@ -202,6 +230,65 @@ export function createToolGateBefore(log: Logger) {
         }
       }
 
+      // ─── Temporal gate enforcement (defense-in-depth) ──────
+      // govern_task action=start is validated here BEFORE the tool runs.
+      // The govern_task tool itself also validates, but hook enforcement
+      // catches the call earlier and provides consistent GOVERNANCE BLOCK format.
+      if (tool === "govern_task") {
+        const args = _output.args as Record<string, unknown> | undefined
+        if (args?.action === "start" && typeof args?.target_id === "string") {
+          const graph = stateManager.getTaskGraph()
+          const node = findTaskNode(graph, args.target_id)
+          if (node) {
+            const check = validateTaskStart(graph, node)
+            if (!check.allowed) {
+              const message = [
+                `GOVERNANCE BLOCK: govern_task action=start denied`,
+                "",
+                `WHAT: Cannot start task "${node.name}" — ${check.reason}`,
+                `WHY: Temporal gates and dependencies are enforced at the hook level.`,
+                check.blockedBy
+                  ? `BLOCKED BY: "${check.blockedBy.name}" [${check.blockedBy.status}] (${check.blockedBy.id})`
+                  : "",
+                `USE INSTEAD: Complete the blocking dependency first, or ask the coordinator to adjust the plan.`,
+                `EVIDENCE: TaskNode ${node.id} dependsOn=${JSON.stringify(node.dependsOn)}`,
+              ].filter(Boolean).join("\n")
+              log.warn(`TEMPORAL GATE BLOCK: ${node.name}`, { sessionID })
+              throw new Error(message)
+            }
+          }
+        }
+      }
+
+      // ─── Per-TaskNode allowedTools enforcement ─────────────
+      // When the active TaskNode has a non-empty allowedTools list,
+      // only those tools are permitted during this task.
+      // Empty allowedTools = no restriction (backward compatible).
+      {
+        const activeTask = stateManager.getActiveTask(sessionID)
+        if (activeTask) {
+          const graph = stateManager.getTaskGraph()
+          const activeWP = graph.workPlans.find(wp => wp.status === "active")
+          if (activeWP) {
+            const activeNode = activeWP.tasks.find(t => t.id === activeTask.id)
+            if (activeNode && activeNode.allowedTools.length > 0) {
+              if (!activeNode.allowedTools.includes(tool)) {
+                const message = [
+                  `GOVERNANCE BLOCK: ${tool} denied for current task`,
+                  "",
+                  `WHAT: Tool "${tool}" is not in the allowedTools for task "${activeNode.name}".`,
+                  `WHY: This task scopes your tool access to: [${activeNode.allowedTools.join(", ")}].`,
+                  `USE INSTEAD: Use one of the allowed tools, or ask the coordinator to update the task's tool scope.`,
+                  `EVIDENCE: TaskNode ${activeNode.id}.allowedTools = [${activeNode.allowedTools.join(", ")}]`,
+                ].join("\n")
+                log.warn(`ALLOWED TOOLS BLOCK: ${tool} not in [${activeNode.allowedTools.join(",")}]`, { sessionID })
+                throw new Error(message)
+              }
+            }
+          }
+        }
+      }
+
       // ─── Write tool gate (existing) ──────────────────────────
       // Only gate write tools (breadth: don't over-block, start minimal)
       if (!WRITE_TOOLS.has(tool)) return
@@ -252,6 +339,26 @@ export function createToolGateBefore(log: Logger) {
         }
       }
 
+      // ─── Executor grace mode ─────────────────────────────────────
+      // If the executor is addressed directly (not via delegation) and
+      // there's no governance context at all (no active WorkPlans),
+      // allow the write with a log warning. This prevents the executor
+      // from being less capable than an ungoverned agent.
+      // BUT: if governance context EXISTS (active plan, just no active
+      // task), still block — they should start a task first.
+      {
+        const capturedAgent = stateManager.getCapturedAgent(sessionID)
+        if (capturedAgent === "idumb-executor") {
+          const graph = stateManager.getTaskGraph()
+          const hasActiveWorkPlan = graph.workPlans.some(wp => wp.status === "active")
+          if (!hasActiveWorkPlan) {
+            log.info(`GRACE MODE: ${tool} allowed for executor — no governance context`, { sessionID })
+            return
+          }
+          // Has active plan but no active task → fall through to BLOCK
+        }
+      }
+
       // Check if this is a retry of a recently blocked tool
       const lastBlock = stateManager.getLastBlock(sessionID)
       const isRetry = lastBlock !== null
@@ -263,6 +370,9 @@ export function createToolGateBefore(log: Logger) {
 
       const message = buildBlockMessage(tool, isRetry)
       log.warn(`BLOCK: ${tool} (no active task)`, { sessionID, isRetry })
+
+      // Notify via TUI toast (P3: graceful degradation)
+      fireToast("warning", `${tool} blocked — no active task`, "Governance Block")
 
       // Throw to block tool execution — error message appears in chat
       throw new Error(message)
@@ -355,13 +465,24 @@ export function createToolGateAfter(log: Logger) {
       const activeTaskForCheckpoint = stateManager.getActiveTask(sessionID)
       if (activeTaskForCheckpoint) {
         // After-hook output shape: { title, output, metadata }
-        // We don't have reliable access to tool args here.
         // For write/edit: always checkpoint (args not needed for filtering).
+        // For govern_shell: parse command from output and check worthiness.
         // For bash: we'd need the command string from args, which isn't
         // available in the after-hook output. Skip bash checkpointing
         // until we can validate the runtime metadata shape (Phase 1b).
         const toolArgs: Record<string, unknown> | undefined = undefined
-        if (shouldCreateCheckpoint(tool, toolArgs)) {
+        let isCheckpointWorthy = shouldCreateCheckpoint(tool, toolArgs)
+
+        // govern_shell: extract command from first line "[category] command"
+        if (tool === "govern_shell" && !isCheckpointWorthy) {
+          const firstLine = output.output?.split("\n")[0] ?? ""
+          const commandMatch = firstLine.match(/^\[.+?\]\s+(.+)$/)
+          if (commandMatch && isBashCheckpointWorthy(commandMatch[1])) {
+            isCheckpointWorthy = true
+          }
+        }
+
+        if (isCheckpointWorthy) {
           const graph = stateManager.getTaskGraph()
           const activeWP = graph.workPlans.find(wp => wp.status === "active")
           if (activeWP) {

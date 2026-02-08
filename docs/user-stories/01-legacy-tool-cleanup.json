@@ -12,7 +12,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes with same or higher assertion count"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Update tools/index.ts barrel to export only current tools",
@@ -21,7 +21,7 @@
       "Keep exports for govern_plan, govern_task, govern_delegate, govern_shell, idumb_anchor, idumb_init",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Update index.ts plugin registration to remove legacy tools",
@@ -32,7 +32,7 @@
       "Verify npm run typecheck passes with zero errors",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Update AGENT_TOOL_RULES to reference only current tool names",
@@ -44,7 +44,7 @@
       "Remove PLUGIN_TOOLS set if it still references old tool names",
       "Verify tool-gate.test.ts passes with updated tool names"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Fix all remaining references to old tool names across codebase",
@@ -57,7 +57,7 @@
       "Verify npm run typecheck passes",
       "Verify npm test passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Migrate or remove tests that depend on deleted tools",
@@ -68,6 +68,6 @@
       "Verify npm test passes with all suites green",
       "Report new test count (should be >= 592 minus removed assertions + any new ones)"
     ],
-    "passes": false
+    "passes": true
   }
 ]
