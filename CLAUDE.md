@@ -94,17 +94,18 @@ Chat turn → chat.params (captures agent name, auto-assigns to active task + Ta
 
 ```
 src/
-├── index.ts              # Plugin entry: hooks + 6 tools wiring (196 LOC)
-├── cli.ts                # CLI entry point for `npx idumb-v2` (431 LOC)
-├── cli/deploy.ts         # Deploys 3 agents + commands + modules to target project
-├── templates.ts          # Agent markdown templates (1482 LOC — splitting planned)
+├── index.ts              # Plugin entry: hooks + 6 tools wiring (199 LOC)
+├── cli.ts                # CLI entry point for `npx idumb-v2` (453 LOC)
+├── cli/deploy.ts         # Deploys 3 agents + commands + modules to target project (440 LOC)
+├── cli/dashboard.ts      # Dashboard launcher (184 LOC)
+├── templates.ts          # Agent markdown templates (1484 LOC — splitting planned)
 ├── hooks/                # 4 event handler modules (+ barrel index.ts)
 │   ├── tool-gate.ts      # VALIDATED — blocks write/edit without active task
 │   ├── compaction.ts     # Unit-tested — anchor injection via output.context.push()
 │   ├── message-transform.ts  # Unit-tested — DCP-pattern context pruning
 │   └── system.ts         # Unit-tested — config-aware governance context (UNVERIFIED in live OpenCode)
 ├── tools/                # 6 tool implementations (+ barrel index.ts)
-│   ├── govern-plan.ts    # Work plan management: create, plan_tasks, status, archive, abandon
+│   ├── govern-plan.ts    # Work plan management: create, plan_tasks, status, archive, abandon, phase
 │   ├── govern-task.ts    # Task lifecycle: quick_start, start, complete, fail, review, status
 │   ├── govern-delegate.ts # Structured delegation: assign, recall, status
 │   ├── govern-shell.ts   # Governed shell execution with classification
@@ -128,10 +129,11 @@ src/
 │   ├── planning-registry.ts  # Artifact tracking — tiers, chains, staleness
 │   ├── anchor.ts         # Anchor types, scoring, staleness, budget selection
 │   ├── config.ts         # IdumbConfig, Language, GovernanceMode
+│   ├── plan-state.ts     # MASTER-PLAN phase tracking — PlanPhase, PlanState
 │   ├── brain.ts          # Brain entry schema — knowledge persistence
 │   ├── project-map.ts    # Project map schema — directory/file mapping
 │   └── codemap.ts        # Code map schema — symbol extraction
-├── modules/              # Deployable module templates (agents, commands, schemas)
+├── modules/              # Empty scaffold — actual module templates live in templates.ts, deployed to .idumb/modules/ at runtime
 └── dashboard/            # React + Express dashboard (not integrated into CLI)
 ```
 
@@ -222,18 +224,18 @@ if (failed > 0) process.exit(1)
 - `@opencode-ai/plugin` — OpenCode plugin SDK (provides `Plugin` type, `tool()` wrapper). Also re-exports `zod` — do NOT install zod separately.
 - `better-sqlite3` — SQLite adapter (lazy-imported; needs `npm rebuild` after Node version changes)
 - `chokidar` — File watching for dashboard
+- `cors` — CORS middleware for dashboard
 - `express` + `ws` — Dashboard backend (dev dependency territory, but listed as deps)
+- `open` — Opens dashboard URL in browser
 - `tsx` — Test runner (dev dependency)
 
 ## Known Issues
 
-- `src/index.ts` has `VERSION = "2.2.0"` which should track package.json — verify on version bumps
 - `system.ts` hook is unit-tested but **unverified** in live OpenCode — may not fire
 - `experimental.chat.messages.transform` is registered but **unverified** in live OpenCode
 - Dashboard exists but is not integrated into the main CLI workflow
-- `templates.ts` at 1482 LOC is the largest file and needs splitting into per-agent modules
+- `templates.ts` at 1484 LOC is the largest file and needs splitting into per-agent modules
 - `entity-resolver.ts` and `chain-validator.ts` are archived in `src/lib/_archived-2026-02-08/` — 845 LOC of dead code, restore when entity-level governance is wired
-- `bash.ts` (tool-gate) ROLE_PERMISSIONS has 10 legacy agents, missing investigator/executor entries
 
 ## Session Handoff
 

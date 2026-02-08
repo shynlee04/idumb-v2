@@ -13,7 +13,7 @@
       "Verify every file path mentioned in CLAUDE.md actually exists: grep for each referenced file",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Fix AGENTS.md minor issues: directory tree lists deleted STRATEGIC-PLANNING-PROMPT.md, investigator description says 'Uses innate read + webfetch' but webfetch is blocked",
@@ -24,7 +24,7 @@
       "Update test baseline numbers if they've changed since last AGENTS.md update",
       "Verify npm run typecheck passes with zero errors"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "description": "Neutralize v1 CLAUDE.md context pollution: the v1 CLAUDE.md at parent /Users/apple/Documents/coding-projects/idumb/CLAUDE.md pollutes every Claude Code conversation with stale 23-agent/19-command/11-tool information",
@@ -35,6 +35,6 @@
       "Verify that starting a new Claude Code session in the v2 directory does NOT inject v1's 23-agent/19-command/11-tool content into the system context",
       "Verify the v2 CLAUDE.md is still loaded correctly"
     ],
-    "passes": false
+    "passes": true
   }
 ]

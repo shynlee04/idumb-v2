@@ -103,7 +103,6 @@ v2/
 │   │   └── init.ts                 # idumb_init — project initialization + code quality report + planning outlier detection (441 LOC)
 │   ├── modules/
 │   │   ├── agents/                 # Module agent templates
-│   │   ├── commands/               # Module command templates
 │   │   └── schemas/                # Module schema templates
 │   └── dashboard/
 │       ├── backend/
@@ -111,9 +110,10 @@ v2/
 │       ├── frontend/
 │       │   └── src/                # React + Vite dashboard app
 │       └── shared/
-│           └── types.ts            # Shared types between frontend and backend
+│           ├── comments-types.ts   # Comment types between frontend and backend
+│           └── schema-types.ts     # Shared schema types between frontend and backend
 ├── tests/
-│   ├── tool-gate.test.ts           # 93 assertions — all pass ✅
+│   ├── tool-gate.test.ts           # 94 assertions — all pass ✅
 │   ├── compaction.test.ts          # 16 assertions — all pass ✅
 │   ├── message-transform.test.ts   # 13 assertions — all pass ✅
 │   ├── system.test.ts              # 43 assertions — all pass ✅
@@ -123,7 +123,7 @@ v2/
 │   ├── delegation.test.ts          # 44 assertions — all pass ✅
 │   ├── planning-registry.test.ts   # 52 assertions — all pass ✅
 │   ├── work-plan.test.ts           # 56 assertions — all pass ✅
-│   ├── task-graph.test.ts          # 96 assertions — all pass ✅
+│   ├── task-graph.test.ts          # 112 assertions — all pass ✅
 │   ├── plan-state.test.ts          # 40 assertions — all pass ✅
 │   ├── sqlite-adapter.test.ts      # SQLite adapter tests (standalone, not in npm test)
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
@@ -396,7 +396,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 12 test files via tsx (620+ assertions; SQLite-dependent assertions are conditional)
+npm test             # 12 test files via tsx (637+ assertions; SQLite-dependent assertions are conditional)
 ```
 
 ---
