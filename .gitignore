@@ -55,3 +55,6 @@ GAP-ANALYSIS.md
 TRIAL-1-RESULTS.md
 TRIAL-TRACKER.md
 CHANGELOG.md
+
+# ─── Git worktrees (isolated prototype workspaces) ───
+.worktrees/
