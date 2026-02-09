@@ -1,66 +1,32 @@
-/**
- * TasksPage — Task management placeholder.
- *
- * Shows task count from governance API. Full task management
- * will be implemented in a later plan.
- */
-
-import { CheckSquare } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
-import { api } from "@/lib/api"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { useMemo } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useTask, useTasks } from "@/hooks/useTasks"
+import { TaskSidebar } from "@/components/tasks/TaskSidebar"
+import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel"
 
 export function TasksPage() {
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ["governance", "tasks"],
-    queryFn: api.getTasks,
-    retry: 1,
-    meta: { silent: true },
-  })
+  const navigate = useNavigate()
+  const { taskId } = useParams<{ taskId: string }>()
+  const { data: snapshot } = useTasks()
+  const { data: selectedTaskResponse } = useTask(taskId)
 
-  const taskCount = tasks?.length ?? 0
+  const selectedTask = useMemo(() => {
+    if (selectedTaskResponse?.task) return selectedTaskResponse.task
+    if (!taskId) return null
+    return snapshot?.tasks.find((task) => task.id === taskId) ?? null
+  }, [selectedTaskResponse, snapshot, taskId])
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Governance task tracking and management
-        </p>
+    <div className="flex h-full">
+      <div className="w-80 min-w-[20rem]">
+        <TaskSidebar
+          snapshot={snapshot}
+          selectedTaskId={taskId}
+          onSelectTask={(id) => navigate(`/tasks/${id}`)}
+        />
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Task Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading tasks...</p>
-          ) : (
-            <div className="flex items-center gap-3">
-              <CheckSquare className="h-8 w-8 text-muted-foreground/50" />
-              <div>
-                <div className="text-2xl font-bold">{taskCount}</div>
-                <p className="text-xs text-muted-foreground">
-                  {taskCount === 0
-                    ? "No tasks tracked yet"
-                    : `${taskCount} task${taskCount !== 1 ? "s" : ""} in governance`}
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-center rounded-lg border border-dashed border-border p-12">
-        <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Task management coming soon
-          </p>
-          <p className="text-xs text-muted-foreground/70">
-            Full task graph visualization and lifecycle management will be added in a future plan.
-          </p>
-        </div>
+      <div className="min-w-0 flex-1">
+        <TaskDetailPanel task={selectedTask} />
       </div>
     </div>
   )

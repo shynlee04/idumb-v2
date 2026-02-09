@@ -1,15 +1,5 @@
-/**
- * API client — typed methods for all backend endpoints.
- *
- * Uses environment variable or defaults to localhost:3001.
- * Every method returns a typed promise for React Query consumption.
- */
-
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001"
 
-// ---------------------------------------------------------------------------
-// Response helper — throws on non-OK responses so React Query marks as error
-// ---------------------------------------------------------------------------
 async function json<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const text = await response.text().catch(() => response.statusText)
@@ -18,82 +8,154 @@ async function json<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>
 }
 
-// ---------------------------------------------------------------------------
-// Types — lightweight mirrors of backend shapes (no coupling to src/schemas)
-// ---------------------------------------------------------------------------
 export interface EngineStatus {
   running: boolean
-  version?: string
-  uptime?: number
-  sessions?: number
+  url?: string
+  projectDir?: string
+  port?: number
 }
 
 export interface Session {
   id: string
-  title?: string
-  createdAt: string
-  updatedAt?: string
-  status?: "idle" | "running" | "compacting"
-  agentId?: string
-}
-
-export interface Message {
-  id: string
-  role: "user" | "assistant" | "system"
-  content: string
-  timestamp: string
-  toolCalls?: unknown[]
+  title: string
+  parentID?: string
+  time: {
+    created: number
+    updated: number
+    compacting?: number
+  }
 }
 
 export interface SessionStatus {
-  id: string
-  status: "idle" | "running" | "compacting"
-  lastActivity?: string
+  type: "idle" | "busy" | "retry" | string
+  attempt?: number
+  message?: string
+  next?: number
 }
 
-export interface TaskItem {
+export interface MessageInfo {
   id: string
-  title: string
-  status: string
-  priority?: string
-  createdAt?: string
+  role: "user" | "assistant" | "system"
+  time: {
+    created: number
+    completed?: number
+  }
 }
 
-export interface BrainEntry {
+export interface StreamPart {
+  id: string
   type: string
-  content: string
-  priority?: string
-  timestamp?: string
+  sessionID?: string
+  messageID?: string
+  text?: string
+  delta?: string
+  name?: string
+  tool?: string
+  callID?: string
+  state?: {
+    status?: string
+    input?: Record<string, unknown>
+    output?: string
+    error?: string
+  }
+  metadata?: Record<string, unknown>
+  [key: string]: unknown
 }
 
-// ---------------------------------------------------------------------------
-// API client singleton
-// ---------------------------------------------------------------------------
+export interface SessionMessageEntry {
+  info: MessageInfo
+  parts: StreamPart[]
+}
+
+export interface TaskNode {
+  id: string
+  workPlanId: string
+  name: string
+  expectedOutput: string
+  status: "planned" | "blocked" | "active" | "review" | "completed" | "failed"
+  assignedTo: string
+  delegatedBy: string
+  dependsOn: string[]
+  checkpoints: Array<{ id: string; summary: string; timestamp: number; tool: string }>
+  createdAt: number
+  modifiedAt: number
+  startedAt?: number
+  completedAt?: number
+  result?: {
+    evidence: string
+    filesModified: string[]
+    testsRun: string
+  }
+}
+
+export interface WorkPlan {
+  id: string
+  name: string
+  status: "draft" | "active" | "completed" | "archived" | "abandoned"
+  category: string
+  tasks: TaskNode[]
+  planAhead: TaskNode[]
+  createdAt: number
+  completedAt?: number
+}
+
+export interface TasksSnapshot {
+  workPlan: WorkPlan | null
+  tasks: TaskNode[]
+  activeTask: TaskNode | null
+}
+
+export interface GovernanceStatus {
+  activeTask: TaskNode | null
+  workPlan: WorkPlan | null
+  progress: {
+    total: number
+    completed: number
+    failed: number
+    percent: number
+  }
+  governanceMode: string
+  writesBlocked: boolean
+  capturedAgent?: unknown
+}
+
 export const api = {
-  // Engine
   getEngineStatus: (): Promise<EngineStatus> =>
     fetch(`${API_BASE}/api/engine/status`).then(r => json<EngineStatus>(r)),
 
-  // Sessions — list / CRUD
+  startEngine: (payload: { projectDir?: string; port?: number }): Promise<EngineStatus> =>
+    fetch(`${API_BASE}/api/engine/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(r => json<EngineStatus>(r)),
+
+  stopEngine: (): Promise<{ success: boolean }> =>
+    fetch(`${API_BASE}/api/engine/stop`, { method: "POST" }).then(r =>
+      json<{ success: boolean }>(r),
+    ),
+
   listSessions: (): Promise<Session[]> =>
     fetch(`${API_BASE}/api/sessions`).then(r => json<Session[]>(r)),
 
-  createSession: (): Promise<Session> =>
-    fetch(`${API_BASE}/api/sessions`, { method: "POST" }).then(r =>
-      json<Session>(r),
-    ),
+  createSession: (title?: string): Promise<Session> =>
+    fetch(`${API_BASE}/api/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(title ? { title } : {}),
+    }).then(r => json<Session>(r)),
 
   getSession: (id: string): Promise<Session> =>
     fetch(`${API_BASE}/api/sessions/${id}`).then(r => json<Session>(r)),
 
-  deleteSession: (id: string): Promise<void> =>
-    fetch(`${API_BASE}/api/sessions/${id}`, { method: "DELETE" }).then(r => {
-      if (!r.ok) throw new Error(`Delete failed: ${r.status}`)
-    }),
+  deleteSession: (id: string): Promise<{ success: boolean }> =>
+    fetch(`${API_BASE}/api/sessions/${id}`, { method: "DELETE" }).then(r =>
+      json<{ success: boolean }>(r),
+    ),
 
-  getMessages: (id: string): Promise<Message[]> =>
+  getMessages: (id: string): Promise<SessionMessageEntry[]> =>
     fetch(`${API_BASE}/api/sessions/${id}/messages`).then(r =>
-      json<Message[]>(r),
+      json<SessionMessageEntry[]>(r),
     ),
 
   getSessionStatus: (id: string): Promise<SessionStatus> =>
@@ -106,34 +168,37 @@ export const api = {
       json<Session[]>(r),
     ),
 
-  /** Returns the SSE URL for streaming a prompt — caller opens EventSource */
-  promptUrl: (id: string): string =>
-    `${API_BASE}/api/sessions/${id}/prompt`,
-
-  sendPrompt: (id: string, text: string): Promise<Response> =>
+  sendPrompt: (id: string, text: string, signal?: AbortSignal): Promise<Response> =>
     fetch(`${API_BASE}/api/sessions/${id}/prompt`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({
+        parts: [{ type: "text", text }],
+      }),
+      signal,
     }),
 
-  abortSession: (id: string): Promise<void> =>
-    fetch(`${API_BASE}/api/sessions/${id}/abort`, { method: "POST" }).then(
-      r => {
-        if (!r.ok) throw new Error(`Abort failed: ${r.status}`)
-      },
+  abortSession: (id: string): Promise<{ success: boolean }> =>
+    fetch(`${API_BASE}/api/sessions/${id}/abort`, { method: "POST" }).then(r =>
+      json<{ success: boolean }>(r),
     ),
 
-  // Governance (existing endpoints)
-  getTasks: (): Promise<TaskItem[]> =>
-    fetch(`${API_BASE}/api/tasks`).then(r => json<TaskItem[]>(r)),
+  getTasks: (): Promise<TasksSnapshot> =>
+    fetch(`${API_BASE}/api/tasks`).then(r => json<TasksSnapshot>(r)),
 
-  getBrain: (): Promise<BrainEntry[]> =>
-    fetch(`${API_BASE}/api/brain`).then(r => json<BrainEntry[]>(r)),
+  getTask: (id: string): Promise<{ task: TaskNode }> =>
+    fetch(`${API_BASE}/api/tasks/${id}`).then(r => json<{ task: TaskNode }>(r)),
 
-  getDelegations: (): Promise<unknown[]> =>
-    fetch(`${API_BASE}/api/delegations`).then(r => json<unknown[]>(r)),
+  getTaskHistory: (): Promise<{ tasks: TaskNode[] }> =>
+    fetch(`${API_BASE}/api/tasks/history`).then(r =>
+      json<{ tasks: TaskNode[] }>(r),
+    ),
 
-  // SSE events endpoint
-  eventsUrl: `${API_BASE}/api/events`,
+  getGovernance: (): Promise<GovernanceStatus> =>
+    fetch(`${API_BASE}/api/governance`).then(r =>
+      json<GovernanceStatus>(r),
+    ),
+
+  eventsUrl: (sessionID?: string): string =>
+    `${API_BASE}/api/events${sessionID ? `?sessionID=${encodeURIComponent(sessionID)}` : ""}`,
 } as const

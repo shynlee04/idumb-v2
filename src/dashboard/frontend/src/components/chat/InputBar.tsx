@@ -1,103 +1,76 @@
-/**
- * InputBar — Text input + submit button with abort capability.
- *
- * Features:
- * - Multi-line text input (auto-resize)
- * - Submit button (Enter sends, Shift+Enter for newline)
- * - Abort button when streaming
- * - Loading state indicator
- */
-
-import { Send, Square } from "lucide-react"
-import { useRef, useEffect, useState } from "react"
+import { AtSign, Paperclip, Send, Slash, Square } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 
 interface InputBarProps {
-  onSubmit: (text: string) => void
-  onAbort?: () => void
-  isStreaming?: boolean
-  isDisabled?: boolean
-  placeholder?: string
+  onSend: (text: string) => void
+  onAbort: () => void
+  isStreaming: boolean
 }
 
-export function InputBar({
-  onSubmit,
-  onAbort,
-  isStreaming = false,
-  isDisabled = false,
-  placeholder = "Ask a question or run a command...",
-}: InputBarProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+export function InputBar({ onSend, onAbort, isStreaming }: InputBarProps) {
   const [value, setValue] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
-    if (!isStreaming && textareaRef.current) {
-      textareaRef.current.focus()
-    }
+    if (!isStreaming) textareaRef.current?.focus()
   }, [isStreaming])
 
-  const handleSubmit = () => {
-    const trimmed = value.trim()
-    if (trimmed && !isStreaming && !isDisabled) {
-      onSubmit(trimmed)
-      setValue("")
-      setTimeout(() => {
-        textareaRef.current?.focus()
-      }, 100)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
-    }
-  }
-
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value)
+  const submit = () => {
+    const text = value.trim()
+    if (!text || isStreaming) return
+    onSend(text)
+    setValue("")
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      textareaRef.current.style.height = "40px"
     }
   }
 
   return (
-    <div className="border-t border-border bg-zinc-950/50 p-4">
+    <div className="border-t border-border bg-zinc-950/40 px-4 py-3">
+      <div className="mb-2 flex items-center gap-1 text-zinc-400">
+        <button className="rounded p-1.5 hover:bg-zinc-800/60" type="button" title="Attach file (coming soon)">
+          <Paperclip className="h-4 w-4" />
+        </button>
+        <button className="rounded p-1.5 hover:bg-zinc-800/60" type="button" title="Mention agent (coming soon)">
+          <AtSign className="h-4 w-4" />
+        </button>
+        <button className="rounded p-1.5 hover:bg-zinc-800/60" type="button" title="Slash commands (coming soon)">
+          <Slash className="h-4 w-4" />
+        </button>
+      </div>
+
       <div className="flex items-end gap-2">
         <textarea
           ref={textareaRef}
-          value={value}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={isStreaming || isDisabled}
+          className="min-h-[40px] max-h-[220px] flex-1 resize-none overflow-y-auto rounded-md border border-border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
           rows={1}
-          className={cn(
-            "flex-1 resize-none rounded-md border border-border bg-zinc-900/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60",
-            "focus:outline-none focus:ring-2 focus:ring-primary/20",
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            "min-h-[40px] max-h-[200px] overflow-y-auto",
-          )}
-          style={{ height: "40px" }}
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value)
+            event.target.style.height = "40px"
+            event.target.style.height = `${Math.min(event.target.scrollHeight, 220)}px`
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault()
+              submit()
+            }
+          }}
+          placeholder="Message iDumb..."
+          disabled={isStreaming}
         />
-        {isStreaming && onAbort ? (
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={onAbort}
-            disabled={isDisabled}
-            title="Abort"
-          >
+
+        {isStreaming ? (
+          <Button size="icon" variant="destructive" onClick={onAbort} title="Abort response">
             <Square className="h-4 w-4" />
           </Button>
         ) : (
           <Button
-            variant="default"
             size="icon"
-            onClick={handleSubmit}
-            disabled={!value.trim() || isStreaming || isDisabled}
-            title="Send"
+            onClick={submit}
+            disabled={value.trim().length === 0}
+            title="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>
@@ -105,8 +78,4 @@ export function InputBar({
       </div>
     </div>
   )
-}
-
-function cn(...classes: (string | undefined | false)[]) {
-  return classes.filter(Boolean).join(" ")
 }
