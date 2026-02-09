@@ -119,6 +119,8 @@ export interface GovernanceStatus {
   capturedAgent?: unknown
 }
 
+import type { ProviderInfo, AgentInfo, AppInfo } from "@shared/engine-types"
+
 export const api = {
   getEngineStatus: (): Promise<EngineStatus> =>
     fetch(`${API_BASE}/api/engine/status`).then(r => json<EngineStatus>(r)),
@@ -134,6 +136,22 @@ export const api = {
     fetch(`${API_BASE}/api/engine/stop`, { method: "POST" }).then(r =>
       json<{ success: boolean }>(r),
     ),
+
+  // ── Config proxy endpoints ──────────────────────────────────────────────
+
+  getProviders: (): Promise<ProviderInfo[]> =>
+    fetch(`${API_BASE}/api/providers`).then(r => json<ProviderInfo[]>(r)),
+
+  getAgents: (): Promise<AgentInfo[]> =>
+    fetch(`${API_BASE}/api/agents`).then(r => json<AgentInfo[]>(r)),
+
+  getConfig: (): Promise<Record<string, unknown>> =>
+    fetch(`${API_BASE}/api/config`).then(r => json<Record<string, unknown>>(r)),
+
+  getAppInfo: (): Promise<AppInfo> =>
+    fetch(`${API_BASE}/api/app`).then(r => json<AppInfo>(r)),
+
+  // ── Session endpoints ───────────────────────────────────────────────────
 
   listSessions: (): Promise<Session[]> =>
     fetch(`${API_BASE}/api/sessions`).then(r => json<Session[]>(r)),
@@ -168,12 +186,18 @@ export const api = {
       json<Session[]>(r),
     ),
 
-  sendPrompt: (id: string, text: string, signal?: AbortSignal): Promise<Response> =>
+  sendPrompt: (
+    id: string,
+    text: string,
+    signal?: AbortSignal,
+    model?: { providerID: string; modelID: string },
+  ): Promise<Response> =>
     fetch(`${API_BASE}/api/sessions/${id}/prompt`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         parts: [{ type: "text", text }],
+        ...(model ? { providerID: model.providerID, modelID: model.modelID } : {}),
       }),
       signal,
     }),

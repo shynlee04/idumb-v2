@@ -5,7 +5,7 @@ interface StreamingState {
   parts: Map<string, StreamPart>
   isStreaming: boolean
   error: string | null
-  sendPrompt: (text: string) => Promise<void>
+  sendPrompt: (text: string, model?: { providerID: string; modelID: string }) => Promise<void>
   abort: () => Promise<void>
   clear: () => void
 }
@@ -80,7 +80,7 @@ export function useStreaming(sessionId?: string): StreamingState {
     setIsStreaming(false)
   }, [sessionId])
 
-  const sendPrompt = useCallback(async (text: string) => {
+  const sendPrompt = useCallback(async (text: string, model?: { providerID: string; modelID: string }) => {
     if (!sessionId || !text.trim()) return
 
     setError(null)
@@ -91,7 +91,7 @@ export function useStreaming(sessionId?: string): StreamingState {
     abortControllerRef.current = controller
 
     try {
-      const response = await api.sendPrompt(sessionId, text, controller.signal)
+      const response = await api.sendPrompt(sessionId, text, controller.signal, model)
       if (!response.ok) {
         throw new Error(`Prompt failed with status ${response.status}`)
       }

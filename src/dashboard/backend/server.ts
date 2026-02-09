@@ -78,6 +78,91 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: Date.now() })
 })
 
+// ─── Config Proxy Routes ──────────────────────────────────────────────────
+
+import type { ProviderInfo, AgentInfo, AppInfo } from "../shared/engine-types.js"
+
+/** GET /api/providers — list configured providers with their models */
+app.get("/api/providers", async (_req: Request, res: Response) => {
+  try {
+    const result = await getClient().config.providers()
+    const providers = unwrapSdkResult(result)
+    // Normalize into ProviderInfo[] shape
+    const normalized: ProviderInfo[] = Array.isArray(providers)
+      ? providers.map((p: Record<string, unknown>) => ({
+          id: String(p.id ?? ""),
+          name: String(p.name ?? p.id ?? ""),
+          models: Array.isArray(p.models)
+            ? (p.models as Record<string, unknown>[]).map((m) => ({
+                id: String(m.id ?? ""),
+                name: String(m.name ?? m.id ?? ""),
+              }))
+            : [],
+        }))
+      : []
+    res.json(normalized)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to list providers: ${String(err)}` })
+  }
+})
+
+/** GET /api/agents — list available agents (via app.agents()) */
+app.get("/api/agents", async (_req: Request, res: Response) => {
+  try {
+    const result = await getClient().app.agents()
+    const agents = unwrapSdkResult(result)
+    const normalized: AgentInfo[] = Array.isArray(agents)
+      ? agents.map((a: Record<string, unknown>) => ({
+          id: String(a.id ?? ""),
+          name: String(a.name ?? a.id ?? ""),
+          ...(a.description ? { description: String(a.description) } : {}),
+        }))
+      : []
+    res.json(normalized)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to list agents: ${String(err)}` })
+  }
+})
+
+/** GET /api/config — proxy OpenCode config */
+app.get("/api/config", async (_req: Request, res: Response) => {
+  try {
+    const result = await getClient().config.get()
+    const config = unwrapSdkResult(result)
+    res.json(config ?? {})
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to get config: ${String(err)}` })
+  }
+})
+
+/** GET /api/app — proxy OpenCode app info (composed from path + vcs) */
+app.get("/api/app", async (_req: Request, res: Response) => {
+  try {
+    const pathResult = await getClient().path.get()
+    const pathInfo = unwrapSdkResult(pathResult) as Record<string, unknown> | undefined
+    let gitInfo: Record<string, unknown> | undefined
+    try {
+      const vcsResult = await getClient().vcs.get()
+      gitInfo = unwrapSdkResult(vcsResult) as Record<string, unknown> | undefined
+    } catch { /* vcs may not be available */ }
+    const appInfo: AppInfo = {
+      path: {
+        cwd: String(pathInfo?.cwd ?? ""),
+        config: String(pathInfo?.config ?? ""),
+        data: String(pathInfo?.data ?? ""),
+      },
+      ...(gitInfo ? { git: gitInfo } : {}),
+    }
+    res.json(appInfo)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to get app info: ${String(err)}` })
+  }
+})
+
 // ─── State Reader Integration ─────────────────────────────────────────────
 
 import { readGovernanceState } from "../../lib/state-reader.js"
@@ -697,6 +782,11 @@ app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
     return
   }
 
+  // Extract optional model override (providerID + modelID)
+  const modelID = typeof req.body?.modelID === "string" ? req.body.modelID : undefined
+  const providerID = typeof req.body?.providerID === "string" ? req.body.providerID : undefined
+  const model = modelID && providerID ? { providerID, modelID } : undefined
+
   initSseResponse(res)
 
   const abortController = new AbortController()
@@ -719,7 +809,7 @@ app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
     const promptResult = await getClient().session.prompt({
       query: sdkQuery(projectDir),
       path: { id },
-      body: { parts },
+      body: { parts, ...(model ? { model } : {}) },
     })
     if (isRecord(promptResult) && promptResult.error) {
       throw new Error(extractSdkErrorMessage(promptResult.error))
