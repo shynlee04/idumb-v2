@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button"
 import { useEngineStatus } from "@/hooks/useEngine"
 import { useTasks } from "@/hooks/useTasks"
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001"
-
 interface HealthPayload {
   status?: string
   grade?: "A" | "B" | "C" | "D" | "F"
@@ -31,7 +29,7 @@ export function ProjectHealthCard() {
   const { data: health } = useQuery({
     queryKey: ["health", "dashboard"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE}/api/health`)
+      const response = await fetch("/api/health")
       if (!response.ok) return {} as HealthPayload
       return response.json() as Promise<HealthPayload>
     },
