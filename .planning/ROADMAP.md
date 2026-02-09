@@ -35,10 +35,15 @@
 
 **Dependencies:** None — this is the foundation. Requires aggressive cleanup of existing codebase (branch, strip dead code, rebuild).
 
-**Plans:**
-1. Codebase cleanup + OpenCode Server integration
-2. Web app shell + streaming chat
-3. Task hierarchy + governance hooks
+**Plans:** 6 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Backend Engine: OpenCode Server lifecycle + Session Proxy API + SSE relay
+- [ ] 01-02-PLAN.md — Frontend App Shell: React Router + Layout + Sidebar + API hooks
+- [ ] 01-03-PLAN.md — Chat Interface: Streaming renderer + Part renderers + Input bar
+- [ ] 01-04-PLAN.md — Task Bus: Task API routes + Task sidebar + Task detail + Rich cards
+- [ ] 01-05-PLAN.md — Multi-Agent Delegation + Governance: Threaded delegation + Governance bar
+- [ ] 01-06-PLAN.md — Dashboard Landing + Integration: Overview page + Human verification checkpoint
 
 ---
 
