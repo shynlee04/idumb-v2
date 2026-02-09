@@ -19,7 +19,7 @@ function applyFilter(tasks: TaskNode[], filter: TaskFilter): TaskNode[] {
 
 export function TaskSidebar({ snapshot, selectedTaskId, onSelectTask }: TaskSidebarProps) {
   const [filter, setFilter] = useState<TaskFilter>("active")
-  const tasks = snapshot?.tasks ?? []
+  const tasks = Array.isArray(snapshot?.tasks) ? snapshot.tasks : []
 
   const visibleTasks = useMemo(() => applyFilter(tasks, filter), [tasks, filter])
 

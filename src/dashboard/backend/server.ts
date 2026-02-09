@@ -212,9 +212,14 @@ function getTaskSnapshot(projectDir: string): TaskSnapshot {
     ? graph.workPlans.find((candidate) => candidate.id === graph.activeWorkPlanId) ?? null
     : graph.workPlans[0] ?? null
 
+  const safeTasks = (wp: WorkPlan) => [
+    ...(Array.isArray(wp.tasks) ? wp.tasks : []),
+    ...(Array.isArray(wp.planAhead) ? wp.planAhead : []),
+  ]
+
   const tasks = activeWorkPlan
-    ? [...activeWorkPlan.tasks, ...activeWorkPlan.planAhead]
-    : graph.workPlans.flatMap((candidate) => [...candidate.tasks, ...candidate.planAhead])
+    ? safeTasks(activeWorkPlan)
+    : graph.workPlans.flatMap(safeTasks)
 
   const activeTask = tasks.find((task) => task.status === "active") ?? null
 

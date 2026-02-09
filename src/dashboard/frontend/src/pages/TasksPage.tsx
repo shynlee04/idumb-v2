@@ -10,7 +10,7 @@ export function TasksPage() {
   const { data: snapshot } = useTasks()
   const { data: selectedTaskResponse } = useTask(taskId)
 
-  const allTasks = snapshot?.tasks ?? []
+  const allTasks = Array.isArray(snapshot?.tasks) ? snapshot.tasks : []
 
   const selectedTask = useMemo(() => {
     if (selectedTaskResponse?.task) return selectedTaskResponse.task

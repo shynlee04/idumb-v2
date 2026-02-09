@@ -39,7 +39,7 @@ export function ProjectHealthCard() {
 
   const fallbackGrade: "A" | "B" | "C" | "D" = engine?.running ? "B" : "D"
   const grade = health?.grade ?? fallbackGrade
-  const taskList = tasks?.tasks ?? []
+  const taskList = Array.isArray(tasks?.tasks) ? tasks.tasks : []
   const issueCount = health?.issues ?? taskList.filter((task) => task.status === "failed").length ?? 0
 
   return (

@@ -6,7 +6,7 @@ import { useTasks } from "@/hooks/useTasks"
 export function ActiveTasksCard() {
   const { data } = useTasks()
 
-  const all = data?.tasks ?? []
+  const all = Array.isArray(data?.tasks) ? data.tasks : []
   const active = all.filter((task) => ["active", "blocked", "review", "planned"].includes(task.status))
   const preview = active.slice(0, 3)
 
