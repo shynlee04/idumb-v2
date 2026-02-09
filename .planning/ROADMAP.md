@@ -45,7 +45,7 @@ Plans:
 - [x] 01-05-PLAN.md — Multi-Agent Delegation + Governance: Threaded delegation + Governance bar
 - [x] 01-06-PLAN.md — Dashboard Landing + Integration: Overview page + Human verification checkpoint
 - [x] 01-07-PLAN.md — Gap Closure: 16 pre-UAT audit flaws (backend, frontend, docs)
-- [ ] 01-08-PLAN.md — Gap Closure: UAT gaps — chat viewport layout + agent object normalization + data migration
+- [x] 01-08-PLAN.md — Gap Closure: UAT gaps — chat viewport layout + agent object normalization + data migration
 
 ---
 

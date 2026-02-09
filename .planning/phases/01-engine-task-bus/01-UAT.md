@@ -32,11 +32,12 @@ result: pass
 
 ### 5. Chat: Create Session + Send Message
 expected: Click "Quick Chat" button in sidebar. New chat session opens. Type a message in the input bar and send. OpenCode responds with streaming text that appears incrementally.
-result: issue
+result: pass
 reported_r1: "Chat page viewport is shifted/covered when sessions exist. Clicking a session shows empty chat area with only input bar and DELEGATION THREAD label — no message history renders. Viewport drifts to top."
-fix_applied: "01-08: flex-col layout, min-h-0 flex-1 ScrollArea, loading/error states"
+fix_applied_r1: "01-08: flex-col layout, min-h-0 flex-1 ScrollArea, loading/error states"
 reported_r2: "Messages now render but the entire viewport drifts upward — react drift up screen"
-severity: major
+fix_applied_r2: "6240916: scroll isolation + overflow containment (5 changes)"
+note: "Passed on R2 re-verify after drift-up fix."
 
 ### 6. Chat: Tool Call Rendering
 expected: If the AI uses a tool during response (e.g. file read), it renders as a collapsible block showing tool name, state badge (running/complete), and expandable input/output.
@@ -64,16 +65,16 @@ result: pass
 ## Summary
 
 total: 10
-passed: 9
-issues: 1
+passed: 10
+issues: 0
 pending: 0
 skipped: 0
 
 ## Gaps
 
 - truth: "Chat viewport stays stable — no drift, messages render in proper scroll area"
-  status: fixed_not_reverified
-  reason: "Fix applied in commit 6240916 (5 changes: scroll isolation, overflow containment, sidebar/delegation containment, h-screen→h-full). User passed tests 6-8 which depend on chat working, but test 5 not explicitly re-verified after drift fix."
+  status: fixed_verified
+  reason: "Fix applied in commit 6240916, re-verified by user — viewport stable, no drift."
   severity: major
   test: 5
   root_cause: "scrollIntoView in MessageList.tsx:25-27 propagates scroll to all ancestors including document body. html/body lack overflow:hidden, enabling document-level scroll. ChatPage aside has no overflow control. DelegationThread inside flex column compresses MessageList."
