@@ -1,15 +1,19 @@
 /**
- * ChatPage — Session list + chat area placeholder.
+ * ChatPage — Session list + full streaming chat interface.
  *
  * Left panel lists sessions with a "New Chat" button.
- * Main area shows placeholder or future message stream when session selected.
+ * Main area renders MessageList + InputBar with SSE streaming support.
  */
 
 import { useParams, useNavigate } from "react-router-dom"
 import { MessageSquare, Plus, Trash2 } from "lucide-react"
 import { useSessions, useCreateSession, useDeleteSession } from "@/hooks/useEngine"
+import { useStreaming } from "@/hooks/useStreaming"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { MessageList, Message } from "@/components/chat/MessageList"
+import { InputBar } from "@/components/chat/InputBar"
+import { useState } from "react"
 
 export function ChatPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
@@ -17,11 +21,49 @@ export function ChatPage() {
   const { data: sessions, isLoading } = useSessions()
   const createSession = useCreateSession()
   const deleteSession = useDeleteSession()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [currentStreamingMessage, setCurrentStreamingMessage] = useState<Message | null>(null)
+  const streaming = useStreaming()
+
+  const handleSubmit = (text: string) => {
+    if (!sessionId) return
+
+    const userMsg: Message = {
+      id: `msg-${Date.now()}-user`,
+      role: "user",
+      content: text,
+      timestamp: new Date().toISOString(),
+    }
+    setMessages((prev) => [...prev, userMsg])
+
+    const assistantMsg: Message = {
+      id: `msg-${Date.now()}-assistant`,
+      role: "assistant",
+      content: "",
+      timestamp: new Date().toISOString(),
+      isStreaming: true,
+      parts: [],
+    }
+    setCurrentStreamingMessage(assistantMsg)
+
+    const sseUrl = `http://localhost:3000/api/sessions/${sessionId}/prompt`
+    streaming.start(sseUrl, text)
+  }
+
+  const handleAbort = () => {
+    streaming.abort()
+    if (currentStreamingMessage) {
+      setMessages((prev) => [...prev, { ...currentStreamingMessage, isStreaming: false }])
+      setCurrentStreamingMessage(null)
+    }
+  }
 
   const handleNewChat = () => {
     createSession.mutate(undefined, {
       onSuccess: (session) => {
         navigate(`/chat/${session.id}`)
+        setMessages([])
+        setCurrentStreamingMessage(null)
       },
     })
   }
@@ -30,7 +72,11 @@ export function ChatPage() {
     e.stopPropagation()
     deleteSession.mutate(id, {
       onSuccess: () => {
-        if (sessionId === id) navigate("/chat")
+        if (sessionId === id) {
+          navigate("/chat")
+          setMessages([])
+          setCurrentStreamingMessage(null)
+        }
       },
     })
   }
@@ -91,17 +137,23 @@ export function ChatPage() {
       </div>
 
       {/* Main chat area */}
-      <div className="flex flex-1 items-center justify-center">
-        {sessionId ? (
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Session: <span className="font-mono text-foreground">{sessionId.slice(0, 12)}</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Chat interface coming in a future plan.
-            </p>
-          </div>
-        ) : (
+      {sessionId ? (
+        <div className="flex flex-1 flex-col">
+          <MessageList
+            messages={[
+              ...messages,
+              ...(currentStreamingMessage ? [currentStreamingMessage] : []),
+            ]}
+          />
+          <InputBar
+            onSubmit={handleSubmit}
+            onAbort={handleAbort}
+            isStreaming={!!currentStreamingMessage}
+            placeholder="Ask a question or run a command..."
+          />
+        </div>
+      ) : (
+        <div className="flex flex-1 items-center justify-center">
           <div className="text-center space-y-3">
             <MessageSquare className="mx-auto h-10 w-10 text-muted-foreground/50" />
             <p className="text-sm text-muted-foreground">
@@ -112,8 +164,8 @@ export function ChatPage() {
               New Chat
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

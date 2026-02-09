@@ -5,7 +5,11 @@
   "mcp": {
     "context7": {
       "type": "local",
-      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
       "enabled": true
     },
     "deepwiki": {
@@ -15,28 +19,45 @@
     },
     "sequentialthinking": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
       "enabled": true
     },
     "tavily": {
       "type": "local",
-      "command": ["npx", "-y", "tavily-mcp@0.2.3"],
-      "env": {
+      "command": [
+        "npx",
+        "-y",
+        "tavily-mcp@0.2.3"
+      ],
+      "environment": {
         "TAVILY_API_KEY": "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"
       },
       "enabled": true
     },
     "exa": {
       "type": "local",
-      "command": ["npx", "-y", "exa-mcp-server"],
-      "env": {
+      "command": [
+        "npx",
+        "-y",
+        "exa-mcp-server"
+      ],
+      "environment": {
         "EXA_API_KEY": "0f87e4ce-23ed-4bb1-85b2-2bf04ae7caba"
       },
       "enabled": true
     },
     "repomix": {
       "type": "local",
-      "command": ["npx", "-y", "repomix", "--mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "repomix",
+        "--mcp"
+      ],
       "enabled": true
     }
   },

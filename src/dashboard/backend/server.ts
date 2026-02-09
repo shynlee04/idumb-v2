@@ -5,6 +5,7 @@
  * - Serves API routes for governance state (tasks, brain, delegations, etc.)
  * - Broadcasts JSON file changes via WebSocket
  * - Provides file watching for .idumb/brain/*.json
+ * - Proxies OpenCode SSE events for streaming chat
  *
  * API Endpoints:
  * - GET /api/tasks          — TaskStore snapshot
@@ -15,6 +16,7 @@
  * - GET /api/artifacts      — List planning artifacts
  * - GET /api/artifacts/:id  — Get artifact content
  * - GET /api/artifacts/metadata — Real file metadata for an artifact
+ * - POST /api/sessions/:id/prompt — SSE stream for chat responses
  * - WS  /ws                — WebSocket for live updates
  */
 
@@ -244,6 +246,51 @@ app.get("/api/codemap", (req: Request, res: Response) => {
   res.json({
     codemap: state.codeMapStore,
   })
+})
+
+// POST /api/sessions/:id/prompt — SSE stream for chat responses
+// TODO: Integrate with OpenCode SDK `client.session.prompt()` for actual streaming
+// Currently mocked for UI development
+app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { text } = req.body
+
+  if (!text || typeof text !== "string") {
+    res.status(400).json({ error: "Missing or invalid text parameter" })
+    return
+  }
+
+  try {
+    res.setHeader("Content-Type", "text/event-stream")
+    res.setHeader("Cache-Control", "no-cache")
+    res.setHeader("Connection", "keep-alive")
+
+    // TODO: Replace with actual OpenCode SDK streaming
+    // const client = getClient()
+    // const response = await client.session.prompt({ path: { id }, body: { parts: [...] } })
+    // for await (const chunk of response) { ... }
+
+    // Mock streaming response for UI development
+    const mockParts = [
+      { type: "text", content: "I understand your request. " },
+      { type: "text", content: "Let me process this step by step.\n\n" },
+      { type: "tool", id: "mock-1", name: "mock_tool", content: "Running mock analysis..." },
+      { type: "text", content: "Analysis complete. Here's what I found:\n\n" },
+      { type: "code", name: "typescript", content: "// Mock code block\nconst result = analyze(data)" },
+    ]
+
+    for (const part of mockParts) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+      res.write(`data: ${JSON.stringify({ type: "part", part })}\n\n`)
+    }
+
+    res.write("data: [DONE]\n\n")
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    log.error("Session prompt failed", { id, error: message })
+    res.write(`data: ${JSON.stringify({ type: "error", message })}\n\n`)
+    res.write("data: [DONE]\n\n")
+  }
 })
 
 // GET /api/artifacts — List planning artifacts

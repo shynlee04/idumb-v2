@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useRef } from "react"
-import { Edit2, Save, X, Check, AlertTriangle } from "lucide-react"
+import { Edit2, Save, X, AlertTriangle } from "lucide-react"
 
 interface InlineEditorProps {
   content: string
