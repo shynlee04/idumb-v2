@@ -9,7 +9,15 @@ interface DelegationThreadProps {
 
 function DelegationNode({ sessionId, depth }: { sessionId: string; depth: number }) {
   const { data: children = [] } = useSessionChildren(sessionId)
-  const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   if (children.length === 0) return null
 
@@ -20,13 +28,13 @@ function DelegationNode({ sessionId, depth }: { sessionId: string; depth: number
           <button
             type="button"
             className="flex w-full items-center gap-2 text-left text-xs text-indigo-100"
-            onClick={() => setOpen((prev) => !prev)}
+            onClick={() => toggle(child.id)}
           >
-            {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+            {expanded.has(child.id) ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             <span className="font-semibold">{child.title || `Delegated ${child.id.slice(0, 8)}`}</span>
           </button>
 
-          {open && depth < 3 ? (
+          {expanded.has(child.id) && depth < 3 ? (
             <DelegationNode sessionId={child.id} depth={depth + 1} />
           ) : null}
         </div>
