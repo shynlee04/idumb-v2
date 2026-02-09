@@ -123,7 +123,7 @@ function getPlanningArtifacts(projectDir: string) {
   }
 
   // Check for implementation plans
-  const implPlanDir = join(planningDir, "implamentation-plan-turn-based")
+  const implPlanDir = join(planningDir, "implementation-plan-turn-based")
   if (existsSync(implPlanDir)) {
     const files = readdirSync(implPlanDir).filter((f: string) => f.endsWith(".md"))
 
@@ -475,7 +475,6 @@ app.post("/api/engine/start", async (req: Request, res: Response) => {
   const projectDir = req.body?.projectDir || resolveProjectDir(req)
   const port = Number(
     req.body?.port
-    ?? process.env.OPENCOD_PORT
     ?? process.env.OPENCODE_PORT
     ?? getRuntimeEngineStatus().port
     ?? 4096,
@@ -503,7 +502,6 @@ app.post("/api/engine/restart", async (req: Request, res: Response) => {
   const projectDir = req.body?.projectDir || resolveProjectDir(req)
   const port = Number(
     req.body?.port
-    ?? process.env.OPENCOD_PORT
     ?? process.env.OPENCODE_PORT
     ?? getRuntimeEngineStatus().port
     ?? 4096,
@@ -1170,7 +1168,6 @@ export async function startServer(config: DashboardConfig): Promise<void> {
 
   const resolvedOpencodePort = Number(
     config.opencodePort
-    ?? process.env.OPENCOD_PORT
     ?? process.env.OPENCODE_PORT
     ?? 4096,
   )
