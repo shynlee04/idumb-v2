@@ -745,6 +745,7 @@ app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
       writeSse(res, { type: "error", message })
     }
   } finally {
+    abortController.abort()
     clearTimeout(timeout)
     res.end()
   }
