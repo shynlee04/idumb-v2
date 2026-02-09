@@ -34,7 +34,7 @@ export function GovernanceBar() {
   const { data } = useGovernance()
   const { connected, subscribe } = useEventStream()
   const [lastEventAt, setLastEventAt] = useState<number | null>(null)
-  const [tick, setTick] = useState(0)
+  const [_tick, setTick] = useState(0)
 
   useEffect(() => {
     return subscribe("event", () => {
