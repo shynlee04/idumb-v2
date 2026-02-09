@@ -1,15 +1,16 @@
 /**
- * Main App component — Dashboard layout with panels and WebSocket
+ * App — Root component with React Router + QueryClient.
+ *
+ * Dashboard-first landing: root "/" goes to DashboardPage (per user decision).
+ * AppShell provides the sidebar + outlet layout for all pages.
  */
 
-import { useEffect, useRef, useCallback } from "react"
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query"
-import { DashboardLayout } from "@/components/layout/DashboardLayout"
-import { TaskGraphPanel } from "@/components/panels/TaskGraphPanel"
-import { TaskHierarchyPanel } from "@/components/panels/TaskHierarchyPanel"
-import { DelegationChainPanel } from "@/components/panels/DelegationChainPanel"
-import { BrainKnowledgePanel } from "@/components/panels/BrainKnowledgePanel"
-import { PlanningArtifactsPanel } from "@/components/panels/PlanningArtifactsPanel"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { AppShell } from "@/components/layout/AppShell"
+import { DashboardPage } from "@/pages/DashboardPage"
+import { ChatPage } from "@/pages/ChatPage"
+import { TasksPage } from "@/pages/TasksPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,81 +21,21 @@ const queryClient = new QueryClient({
   },
 })
 
-const MAX_RECONNECT_DELAY_MS = 30_000
-const BASE_RECONNECT_DELAY_MS = 1_000
-
-function useWebSocket() {
-  const qc = useQueryClient()
-  const wsRef = useRef<WebSocket | null>(null)
-  const retriesRef = useRef(0)
-  const mountedRef = useRef(true)
-
-  const connect = useCallback(() => {
-    if (!mountedRef.current) return
-
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`)
-    wsRef.current = ws
-
-    ws.onopen = () => {
-      retriesRef.current = 0 // reset backoff on successful connection
-    }
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data)
-        if (msg.type === "file-changed" ||
-            msg.type === "artifact-saved" || msg.type === "comment-added" ||
-            msg.type === "comment-updated" || msg.type === "comment-deleted") {
-          qc.invalidateQueries()
-        }
-      } catch {
-        /* ignore malformed messages */
-      }
-    }
-
-    ws.onclose = () => {
-      wsRef.current = null
-      if (!mountedRef.current) return
-      // Exponential backoff: 1s, 2s, 4s, 8s, ... capped at 30s
-      const delay = Math.min(
-        BASE_RECONNECT_DELAY_MS * Math.pow(2, retriesRef.current),
-        MAX_RECONNECT_DELAY_MS
-      )
-      retriesRef.current++
-      setTimeout(connect, delay)
-    }
-  }, [qc])
-
-  useEffect(() => {
-    mountedRef.current = true
-    connect()
-
-    return () => {
-      mountedRef.current = false
-      wsRef.current?.close()
-    }
-  }, [connect])
-}
-
-function Dashboard() {
-  useWebSocket()
-
-  return (
-    <DashboardLayout>
-      <TaskGraphPanel />
-      <TaskHierarchyPanel />
-      <DelegationChainPanel />
-      <BrainKnowledgePanel />
-      <PlanningArtifactsPanel />
-    </DashboardLayout>
-  )
-}
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Dashboard />
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/chat/:sessionId" element={<ChatPage />} />
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/tasks/:taskId" element={<TasksPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }
