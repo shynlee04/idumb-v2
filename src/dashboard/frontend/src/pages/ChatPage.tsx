@@ -25,7 +25,7 @@ export function ChatPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
 
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions()
-  const { data: messages = [], refetch: refetchMessages } = useMessages(sessionId)
+  const { data: messages = [], refetch: refetchMessages, isLoading: messagesLoading, isError: messagesError } = useMessages(sessionId)
   const createSession = useCreateSession()
   const deleteSession = useDeleteSession()
   const streaming = useStreaming(sessionId)
@@ -119,12 +119,22 @@ export function ChatPage() {
               ) : null}
             </div>
 
-            <div className="min-h-0 flex-1">
-              <MessageList
-                messages={messages}
-                streamingParts={streaming.parts}
-                isStreaming={streaming.isStreaming}
-              />
+            <div className="min-h-0 flex-1 flex flex-col">
+              {messagesError ? (
+                <div className="flex flex-1 items-center justify-center">
+                  <p className="text-sm text-red-300">Failed to load messages. Check engine connection.</p>
+                </div>
+              ) : messagesLoading ? (
+                <div className="flex flex-1 items-center justify-center">
+                  <p className="text-sm text-muted-foreground">Loading messages...</p>
+                </div>
+              ) : (
+                <MessageList
+                  messages={messages}
+                  streamingParts={streaming.parts}
+                  isStreaming={streaming.isStreaming}
+                />
+              )}
               <div className="border-t border-border px-4 py-2">
                 <p className="mb-2 text-[11px] uppercase tracking-wide text-zinc-500">Delegation thread</p>
                 <DelegationThread sessionId={sessionId} />

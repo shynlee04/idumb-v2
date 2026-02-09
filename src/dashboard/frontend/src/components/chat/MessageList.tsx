@@ -40,7 +40,7 @@ export function MessageList({ messages, streamingParts, isStreaming }: MessageLi
   }
 
   return (
-    <ScrollArea className="h-full px-4 py-4">
+    <ScrollArea className="min-h-0 flex-1 px-4 py-4">
       <div className="space-y-4">
         {messages.map((entry) => {
           const isUser = entry.info.role === "user"
