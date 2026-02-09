@@ -10,11 +10,13 @@ export function TasksPage() {
   const { data: snapshot } = useTasks()
   const { data: selectedTaskResponse } = useTask(taskId)
 
+  const allTasks = snapshot?.tasks ?? []
+
   const selectedTask = useMemo(() => {
     if (selectedTaskResponse?.task) return selectedTaskResponse.task
     if (!taskId) return null
-    return snapshot?.tasks.find((task) => task.id === taskId) ?? null
-  }, [selectedTaskResponse, snapshot, taskId])
+    return allTasks.find((task) => task.id === taskId) ?? null
+  }, [selectedTaskResponse, allTasks, taskId])
 
   return (
     <div className="flex h-full">
