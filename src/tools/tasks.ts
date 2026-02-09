@@ -24,7 +24,13 @@ import { stateManager } from "../lib/persistence.js"
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function getAgent(sessionID: string): string {
-  return stateManager.getCapturedAgent(sessionID) ?? "idumb-executor"
+  const raw = stateManager.getCapturedAgent(sessionID)
+  if (!raw) return "idumb-executor"
+  // Defensive: handle legacy object values from pre-normalization state
+  if (typeof raw === "object" && raw !== null) {
+    return ((raw as Record<string, unknown>).name as string) ?? "idumb-executor"
+  }
+  return String(raw)
 }
 
 function getActiveWP(graph: TaskGraph) {

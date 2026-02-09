@@ -35,7 +35,11 @@ export function TaskDetailPanel({ task }: TaskDetailPanelProps) {
         </div>
         <div className="rounded border border-border bg-zinc-950/30 p-3">
           <p className="text-xs uppercase tracking-wide text-zinc-500">Assigned</p>
-          <p className="mt-1 text-sm text-zinc-200">{task.assignedTo}</p>
+          <p className="mt-1 text-sm text-zinc-200">
+            {typeof task.assignedTo === "object" && task.assignedTo !== null
+              ? ((task.assignedTo as Record<string, unknown>).name as string) ?? "unknown"
+              : task.assignedTo ?? "unassigned"}
+          </p>
         </div>
       </div>
 

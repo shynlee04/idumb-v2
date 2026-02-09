@@ -121,16 +121,22 @@ const idumb: Plugin = async ({ directory, client }) => {
         verifyLog.info("HOOK FIRED: chat.params", { sessionID, agent })
 
         if (agent) {
-          stateManager.setCapturedAgent(sessionID, agent)
-          log.info(`Agent captured: ${agent}`, { sessionID })
+          // OpenCode SDK passes agent as full object at runtime despite string type.
+          // Normalize to string name to prevent object propagation into TaskNodes.
+          const agentName: string =
+            typeof agent === "object" && agent !== null
+              ? ((agent as Record<string, unknown>).name as string) ?? String(agent)
+              : String(agent)
+          stateManager.setCapturedAgent(sessionID, agentName)
+          log.info(`Agent captured: ${agentName}`, { sessionID })
 
           // Auto-assign agent to active task if not already assigned
           const activeTask = stateManager.getSmartActiveTask()
           if (activeTask && !activeTask.assignee) {
-            activeTask.assignee = agent
+            activeTask.assignee = agentName
             const store = stateManager.getTaskStore()
             stateManager.setTaskStore(store) // trigger save
-            log.info(`Auto-assigned ${agent} to task "${activeTask.name}"`, { sessionID })
+            log.info(`Auto-assigned ${agentName} to task "${activeTask.name}"`, { sessionID })
           }
 
           // Auto-assign agent to active TaskNode in TaskGraph
@@ -139,9 +145,9 @@ const idumb: Plugin = async ({ directory, client }) => {
           if (activeWP) {
             const activeNode = activeWP.tasks.find(t => t.status === "active")
             if (activeNode && !activeNode.assignedTo) {
-              activeNode.assignedTo = agent
+              activeNode.assignedTo = agentName
               stateManager.saveTaskGraph(graph)
-              log.info(`Auto-assigned ${agent} to TaskNode "${activeNode.name}"`, { sessionID })
+              log.info(`Auto-assigned ${agentName} to TaskNode "${activeNode.name}"`, { sessionID })
             }
           }
         }
