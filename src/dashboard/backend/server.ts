@@ -93,7 +93,7 @@ function getGovernanceState(projectDir: string) {
  * Get planning artifacts list
  */
 function getPlanningArtifacts(projectDir: string) {
-  const planningDir = join(projectDir, "planning")
+  const planningDir = join(projectDir, ".planning")
   const artifacts: Array<{
     path: string
     name: string
@@ -1104,7 +1104,7 @@ import { watch } from "chokidar"
 
 function setupFileWatcher(projectDir: string) {
   const brainDir = join(projectDir, ".idumb/brain")
-  const planningDir = join(projectDir, "planning")
+  const planningDir = join(projectDir, ".planning")
 
   const watcher = watch([
     join(brainDir, "*.json"),
