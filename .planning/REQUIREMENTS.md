@@ -94,34 +94,34 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REG-01 | — | Pending |
-| REG-02 | — | Pending |
-| REG-03 | — | Pending |
-| REG-04 | — | Pending |
-| DEL-01 | — | Pending |
-| DEL-02 | — | Pending |
-| DEL-03 | — | Pending |
-| DEL-04 | — | Pending |
-| WIKI-01 | — | Pending |
-| WIKI-02 | — | Pending |
-| WIKI-03 | — | Pending |
-| KB-01 | — | Pending |
-| KB-02 | — | Pending |
-| KB-03 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| ENG-01 | — | Pending |
-| ENG-02 | — | Pending |
-| ENG-03 | — | Pending |
-| ENG-04 | — | Pending |
-| ENG-05 | — | Pending |
+| REG-01 | Phase 2 | Pending |
+| REG-02 | Phase 2 | Pending |
+| REG-03 | Phase 3 | Pending |
+| REG-04 | Phase 3 | Pending |
+| DEL-01 | Phase 1 | Pending |
+| DEL-02 | Phase 2 | Pending |
+| DEL-03 | Phase 2 | Pending |
+| DEL-04 | Phase 1 | Pending |
+| WIKI-01 | Phase 2 | Pending |
+| WIKI-02 | Phase 2 | Pending |
+| WIKI-03 | Phase 2 | Pending |
+| KB-01 | Phase 3 | Pending |
+| KB-02 | Phase 3 | Pending |
+| KB-03 | Phase 3 | Pending |
+| UI-01 | Phase 4 | Pending |
+| UI-02 | Phase 4 | Pending |
+| UI-03 | Phase 4 | Pending |
+| ENG-01 | Phase 1 | Pending |
+| ENG-02 | Phase 1 | Pending |
+| ENG-03 | Phase 1 | Pending |
+| ENG-04 | Phase 3 | Pending |
+| ENG-05 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22
+- Mapped to phases: 22
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-09*
-*Last updated: 2026-02-09 after initial definition from user specification*
+*Last updated: 2026-02-09 — traceability table populated from ROADMAP.md phasing*
