@@ -1,25 +1,30 @@
 /**
- * OpenCode Engine — Server Lifecycle Manager
+ * OpenCode Engine — server lifecycle manager + client singleton.
  *
- * Manages the OpenCode server process and provides a singleton SDK client
- * for all dashboard routes to use. Handles:
- * - Server start/stop lifecycle
- * - Client singleton access
- * - Compaction count tracking per session
+ * Responsibilities:
+ * - start/stop OpenCode server with configurable port
+ * - expose shared client for backend routes
+ * - track compaction counts per session from event stream data
+ * - provide lightweight health check with retry
  *
- * CRITICAL: No console.log — all logging via createLogger.
+ * TUI-safe: logging goes through createLogger, never console.log.
  */
 
-import { createOpencodeServer } from "@opencode-ai/sdk/server"
-import { createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk"
+import { createOpencode, type OpencodeClient } from "@opencode-ai/sdk"
 import { createLogger, type Logger } from "../../lib/logging.js"
 import type { EngineStatus } from "../shared/engine-types.js"
 
-// ─── Module-level singleton state ────────────────────────────────────────────
+interface EngineHandle {
+  url: string
+  close(): void
+}
 
-let opcodeServer: { url: string; close(): void } | null = null
-let opcodeClient: OpencodeClient | null = null
+let engineServer: EngineHandle | null = null
+let engineClient: OpencodeClient | null = null
 let engineProjectDir: string | null = null
+let enginePort: number | null = null
+let isStopping = false
+
 let log: Logger = {
   debug() {},
   info() {},
@@ -27,120 +32,199 @@ let log: Logger = {
   error() {},
 }
 
-/** Compaction count tracker: sessionId -> number of compactions observed */
 const compactionCounts = new Map<string, number>()
+const compactingState = new Map<string, boolean>()
 
-// ─── Public API ──────────────────────────────────────────────────────────────
+let shutdownHandlersInstalled = false
 
-/**
- * Start the OpenCode server and create a client singleton.
- *
- * @param projectDir - Absolute path to the project directory
- * @returns The server URL
- * @throws If the server fails to start
- */
-export async function startEngine(projectDir: string): Promise<{ url: string }> {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function parsePortFromUrl(url?: string): number | null {
+  if (!url) return null
+  try {
+    return new URL(url).port ? Number(new URL(url).port) : null
+  } catch {
+    return null
+  }
+}
+
+function installShutdownHandlers(): void {
+  if (shutdownHandlersInstalled) return
+  shutdownHandlersInstalled = true
+
+  const handleSignal = async (signal: "SIGINT" | "SIGTERM") => {
+    if (isStopping) return
+    isStopping = true
+    log.info(`Received ${signal}; stopping OpenCode engine`)
+    try {
+      await stopEngine()
+    } catch (err) {
+      log.warn("Error while stopping engine during signal handler", {
+        signal,
+        error: String(err),
+      })
+    }
+    process.exit(0)
+  }
+
+  process.on("SIGINT", () => {
+    void handleSignal("SIGINT")
+  })
+
+  process.on("SIGTERM", () => {
+    void handleSignal("SIGTERM")
+  })
+}
+
+export async function startEngine(projectDir: string, port: number = 4096): Promise<{ url: string }> {
   log = createLogger(projectDir, "engine")
 
-  if (opcodeServer) {
-    log.info("Engine already running", { url: opcodeServer.url })
-    return { url: opcodeServer.url }
-  }
-
-  log.info("Starting OpenCode server...", { projectDir })
-
-  try {
-    opcodeServer = await createOpencodeServer()
-    log.info("OpenCode server started", { url: opcodeServer.url })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    log.error("Failed to start OpenCode server", { error: message, projectDir })
-    throw new Error(`Engine start failed: ${message}`)
-  }
-
-  try {
-    opcodeClient = createOpencodeClient({
-      baseUrl: opcodeServer.url,
-      directory: projectDir,
+  if (engineServer && engineClient) {
+    log.info("Engine already running", {
+      url: engineServer.url,
+      port: enginePort,
     })
-    engineProjectDir = projectDir
-    log.info("OpenCode client created", { baseUrl: opcodeServer.url })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    log.error("Failed to create OpenCode client", { error: message })
-    // Clean up server if client creation fails
-    opcodeServer.close()
-    opcodeServer = null
-    throw new Error(`Engine client creation failed: ${message}`)
+    return { url: engineServer.url }
   }
 
-  return { url: opcodeServer.url }
+  installShutdownHandlers()
+
+  try {
+    log.info("Starting OpenCode engine", { projectDir, port })
+
+    const { server, client } = await createOpencode({
+      port,
+      timeout: 30_000,
+    })
+
+    engineServer = server
+    engineClient = client
+    engineProjectDir = projectDir
+    enginePort = parsePortFromUrl(server.url) ?? port
+
+    log.info("OpenCode engine started", {
+      url: server.url,
+      port: enginePort,
+    })
+
+    return { url: server.url }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    log.error("Failed to start OpenCode engine", {
+      projectDir,
+      port,
+      error: message,
+    })
+    throw new Error(`Engine start failed on port ${port}: ${message}`)
+  }
 }
 
-/**
- * Get the OpenCode SDK client singleton.
- *
- * @throws If the engine has not been started
- */
 export function getClient(): OpencodeClient {
-  if (!opcodeClient) {
+  if (!engineClient) {
     throw new Error("Engine not started — call startEngine() first")
   }
-  return opcodeClient
+  return engineClient
 }
 
-/**
- * Stop the OpenCode server and clear all references.
- */
 export async function stopEngine(): Promise<void> {
-  log.info("Stopping OpenCode engine...")
+  if (!engineServer && !engineClient) return
 
-  if (opcodeServer) {
+  isStopping = true
+  log.info("Stopping OpenCode engine")
+
+  if (engineServer) {
     try {
-      opcodeServer.close()
+      engineServer.close()
     } catch (err) {
       log.warn("Error closing OpenCode server", { error: String(err) })
     }
-    opcodeServer = null
   }
 
-  opcodeClient = null
+  engineServer = null
+  engineClient = null
   engineProjectDir = null
+  enginePort = null
   compactionCounts.clear()
-  log.info("Engine stopped")
+  compactingState.clear()
+  isStopping = false
+
+  log.info("OpenCode engine stopped")
 }
 
-/**
- * Get current engine status.
- */
 export function getEngineStatus(): EngineStatus {
   return {
-    running: opcodeServer !== null,
-    url: opcodeServer?.url,
+    running: Boolean(engineServer && engineClient),
+    url: engineServer?.url,
     projectDir: engineProjectDir ?? undefined,
+    port: enginePort ?? undefined,
   }
 }
 
-/**
- * Get the project directory the engine was started with.
- */
+export function getActualPort(): number | null {
+  return enginePort
+}
+
 export function getProjectDir(): string | null {
   return engineProjectDir
 }
 
 /**
- * Track a compaction event for a session.
- * Called when a `session.updated` event shows compaction completed.
+ * Observe an SDK event and bump compaction count when session compaction
+ * transitions from active -> inactive.
  */
-export function trackCompaction(sessionId: string): void {
-  const current = compactionCounts.get(sessionId) ?? 0
-  compactionCounts.set(sessionId, current + 1)
-  log.info("Compaction tracked", { sessionId, count: current + 1 })
+export function observeCompactionEvent(event: unknown): void {
+  const e = event as Record<string, unknown>
+
+  const sessionId =
+    (e.sessionID as string | undefined)
+    ?? ((e.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined)
+    ?? (((e.properties as Record<string, unknown> | undefined)?.message as Record<string, unknown> | undefined)?.sessionID as string | undefined)
+
+  if (!sessionId) return
+
+  const time = (e as { time?: { compacting?: unknown } }).time
+  const compacting = Boolean(time && time.compacting != null)
+  const wasCompacting = compactingState.get(sessionId) ?? false
+
+  if (wasCompacting && !compacting) {
+    const next = (compactionCounts.get(sessionId) ?? 0) + 1
+    compactionCounts.set(sessionId, next)
+    log.debug("Compaction completed", { sessionId, count: next })
+  }
+
+  compactingState.set(sessionId, compacting)
 }
 
-/**
- * Get the compaction count for a session.
- */
 export function getCompactionCount(sessionId: string): number {
   return compactionCounts.get(sessionId) ?? 0
+}
+
+export async function ensureHealthy(): Promise<boolean> {
+  const client = getClient()
+  const projectDir = engineProjectDir ?? undefined
+
+  const delays = [150, 300, 600]
+
+  for (let index = 0; index < delays.length; index += 1) {
+    try {
+      await client.config.get({
+        query: projectDir ? { directory: projectDir } : undefined,
+      })
+      return true
+    } catch (err) {
+      const attempt = index + 1
+      log.warn("Engine health check attempt failed", {
+        attempt,
+        total: delays.length,
+        error: String(err),
+      })
+      if (attempt < delays.length) {
+        await sleep(delays[index])
+      }
+    }
+  }
+
+  throw new Error("Engine unhealthy after 3 retries")
 }
