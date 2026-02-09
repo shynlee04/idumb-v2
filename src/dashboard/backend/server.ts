@@ -172,6 +172,24 @@ function extractSdkErrorMessage(error: unknown): string {
   return JSON.stringify(error)
 }
 
+function unwrapSdkResult<T>(result: {
+  data?: T
+  error?: unknown
+  response?: { status?: number }
+}): T {
+  if (result.error) {
+    const err = new Error(extractSdkErrorMessage(result.error)) as Error & { status?: number }
+    err.status = result.response?.status ?? 500
+    throw err
+  }
+  if (result.data === undefined) {
+    const err = new Error("Empty SDK response") as Error & { status?: number }
+    err.status = result.response?.status ?? 500
+    throw err
+  }
+  return result.data
+}
+
 interface TaskSnapshot {
   workPlan: WorkPlan | null
   tasks: TaskNode[]
@@ -506,7 +524,8 @@ app.post("/api/engine/restart", async (req: Request, res: Response) => {
 app.get("/api/sessions", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    const sessions = await getClient().session.list({ query: sdkQuery(projectDir) })
+    const result = await getClient().session.list({ query: sdkQuery(projectDir) })
+    const sessions = unwrapSdkResult(result)
     res.json(sessions)
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -519,10 +538,11 @@ app.post("/api/sessions", async (req: Request, res: Response) => {
   const title = typeof req.body?.title === "string" ? req.body.title : undefined
 
   try {
-    const session = await getClient().session.create({
+    const result = await getClient().session.create({
       query: sdkQuery(projectDir),
       body: title ? { title } : {},
     })
+    const session = unwrapSdkResult(result)
     res.status(201).json(session)
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -533,10 +553,11 @@ app.post("/api/sessions", async (req: Request, res: Response) => {
 app.get("/api/sessions/:id", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    const session = await getClient().session.get({
+    const result = await getClient().session.get({
       query: sdkQuery(projectDir),
       path: { id: req.params.id },
     })
+    const session = unwrapSdkResult(result)
     res.json(session)
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -547,10 +568,11 @@ app.get("/api/sessions/:id", async (req: Request, res: Response) => {
 app.delete("/api/sessions/:id", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    await getClient().session.delete({
+    const result = await getClient().session.delete({
       query: sdkQuery(projectDir),
       path: { id: req.params.id },
     })
+    unwrapSdkResult(result)
     res.json({ success: true })
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -561,10 +583,11 @@ app.delete("/api/sessions/:id", async (req: Request, res: Response) => {
 app.get("/api/sessions/:id/messages", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    const messages = await getClient().session.messages({
+    const result = await getClient().session.messages({
       query: sdkQuery(projectDir),
       path: { id: req.params.id },
     })
+    const messages = unwrapSdkResult(result)
     res.json(messages)
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -575,10 +598,11 @@ app.get("/api/sessions/:id/messages", async (req: Request, res: Response) => {
 app.get("/api/sessions/:id/children", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    const children = await getClient().session.children({
+    const result = await getClient().session.children({
       query: sdkQuery(projectDir),
       path: { id: req.params.id },
     })
+    const children = unwrapSdkResult(result)
     res.json(children)
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -589,10 +613,11 @@ app.get("/api/sessions/:id/children", async (req: Request, res: Response) => {
 app.post("/api/sessions/:id/abort", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    await getClient().session.abort({
+    const result = await getClient().session.abort({
       query: sdkQuery(projectDir),
       path: { id: req.params.id },
     })
+    unwrapSdkResult(result)
     res.json({ success: true })
   } catch (err) {
     const status = (err as { status?: number }).status ?? 500
@@ -603,9 +628,10 @@ app.post("/api/sessions/:id/abort", async (req: Request, res: Response) => {
 app.get("/api/sessions/:id/status", async (req: Request, res: Response) => {
   const projectDir = resolveProjectDir(req)
   try {
-    const statusMap = await getClient().session.status({
+    const result = await getClient().session.status({
       query: sdkQuery(projectDir),
-    }) as Record<string, unknown>
+    })
+    const statusMap = unwrapSdkResult(result) as Record<string, unknown>
 
     const status = statusMap[req.params.id]
     if (!status) {
@@ -686,11 +712,14 @@ app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
       signal: abortController.signal,
     })
 
-    await getClient().session.prompt({
+    const promptResult = await getClient().session.prompt({
       query: sdkQuery(projectDir),
       path: { id },
       body: { parts },
     })
+    if (isRecord(promptResult) && promptResult.error) {
+      throw new Error(extractSdkErrorMessage(promptResult.error))
+    }
 
     let seenSessionEvent = false
 
