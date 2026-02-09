@@ -15,7 +15,7 @@ function sortParts(parts: StreamPart[]): StreamPart[] {
 }
 
 export function MessageList({ messages, streamingParts, isStreaming }: MessageListProps) {
-  const endRef = useRef<HTMLDivElement | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   const streamingList = useMemo(
     () => sortParts(Array.from(streamingParts.values())),
@@ -23,7 +23,10 @@ export function MessageList({ messages, streamingParts, isStreaming }: MessageLi
   )
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" })
+    const container = scrollContainerRef.current
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
   }, [messages, streamingList, isStreaming])
 
   if (messages.length === 0 && streamingList.length === 0) {
@@ -40,7 +43,7 @@ export function MessageList({ messages, streamingParts, isStreaming }: MessageLi
   }
 
   return (
-    <ScrollArea className="min-h-0 flex-1 px-4 py-4">
+    <ScrollArea ref={scrollContainerRef} className="min-h-0 flex-1 px-4 py-4">
       <div className="space-y-4">
         {messages.map((entry) => {
           const isUser = entry.info.role === "user"
@@ -81,7 +84,6 @@ export function MessageList({ messages, streamingParts, isStreaming }: MessageLi
           </div>
         ) : null}
       </div>
-      <div ref={endRef} />
     </ScrollArea>
   )
 }

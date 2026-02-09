@@ -50,7 +50,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-border bg-zinc-950 text-zinc-300">
+    <aside className="flex h-full w-60 flex-col border-r border-border bg-zinc-950 text-zinc-300">
       <div className="flex h-14 items-center gap-2 border-b border-border px-4">
         <span className="text-base font-bold text-primary">iDumb</span>
         <span className="font-mono text-xs text-muted-foreground">v2</span>

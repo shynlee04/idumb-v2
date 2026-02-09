@@ -57,8 +57,8 @@ export function ChatPage() {
 
   return (
     <div className="flex h-full">
-      <aside className="w-72 border-r border-border bg-zinc-950/50">
-        <div className="flex items-center justify-between border-b border-border px-3 py-3">
+      <aside className="flex h-full w-72 flex-col border-r border-border bg-zinc-950/50">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-3">
           <div>
             <h2 className="text-sm font-semibold">Conversations</h2>
             <p className="text-xs text-muted-foreground">{sortedSessions.length} sessions</p>
@@ -68,44 +68,46 @@ export function ChatPage() {
           </Button>
         </div>
 
-        <div className="space-y-1 p-2">
-          {sessionsLoading ? (
-            <p className="px-2 py-3 text-xs text-muted-foreground">Loading sessions...</p>
-          ) : null}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="space-y-1 p-2">
+            {sessionsLoading ? (
+              <p className="px-2 py-3 text-xs text-muted-foreground">Loading sessions...</p>
+            ) : null}
 
-          {!sessionsLoading && sortedSessions.length === 0 ? (
-            <p className="px-2 py-3 text-xs text-muted-foreground">
-              No sessions yet. Create one to start chatting.
-            </p>
-          ) : null}
+            {!sessionsLoading && sortedSessions.length === 0 ? (
+              <p className="px-2 py-3 text-xs text-muted-foreground">
+                No sessions yet. Create one to start chatting.
+              </p>
+            ) : null}
 
-          {sortedSessions.map((session) => (
-            <button
-              key={session.id}
-              type="button"
-              className={cn(
-                "group flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors",
-                sessionId === session.id
-                  ? "bg-blue-500/15 text-zinc-100"
-                  : "text-zinc-300 hover:bg-zinc-800/60",
-              )}
-              onClick={() => navigate(`/chat/${session.id}`)}
-            >
-              <MessageSquare className="h-4 w-4 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm">{session.title || session.id}</p>
-                <p className="text-xs text-zinc-500">{formatRelativeTime(session.time.updated)}</p>
-              </div>
-              <span
-                role="button"
-                tabIndex={-1}
-                className="rounded p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-300"
-                onClick={(event) => onDelete(event, session.id)}
+            {sortedSessions.map((session) => (
+              <button
+                key={session.id}
+                type="button"
+                className={cn(
+                  "group flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors",
+                  sessionId === session.id
+                    ? "bg-blue-500/15 text-zinc-100"
+                    : "text-zinc-300 hover:bg-zinc-800/60",
+                )}
+                onClick={() => navigate(`/chat/${session.id}`)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
-              </span>
-            </button>
-          ))}
+                <MessageSquare className="h-4 w-4 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm">{session.title || session.id}</p>
+                  <p className="text-xs text-zinc-500">{formatRelativeTime(session.time.updated)}</p>
+                </div>
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  className="rounded p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-300"
+                  onClick={(event) => onDelete(event, session.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </aside>
 
@@ -135,7 +137,7 @@ export function ChatPage() {
                   isStreaming={streaming.isStreaming}
                 />
               )}
-              <div className="border-t border-border px-4 py-2">
+              <div className="shrink-0 border-t border-border px-4 py-2 max-h-40 overflow-y-auto">
                 <p className="mb-2 text-[11px] uppercase tracking-wide text-zinc-500">Delegation thread</p>
                 <DelegationThread sessionId={sessionId} />
               </div>
