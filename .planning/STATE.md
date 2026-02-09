@@ -1,8 +1,24 @@
 # Project State
 
 **Project:** iDumb — AI Knowledge Work Platform
-**Current Phase:** Phase 1 (not started)
-**Last Updated:** 2026-02-09
+**Current Phase:** Phase 1 - Engine + Task Bus
+**Status:** 01-01 Revised with research, ready for execution
+**Last Updated:** 2026-02-10
+
+## Recent Activity
+
+| Date | Phase | Activity |
+|-------|-------|----------|
+| 2026-02-10 | 01-01 | Research completed: OpenCode SDK integration patterns validated |
+| 2026-02-10 | 01-01 | Plan revised: Port configuration, SSE filtering, graceful shutdown added |
+| 2026-02-09 | 01-02 | Frontend app shell complete (nav, layout, session list) |
+| 2026-02-09 | 01-03 | Chat interface complete (SSE streaming, tool calls, abort) |
+
+## Next Steps
+
+1. Execute 01-01 — Backend engine with configurable OpenCode port
+2. UAT — Verify 01-01 + 01-02 + 01-03 integration
+3. Continue with ENG-02, ENG-03, DEL-01, DEL-04
 
 ## Project Reference
 
