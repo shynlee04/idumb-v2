@@ -39,8 +39,8 @@
 
 Plans:
 - [ ] 01-01-PLAN.md — Backend Engine: OpenCode Server lifecycle + Session Proxy API + SSE relay
-- [ ] 01-02-PLAN.md — Frontend App Shell: React Router + Layout + Sidebar + API hooks
-- [ ] 01-03-PLAN.md — Chat Interface: Streaming renderer + Part renderers + Input bar
+- [x] 01-02-PLAN.md — Frontend App Shell: React Router + Layout + Sidebar + API hooks ✅
+- [x] 01-03-PLAN.md — Chat Interface: Streaming renderer + Part renderers + Input bar ✅
 - [ ] 01-04-PLAN.md — Task Bus: Task API routes + Task sidebar + Task detail + Rich cards
 - [ ] 01-05-PLAN.md — Multi-Agent Delegation + Governance: Threaded delegation + Governance bar
 - [ ] 01-06-PLAN.md — Dashboard Landing + Integration: Overview page + Human verification checkpoint
