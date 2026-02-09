@@ -695,9 +695,10 @@ app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
   initSseResponse(res)
 
   const abortController = new AbortController()
+  // 5 minutes: agent turns can legitimately take minutes for complex tasks
   const timeout = setTimeout(() => {
     abortController.abort()
-  }, 45_000)
+  }, 300_000)
 
   req.on("close", () => {
     abortController.abort()
