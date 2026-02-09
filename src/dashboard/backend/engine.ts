@@ -1,16 +1,17 @@
 /**
- * OpenCode Engine — server lifecycle manager + client singleton.
+ * OpenCode Engine — connect-or-start lifecycle manager + client singleton.
  *
- * Responsibilities:
- * - start/stop OpenCode server with configurable port
- * - expose shared client for backend routes
- * - track compaction counts per session from event stream data
- * - provide lightweight health check with retry
+ * Strategy:
+ * 1. Try connecting to an EXISTING OpenCode server on the target port
+ * 2. If no server found, start a new one
+ *
+ * This means `idumb-v2 dashboard` works whether the user already has
+ * OpenCode running (e.g., from the CLI) or not.
  *
  * TUI-safe: logging goes through createLogger, never console.log.
  */
 
-import { createOpencode, type OpencodeClient } from "@opencode-ai/sdk"
+import { createOpencode, createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk"
 import { createLogger, type Logger } from "../../lib/logging.js"
 import type { EngineStatus } from "../shared/engine-types.js"
 
@@ -23,6 +24,7 @@ let engineServer: EngineHandle | null = null
 let engineClient: OpencodeClient | null = null
 let engineProjectDir: string | null = null
 let enginePort: number | null = null
+let connectedToExisting = false
 
 let log: Logger = {
   debug() {},
@@ -47,19 +49,54 @@ function parsePortFromUrl(url?: string): number | null {
   }
 }
 
+/**
+ * Try connecting to an existing OpenCode server on the given port.
+ * Returns the client if successful, null otherwise.
+ */
+async function tryConnectExisting(port: number, projectDir?: string): Promise<OpencodeClient | null> {
+  try {
+    const baseUrl = `http://127.0.0.1:${port}`
+    const client = createOpencodeClient({ baseUrl })
+
+    // Health check — verify it's actually an OpenCode server
+    await client.config.get({
+      query: projectDir ? { directory: projectDir } : undefined,
+    })
+
+    return client
+  } catch {
+    return null
+  }
+}
+
 export async function startEngine(projectDir: string, port: number = 4096): Promise<{ url: string }> {
   log = createLogger(projectDir, "engine")
 
-  if (engineServer && engineClient) {
-    log.info("Engine already running", {
-      url: engineServer.url,
-      port: enginePort,
-    })
-    return { url: engineServer.url }
+  if (engineClient) {
+    const url = engineServer?.url ?? `http://127.0.0.1:${enginePort}`
+    log.info("Engine already connected", { url, port: enginePort })
+    return { url }
   }
 
+  // Strategy 1: Connect to existing OpenCode server
+  log.info("Checking for existing OpenCode server", { port })
+  const existingClient = await tryConnectExisting(port, projectDir)
+
+  if (existingClient) {
+    const url = `http://127.0.0.1:${port}`
+    engineClient = existingClient
+    engineProjectDir = projectDir
+    enginePort = port
+    engineServer = null // no server handle — we didn't start it
+    connectedToExisting = true
+
+    log.info("Connected to existing OpenCode server", { url, port })
+    return { url }
+  }
+
+  // Strategy 2: Start new OpenCode server
   try {
-    log.info("Starting OpenCode engine", { projectDir, port })
+    log.info("No existing server found, starting new OpenCode engine", { projectDir, port })
 
     const { server, client } = await createOpencode({
       port,
@@ -70,6 +107,7 @@ export async function startEngine(projectDir: string, port: number = 4096): Prom
     engineClient = client
     engineProjectDir = projectDir
     enginePort = parsePortFromUrl(server.url) ?? port
+    connectedToExisting = false
 
     log.info("OpenCode engine started", {
       url: server.url,
@@ -100,7 +138,8 @@ export async function stopEngine(): Promise<void> {
 
   log.info("Stopping OpenCode engine")
 
-  if (engineServer) {
+  // Only close the server if WE started it (don't kill user's existing OpenCode)
+  if (engineServer && !connectedToExisting) {
     try {
       engineServer.close()
     } catch (err) {
@@ -112,6 +151,7 @@ export async function stopEngine(): Promise<void> {
   engineClient = null
   engineProjectDir = null
   enginePort = null
+  connectedToExisting = false
   compactionCounts.clear()
   compactingState.clear()
 
@@ -120,8 +160,8 @@ export async function stopEngine(): Promise<void> {
 
 export function getEngineStatus(): EngineStatus {
   return {
-    running: Boolean(engineServer && engineClient),
-    url: engineServer?.url,
+    running: Boolean(engineClient),
+    url: engineServer?.url ?? (enginePort ? `http://127.0.0.1:${enginePort}` : undefined),
     projectDir: engineProjectDir ?? undefined,
     port: enginePort ?? undefined,
   }
