@@ -49,6 +49,22 @@ A runnable web application where users chat with OpenCode through the browser, t
 - Governance bar exact positioning and styling
 - Agent status indicator animation style
 
+### Technical Architecture
+
+- **SSE Relay Pattern** — Backend proxies OpenCode SSE events to browser (NOT direct connection). Browser ←SSE→ Express ←SDK→ OpenCode Server
+- **Session Proxy Pattern** — Backend wraps OpenCode SDK calls, adding governance state injection and compaction tracking
+- **Workspace-Bound Sessions** — All sessions tied to a detected project directory from OpenCode server config
+- **App Shell Pattern** — Sidebar + Outlet layout for all routed pages with React Router v7
+- **Query Key Colocation** — Tanstack Query keys defined alongside hooks (engineKeys, sessionKeys)
+- **Typed API Client Singleton** — All fetch calls centralized in api.ts with typed return values and error handling
+- **Structured Streaming Blocks** — Responses render as progressive markdown with live-updating tool call blocks (Cursor/Windsurf style)
+
+### Session Lifecycle
+
+- After ~3 compactions, sub-agent analyzes conversation state and suggests purified context
+- User prompted to start fresh session carrying synthesis forward (not automatic archival)
+- Compaction count tracked per session via `session.updated` events
+
 </decisions>
 
 <specifics>
