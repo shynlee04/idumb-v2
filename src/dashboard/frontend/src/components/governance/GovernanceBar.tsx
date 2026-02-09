@@ -34,12 +34,20 @@ export function GovernanceBar() {
   const { data } = useGovernance()
   const { connected, subscribe } = useEventStream()
   const [lastEventAt, setLastEventAt] = useState<number | null>(null)
+  const [tick, setTick] = useState(0)
 
   useEffect(() => {
     return subscribe("event", () => {
       setLastEventAt(Date.now())
     })
   }, [subscribe])
+
+  // Re-render every second to keep "Xs ago" timestamp fresh
+  useEffect(() => {
+    if (!lastEventAt) return
+    const interval = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(interval)
+  }, [lastEventAt])
 
   const initialized = Boolean(data?.workPlan)
   const hasActiveTask = Boolean(data?.activeTask)
