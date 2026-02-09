@@ -1193,9 +1193,9 @@ export async function startServer(config: DashboardConfig): Promise<void> {
     app.use(express.static(frontendDistPath))
     // SPA catch-all: serve index.html for any non-API route
     // This MUST come after all /api/ routes are registered (they are module-level above)
-    app.get("*", (req: Request, res: Response) => {
-      // Skip API routes — they are already handled above
-      if (req.path.startsWith("/api/")) return
+    app.get("*", (req: Request, res: Response, next) => {
+      // Skip API routes — let Express default 404 handler respond
+      if (req.path.startsWith("/api/")) return next()
       res.sendFile(join(frontendDistPath, "index.html"))
     })
     log.info("Serving pre-built frontend from Express", { path: frontendDistPath })
