@@ -53,8 +53,8 @@ export function useSessionStatus(id: string | undefined) {
     queryFn: () => api.getSessionStatus(id!),
     enabled: !!id,
     refetchInterval: (query) => {
-      const status = query.state.data?.status
-      return status === "running" ? 2_000 : 10_000
+      const statusType = query.state.data?.type
+      return statusType === "busy" ? 2_000 : 10_000
     },
   })
 }

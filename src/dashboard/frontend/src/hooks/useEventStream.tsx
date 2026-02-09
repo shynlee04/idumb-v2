@@ -27,7 +27,7 @@ export function EventStreamProvider({ children }: { children: React.ReactNode })
   }, [])
 
   useEffect(() => {
-    const source = new EventSource(api.eventsUrl)
+    const source = new EventSource(api.eventsUrl())
     sourceRef.current = source
     setState("reconnecting")
 
