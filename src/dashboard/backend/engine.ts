@@ -23,7 +23,6 @@ let engineServer: EngineHandle | null = null
 let engineClient: OpencodeClient | null = null
 let engineProjectDir: string | null = null
 let enginePort: number | null = null
-let isStopping = false
 
 let log: Logger = {
   debug() {},
@@ -99,7 +98,6 @@ export function getClient(): OpencodeClient {
 export async function stopEngine(): Promise<void> {
   if (!engineServer && !engineClient) return
 
-  isStopping = true
   log.info("Stopping OpenCode engine")
 
   if (engineServer) {
@@ -116,7 +114,6 @@ export async function stopEngine(): Promise<void> {
   enginePort = null
   compactionCounts.clear()
   compactingState.clear()
-  isStopping = false
 
   log.info("OpenCode engine stopped")
 }
