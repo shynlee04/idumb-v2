@@ -2,7 +2,7 @@
 
 **Project:** iDumb — AI Knowledge Work Platform
 **Current Phase:** Phase 1 - Engine + Task Bus
-**Status:** Wave 4 checkpoint reached — 01-06 human verification pending
+**Status:** 01-08 gap closure complete — UAT re-verification pending
 **Last Updated:** 2026-02-10
 
 ## Recent Activity
@@ -15,10 +15,11 @@
 | 2026-02-10 | 01-06 | Dashboard cards + sidebar polish completed; awaiting human integration verify checkpoint |
 | 2026-02-10 | 01 | Frontend type regressions fixed (`useEventStream`, `useSessionStatus`) |
 | 2026-02-10 | 01-07 | Gap closure: 16 audit flaws fixed across backend, frontend, and docs |
+| 2026-02-10 | 01-08 | UAT gap closure: chat viewport flex layout + agent normalization + 92-field data migration |
 
 ## Next Steps
 
-1. Run plan `01-06` checkpoint verification (dashboard → chat → tasks → governance flow).
+1. Re-run UAT tests 5, 6, 7, 8 to verify gap closure.
 2. On approval, write `01-06-SUMMARY.md` and phase verification report (`01-VERIFICATION.md`).
 3. Update ROADMAP/STATE to mark Phase 1 complete and handoff to Phase 2 planning.
 
@@ -33,18 +34,18 @@ See: .planning/PROJECT.md (updated 2026-02-09)
 
 | # | Phase | Status | Progress | Requirements |
 |---|-------|--------|----------|--------------|
-| 1 | Engine + Task Bus | ◆ In Progress | 93% (6/7 plans + 01-06 verify pending) | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 |
+| 1 | Engine + Task Bus | ◆ In Progress | 95% (7/8 plans + UAT re-verify pending) | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 |
 | 2 | Planning Registry + Commit Governance | ○ Pending | 0% | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 |
 | 3 | Knowledge Engine | ○ Pending | 0% | REG-03, REG-04, KB-01, KB-02, KB-03, ENG-04 |
 | 4 | UI Views + Source Synthesis | ○ Pending | 0% | UI-01, UI-02, UI-03, ENG-05 |
 
 ## Active Work
 
-Phase 1 `01-06` checkpoint: human verification of end-to-end integration.
+Phase 1 `01-08` gap closure complete. UAT re-verification needed for tests 5, 6, 7, 8.
 
 ## Blockers
 
-Human verification checkpoint required to close `01-06` and mark Phase 1 complete.
+Human verification of UAT re-run required to close Phase 1.
 
 ## Recent Decisions
 
@@ -57,6 +58,8 @@ Human verification checkpoint required to close `01-06` and mark Phase 1 complet
 | 4-phase roadmap: Engine -> Governance -> Knowledge -> UI | 2026-02-09 | Pre-Phase 1 |
 | SC-4 scoped to passive delegation display; active orchestration deferred to Phase 2 | 2026-02-10 | Phase 1 |
 | 01-07 gap closure: 16 audit flaws fixed (5 critical, 9 important, 2 discrepancy) | 2026-02-10 | Phase 1 |
+| 01-08 agent normalization at source with defensive fallbacks in consumers | 2026-02-10 | Phase 1 |
+| Runtime data files gitignored correctly; migration applied in-place, no git commit for data | 2026-02-10 | Phase 1 |
 
 ---
 *State initialized: 2026-02-09*
