@@ -35,8 +35,6 @@ let log: Logger = {
 const compactionCounts = new Map<string, number>()
 const compactingState = new Map<string, boolean>()
 
-let shutdownHandlersInstalled = false
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -50,34 +48,6 @@ function parsePortFromUrl(url?: string): number | null {
   }
 }
 
-function installShutdownHandlers(): void {
-  if (shutdownHandlersInstalled) return
-  shutdownHandlersInstalled = true
-
-  const handleSignal = async (signal: "SIGINT" | "SIGTERM") => {
-    if (isStopping) return
-    isStopping = true
-    log.info(`Received ${signal}; stopping OpenCode engine`)
-    try {
-      await stopEngine()
-    } catch (err) {
-      log.warn("Error while stopping engine during signal handler", {
-        signal,
-        error: String(err),
-      })
-    }
-    process.exit(0)
-  }
-
-  process.on("SIGINT", () => {
-    void handleSignal("SIGINT")
-  })
-
-  process.on("SIGTERM", () => {
-    void handleSignal("SIGTERM")
-  })
-}
-
 export async function startEngine(projectDir: string, port: number = 4096): Promise<{ url: string }> {
   log = createLogger(projectDir, "engine")
 
@@ -88,8 +58,6 @@ export async function startEngine(projectDir: string, port: number = 4096): Prom
     })
     return { url: engineServer.url }
   }
-
-  installShutdownHandlers()
 
   try {
     log.info("Starting OpenCode engine", { projectDir, port })
