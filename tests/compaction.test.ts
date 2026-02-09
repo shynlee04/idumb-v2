@@ -13,7 +13,7 @@
 
 import { createCompactionHook, addAnchor, getAnchors } from "../src/hooks/compaction.js"
 import { createAnchor, isStale } from "../src/schemas/index.js"
-import { setActiveTask } from "../src/hooks/index.js"
+import { stateManager } from "../src/lib/persistence.js"
 import { createLogger } from "../src/lib/index.js"
 import { mkdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
@@ -59,7 +59,7 @@ async function test2_anchorInjected(): Promise<void> {
 }
 
 async function test3_activeTaskInContext(): Promise<void> {
-  setActiveTask("compact-test-3", { id: "t-1", name: "Build auth module" })
+  stateManager.setActiveTask("compact-test-3", { id: "t-1", name: "Build auth module" })
   const anchor = createAnchor("decision", "critical", "Auth strategy: SAML")
   addAnchor("compact-test-3", anchor)
 

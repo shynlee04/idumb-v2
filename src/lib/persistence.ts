@@ -21,9 +21,9 @@ import { z } from "zod"
 import type { Anchor } from "../schemas/anchor.js"
 import type { TaskStore, TaskEpic, Task } from "../schemas/task.js"
 import { createEmptyStore, getActiveChain, migrateTaskStore } from "../schemas/task.js"
-import type { TaskGraph } from "../schemas/work-plan.js"
+import type { TaskGraph, TaskNode } from "../schemas/work-plan.js"
 import { createEmptyTaskGraph } from "../schemas/work-plan.js"
-import { purgeAbandonedPlans, migrateV2ToV3 } from "../schemas/task-graph.js"
+import { purgeAbandonedPlans, migrateV2ToV3, findTaskNode } from "../schemas/task-graph.js"
 import type { DelegationStore } from "../schemas/delegation.js"
 import { createEmptyDelegationStore, expireStaleDelegations } from "../schemas/delegation.js"
 import type { PlanState } from "../schemas/plan-state.js"
@@ -162,6 +162,22 @@ async function readWithLegacyFallback(
     const raw = await readFile(join(directory, legacyPath), "utf-8")
     return { raw, migrated: true }
   }
+}
+
+// ─── GovernanceStatus ────────────────────────────────────────────────
+
+/**
+ * Unified governance snapshot — eliminates 4x-duplicated call pattern.
+ * Used by: tasks_check, system.ts hook, compaction.ts hook.
+ */
+export interface GovernanceStatus {
+  activeTask: { id: string; name: string } | null
+  taskNode: TaskNode | null
+  workPlan: { name: string; status: string } | null
+  agent: string | null
+  progress: { completed: number; total: number; failed: number } | null
+  nextPlanned: { name: string; blockedBy?: string } | null
+  recentCheckpoints: number
 }
 
 // ─── StateManager ────────────────────────────────────────────────────
@@ -577,6 +593,55 @@ export class StateManager {
   saveTaskGraph(graph: TaskGraph): void {
     this.taskGraph = graph
     this.scheduleTaskGraphSave()
+  }
+
+  /**
+   * Unified governance snapshot for a session.
+   * Eliminates 4x-duplicated pattern: getTaskGraph() + getActiveWorkChain() + getCapturedAgent() + ...
+   */
+  getGovernanceStatus(sessionID: string): GovernanceStatus {
+    const activeTask = this.getActiveTask(sessionID)
+    const graph = this.taskGraph
+    const agent = this.getCapturedAgent(sessionID)
+
+    let taskNode: TaskNode | null = null
+    let workPlan: { name: string; status: string } | null = null
+    let progress: { completed: number; total: number; failed: number } | null = null
+    let nextPlanned: { name: string; blockedBy?: string } | null = null
+    let recentCheckpoints = 0
+
+    if (activeTask) {
+      taskNode = findTaskNode(graph, activeTask.id) ?? null
+    }
+
+    const activeWP = graph.activeWorkPlanId
+      ? graph.workPlans.find(wp => wp.id === graph.activeWorkPlanId)
+      : undefined
+
+    if (activeWP) {
+      workPlan = { name: activeWP.name, status: activeWP.status }
+
+      const completed = activeWP.tasks.filter(t => t.status === "completed").length
+      const total = activeWP.tasks.length
+      const failed = activeWP.tasks.filter(t => t.status === "failed").length
+      progress = { completed, total, failed }
+
+      const next = activeWP.tasks.find(t => t.status === "planned" || t.status === "blocked")
+      if (next) {
+        let blockedBy: string | undefined
+        if (next.dependsOn.length > 0) {
+          const blocker = findTaskNode(graph, next.dependsOn[0])
+          blockedBy = blocker?.name
+        }
+        nextPlanned = { name: next.name, blockedBy }
+      }
+
+      if (taskNode) {
+        recentCheckpoints = taskNode.checkpoints.length
+      }
+    }
+
+    return { activeTask, taskNode, workPlan, agent, progress, nextPlanned, recentCheckpoints }
   }
 
   // ─── Plan State (global, not per-session) ──────────────────────────

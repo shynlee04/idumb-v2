@@ -15,8 +15,8 @@
 import { tool } from "@opencode-ai/plugin/tool"
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises"
 import { join, dirname } from "node:path"
-import { createConfig, validateConfig } from "../schemas/config.js"
-import type { Language, ExperienceLevel, GovernanceMode, InstallScope, IdumbConfig } from "../schemas/config.js"
+import { createConfig, validateConfig, summarizeCodeQuality } from "../schemas/config.js"
+import type { Language, ExperienceLevel, GovernanceMode, InstallScope, IdumbConfig, CodeQualityReport } from "../schemas/config.js"
 import { scanProject, formatDetectionReport } from "../lib/framework-detector.js"
 import { scaffoldProject, formatScaffoldReport } from "../lib/scaffolder.js"
 import { createLogger } from "../lib/logging.js"
@@ -231,6 +231,7 @@ function buildGreeting(
   config: IdumbConfig,
   scaffoldReport: string,
   detectionReport: string,
+  fullCodeQuality?: CodeQualityReport,
 ): string {
   const lang = config.user.language.communication
   const sections: string[] = []
@@ -245,8 +246,8 @@ function buildGreeting(
     sections.push("")
     sections.push(detectionReport)
     sections.push("")
-    // Code quality summary for agents
-    const cq = config.detection.codeQuality
+    // Code quality summary — uses full report for accurate counts, not capped config summary
+    const cq = fullCodeQuality ?? config.detection.codeQuality
     if (cq) {
       sections.push(`## 📊 Chất Lượng Code — Điểm ${cq.grade} (${cq.score}/100)\n`)
       sections.push(`- **File đã quét:** ${cq.totalFiles}`)
@@ -273,8 +274,8 @@ function buildGreeting(
     sections.push("")
     sections.push(detectionReport)
     sections.push("")
-    // Code quality summary for agents
-    const cq = config.detection.codeQuality
+    // Code quality summary — uses full report for accurate counts, not capped config summary
+    const cq = fullCodeQuality ?? config.detection.codeQuality
     if (cq) {
       sections.push(`## 📊 Code Quality — Grade ${cq.grade} (${cq.score}/100)\n`)
       sections.push(`- **Files scanned:** ${cq.totalFiles}`)
@@ -451,13 +452,28 @@ export const idumb_init = tool({
       // ─── INSTALL: full init ──────────────────────────────
       const docsLang = (args.documents_language ?? args.language ?? "en") as Language
 
+      // Keep the full code quality report for CLI greeting display
+      const fullCodeQuality = detection.codeQuality
+
+      // Summarize code quality for config persistence:
+      // Full scanner can produce 300+ smells on React/Vue projects.
+      // Storing all of them in config.json causes agents to loop for hours
+      // because the coordinator template reads config.json every session.
+      // Summary: grade + score + stats + top 10 smells (no roasts).
+      const configDetection = {
+        ...detection,
+        codeQuality: detection.codeQuality
+          ? summarizeCodeQuality(detection.codeQuality)
+          : undefined,
+      }
+
       const config = createConfig({
         scope: (args.scope ?? "project") as InstallScope,
         experienceLevel: (args.experience ?? "guided") as ExperienceLevel,
         communicationLanguage: lang,
         documentsLanguage: docsLang,
         governanceMode: (args.governance_mode ?? "balanced") as GovernanceMode,
-        detection,
+        detection: configDetection,
       })
 
       const force = args.force ?? false
@@ -490,8 +506,8 @@ export const idumb_init = tool({
         log.warn("Brain index population failed — skipping", { error: msg })
       }
 
-      // Build the greeting
-      const greeting = buildGreeting(config, scaffoldReport, detectionReport)
+      // Build the greeting (uses full code quality report, not summarized config version)
+      const greeting = buildGreeting(config, scaffoldReport, detectionReport, fullCodeQuality)
 
       log.info("idumb_init complete", {
         governance: detection.governance,

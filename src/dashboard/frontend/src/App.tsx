@@ -5,6 +5,7 @@
 import { useEffect, useRef, useCallback } from "react"
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
+import { TaskGraphPanel } from "@/components/panels/TaskGraphPanel"
 import { TaskHierarchyPanel } from "@/components/panels/TaskHierarchyPanel"
 import { DelegationChainPanel } from "@/components/panels/DelegationChainPanel"
 import { BrainKnowledgePanel } from "@/components/panels/BrainKnowledgePanel"
@@ -81,6 +82,7 @@ function Dashboard() {
 
   return (
     <DashboardLayout>
+      <TaskGraphPanel />
       <TaskHierarchyPanel />
       <DelegationChainPanel />
       <BrainKnowledgePanel />

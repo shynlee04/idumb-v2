@@ -1,160 +1,230 @@
-TLDR: good tools are always picked as they are needed by any agents (no need of custom made nor manipulate any other techniques. Vs Worst tools: struggle to make their ways in even with splitting, enforcing in to focus group and agent profile → they are sometimes picked but once used are struggled by agents of all sorts of trouble by logics, by choices, by making complex arguments that they  have no long-term memory to access. 
+# Integration Validation Checklist — iDumb v2
 
-## Points of consideration from our knowledge as for the current needs of which tools → pre-assess them following these points:
-
-### Locations of tools, the structure, and they can be a tool with multiple ones as export:
-
-```markdown
-Location
-They can be defined:
-
-Locally by placing them in the .opencode/tools/ directory of your project.
-Or globally, by placing them in ~/.config/opencode/tools/.
-Structure
-The easiest way to create tools is using the tool() helper which provides type-safety and validation.
-
-.opencode/tools/database.ts
-import { tool } from "@opencode-ai/plugin"
-
-export default tool({
-  description: "Query the project database",
-  args: {
-    query: tool.schema.string().describe("SQL query to execute"),
-  },
-  async execute(args) {
-    // Your database logic here
-    return `Executed query: ${args.query}`
-  },
-})
-
-The filename becomes the tool name. The above creates a database tool.
-
-Multiple tools per file
-You can also export multiple tools from a single file. Each export becomes a separate tool with the name <filename>_<exportname>:
-
-.opencode/tools/math.ts
-import { tool } from "@opencode-ai/plugin"
-
-export const add = tool({
-  description: "Add two numbers",
-  args: {
-    a: tool.schema.number().describe("First number"),
-    b: tool.schema.number().describe("Second number"),
-  },
-  async execute(args) {
-    return args.a + args.b
-  },
-})
-
-export const multiply = tool({
-  description: "Multiply two numbers",
-  args: {
-    a: tool.schema.number().describe("First number"),
-    b: tool.schema.number().describe("Second number"),
-  },
-  async execute(args) {
-    return args.a * args.b
-  },
-})
-
-This creates two tools: math_add and math_multiply.
-```
-
- 
-
-### Tools arguments with zod
-
-```markdown
-
-Arguments
-You can use tool.schema, which is just Zod, to define argument types.
-
-args: {
-  query: tool.schema.string().describe("SQL query to execute")
-}
-
-You can also import Zod directly and return a plain object:
-
-import { z } from "zod"
-
-export default {
-  description: "Tool description",
-  args: {
-    param: z.string().describe("Parameter description"),
-  },
-  async execute(args, context) {
-    // Tool implementation
-    return "result"
-  },
-}
-
-.worktree for the git worktree root.
-
-Examples
-Write a tool in Python
-You can write your tools in any language you want. Here’s an example that adds two numbers using Python.
-
-First, create the tool as a Python script:
-
-.opencode/tools/add.py
-import sys
-
-a = int(sys.argv[1])
-b = int(sys.argv[2])
-print(a + b)
-
-Then create the tool definition that invokes it:
-
-.opencode/tools/python-add.ts
-import { tool } from "@opencode-ai/plugin"
-import path from "path"
-
-export default tool({
-  description: "Add two numbers using Python",
-  args: {
-    a: tool.schema.number().describe("First number"),
-    b: tool.schema.number().describe("Second number"),
-  },
-  async execute(args, context) {
-    const script = path.join(context.worktree, ".opencode/tools/add.py")
-    const result = await Bun.$`python3 ${script} ${args.a} ${args.b}`.text()
-    return result.trim()
-  },
-})
-
-Here we are using the Bun.$ utility to run the Python script.
-
-```
-
-### Tools that receive context
-
-```markdown
-Context
-Tools receive context about the current session:
-
-.opencode/tools/project.ts
-import { tool } from "@opencode-ai/plugin"
-
-export default tool({
-  description: "Get project information",
-  args: {},
-  async execute(args, context) {
-    // Access context information
-    const { agent, sessionID, messageID, directory, worktree } = context
-    return `Agent: ${agent}, Session: ${sessionID}, Message: ${messageID}, Directory: ${directory}, Worktree: ${worktree}`
-  },
-})
-
-Use context.directory for the session working directory. Use context
-```
-
-### tools can be written in other languages and can include sets of scripts when activates
-
-Tools are defined as **TypeScript** or **JavaScript** files. However, the tool definition can invoke scripts written in **any language** — TypeScript or JavaScript is only used for the tool definition itself.
+> **This document is the SINGLE SOURCE OF TRUTH for integration pitfalls.**
+> Every bug class that has bitten this project is catalogued here with a prevention checklist.
+> Referenced by: `CLAUDE.md`, `AGENTS.md`
+>
+> **Last Updated:** 2026-02-09
+> **Evidence Sources:** Legacy flaw analysis, 60+ git commits, 8 archived research docs, 2 user journey audits
 
 ---
 
-### As there are many points that raise very true nature that tools should never be shallow and made without thoughts - be a thinker (walk the agents and the use cases to make them better with these questions)
+## WHY THIS EXISTS
+
+This project orchestrates on **precision and relationships**: schema-driven state, timestamp-aware staleness, file watchers, event-driven dashboards. Every entity (tool, hook, schema, path, agent template, brain file, watcher, API endpoint) must be wired to every other entity it touches. The failure mode is never "it crashes" — it's **"it silently doesn't connect"**: a path constant exists but nothing reads it, a schema is defined but no tool saves to it, a watcher watches the wrong directory, an agent template references a tool that was renamed 3 commits ago.
+
+**Pattern:** Every major bug in this project's history falls into one of 8 categories below.
+
+---
+
+## MANDATORY: Run This Checklist Before Marking Any Task Complete
+
+### Category 1: PATH UNITY — "One constant, all consumers"
+
+**The bug:** Entity A writes to path X. Entity B reads from hardcoded path Y. X ≠ Y. Silent data loss.
+
+**Historical evidence:**
+- `1c85fcf` — `deploy.ts` wrote `registry.json`, `init.ts` hardcoded its own path, `BRAIN_PATHS` didn't have it → dashboard couldn't serve planning registry
+- `0ec3981` — Phase 8 renamed `hook-state.json` → `state.json`, `task-graph.json` → `graph.json`, `plan-state.json` → `plan.json` — 8 files had to update
+- `e386867` — `opencode.json` had stale `/vkode-agent/` path instead of `/idumb/v2`
+- Scaffolder created `.idumb/modules/` but git tracked `.idumb/idumb-modules/` — stale directory left on brownfield
+
+**Checklist:**
+- [ ] Every file path used in >1 file comes from `BRAIN_PATHS` in `src/lib/paths.ts`
+- [ ] `grep` for the raw path string — zero hits outside `paths.ts` (except comments/docs)
+- [ ] If you rename a brain file, update: `paths.ts`, `persistence.ts`, `state-reader.ts`, `deploy.ts`, `init.ts`, `scaffolder.ts`, `templates.ts`, `server.ts`
+- [ ] If you add a new brain file, add it to: `BRAIN_PATHS`, `GovernanceSnapshot`, `readGovernanceState()`, `scaffolder SCAFFOLD_DIRS` (if directory), `deploy.ts writeIfNew` (if state file)
+- [ ] Verify dashboard `setupFileWatcher()` glob covers the new path
+
+---
+
+### Category 2: SCHEMA ↔ RUNTIME WIRING — "Schema exists ≠ schema is used"
+
+**The bug:** A Zod schema is defined, types are exported, but no runtime code reads/writes/validates against it.
+
+**Historical evidence:**
+- `4775d38` — `schemas/brain.ts`, `project-map.ts`, `codemap.ts` all had STATUS headers "Schema-only. Not wired."
+- Legacy v1 — `DriftInfoSchema` existed but no runtime enforcement. `chain-rules.ts` had chain schemas but enforcement was bypassable with `--force`
+- `planning-registry.ts` — 729 LOC of schema + helpers, but chain lifecycle never auto-triggers
+
+**Checklist:**
+- [ ] Every schema file has at least one runtime consumer (tool, hook, persistence, or API endpoint)
+- [ ] `grep -r "import.*from.*schemas/NEW_SCHEMA"` returns ≥1 hit in `tools/`, `hooks/`, `lib/`, or `dashboard/`
+- [ ] If a schema defines a store (e.g., `CodeMapStore`), `persistence.ts` has load/save methods for it
+- [ ] If a schema has factory functions (e.g., `createEmpty*()`), `deploy.ts` uses them for bootstrap
+- [ ] No schema file should have "Not wired" or "Schema-only" in its comments unless explicitly planned for a future phase
+
+---
+
+### Category 3: TOOL ↔ AGENT TEMPLATE ALIGNMENT — "Agent references tool that doesn't exist"
+
+**The bug:** An agent template references a tool name that was renamed, removed, or never registered.
+
+**Historical evidence:**
+- `ec38df1` — `AGENT_TOOL_RULES` still had old agent names after 3-agent refactor
+- `b306972` — Investigator template described "webfetch" capability but `tools.webfetch: false` blocked it
+- Legacy v1 — 14 tools registered, agents rarely picked them over innate tools (Hollow Tool Trap)
+- `2856681` — Tool-gate blocked ALL agents including non-iDumb ones (passthrough missing)
+
+**Checklist:**
+- [ ] `grep` every tool name in `templates.ts` — each must match a registered tool in `index.ts`
+- [ ] `grep` for removed/renamed tool names across `templates.ts` — zero hits
+- [ ] Every tool referenced in agent YAML frontmatter `tools:` section must exist in `index.ts` tool registration
+- [ ] `AGENT_TOOL_RULES` in `tool-gate.ts` must list all current agent names (not old ones)
+- [ ] Agent template capability descriptions must not mention tools the agent is blocked from using
+- [ ] Tool descriptions must be self-sufficient — agents must pick them WITHOUT prompt reminders (the "Hollow Tool Trap" test)
+
+---
+
+### Category 4: DEPLOY OVERWRITE vs PRESERVE — "Derived vs state confusion"
+
+**The bug:** `idumb-v2 init` on a brownfield project either (a) clobbers user state files, or (b) leaves stale derived files.
+
+**Historical evidence:**
+- Phase 8 — Required explicit `writeDerived()` (always overwrite) vs `writeIfNew()` (preserve unless --force) distinction
+- `cleanStalePluginPaths()` needed to remove old `tools-plugin` and stale idumb-v2 entries from `opencode.json`
+- Old `.idumb/idumb-modules/` directory persists alongside new `.idumb/modules/` on brownfield reinstall
+
+**Checklist:**
+- [ ] Every deployed file is classified: **DERIVED** (agents, commands, module docs, profiles) → always overwrite | **STATE** (tasks.json, graph.json, registry.json, plan.json) → preserve
+- [ ] `deploy.ts` uses `writeDerived()` for derived files, `writeIfNew()` for state files
+- [ ] `cleanStalePluginPaths()` removes ALL known legacy path patterns from `opencode.json`
+- [ ] After `idumb-v2 init` on brownfield: agent templates reflect latest version, state files untouched
+- [ ] Legacy file migration: `persistence.ts init()` checks old filenames → reads → saves to new → logs migration
+
+---
+
+### Category 5: DASHBOARD DATA CHAIN — "Watcher → Reader → API → Frontend"
+
+**The bug:** Dashboard shows empty/stale data because one link in the chain is broken.
+
+**Historical evidence:**
+- `1c85fcf` — `GovernanceSnapshot` missing `taskGraph`, `planState`, `planningRegistry` → dashboard API returned incomplete data
+- `deb374b` — `process.cwd()` bug in server.ts → wrong project directory → empty state
+- `8aa4fc9` — Path traversal vulnerability, WebSocket reconnection broken, type safety issues
+- `c02aa48` — `console.log` in dashboard backend (TUI safety violation)
+
+**Checklist:**
+- [ ] Every brain file in `BRAIN_PATHS` has a corresponding field in `GovernanceSnapshot`
+- [ ] `readGovernanceState()` reads every field in `GovernanceSnapshot`
+- [ ] Dashboard `server.ts` has an API endpoint for every data type the frontend needs
+- [ ] `setupFileWatcher()` watches `*.json` in the directory containing all brain files
+- [ ] Frontend WebSocket handler invalidates queries on `file-changed` events
+- [ ] No `console.log` in `server.ts` — use logger (TUI safety)
+- [ ] API uses `X-Project-Dir` header or `process.cwd()` correctly — test with non-default directories
+
+---
+
+### Category 6: EXPORT ↔ REGISTRATION — "Function exists but isn't wired"
+
+**The bug:** A function/hook/tool is implemented but never registered in the plugin entry point.
+
+**Historical evidence:**
+- `1dfa23b` — `VERSION` named export in `index.ts` crashed OpenCode plugin loader (loader picks first export as function, string export crashed it)
+- `0a4afb1` — Dead `idumb_status` tool existed but was never cleaned up after replacement by `govern_task status`
+- Legacy v1 — `idumb-context` tool: 276 LOC, never called. `idumb-manifest`: 597 LOC, unused
+
+**Checklist:**
+- [ ] Every tool in `tools/index.ts` barrel export is registered in `src/index.ts`
+- [ ] Every hook factory in `hooks/index.ts` barrel export is wired in `src/index.ts`
+- [ ] No dead tool files — if a tool is replaced, delete the old file AND remove from barrel
+- [ ] `index.ts` exports exactly ONE default export (the plugin factory) — no extra named exports that could confuse the loader
+- [ ] `grep -r "export" src/tools/index.ts` count matches tool count in `index.ts` registration
+
+---
+
+### Category 7: DOCUMENT ↔ CODE DRIFT — "Docs say X, code does Y"
+
+**The bug:** AGENTS.md, CLAUDE.md, README.md, or MASTER-PLAN.md describe features/counts/paths that no longer match the codebase.
+
+**Historical evidence:**
+- `e8ec79a` — 16 staleness issues in AGENTS.md after n6 integration (wrong LOC counts, missing files, phantom features)
+- `b279e75` — README badges showed wrong test count (373 → 859), wrong hook count (6 → 7), architecture section described old design
+- `b306972` — Phase 7 found investigator descriptions claiming "webfetch" capability
+- MASTER-PLAN Phase 8 — Acceptance criteria said "brain/index/ populated" but nothing wrote there
+- AGENTS.md init.test.ts listed 66 assertions but actual is now 65 (brain/index removed)
+
+**Checklist:**
+- [ ] After ANY code change: `npm test` count matches AGENTS.md test baseline number
+- [ ] After adding/removing files: AGENTS.md directory tree updated
+- [ ] After renaming tools: AGENTS.md Custom Tools table updated, CLAUDE.md Source Layout updated
+- [ ] LOC counts in AGENTS.md ⚠️ flags are approximate — verify with `wc -l` if claiming specific numbers
+- [ ] MASTER-PLAN acceptance criteria must describe what actually happens, not aspirational state
+- [ ] README "Quick Start" instructions work on a fresh clone (verified by following them)
+
+---
+
+### Category 8: SCAFFOLDER ↔ RUNTIME — "Created directories nobody uses"
+
+**The bug:** Scaffolder creates directory structure that doesn't match what runtime code actually reads/writes.
+
+**Historical evidence:**
+- Phase 8 — Scaffolder created 15 directories, 6 permanently empty (`anchors/`, `governance/`, `sessions/`, `project-core/`, `project-output/`, old `modules/`)
+- `1c85fcf` — Scaffolder created `brain/index/` but nothing wrote there (codemap/project-map go to `brain/` directly)
+- Naming mismatch: scaffolder created `modules/`, git tracked `idumb-modules/`
+
+**Checklist:**
+- [ ] Every directory in `SCAFFOLD_DIRS` has at least one file written to it by deploy or runtime
+- [ ] No directory should exist just for a `.gitkeep` — if nothing writes there, don't scaffold it
+- [ ] `deploy.ts` module paths must match `scaffolder.ts` directory names
+- [ ] After `idumb-v2 init`, `ls .idumb/` shows ONLY: `brain/`, `config.json`, `modules/`
+- [ ] No empty directories after fresh init (unless explicitly planned for future phase)
+
+---
+
+## QUICK REFERENCE: The 30-Second Pre-Commit Check
+
+Before committing any change that touches tools, hooks, schemas, paths, templates, or brain files:
+
+```bash
+# 1. Typecheck
+npm run typecheck
+
+# 2. Tests pass
+npm test
+
+# 3. No hardcoded brain paths outside paths.ts
+grep -rn '\.idumb/brain/' src/ --include='*.ts' | grep -v 'paths.ts' | grep -v '//' | grep -v 'comment'
+
+# 4. No stale tool names in templates
+grep -n 'idumb_task\|idumb_scan\|idumb_codemap\|idumb_read\|idumb_write\|idumb_bash\|idumb_webfetch\|idumb_status' src/templates.ts
+
+# 5. Tool count matches
+echo "Tools in index.ts:" && grep -c 'tool(' src/index.ts
+echo "Tools in AGENTS.md:" && grep -c '| `' AGENTS.md | head -1
+
+# 6. Agent names match
+grep 'idumb-' src/hooks/tool-gate.ts | head -5
+grep 'idumb-' src/templates.ts | head -5
+```
+
+---
+
+## EVIDENCE ARCHIVE
+
+These documents contain the raw evidence that informed this checklist:
+
+| Document | What it proves |
+|----------|---------------|
+| `planning/_archived-2026-02-08/research/2026-02-06-reset/LEGACY-FLAWS-ANALYSIS.md` | 10 legacy v1 flaws: LOG ONLY, console.log, hollow tools, disconnected tasks, bypassable chains |
+| `planning/_archived-2026-02-08/research/2026-02-06-reset/PITFALLS.md` | 10 meta-governance pitfalls: no SSOT, hypothesis stacking, non-actionable context |
+| `planning/_archived-2026-02-08/research/2026-02-06-reset/V2-VIOLATION-CHECK.md` | V2 checked against legacy flaws — 4 new concerns identified |
+| `planning/_archived-2026-02-08/research/2026-02-06-reset/STRESS-TESTS-LEGACY-INFORMED.md` | 7 KNOT tests designed from failure modes |
+| `planning/_archived-2026-02-08/codebase/CONCERNS.md` | Tech debt, known bugs, fragile areas, scaling limits |
+| `planning/_archived-2026-02-08/codebase/INTEGRATIONS.md` | Plugin SDK integration patterns, hook/tool wiring |
+| `MASTER-PLAN.md` Phase 8 | Directory restructure: 6 empty dirs removed, files renamed, migration strategy |
+| Git commits `1c85fcf`, `0ec3981`, `e386867`, `ec38df1`, `b306972`, `1dfa23b` | Actual integration bugs fixed |
+
+---
+
+## TOOL DESIGN PRINCIPLES (Distilled from 60+ commits)
+
+1. **Good tools are picked naturally** — agents select them without prompt reminders. If a tool needs "use X tool" in the agent profile, the tool description is bad (the "Hollow Tool Trap")
+2. **6 tools max** — current set (`govern_plan`, `govern_task`, `govern_delegate`, `govern_shell`, `idumb_anchor`, `idumb_init`) is the ceiling. Adding more reduces correct selection
+3. **Tools must not overlap** — each tool has a distinct verb domain. No two tools should answer the same agent intent
+4. **Tool output must be actionable** — if the agent can't do anything with the output, the tool is decorative
+5. **Tools must harmonize with hooks** — tool state changes (e.g., `govern_task start`) must be visible to hooks (e.g., `tool-gate.ts` reads active task)
+6. **Schema-first** — define the Zod schema, derive the type, then write the tool. Never hand-write interfaces for tool I/O
 
 1. Are the tools make no hassle into the choice of ai agents and these custom-made tools can expose to all agents as for when they need to pick each and use without any shadowing techniques in tools’ descriptions (this is an enhancement for technique of writing good description)  → this defines the distinct uses also the superiority over other tools  and because Ai agent is smart they can automatically pick ones when they need.
 2. Are the tools made just for a few specific use cases, or many of them with high frequency → if the latter then they are well made

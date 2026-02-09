@@ -133,17 +133,20 @@ function resolveFrontendDirs(projectDir: string): { srcDir: string | null; distD
  * Story 12-01: Passes VITE_BACKEND_PORT env so Vite proxy targets the actual backend port.
  * Story 12-02: Skips Vite entirely if pre-built frontend dist exists (production serve mode).
  * Story 12-04: Uses resolveFrontendDirs() for robust path resolution.
+ *
+ * FIX: Previously this Promise never rejected — it resolved even when Vite crashed,
+ * causing the caller to print "✅ Frontend running" and "✅ Dashboard is ready!"
+ * after a fatal ERR_MODULE_NOT_FOUND. Now rejects on spawn error or non-zero exit.
  */
-function startFrontend(config: DashboardConfig, actualBackendPort: number): Promise<void> {
-  return new Promise((resolve) => {
+function startFrontend(config: DashboardConfig, actualBackendPort: number): Promise<{ effectivePort: number }> {
+  return new Promise((resolve, reject) => {
     const { srcDir, distDir } = resolveFrontendDirs(config.projectDir)
 
-    // Story 12-02: If pre-built frontend exists, Express already serves it via static middleware.
-    // Skip spawning Vite dev server entirely.
+    // Pre-built frontend: Express serves it on the backend port.
     if (distDir) {
       print(`  ${C.green}✅ Frontend served from pre-built assets${C.reset}`)
       print(`  ${C.dim}  ${distDir}${C.reset}`)
-      resolve()
+      resolve({ effectivePort: actualBackendPort })
       return
     }
 
@@ -153,7 +156,7 @@ function startFrontend(config: DashboardConfig, actualBackendPort: number): Prom
       print(`  ${C.dim}  - Relative to running file: ${join(__dirname, "../dashboard/frontend")}${C.reset}`)
       print(`  ${C.dim}  - Package root: ${join(config.projectDir, "src/dashboard/frontend")}${C.reset}`)
       print(`  ${C.dim}  Build the frontend first or run from the source tree.${C.reset}`)
-      resolve()
+      reject(new Error("Frontend source directory not found"))
       return
     }
 
@@ -176,15 +179,21 @@ function startFrontend(config: DashboardConfig, actualBackendPort: number): Prom
 
     vite.on("error", (...args) => {
       const err = args[0] as Error | undefined
-      print(`  ${C.red}❌ Failed to start Vite:${C.reset} ${err?.message || "unknown error"}`)
+      const msg = err?.message || "unknown error"
+      print(`  ${C.red}❌ Failed to start Vite: ${msg}${C.reset}`)
+      reject(new Error(`Vite spawn failed: ${msg}`))
     })
 
     vite.on("exit", (...args) => {
       const code = args[0] as number | undefined
       if (code && code !== 0) {
-        print(`  ${C.yellow}⚠ Vite exited with code ${code}${C.reset}`)
+        print(`  ${C.red}❌ Vite exited with code ${code}${C.reset}`)
+        print(`  ${C.dim}  This usually means frontend dependencies are not installed.${C.reset}`)
+        print(`  ${C.dim}  Try: cd src/dashboard/frontend && npm install${C.reset}`)
+        reject(new Error(`Vite exited with code ${code}`))
+      } else {
+        resolve({ effectivePort: config.port })
       }
-      resolve()
     })
 
     // Store process for cleanup
@@ -226,20 +235,30 @@ export async function startDashboard(_projectDir: string, args: string[]): Promi
 
   // Start frontend dev server (or skip if pre-built — Story 12-02)
   print(`  ${C.yellow}⏳ Starting frontend...${C.reset}`)
-  await startFrontend(config, actualBackendPort)
-  print(`  ${C.green}✅ Frontend running on port ${config.port}${C.reset}`)
+  try {
+    const { effectivePort } = await startFrontend(config, actualBackendPort)
+    print(`  ${C.green}✅ Frontend running on port ${effectivePort}${C.reset}`)
 
-  // Open browser if requested
-  if (config.open) {
-    try {
-      const openMod = await import("open")
-      await openMod.default(`http://localhost:${config.port}`)
-      print(`  ${C.dim}🌐 Opening browser...${C.reset}`)
-    } catch {
-      print(`  ${C.dim}📎 Open http://localhost:${config.port} in your browser${C.reset}`)
+    // Open browser if requested
+    const dashboardUrl = `http://localhost:${effectivePort}`
+    if (config.open) {
+      try {
+        const openMod = await import("open")
+        await openMod.default(dashboardUrl)
+        print(`  ${C.dim}🌐 Opening browser...${C.reset}`)
+      } catch {
+        print(`  ${C.dim}📎 Open ${dashboardUrl} in your browser${C.reset}`)
+      }
+    } else {
+      print(`  ${C.dim}📎 Open ${dashboardUrl} in your browser${C.reset}`)
     }
-  } else {
-    print(`  ${C.dim}📎 Open http://localhost:${config.port} in your browser${C.reset}`)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    print(`  ${C.red}❌ Frontend failed to start: ${msg}${C.reset}`)
+    print(`  ${C.dim}  Backend is still running at http://localhost:${actualBackendPort}${C.reset}`)
+    print(`  ${C.dim}  You can use the API directly or fix the frontend and restart.${C.reset}`)
+    print("")
+    return
   }
 
   print("")

@@ -1,11 +1,10 @@
 /**
  * iDumb v2 — Intelligent Delegation Using Managed Boundaries
- * 
- * Governance substrate for agentic CLIs.
- * 
+ *
+ * Task tracking substrate for agentic CLIs.
+ * Lifecycle verb tools agents WANT to use. No blocking.
+ *
  * CRITICAL: NO console.log anywhere — breaks TUI rendering.
- * 
- * μ1: Stop hook + task tool — blocks writes without active task.
  */
 
 import type { Plugin } from "@opencode-ai/plugin"
@@ -15,10 +14,10 @@ import { createRequire } from "node:module"
 import { createLogger } from "./lib/index.js"
 import { setClient } from "./lib/sdk-client.js"
 import { stateManager } from "./lib/persistence.js"
-import { createToolGateBefore, createToolGateAfter, createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
+import { createCompactionHook, createSystemHook, createMessageTransformHook } from "./hooks/index.js"
 import {
-  // v3 governance tools
-  govern_plan, govern_task, govern_delegate, govern_shell,
+  // Phase 9: lifecycle verb tools
+  tasks_start, tasks_done, tasks_check, tasks_add, tasks_fail,
   // Context & bootstrap tools
   idumb_anchor, idumb_init,
 } from "./tools/index.js"
@@ -39,13 +38,9 @@ const VERSION = _pkg.version
  * pollution, and TUI breakage. The user must run `idumb-v2 init` first.
  */
 const idumb: Plugin = async ({ directory, client }) => {
-  // ─── Init guard: skip governance if not initialized ────────────────
+  // ─── Init guard: skip if not initialized ────────────────────────
   const idumbDir = join(directory, ".idumb")
   if (!existsSync(idumbDir)) {
-    // Not initialized — return empty hooks object.
-    // This prevents: zombie .opencode/ creation via logger,
-    // hooks firing on an uninitialized project, and TUI breakage
-    // when agents are missing from .opencode/agents/.
     return {}
   }
 
@@ -69,8 +64,6 @@ const idumb: Plugin = async ({ directory, client }) => {
   }
 
   // Create hook instances with captured logger (DO #5: hook factory pattern)
-  const toolGateBefore = createToolGateBefore(log)
-  const toolGateAfter = createToolGateAfter(log)
   const compactionHook = createCompactionHook(log)
   const systemHook = createSystemHook(log, directory)
   const messageTransformHook = createMessageTransformHook(log)
@@ -88,25 +81,7 @@ const idumb: Plugin = async ({ directory, client }) => {
     },
 
     /**
-     * μ1: Stop hook — blocks write/edit tools without active task.
-     * Throws Error with BLOCK+REDIRECT+EVIDENCE message.
-     */
-    "tool.execute.before": async (input, output) => {
-      verifyLog.debug("HOOK FIRED: tool.execute.before", { tool: input.tool, sessionID: input.sessionID })
-      await toolGateBefore(input, output)
-    },
-
-    /**
-     * μ1: Defense-in-depth fallback.
-     * If before-hook throw didn't block, replace output with governance message.
-     */
-    "tool.execute.after": async (input, output) => {
-      verifyLog.debug("HOOK FIRED: tool.execute.after", { tool: input.tool, sessionID: input.sessionID })
-      await toolGateAfter(input, output)
-    },
-
-    /**
-     * μ2: Compaction hook — injects top anchors + active task into
+     * Compaction hook — injects top anchors + active task into
      * post-compaction context via output.context.push().
      * Budget-capped ≤500 tokens (Pitfall 7).
      */
@@ -116,9 +91,9 @@ const idumb: Plugin = async ({ directory, client }) => {
     },
 
     /**
-     * μ3: System prompt — always-on governance directive.
-     * Injects active task + critical anchors + rules.
-     * Budget: ≤200 tokens. ADD, not REPLACE.
+     * System prompt — config-aware context injection.
+     * Injects active task + critical anchors + project awareness.
+     * Budget: ≤250 tokens. ADD, not REPLACE.
      */
     "experimental.chat.system.transform": async (input, output) => {
       verifyLog.info("HOOK FIRED: experimental.chat.system.transform", { inputKeys: Object.keys(input) })
@@ -126,7 +101,7 @@ const idumb: Plugin = async ({ directory, client }) => {
     },
 
     /**
-     * M2: Message transform — DCP-pattern context pruning.
+     * Message transform — DCP-pattern context pruning.
      * Truncates stale tool outputs to save tokens and delay compaction.
      * Keeps last 10 tool results intact, truncates older ones.
      */
@@ -136,7 +111,7 @@ const idumb: Plugin = async ({ directory, client }) => {
     },
 
     /**
-     * n3 α2-1: Agent identity capture.
+     * Agent identity capture.
      * Fires on every chat turn — captures the agent name from input.agent.
      * Used for: auto-assignee on tasks, delegation chain tracking.
      */
@@ -177,18 +152,19 @@ const idumb: Plugin = async ({ directory, client }) => {
     },
 
     /**
-     * v3 governance tools + context/bootstrap tools.
-     * Governance: govern_plan, govern_task, govern_delegate, govern_shell
+     * Lifecycle verb tools + context/bootstrap tools.
+     * Lifecycle: tasks_start, tasks_done, tasks_check, tasks_add, tasks_fail
      * Context: idumb_anchor (anchors survive compaction)
      * Bootstrap: idumb_init (project setup)
-     * Agent-scoped access enforced via AGENT_TOOL_RULES in tool-gate.ts.
+     * Agent access scoped via template-level permissions (agent markdown profiles).
      */
     tool: {
-      // v3 governance tools
-      govern_plan,
-      govern_task,
-      govern_delegate,
-      govern_shell,
+      // Phase 9: lifecycle verb tools
+      tasks_start,
+      tasks_done,
+      tasks_check,
+      tasks_add,
+      tasks_fail,
       // Context & bootstrap tools
       idumb_anchor,
       idumb_init,

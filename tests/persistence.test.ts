@@ -324,27 +324,7 @@ const LEGACY_STATE_FILE = ".idumb/brain/hook-state.json"
   assert("degraded reset: still not degraded", !sm.isDegraded())
 }
 
-// ─── Test 12: Hook API backward compatibility ────────────────────────
-// Proves that setActiveTask/getActiveTask from tool-gate.ts still work
-// because they now delegate to the global stateManager singleton
-
-{
-  const { setActiveTask, getActiveTask } = await import("../src/hooks/tool-gate.js")
-  const { addAnchor, getAnchors } = await import("../src/hooks/compaction.js")
-
-  const testSessionID = `compat-test-${Date.now()}`
-
-  setActiveTask(testSessionID, { id: "compat-t1", name: "compat task" })
-  assert("compat: setActiveTask works", getActiveTask(testSessionID)?.name === "compat task")
-
-  setActiveTask(testSessionID, null)
-  assert("compat: clear task works", getActiveTask(testSessionID) === null)
-
-  const anchor = createAnchor("decision", "high", "compat anchor")
-  addAnchor(testSessionID, anchor)
-  assert("compat: addAnchor works", getAnchors(testSessionID).length >= 1)
-  assert("compat: anchor content", getAnchors(testSessionID).some(a => a.content === "compat anchor"))
-}
+// ─── Test 12: Removed — tool-gate.ts deleted (Phase 9 R4) ───────────
 
 let sqliteBackendAvailable = true
 {

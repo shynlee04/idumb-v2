@@ -3,7 +3,7 @@
 > **This document is the SINGLE SOURCE OF TRUTH for all iDumb v2 planning.**
 > No other document may claim planning SOT status. All superseded docs are archived in `planning/_archived-2026-02-08/`.
 
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-02-09 (Phase 9 rewritten to Lifecycle Verbs)
 **Plan State Runtime:** `.idumb/brain/plan.json` (machine-readable projection read by hooks)
 
 ---
@@ -276,95 +276,163 @@ Current scaffolder creates 15 directories. **6 are permanently empty** (anchors/
 
 ---
 
-## Phase 9: Fullscan — Brain Index Population
+## Phase 9: Lifecycle Verbs — Agent-Native Tool Redesign
 
-**Status:** Pending
-**Goal:** `idumb_init action=scan` populates `brain/index/` with real codebase intelligence. The brain becomes an indexer, not a dump.
+**Status:** In Progress (Round 1 complete, Round 2 next)
+**Goal:** Replace verbose, ceremony-driven governance tools with agent-native **Lifecycle Verbs** — 5 tools, each with 1 argument and 1-line output. Kill the 3-call ceremony. Apply 5 Agent-Native Principles: Iceberg, Native Parallelism, Signal-to-Noise, Context Inference, No-Shadowing.
 **Depends on:** Phase 8
+**Design Plan:** `.claude/plans/toasty-purring-nygaard.md` (brainstorming plan, user-gated rounds)
 
-### 9.1 Wire framework-detector → brain/index/frameworks.json
-- **File:** `src/lib/framework-detector.ts`
-- **Change:** `scanProject()` also writes results to `brain/index/frameworks.json`
-- **Content:** `{ governance: [...], tech: [...], packageManager: "...", hasMonorepo: bool, scannedAt: timestamp }`
+### Why This Supersedes the 3-Tool Architecture
+The earlier 3-tool plan (idumb_tasks/idumb_plans/idumb_hive_mind) still suffered from **cognitive overloading** — agents forced to be project managers, JSON parsers, and state machines simultaneously. The 783-line tasks.ts returned 20+ line outputs with navigation footers, classification guidance, and role-aware branching nobody asked for.
 
-### 9.2 Wire code-quality → brain/index/quality.json
-- **File:** `src/lib/code-quality.ts`
-- **Change:** `scanCodeQuality()` also writes results to `brain/index/quality.json`
-- **Content:** `{ grade: "A-F", score: N, totalFiles: N, totalLines: N, stats: {...}, topSmells: [...], scannedAt: timestamp }`
+**Root problems the Lifecycle Verbs fix:**
+- **3-call ceremony** makes governance agent-hostile (plan create → plan_tasks → task start)
+- **9 phantom action references** in templates (agents call non-existent actions)
+- **7 real actions undocumented** (agents don't know about quick_start, fail, learn)
+- **Multi-call ceremonies** (3+ sequential calls to unlock a capability) are agent-hostile
+- **Tools should be utility-driven** — agents should WANT to use them, not be forced
 
-### 9.3 Extract tech stacks → brain/index/stacks.json
-- **New function:** `extractTechStacks(projectDir)` in `framework-detector.ts`
-- **Reads:** `package.json` (dependencies, devDependencies), lockfiles, `tsconfig.json`, `pyproject.toml`, `Cargo.toml`
-- **Writes:** `brain/index/stacks.json` — `{ runtime: "node@22", language: "typescript@5.x", frameworks: [...], buildTools: [...], testTools: [...], scannedAt: timestamp }`
+### The 5 Agent-Native Principles (NON-NEGOTIABLE)
 
-### 9.4 Generate project map → brain/index/project.json
-- **Wire:** `schemas/project-map.ts` (currently schema-only) → actual directory scan
-- **New function:** `generateProjectMap(projectDir)` in `framework-detector.ts` or new `lib/project-indexer.ts`
-- **Writes:** `brain/index/project.json` — directory tree with file count, total lines, top-level structure
-- **Scope:** Top 2 levels only (fast), no node_modules
+1. **Iceberg** — Hide bureaucracy behind simple interfaces. 1 arg in, system handles plan creation, classification, write-unlock, wiki, knowledge behind the scenes.
+2. **Native Parallelism** — Don't force JSON batch parsing. Agent calls `tasks_add` N times in a single turn. Each call adds ONE task.
+3. **Signal-to-Noise** — Minimal output, pull-not-push. 1-line success messages. Agent calls `tasks_check` ONLY when confused.
+4. **Context Inference** — Never ask for what the system already knows. No `target_id` — system knows the active task.
+5. **No-Shadowing** — Describe rewards, not rules. Tool descriptions say what agents GET, not what they're forced to do.
 
-### 9.5 Wire into init tool
-- **File:** `src/tools/init.ts`
-- **Change:** `action=scan` runs all 4 indexers, writes to `brain/index/`
-- **Change:** `action=install` runs scan as final step (after scaffold)
-- **Result:** Every fresh init populates the index
+### The Lifecycle Verbs Tool Surface
+
+| Tool | Args | Output | Replaces |
+|------|------|--------|----------|
+| `tasks_start` | `objective: string` | `Active: "X". Writes UNLOCKED.` (1 line) | quick_start (783 LOC), govern_task quick_start, govern_plan create |
+| `tasks_done` | `evidence: string` | `Done: "X". Writes LOCKED.` (1 line) | tasks_complete, govern_task complete |
+| `tasks_check` | (none) | JSON: `{task, progress, next, role}` | tasks_status, govern_task status, govern_plan status |
+| `tasks_add` | `title: string, after?: string` | `Added: "X" (depends on: "Y").` (1 line) | tasks_parallel JSON batch, govern_plan plan_tasks |
+| `tasks_fail` | `reason: string` | `Failed: "X". Writes LOCKED.` (1 line) | tasks_fail, govern_task fail |
+
+**Unchanged tools (already clean):**
+- `idumb_anchor` (3 actions: add, list, learn) — agent WANTS to call these
+- `idumb_init` (3 actions: install, scan, status) — one-time bootstrap
+
+**Total: 7 tools** (5 lifecycle verbs + anchor + init), down from 11.
+
+### New StateManager Method: `getGovernanceStatus()`
+
+Eliminates 4x-duplicated StateManager call pattern across system.ts, compaction.ts, tasks.ts status, govern-task.ts status:
+
+```typescript
+interface GovernanceStatus {
+  activeTask: { id: string; name: string } | null
+  taskNode: TaskNode | null
+  workPlan: { name: string; status: string } | null
+  agent: string | null
+  progress: { completed: number; total: number; failed: number } | null
+  nextPlanned: { name: string; blockedBy?: string } | null
+  recentCheckpoints: number
+}
+```
+
+### Integration Points (Critical Paths)
+
+**Critical Path 1 — Write Unlock:**
+```
+tasks_start → setActiveTask() → tool-gate reads → ALLOW write/edit
+```
+
+**Critical Path 2 — Context Survival:**
+```
+idumb_anchor add → addAnchor() → compaction hook → post-compaction context
+```
+
+**Critical Path 3 — Agent Identity:**
+```
+chat.params hook → setCapturedAgent() → tool-gate → AGENT_TOOL_RULES → role-aware gating
+```
+
+### Implementation Rounds
+
+| Round | Scope | Risk | Status |
+|-------|-------|------|--------|
+| R1: Schema Foundation | 3 new schemas (classification, wiki, coherent-knowledge) | Low | **COMPLETE** |
+| R2: Rewrite `tasks.ts` | 5 lifecycle verb exports (~200 LOC), `getGovernanceStatus()` | Medium | Next |
+| R3: Absorb govern_plan | `tasks_add` handles single + batch, `tasks_start` auto-creates plan | Medium | Pending |
+| R4: Hook Migration + Deletion | Shell blacklist → hook, delete govern_shell/plan/task/delegate/anchor | HIGH | Pending |
+| R5: Template Rewrite | Reference new tool names, fix phantom actions, 4-stop loop | Medium | Pending |
+| R6: Docs + Dashboard | AGENTS.md, CLAUDE.md, README.md | Low | Pending |
+
+### What Gets Deleted (Round 4)
+**Tools:** govern_plan.ts, govern_task.ts, govern_delegate.ts, govern_shell.ts, anchor.ts
+**Schemas:** task.ts (legacy v2), delegation.ts, planning-registry.ts
+
+### What Gets Preserved
+- `setActiveTask()` bridge (→ `tasks_start`)
+- Destructive shell blacklist, 13 patterns (→ tool-gate.ts Layer 0)
+- 6-layer gate sequence in tool-gate.ts (unchanged)
+- Checkpoint auto-recording in tool-gate.ts after hook (unchanged)
+- 8 debounce timers in persistence.ts (unchanged)
+- Compaction anchor injection (→ `idumb_anchor add`)
+- Agent identity capture in chat.params hook (unchanged)
+
+### What Moves to Hooks (Round 4)
+- **Destructive blacklist** (14 patterns from govern-shell.ts) → tool-gate.ts Layer 0 on innate bash
+- **Role permissions** (coordinator=inspection, executor=all) → tool-gate.ts AGENT_TOOL_RULES extension
+- **Auto-archive** (plan completion) → tool-gate.ts after-hook
+- **Shell classification** (command categorization) → tool-gate.ts for logging/audit
 
 ### Acceptance Criteria
-- `idumb_init action=scan` produces 4+ files in `brain/index/`
-- `brain/index/quality.json` has grade and stats
-- `brain/index/stacks.json` shows actual dependencies from package.json
-- `brain/index/frameworks.json` shows detected frameworks
-- `brain/index/project.json` shows directory structure
-- All files have `scannedAt` timestamp for freshness tracking
-- Scan completes in <3 seconds for a 15K LOC project
+- `npm run typecheck` — zero errors
+- `npm test` — all tests pass (new baseline after R4)
+- `tasks_start objective="Fix auth"` → 1-line output, writes unlock in ONE call
+- `tasks_check` → JSON status object (not 20-line prose)
+- `tasks_done evidence="Fixed"` → 1-line output, writes re-lock
+- `tasks_add title="Research"` then `tasks_add title="Build" after="Research"` → dependency chain
+- Templates reference ONLY existing tool exports (zero phantom actions)
+- Destructive shell blacklist enforced in hook layer (not tool layer)
 
 ---
 
-## Phase 10: Init Experience — Showcase the Foundation
+## Phase 10: Brain Engine + Session Intelligence + Init Experience
 
-**Status:** Pending
-**Goal:** After `idumb-v2 init`, the user sees their project's intelligence profile. The `.idumb/` directory is a living foundation, not a skeleton.
-**Depends on:** Phase 9
+**Status:** Pending — deferred until Phase 9 completes
+**Goal:** Brain becomes an indexer (not a dump). Session brain layer for cross-session memory. Init shows Foundation Report with real data. Hook-driven automation for brain reflexes.
+**Depends on:** Phase 9 (lifecycle verbs must exist first)
+**Brain Engine Plan:** `.qoder/plans/Brain_Engine_Prototype_980105f5.md` (detailed, deferred)
 
-### 10.1 CLI fullscan flag
-- **File:** `src/cli.ts`
-- **Change:** `idumb-v2 init --fullscan` runs deep scan during install (currently code quality scan is optional)
-- **Default:** Quick scan (frameworks + stacks). `--fullscan` adds code quality + full codemap
+### 10.1 Brain Engine (Hook-Driven Automation)
+- `tool.execute.after` hook: auto-scan modified files, update wiki/artifacts
+- Session trajectory auto-export to `.idumb/brain/sessions/<session_id>.json`
+- Agents PULL context via tools when needed (pull-based, not push)
+- `clean` action purges expired session files (>7d inactive, >30d completed)
+- Hook-driven, not ceremony-driven — brain fills without agents calling tools
 
-### 10.2 Structured init output
-- **File:** `src/cli.ts` + `src/tools/init.ts`
-- **Change:** Init output shows a "Foundation Report" box:
-  ```
-  ┌─────────────────────────────────────────┐
-  │  iDumb v2 — Foundation Report           │
-  ├─────────────────────────────────────────┤
-  │  Project:    15,420 lines across 149 files
-  │  Grade:      C (62/100)
-  │  Tech Stack: TypeScript, Node 22, Express
-  │  Frameworks: None detected
-  │  Brain:      6 state files + 4 index files
-  │  Agents:     3 deployed (coordinator, investigator, executor)
-  └─────────────────────────────────────────┘
-  ```
-- **Vietnamese variant** for `language.communication: "vi"`
+### 10.2 Session Intelligence Tools (formerly idumb_hive_mind)
+- `recall` — cross-session memory queries
+- `orient` — "where am I, what was I doing?"
+- `clean` — context janitor, sweep stale data
+- `status` — memory health report
 
-### 10.3 Brain summary in system hook
-- **File:** `src/hooks/system.ts`
-- **Change:** If `brain/index/` has populated files, include one-line project awareness in governance injection:
-  `Project: 149 files, grade C, TypeScript+Express | Phase: "Phase 8" [in_progress]`
-- **Budget:** Max 120 chars for project context line
+### 10.3 Plans/Artifacts Tools (formerly idumb_plans)
+- `anchor` — compaction-surviving context (absorbs current anchor.ts)
+- `learn` — brain knowledge entry persistence
+- `phase` — MASTER-PLAN phase transitions
+- `status` — artifact-centric view
 
-### 10.4 Scan freshness enforcement
-- **File:** `src/tools/init.ts`
-- **Change:** `action=status` checks `brain/index/*.json` timestamps. If older than 7 days, suggests rescan: `"Brain index is 12 days stale. Run idumb_init action=scan to refresh."`
+### 10.4-10.5 Brain Index Population
+Wire framework-detector, code-quality, tech-stacks, project-map to `brain/index/`.
+`idumb_init scan` runs all indexers. Every fresh init populates the index.
+**CRITICAL**: `client.find.symbols()` could replace manual codemap generation.
+**CRITICAL**: `client.find.files()` could replace `listFilesRecursively()` in init.ts.
+
+### 10.6-10.9 Init Experience
+CLI fullscan flag, Foundation Report box, brain summary in system hook, scan freshness enforcement.
 
 ### Acceptance Criteria
-- Fresh `idumb-v2 init` on this codebase shows Foundation Report with real data
-- `idumb-v2 init --fullscan` adds code quality grade and smell counts
+- `brain/index/` populated with 4+ files after scan
+- Foundation Report shows project stats in CLI output
 - System prompt includes project awareness line
-- `idumb_init action=status` warns about stale index
-- Non-English support (Vietnamese Foundation Report)
-- 670+ tests (new assertions for init output + system hook project context)
+- `idumb_init status` warns about stale index
+- Bilingual support (English + Vietnamese)
 
 ---
 
@@ -375,16 +443,17 @@ Current scaffolder creates 15 directories. **6 are permanently empty** (anchors/
 | `MASTER-PLAN.md` (this) | Planning SOT | Active |
 | `AGENTS.md` | Feature ground truth | Active |
 | `CLAUDE.md` | Agent instructions | Active |
-| `planning/implamentation-plan-turn-based/implementation_plan-n6.md` | Technical reference | Active |
-| `planning/implamentation-plan-turn-based/walkthrough-n6.md` | Latest walkthrough | Active |
+| `.claude/plans/toasty-purring-nygaard.md` | Lifecycle Verbs design plan | Active (Phase 9) |
+| `docs/plans/pitfalls-when-creating-tools.md` | Tool design constraints | Active |
 | `planning/diagrams/from-a-closer-angle.png` | System concepts mind map | Active (vision reference) |
 | `planning/diagrams/the-hierarchy-relationships.png` | Flow & concepts mind map | Active (vision reference) |
-| `docs/plans/2026-02-08-user-journey-governance-design.md` | User journey design | Active |
-| `docs/plans/2026-02-08-task-graph-hook-intelligence-design.md` | Intelligence design | Active (philosophy) |
-| `docs/sdk-client-api.md` | OpenCode SDK client reference | Active (extracted from SOT contract Phase 7.3) |
+| `docs/plans/2026-02-08-user-journey-governance-design.md` | User journey design | Active (partially stale — tool sections) |
+| `docs/plans/2026-02-08-task-graph-hook-intelligence-design.md` | Intelligence design | Active (partially stale — tool names) |
+| `docs/sdk-client-api.md` | OpenCode SDK client reference | Active |
+| `.qoder/plans/Brain_Engine_Prototype_980105f5.md` | Brain Engine detailed plan | Deferred (Phase 10) |
 | `.agents/prompts/ralph-output/` | Audit reference | Active |
 | `planning/_archived-2026-02-08/` | Superseded docs (Phases 1-5 era) | Archived |
-| `docs/plans/_archived-2026-02-09/` | Stale design docs (Phase 7.3) | Archived |
+| `docs/plans/_archived-2026-02-09/` | Stale design docs (Phase 7.3 + Phase 9 predecessors) | Archived |
 
 ---
 
@@ -392,13 +461,19 @@ Current scaffolder creates 15 directories. **6 are permanently empty** (anchors/
 
 After all phases:
 1. `npm run typecheck` — zero errors
-2. `npm test` — 670+ assertions pass
+2. `npm test` — all tests pass (new baseline after Phase 9 R4)
 3. Non-iDumb agent can write/edit without governance block
 4. Every system prompt injection includes current phase + project awareness
 5. Post-compaction context preserves phase awareness
-6. `govern_plan action=phase phase_id=N phase_status=in_progress` transitions the phase
+6. Phase transitions work (via tool or hook)
 7. Only MASTER-PLAN.md claims planning SOT status
 8. Zero "meta-builder" references in active source code
 9. Fresh `idumb-v2 init` produces zero empty directories
 10. `brain/index/` populated with real codebase intelligence after scan
 11. Foundation Report shows project stats in CLI output
+12. `tasks_start objective="X"` → 1-line output, writes unlock in ONE call (no ceremony)
+13. `tasks_check` → JSON status object (not 20-line prose)
+14. `tasks_done evidence="X"` → 1-line output, writes re-lock
+15. Zero phantom action references in templates
+16. Destructive shell blacklist enforced in hook layer (not tool layer)
+17. Brain has entries after a work session (auto-populated by hooks, Phase 10)

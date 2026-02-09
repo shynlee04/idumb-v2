@@ -58,3 +58,14 @@ CHANGELOG.md
 
 # ─── Git worktrees (isolated prototype workspaces) ───
 .worktrees/
+
+# ─── Orphan tool directories (skills installed by various AI tools) ───
+.agent/
+.agents/
+.kilocode/
+.windsurf/
+.qoder/skills/
+.claude/skills/
+
+# ─── iDumb runtime modules (regenerated at runtime) ───
+.idumb/modules/

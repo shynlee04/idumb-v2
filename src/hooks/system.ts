@@ -19,7 +19,6 @@
 
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
-import { getActiveTask } from "./tool-gate.js"
 import { getAnchors } from "./compaction.js"
 import { stateManager } from "../lib/persistence.js"
 import { getActiveWorkChain, detectGraphBreaks } from "../schemas/task-graph.js"
@@ -132,7 +131,7 @@ export function createSystemHook(log: Logger, directory: string) {
       if (!sessionID) return
 
       const config = await loadConfig()
-      const task = getActiveTask(sessionID)
+      const task = stateManager.getActiveTask(sessionID)
       const anchors = getAnchors(sessionID)
       const criticalAnchors = anchors.filter(a => a.priority === "critical")
 

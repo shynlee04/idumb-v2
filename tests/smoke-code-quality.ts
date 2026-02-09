@@ -45,7 +45,7 @@ async function main() {
         console.log("All smells:")
         for (const smell of report.smells) {
             console.log(`  [${smell.severity}] ${smell.file}${smell.line ? `:${smell.line}` : ""} — ${smell.message}`)
-            console.log(`    🔥 ${smell.roast}`)
+            console.log(`    🔥 ${smell.roast ?? "(no roast)"}`)
         }
     }
 }

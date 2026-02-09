@@ -14,7 +14,7 @@
  */
 
 import { createSystemHook } from "../src/hooks/system.js"
-import { setActiveTask } from "../src/hooks/index.js"
+import { stateManager } from "../src/lib/persistence.js"
 import { addAnchor } from "../src/hooks/compaction.js"
 import { createAnchor } from "../src/schemas/index.js"
 import { createConfig } from "../src/schemas/config.js"
@@ -188,7 +188,7 @@ async function test7_activeTaskIncluded(): Promise<void> {
   const dir = createTestDir("task")
   writeConfig(dir)
 
-  setActiveTask("sys-test-7", { id: "t-42", name: "Implement auth module" })
+  stateManager.setActiveTask("sys-test-7", { id: "t-42", name: "Implement auth module" })
   const system = await runHook(dir, "sys-test-7")
 
   assert("active task in injection", system[0].includes("Implement auth module"))
@@ -330,7 +330,7 @@ async function test14_workPlanProgressInjected(): Promise<void> {
 
   const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
   stateManager.saveTaskGraph(graph)
-  setActiveTask("sys-test-14", { id: tn2.id, name: tn2.name })
+  stateManager.setActiveTask("sys-test-14", { id: tn2.id, name: tn2.name })
 
   const system = await runHook(dir, "sys-test-14")
 
@@ -364,7 +364,7 @@ async function test15_delegationContextInjected(): Promise<void> {
 
   const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
   stateManager.saveTaskGraph(graph)
-  setActiveTask("sys-test-15", { id: tn.id, name: tn.name })
+  stateManager.setActiveTask("sys-test-15", { id: tn.id, name: tn.name })
 
   const system = await runHook(dir, "sys-test-15")
 
@@ -402,7 +402,7 @@ async function test16_planAheadVisibility(): Promise<void> {
 
   const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
   stateManager.saveTaskGraph(graph)
-  setActiveTask("sys-test-16", { id: tn1.id, name: tn1.name })
+  stateManager.setActiveTask("sys-test-16", { id: tn1.id, name: tn1.name })
 
   const system = await runHook(dir, "sys-test-16")
 
@@ -435,7 +435,7 @@ async function test17_budgetStillEnforcedWithChain(): Promise<void> {
 
   const graph = { version: "3.0.0", activeWorkPlanId: wp.id, workPlans: [wp] }
   stateManager.saveTaskGraph(graph)
-  setActiveTask("sys-test-17", { id: tn.id, name: tn.name })
+  stateManager.setActiveTask("sys-test-17", { id: tn.id, name: tn.name })
 
   for (let i = 0; i < 10; i++) {
     addAnchor("sys-test-17", createAnchor("decision", "critical", `Decision ${i}: ${"y".repeat(100)}`))

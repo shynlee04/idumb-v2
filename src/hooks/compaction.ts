@@ -13,7 +13,6 @@ import type { Anchor } from "../schemas/index.js"
 import { selectAnchors } from "../schemas/index.js"
 import type { PlanState } from "../schemas/plan-state.js"
 import { formatPlanStateCompact } from "../schemas/plan-state.js"
-import { getActiveTask } from "./tool-gate.js"
 import type { Logger } from "../lib/index.js"
 import { stateManager } from "../lib/persistence.js"
 
@@ -106,7 +105,7 @@ export function createCompactionHook(log: Logger) {
       const selected = selectAnchors(allAnchors, INJECTION_BUDGET_CHARS)
 
       // Get active task
-      const activeTask = getActiveTask(sessionID)
+      const activeTask = stateManager.getActiveTask(sessionID)
 
       // Get plan state
       const planState = stateManager.getPlanState()

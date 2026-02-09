@@ -1,9 +1,15 @@
 # User Journey + Governance Design — iDumb v2
 
 **Date:** 2026-02-08
-**Status:** APPROVED (brainstorming complete)
+**Status:** PARTIALLY VALID — Implementation-agnostic sections current, tool-specific sections stale
 **Scope:** End-to-end user journey from install to active governance
 **Depends on:** Phase 1a code (committed 40bb05e), templates.ts v3 migration (pending)
+
+> **STALENESS NOTE (2026-02-09):** Sections 2, 3, 5, 6, 8 remain valid (implementation-agnostic).
+> Sections 4 (Workflow), 7 (Runtime Injection), 9 (Framework Wrapping), 10 (Implementation Path)
+> reference **old tool names** (govern_plan, govern_task, govern_delegate, govern_shell).
+> These tools are being replaced by **Lifecycle Verbs** (tasks_start, tasks_done, tasks_check,
+> tasks_add, tasks_fail) — see MASTER-PLAN.md Phase 9 for current architecture.
 
 ---
 

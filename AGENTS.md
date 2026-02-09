@@ -2,7 +2,7 @@
 
 **Version:** 7.0.0
 **Last Updated:** 2026-02-09
-**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE. Phase 8 `.idumb` structure redesign DONE. v3 governance tools (govern_plan, govern_task, govern_delegate, govern_shell) DONE. govern_task quick_start (1-call ceremony) DONE.
+**Status:** Phase 0 COMPLETE. Phase 1b-β tools DONE. Phase α2 foundation DONE. Phase δ2 delegation DONE. Phase n6 3-agent refactor DONE. Planning Registry schema + integration DONE. Phase 8 `.idumb` structure redesign DONE. Phase 9 Lifecycle Verbs DONE (R1-R5 complete, R6 docs in progress). 7 tools: 5 lifecycle verbs + anchor + init.
 
 ---
 
@@ -61,10 +61,10 @@ v2/
 │   │   ├── deploy.ts               # Deploys 3 agents + 3 profiles + commands + modules + planning registry bootstrap (408 LOC)
 │   │   └── dashboard.ts            # Dashboard server launcher
 │   ├── templates.ts                # All deployable templates — coordinator + investigator + executor (1482 LOC ⚠️)
-│   ├── index.ts                    # Plugin entry — wires 7 hooks + 6 tools (single plugin, 196 LOC)
+│   ├── index.ts                    # Plugin entry — wires 7 hooks + 7 tools (single plugin, 200 LOC)
 │   ├── hooks/
 │   │   ├── index.ts                # Barrel exports
-│   │   ├── tool-gate.ts            # VALIDATED — blocks write/edit without active task
+│   │   ├── tool-gate.ts            # VALIDATED — blocks write/edit without active task + shell safety (556 LOC ⚠️)
 │   │   ├── compaction.ts           # Unit-tested — anchor injection via output.context.push()
 │   │   ├── message-transform.ts    # Unit-tested — DCP-pattern context pruning
 │   │   └── system.ts               # Unit-tested — config-aware governance context (UNVERIFIED in live OpenCode)
@@ -83,9 +83,12 @@ v2/
 │   ├── schemas/
 │   │   ├── index.ts                # Barrel exports (15 functions + 7 types from task.ts)
 │   │   ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
+│   │   ├── classification.ts       # Task complexity classification — Type A/B/C routing (168 LOC)
 │   │   ├── config.ts               # IdumbConfig schema, Language, GovernanceMode, etc.
+│   │   ├── coherent-knowledge.ts   # Cross-session knowledge linking — action records (235 LOC)
 │   │   ├── task.ts                 # Smart TODO schema — Epic/Task/Subtask + WorkStream categories (530 LOC ⚠️)
 │   │   ├── task-graph.ts           # v3 task graph schema — TaskNode, Checkpoint, TaskGraph (605 LOC ⚠️)
+│   │   ├── wiki.ts                 # Wiki entry schema — code change documentation (153 LOC)
 │   │   ├── work-plan.ts            # v3 work plan schema — WorkPlan lifecycle (291 LOC)
 │   │   ├── delegation.ts           # Delegation schema — 3-agent hierarchy + category routing (363 LOC)
 │   │   ├── planning-registry.ts    # Planning artifact registry — tiers, chains, sections, outliers (729 LOC ⚠️)
@@ -94,12 +97,9 @@ v2/
 │   │   ├── project-map.ts          # Project map schema — directory/file mapping
 │   │   └── codemap.ts              # Code map schema — symbol extraction
 │   ├── tools/
-│   │   ├── index.ts                # Barrel exports
+│   │   ├── index.ts                # Barrel exports + shell safety re-exports from tool-gate
 │   │   ├── anchor.ts               # idumb_anchor — context anchors surviving compaction (86 LOC)
-│   │   ├── govern-plan.ts          # govern_plan — work plan management: create, plan_tasks, status, archive, abandon (279 LOC)
-│   │   ├── govern-task.ts          # govern_task — task lifecycle: start, complete, fail, status, review (307 LOC)
-│   │   ├── govern-delegate.ts      # govern_delegate — structured delegation: assign, recall, status (243 LOC)
-│   │   ├── govern-shell.ts         # govern_shell — governed shell execution with classification (231 LOC)
+│   │   ├── tasks.ts                # 5 lifecycle verbs — tasks_start, tasks_done, tasks_check, tasks_add, tasks_fail (300 LOC)
 │   │   └── init.ts                 # idumb_init — project initialization + code quality report + planning outlier detection (441 LOC)
 │   ├── modules/
 │   │   ├── agents/                 # Module agent templates
@@ -113,7 +113,7 @@ v2/
 │           ├── comments-types.ts   # Comment types between frontend and backend
 │           └── schema-types.ts     # Shared schema types between frontend and backend
 ├── tests/
-│   ├── tool-gate.test.ts           # 94 assertions — all pass ✅
+│   ├── tool-gate.test.ts           # 147 assertions — all pass ✅
 │   ├── compaction.test.ts          # 16 assertions — all pass ✅
 │   ├── message-transform.test.ts   # 13 assertions — all pass ✅
 │   ├── system.test.ts              # 43 assertions — all pass ✅
@@ -125,12 +125,9 @@ v2/
 │   ├── work-plan.test.ts           # 56 assertions — all pass ✅
 │   ├── task-graph.test.ts          # 112 assertions — all pass ✅
 │   ├── plan-state.test.ts          # 40 assertions — all pass ✅
-│   ├── govern-plan.test.ts         # 52 assertions — all pass ✅
-│   ├── govern-task.test.ts         # 58 assertions — all pass ✅
-│   ├── govern-delegate.test.ts     # 17 assertions — all pass ✅
-│   ├── govern-shell.test.ts        # 31 assertions — all pass ✅
 │   ├── anchor-tool.test.ts         # 32 assertions — all pass ✅
 │   ├── init-tool.test.ts           # 32 assertions — all pass ✅
+│   ├── tasks.test.ts               # 61 assertions — all pass ✅ (lifecycle verb tests)
 │   ├── sqlite-adapter.test.ts      # SQLite adapter tests (conditional on native binding)
 │   └── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
 ├── planning/
@@ -148,10 +145,10 @@ v2/
 └── tsconfig.json
 ```
 
-**Source LOC:** ~14,717 (excluding dashboard frontend, node_modules)  
-**Test baseline:** `npm test` → **859+ assertions** across **20** test files (SQLite-dependent assertions run when native binding is available)
-**TypeScript:** `tsc --noEmit` clean, zero errors  
-**Files above 500 LOC (⚠️):** `templates.ts` (1482), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `schemas/task.ts` (530)
+**Source LOC:** ~13,500 (excluding dashboard frontend, node_modules)
+**Test baseline:** `npm test` → **814 assertions** across **17** test files (SQLite-dependent assertions run when native binding is available)
+**TypeScript:** `tsc --noEmit` clean, zero errors
+**Files above 500 LOC (⚠️):** `templates.ts` (1466), `schemas/planning-registry.ts` (729), `dashboard/backend/server.ts` (721), `lib/code-quality.ts` (701), `schemas/task-graph.ts` (605), `lib/persistence.ts` (584), `hooks/tool-gate.ts` (556), `schemas/task.ts` (530)
 
 ---
 
@@ -163,7 +160,7 @@ v2/
 
 | Component | File | Evidence |
 |---|---|---|
-| Tool gate — blocks write/edit without active task | `hooks/tool-gate.ts` | 94/94 assertions |
+| Tool gate — blocks write/edit without active task + shell safety | `hooks/tool-gate.ts` | 147/147 assertions |
 | Compaction anchor injection | `hooks/compaction.ts` | 16/16 unit tests |
 | Message transform — prunes old tool outputs | `hooks/message-transform.ts` | 13/13 unit tests |
 | Anchor scoring + staleness | `schemas/anchor.ts` | Priority scoring, 48h staleness |
@@ -191,10 +188,12 @@ v2/
 |---|---|---|
 | **Task graph schema** | `schemas/task-graph.ts` | TaskNode, Checkpoint, TaskGraph. 112/112 tests |
 | **Work plan schema** | `schemas/work-plan.ts` | WorkPlan lifecycle. 56/56 tests |
-| **govern_plan tool** | `tools/govern-plan.ts` | Work plan management: create, plan_tasks, status, archive, abandon |
-| **govern_task tool** | `tools/govern-task.ts` | Task lifecycle: quick_start, start, complete, fail, status, review |
+| **Lifecycle verb tools** | `tools/tasks.ts` | 5 verbs: tasks_start, tasks_done, tasks_check, tasks_add, tasks_fail. 61/61 tests |
 | **Legacy task schema** | `schemas/task.ts` | Epic/Task/Subtask, WorkStream categories, v1→v2 migration |
-| **Persistence** | `lib/persistence.ts` | Separate `tasks.json`. Auto-migration. Agent identity capture |
+| **Wiki schema** | `schemas/wiki.ts` | Code change documentation — WikiEntry, WikiStore, query helpers |
+| **Knowledge schema** | `schemas/coherent-knowledge.ts` | Cross-session action linking — CoherentKnowledgeEntry, stats |
+| **Classification schema** | `schemas/classification.ts` | Task complexity routing — Type A/B/C |
+| **Persistence** | `lib/persistence.ts` | Separate `tasks.json`. Auto-migration. Agent identity capture. `getGovernanceStatus()` |
 
 ### Level 4: Code Intelligence
 
@@ -225,9 +224,9 @@ All agents are deployed to `.opencode/agents/` by `idumb-v2 init` via `cli/deplo
 
 | Agent | Level | Role | Key Tools |
 |---|---|---|---|
-| `idumb-supreme-coordinator` | 0 | Pure orchestrator — delegates, never writes | `govern_plan`, `govern_delegate`, `govern_task (status only)`, `idumb_anchor`, `idumb_init` |
-| `idumb-investigator` | 1 | Research, analysis, planning, brain entries | `govern_task`, `govern_shell (validation+inspection)`, `idumb_anchor` |
-| `idumb-executor` | 1 | Code implementation, builds, tests | `govern_task`, `govern_shell (all categories)`, `idumb_anchor` |
+| `idumb-supreme-coordinator` | 0 | Pure orchestrator — delegates, never writes | `tasks_check`, `tasks_add`, `idumb_anchor`, `idumb_init` |
+| `idumb-investigator` | 1 | Research, analysis, planning, brain entries | `tasks_start`, `tasks_done`, `tasks_fail`, `tasks_check`, `tasks_add`, `idumb_anchor` |
+| `idumb-executor` | 1 | Code implementation, builds, tests | `tasks_start`, `tasks_done`, `tasks_fail`, `tasks_check`, `tasks_add`, `idumb_anchor` |
 
 **Delegation routing (from `delegation.ts`):**
 
@@ -251,13 +250,13 @@ Reference profiles deployed to `.idumb/modules/agents/` as documentation.
 | Live hook verification | **Not yet tested.** Never installed in real OpenCode. |
 | `experimental.chat.system.transform` | **Unit-tested.** Config-aware injection with framework overlay + mode context. Not yet confirmed firing in live OpenCode. |
 | `experimental.chat.messages.transform` | **Unverified.** SDK input is `{}` (empty!). |
-| `chat.params` hook | **IMPLEMENTED but UNVERIFIED in live OpenCode.** Captures `agent` field. Auto-assigns to active task and TaskNode. Code is complete in `index.ts:140-174`. |
+| `chat.params` hook | **IMPLEMENTED but UNVERIFIED in live OpenCode.** Captures `agent` field. Auto-assigns to active task and TaskNode. Code is complete in `index.ts:143-177`. |
 | `chat.message` hook | **NOT REGISTERED.** Available with optional `agent?` field. |
 | Framework agent interception | **Not implemented.** BMAD/GSD/Agent-OS agents not intercepted yet. |
 | Command splitting | **Not implemented.** Agent prompts still monolithic in `templates.ts`. |
 | Dashboard integration | **Frontend built.** Backend exists. Not integrated into CLI. |
-| Delegation runtime | **Schema done (δ2).** `govern_delegate` tool exists. Full runtime enforcement not wired. |
-| Brain / wiki | **Not implemented.** |
+| Delegation runtime | **Schema done (δ2).** Shell blacklist + role permissions moved to tool-gate.ts. Full runtime delegation enforcement not wired. |
+| Brain / wiki | **Schema done (R1).** wiki.ts, coherent-knowledge.ts, classification.ts schemas created. Auto-population hooks NOT wired yet (Phase 10). |
 
 ---
 
@@ -284,16 +283,19 @@ Reference profiles deployed to `.idumb/modules/agents/` as documentation.
 | `experimental.chat.messages.transform` | **UNVERIFIED** | Prunes old tool outputs |
 | `chat.params` | **REGISTERED** | Captures agent name, auto-assigns |
 
-## Custom Tools (6 tools)
+## Custom Tools (7 tools)
 
 | Tool | Description |
 |---|---|
-| `govern_plan` | Work plan management — create, plan_tasks, status, archive, abandon |
-| `govern_task` | Task lifecycle — quick_start, start, complete, fail, review, status |
-| `govern_delegate` | Structured delegation — assign, recall, status |
-| `govern_shell` | Governed shell command execution with classification |
-| `idumb_anchor` | Context anchors that survive compaction |
-| `idumb_init` | Project initialization and configuration |
+| `tasks_start` | Start a task — 1 arg (`objective`), unlocks writes, auto-creates plan |
+| `tasks_done` | Complete active task — 1 arg (`evidence`), re-locks writes, unblocks dependents |
+| `tasks_check` | Check governance status — no args, returns JSON `{activeTask, workPlan, progress}` |
+| `tasks_add` | Add a task to the plan — 1 arg (`title`), optional `after` for dependency, `expected_output` |
+| `tasks_fail` | Fail active task — 1 arg (`reason`), re-locks writes, blocks dependents |
+| `idumb_anchor` | Context anchors that survive compaction — add, list, learn |
+| `idumb_init` | Project initialization and configuration — install, scan, status |
+
+**Shell safety** is enforced by `tool-gate.ts` hook layer (14-pattern destructive blacklist + role-based bash gating), not by a separate tool.
 
 ---
 
@@ -402,7 +404,7 @@ These files need future splitting. Listed in severity order:
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 20 test files via tsx (859+ assertions; SQLite-dependent assertions are conditional)
+npm test             # 17 test files via tsx (814 assertions; SQLite-dependent assertions are conditional)
 ```
 
 ---

@@ -30,6 +30,17 @@ const SOURCE_EXTENSIONS = new Set([
     ".vue", ".svelte", ".astro",
 ])
 
+/**
+ * Template/component extensions where deep nesting is structurally normal.
+ * JSX/TSX: <Provider><Layout><Page><Section><Card><Content>...</Content></Card></Section></Page></Layout></Provider>
+ * Vue/Svelte/Astro SFCs: <template> wrapping adds 1-2 levels inherently.
+ *
+ * These files get relaxed nesting thresholds to avoid false-positive "critical" on every React component.
+ */
+const TEMPLATE_EXTENSIONS = new Set([
+    ".tsx", ".jsx", ".vue", ".svelte", ".astro",
+])
+
 /** Directories to skip — don't waste time in node_modules */
 const SKIP_DIRS = new Set([
     "node_modules", ".git", ".idumb", ".opencode", ".claude", ".next",
@@ -280,22 +291,29 @@ function detectDeepNesting(file: FileInfo): CodeSmell[] {
         }
     }
 
-    if (maxIndent >= 7) {
+    // JSX/template files have structurally deep nesting:
+    //   <Provider><Layout><Page><Card><Content>... = 5+ levels before any logic
+    // Imperative files (ts, py, go) reaching 5+ levels is genuinely suspicious.
+    const isTemplate = TEMPLATE_EXTENSIONS.has(file.extension)
+    const criticalThreshold = isTemplate ? 11 : 7
+    const warningThreshold = isTemplate ? 8 : 5
+
+    if (maxIndent >= criticalThreshold) {
         smells.push({
             file: file.relative,
             line: maxIndentLine,
             severity: "critical",
             category: "spaghetti",
-            message: `Nesting depth reaches ${maxIndent} levels`,
+            message: `Nesting depth reaches ${maxIndent} levels${isTemplate ? " (template file — threshold raised)" : ""}`,
             roast: randomRoast("deepNesting"),
         })
-    } else if (maxIndent >= 5) {
+    } else if (maxIndent >= warningThreshold) {
         smells.push({
             file: file.relative,
             line: maxIndentLine,
             severity: "warning",
             category: "spaghetti",
-            message: `Nesting depth reaches ${maxIndent} levels`,
+            message: `Nesting depth reaches ${maxIndent} levels${isTemplate ? " (template file — threshold raised)" : ""}`,
             roast: randomRoast("deepNesting"),
         })
     }
@@ -671,7 +689,7 @@ export function formatCodeQualityReport(
             const lineRef = smell.line ? `:${smell.line}` : ""
             lines.push(`    ${icon} ${C.dim}${smell.file}${lineRef}${C.reset}`)
             lines.push(`      ${smell.message}`)
-            if (isSavage) {
+            if (isSavage && smell.roast) {
                 lines.push(`      ${C.magenta}${C.italic}${smell.roast}${C.reset}`)
             }
         }

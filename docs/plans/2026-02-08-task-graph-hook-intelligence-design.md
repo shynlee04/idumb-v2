@@ -2,7 +2,14 @@
 
 **Date:** 2026-02-08
 **Scope:** Phase 1 (Systems 1 + 4)
-**Status:** Draft — awaiting user review
+**Status:** PARTIALLY VALID — Design philosophy and hook techniques current, tool names/counts stale
+
+> **STALENESS NOTE (2026-02-09):** The 4 Systems vision, hook intelligence techniques (Sections 4.1-4.3),
+> schema design patterns (Section 3.2), and error design (Section 3.7) remain valuable as design philosophy.
+> Tool names, action counts, and the 6-tool/18-action surface (Sections 3.3, 5.1-5.3) are **STALE** —
+> replaced by **Lifecycle Verbs** architecture (5 tools: tasks_start, tasks_done, tasks_check, tasks_add,
+> tasks_fail + idumb_anchor + idumb_init). See MASTER-PLAN.md Phase 9 for current architecture.
+> The WorkPlan→TaskNode→Checkpoint schema (Section 3.2.2) was BUILT and remains the active data model.
 **Supersedes:** `2026-02-08-tool-agent-redesign-plan.md` (Phase 0-5 plan — scope narrowed to Systems 1+4)
 
 ---

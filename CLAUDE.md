@@ -28,7 +28,7 @@ npm run dev            # tsc --watch
 # Type check (no emit)
 npm run typecheck      # tsc --noEmit — must be zero errors
 
-# Run ALL tests (20 suites, sequential chain)
+# Run ALL tests (17 suites, sequential chain)
 npm test
 
 # Run a single test file
@@ -44,12 +44,9 @@ npx tsx tests/planning-registry.test.ts
 npx tsx tests/work-plan.test.ts
 npx tsx tests/task-graph.test.ts
 npx tsx tests/plan-state.test.ts
-npx tsx tests/govern-plan.test.ts
-npx tsx tests/govern-task.test.ts
-npx tsx tests/govern-delegate.test.ts
-npx tsx tests/govern-shell.test.ts
 npx tsx tests/anchor-tool.test.ts
 npx tsx tests/init-tool.test.ts
+npx tsx tests/tasks.test.ts
 
 # Link for local development
 npm link
@@ -59,7 +56,7 @@ idumb-v2 init          # Interactive setup
 idumb-v2 init -y       # Non-interactive defaults
 ```
 
-**Important:** `npm test` chains 12 `tsx` commands with `&&`. If an early suite fails, later suites don't run. When debugging, run the failing suite individually.
+**Important:** `npm test` chains 17 `tsx` commands with `&&`. If an early suite fails, later suites don't run. When debugging, run the failing suite individually.
 
 ## Architecture
 
@@ -67,7 +64,7 @@ idumb-v2 init -y       # Non-interactive defaults
 
 Single entry point for all hooks and tools:
 
-- **`src/index.ts`** — Main plugin export. Wires 7 event hooks + 6 tools into OpenCode's plugin system. This is the `"main"` entry in package.json.
+- **`src/index.ts`** — Main plugin export. Wires 7 event hooks + 7 tools into OpenCode's plugin system. This is the `"main"` entry in package.json.
 
 ### Hook Factory Pattern
 
@@ -100,21 +97,18 @@ Chat turn → chat.params (captures agent name, auto-assigns to active task + Ta
 
 ```
 src/
-├── index.ts              # Plugin entry: hooks + 6 tools wiring (199 LOC)
+├── index.ts              # Plugin entry: hooks + 7 tools wiring (200 LOC)
 ├── cli.ts                # CLI entry point for `npx idumb-v2` (453 LOC)
 ├── cli/deploy.ts         # Deploys 3 agents + commands + modules to target project (440 LOC)
 ├── cli/dashboard.ts      # Dashboard launcher (184 LOC)
-├── templates.ts          # Agent markdown templates (1484 LOC — splitting planned)
+├── templates.ts          # Agent markdown templates (1466 LOC — splitting planned)
 ├── hooks/                # 4 event handler modules (+ barrel index.ts)
-│   ├── tool-gate.ts      # VALIDATED — blocks write/edit without active task
+│   ├── tool-gate.ts      # Write-gate + shell safety + agent-scoped access (556 LOC)
 │   ├── compaction.ts     # Unit-tested — anchor injection via output.context.push()
 │   ├── message-transform.ts  # Unit-tested — DCP-pattern context pruning
 │   └── system.ts         # Unit-tested — config-aware governance context (UNVERIFIED in live OpenCode)
-├── tools/                # 6 tool implementations (+ barrel index.ts)
-│   ├── govern-plan.ts    # Work plan management: create, plan_tasks, status, archive, abandon, phase
-│   ├── govern-task.ts    # Task lifecycle: quick_start, start, complete, fail, review, status
-│   ├── govern-delegate.ts # Structured delegation: assign, recall, status
-│   ├── govern-shell.ts   # Governed shell execution with classification
+├── tools/                # 7 tool implementations (+ barrel index.ts)
+│   ├── tasks.ts          # 5 lifecycle verbs: tasks_start, tasks_done, tasks_check, tasks_add, tasks_fail (300 LOC)
 │   ├── anchor.ts         # Context anchors surviving compaction
 │   └── init.ts           # Project initialization + code quality report
 ├── lib/                  # Shared utilities
@@ -131,6 +125,9 @@ src/
 │   ├── task.ts           # Smart TODO schema — Epic/Task/Subtask hierarchy
 │   ├── task-graph.ts     # v3 task graph — TaskNode, Checkpoint, TaskGraph
 │   ├── work-plan.ts      # v3 work plan lifecycle
+│   ├── classification.ts # Task complexity classification — Type A/B/C routing
+│   ├── wiki.ts           # Wiki entry schema — code change documentation
+│   ├── coherent-knowledge.ts # Cross-session knowledge linking
 │   ├── delegation.ts     # 3-agent hierarchy + category routing
 │   ├── planning-registry.ts  # Artifact tracking — tiers, chains, staleness
 │   ├── anchor.ts         # Anchor types, scoring, staleness, budget selection

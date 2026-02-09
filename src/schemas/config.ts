@@ -64,7 +64,7 @@ export interface CodeSmell {
   severity: "info" | "warning" | "critical"
   category: "spaghetti" | "god-file" | "dead-code" | "coupling" | "missing-tests" | "naming" | "security" | "todo-debt"
   message: string                // human-readable description
-  roast: string                  // savage mode commentary
+  roast?: string                 // savage mode commentary — present in CLI display, stripped from persistence
 }
 
 /** Aggregated code quality report — produced by the code scanner */
@@ -189,6 +189,36 @@ export function createConfig(overrides: {
       dashboard: overrides.dashboard ?? "disabled",
     },
     paths: { ...DEFAULT_PATHS },
+  }
+}
+
+/**
+ * Summarize a code quality report for config persistence.
+ *
+ * The full scanner can produce 300+ smells on a React project.
+ * Storing all of them in config.json causes agents to loop for hours
+ * because the coordinator template reads config.json every session.
+ *
+ * This function:
+ * 1. Keeps grade, score, stats (all lightweight, all accurate)
+ * 2. Caps smells to top N (criticals first, then warnings)
+ * 3. Strips roasts from persisted smells (CLI-only display concern)
+ */
+export function summarizeCodeQuality(
+  report: CodeQualityReport,
+  maxSmells: number = 10,
+): CodeQualityReport {
+  const criticals = report.smells.filter(s => s.severity === "critical")
+  const warnings = report.smells.filter(s => s.severity === "warning")
+  const infos = report.smells.filter(s => s.severity === "info")
+  const topSmells = [...criticals, ...warnings, ...infos].slice(0, maxSmells)
+
+  // Strip roasts — they're for CLI entertainment, not persistence
+  const cleanSmells: CodeSmell[] = topSmells.map(({ roast: _, ...rest }) => rest)
+
+  return {
+    ...report,
+    smells: cleanSmells,
   }
 }
 

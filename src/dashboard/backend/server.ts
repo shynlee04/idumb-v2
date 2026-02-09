@@ -182,6 +182,15 @@ app.get("/api/tasks", (req: Request, res: Response) => {
   })
 })
 
+// GET /api/graph — TaskGraph snapshot (v3 WorkPlan→TaskNode)
+app.get("/api/graph", (req: Request, res: Response) => {
+  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const state = getGovernanceState(projectDir)
+  res.json({
+    graph: state.taskGraph,
+  })
+})
+
 // GET /api/brain — BrainStore snapshot
 app.get("/api/brain", (req: Request, res: Response) => {
   const projectDir = req.header("X-Project-Dir") || process.cwd()
@@ -713,11 +722,11 @@ function tryListenOnPort(config: DashboardConfig, port: number): Promise<void> {
     try {
       server = createHttpServer(app)
 
-      // Setup WebSocket
-      setupWebSocket(server)
-
       server.listen(port, () => {
         log.info(`Backend listening on port ${port}`)
+
+        // Setup WebSocket AFTER successful listen — avoids unhandled WSS error on EADDRINUSE
+        setupWebSocket(server!)
 
         // Setup file watcher
         watcher = setupFileWatcher(config.projectDir)
@@ -728,7 +737,6 @@ function tryListenOnPort(config: DashboardConfig, port: number): Promise<void> {
 
       server.on("error", (err) => {
         log.error("Server error", { error: String(err) })
-        // Close the server on bind error so it's cleaned up for retry
         server?.close()
         server = null
         reject(err)

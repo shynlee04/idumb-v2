@@ -121,3 +121,35 @@ export type {
     PlanPhaseStatus, PlanPhase, PlanState,
 } from "./plan-state.js"
 
+// ─── Phase 9: Task Classification (A/B/C decision gate) ─────────────
+export {
+    classifyTask, formatClassification,
+} from "./classification.js"
+export type {
+    TaskClassificationType, ClassificationResult,
+} from "./classification.js"
+
+// ─── Phase 9: Wiki Entry (code change documentation) ────────────────
+export {
+    createWikiEntry, createWikiStore,
+    findWikiEntriesByTask, findWikiEntriesByPlan, findWikiEntriesBySession,
+    countFilesChanged,
+    formatWikiEntry, formatWikiSummary,
+    WIKI_STORE_VERSION,
+} from "./wiki.js"
+export type {
+    FileAction, WikiFileChange, WikiEntry, WikiStore,
+} from "./wiki.js"
+
+// ─── Phase 9: Coherent Knowledge (cross-session action records) ─────
+export {
+    createKnowledgeEntry, createKnowledgeStore,
+    findKnowledgeByTask, findKnowledgeBySession, findKnowledgeByAgent, findKnowledgeByPlan,
+    getChangedFiles, knowledgeStats,
+    formatKnowledgeEntry, formatKnowledgeSummary,
+    KNOWLEDGE_STORE_VERSION,
+} from "./coherent-knowledge.js"
+export type {
+    CodeChange, CoherentKnowledgeEntry, CoherentKnowledgeStore,
+} from "./coherent-knowledge.js"
+
