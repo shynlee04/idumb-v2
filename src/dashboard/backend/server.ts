@@ -28,6 +28,16 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSy
 import { randomUUID } from "crypto"
 import { SqliteAdapter } from "../../lib/sqlite-adapter.js"
 import { createLogger, type Logger } from "../../lib/logging.js"
+import {
+  getClient,
+  startEngine,
+  stopEngine as stopRuntimeEngine,
+  getEngineStatus as getRuntimeEngineStatus,
+  ensureHealthy,
+  observeCompactionEvent,
+} from "./engine.js"
+import type { DashboardConfig } from "../shared/engine-types.js"
+import type { TaskGraph, TaskNode, WorkPlan } from "../../schemas/work-plan.js"
 
 // ─── Security ─────────────────────────────────────────────────────────────
 
@@ -54,15 +64,6 @@ let log: Logger = {
   info() {},
   warn() {},
   error() {},
-}
-
-// ─── Types ───────────────────────────────────────────────────────────────
-
-interface DashboardConfig {
-  projectDir: string
-  port: number
-  backendPort: number
-  open: boolean
 }
 
 // ─── Express App ─────────────────────────────────────────────────────────
@@ -151,35 +152,233 @@ function getPlanningArtifacts(projectDir: string) {
   return artifacts
 }
 
-// ─── API Routes ───────────────────────────────────────────────────────────
+function resolveProjectDir(req?: Request): string {
+  return req?.header("X-Project-Dir") || configuredProjectDir || process.cwd()
+}
 
-// GET /api/tasks — TaskStore snapshot
-app.get("/api/tasks", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+function sdkQuery(projectDir: string) {
+  return { directory: projectDir }
+}
 
-  // Use SQLite adapter when available and project dir matches
-  if (adapter && configuredProjectDir === projectDir) {
-    try {
-      const state = getGovernanceState(projectDir) // still need capturedAgent from JSON
-      res.json({
-        tasks: adapter.getTaskStore(),
-        activeTask: adapter.getSmartActiveTask(),
-        activeEpic: adapter.getActiveEpic(),
-        capturedAgent: state.capturedAgent,
-      })
-      return
-    } catch (err) {
-      log.warn("SQLite read failed for /api/tasks, falling back to JSON", { error: String(err) })
-      // Fall through to JSON path
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function extractSdkErrorMessage(error: unknown): string {
+  if (typeof error === "string") return error
+  if (!isRecord(error)) return "Unknown SDK error"
+  if (typeof error.message === "string" && error.message.length > 0) return error.message
+  if (isRecord(error.error) && typeof error.error.message === "string") return error.error.message
+  return JSON.stringify(error)
+}
+
+interface TaskSnapshot {
+  workPlan: WorkPlan | null
+  tasks: TaskNode[]
+  activeTask: TaskNode | null
+}
+
+function getTaskSnapshot(projectDir: string): TaskSnapshot {
+  const state = getGovernanceState(projectDir)
+  const graph = state.taskGraph as TaskGraph | null
+
+  if (!graph || !Array.isArray(graph.workPlans)) {
+    return {
+      workPlan: null,
+      tasks: [],
+      activeTask: null,
     }
   }
 
-  // Fallback to JSON file reads
+  const activeWorkPlan = graph.activeWorkPlanId
+    ? graph.workPlans.find((candidate) => candidate.id === graph.activeWorkPlanId) ?? null
+    : graph.workPlans[0] ?? null
+
+  const tasks = activeWorkPlan
+    ? [...activeWorkPlan.tasks, ...activeWorkPlan.planAhead]
+    : graph.workPlans.flatMap((candidate) => [...candidate.tasks, ...candidate.planAhead])
+
+  const activeTask = tasks.find((task) => task.status === "active") ?? null
+
+  return {
+    workPlan: activeWorkPlan,
+    tasks,
+    activeTask,
+  }
+}
+
+function findTaskById(tasks: TaskNode[], taskId: string): TaskNode | null {
+  return tasks.find((task) => task.id === taskId) ?? null
+}
+
+function extractSessionIdFromEvent(event: unknown): string | null {
+  const e = event as Record<string, unknown>
+  const properties = (e.properties as Record<string, unknown> | undefined) ?? {}
+  const message = (properties.message as Record<string, unknown> | undefined) ?? {}
+  const part = (properties.part as Record<string, unknown> | undefined) ?? {}
+  const info = (properties.info as Record<string, unknown> | undefined) ?? {}
+
+  return (
+    (e.sessionID as string | undefined)
+    ?? (properties.sessionID as string | undefined)
+    ?? (part.sessionID as string | undefined)
+    ?? (info.id as string | undefined)
+    ?? (message.sessionID as string | undefined)
+    ?? null
+  )
+}
+
+function extractSessionStatusFromEvent(event: unknown): string | null {
+  const e = event as Record<string, unknown>
+  const type = e.type
+  if (type === "session.idle") return "idle"
+  if (type === "session.error") return "error"
+
+  const properties = (e.properties as Record<string, unknown> | undefined) ?? {}
+  const status = properties.status
+
+  if (typeof status === "string") return status
+  if (status && typeof status === "object" && typeof (status as { type?: unknown }).type === "string") {
+    return (status as { type: string }).type
+  }
+  return null
+}
+
+function eventBelongsToSession(event: unknown, sessionId: string): boolean {
+  return extractSessionIdFromEvent(event) === sessionId
+}
+
+function initSseResponse(res: Response): void {
+  res.setHeader("Content-Type", "text/event-stream")
+  res.setHeader("Cache-Control", "no-cache")
+  res.setHeader("Connection", "keep-alive")
+  res.flushHeaders()
+}
+
+function writeSse(res: Response, payload: unknown): void {
+  res.write(`data: ${JSON.stringify(payload)}\n\n`)
+}
+
+const sseConnections = new Map<string, { res: Response; sessionHint?: string }>()
+let eventsAbortController: AbortController | null = null
+let eventsStreamPromise: Promise<void> | null = null
+let eventsStreamProjectDir: string | null = null
+let eventsShutdownTimer: ReturnType<typeof setTimeout> | null = null
+
+async function startEventsRelay(projectDir: string): Promise<void> {
+  if (eventsStreamPromise && eventsStreamProjectDir === projectDir) {
+    return
+  }
+
+  if (eventsAbortController) {
+    eventsAbortController.abort()
+    eventsAbortController = null
+  }
+
+  const controller = new AbortController()
+  eventsAbortController = controller
+  eventsStreamProjectDir = projectDir
+
+  eventsStreamPromise = (async () => {
+    try {
+      const streamResult = await getClient().event.subscribe({
+        query: sdkQuery(projectDir),
+        signal: controller.signal,
+      })
+
+      for await (const event of streamResult.stream) {
+        observeCompactionEvent(event)
+        for (const { res, sessionHint } of sseConnections.values()) {
+          if (sessionHint && !eventBelongsToSession(event, sessionHint)) {
+            continue
+          }
+          writeSse(res, { type: "event", event })
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        log.warn("Global events relay stopped with error", { error: String(err) })
+      }
+    } finally {
+      eventsAbortController = null
+      eventsStreamPromise = null
+      eventsStreamProjectDir = null
+    }
+  })()
+
+  await Promise.resolve()
+}
+
+function scheduleEventsRelayShutdown(): void {
+  if (eventsShutdownTimer) clearTimeout(eventsShutdownTimer)
+  eventsShutdownTimer = setTimeout(() => {
+    if (sseConnections.size === 0 && eventsAbortController) {
+      eventsAbortController.abort()
+    }
+  }, 1500)
+}
+
+// ─── API Routes ───────────────────────────────────────────────────────────
+
+// GET /api/tasks — WorkPlan/task snapshot for dashboard task surface
+app.get("/api/tasks", (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+
+  if (!existsSync(join(projectDir, ".idumb"))) {
+    res.json({ workPlan: null, tasks: [], activeTask: null })
+    return
+  }
+
+  const snapshot = getTaskSnapshot(projectDir)
+  res.json(snapshot)
+})
+
+// GET /api/tasks/history — completed/failed task history
+app.get("/api/tasks/history", (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  const snapshot = getTaskSnapshot(projectDir)
+  const history = snapshot.tasks.filter((task) => task.status === "completed" || task.status === "failed")
+  res.json({ tasks: history })
+})
+
+// GET /api/tasks/:id — single task detail
+app.get("/api/tasks/:id", (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  const snapshot = getTaskSnapshot(projectDir)
+  const task = findTaskById(snapshot.tasks, req.params.id)
+  if (!task) {
+    res.status(404).json({ error: "Task not found" })
+    return
+  }
+  res.json({ task })
+})
+
+// GET /api/governance — governance status snapshot
+app.get("/api/governance", (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  const snapshot = getTaskSnapshot(projectDir)
   const state = getGovernanceState(projectDir)
+
+  const completed = snapshot.tasks.filter((task) => task.status === "completed").length
+  const failed = snapshot.tasks.filter((task) => task.status === "failed").length
+  const total = snapshot.tasks.length
+
+  const governanceMode =
+    typeof state.config?.governance === "object"
+      ? String((state.config.governance as { mode?: string }).mode ?? "standard")
+      : "standard"
+
   res.json({
-    tasks: state.taskStore,
-    activeTask: state.activeTask,
-    activeEpic: state.activeEpic,
+    activeTask: snapshot.activeTask,
+    workPlan: snapshot.workPlan,
+    progress: {
+      total,
+      completed,
+      failed,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0,
+    },
+    governanceMode,
+    writesBlocked: snapshot.activeTask == null,
     capturedAgent: state.capturedAgent,
   })
 })
@@ -240,7 +439,7 @@ app.get("/api/scan", (req: Request, res: Response) => {
 
 // GET /api/codemap — CodeMapStore snapshot
 app.get("/api/codemap", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const state = getGovernanceState(projectDir)
 
   res.json({
@@ -248,48 +447,277 @@ app.get("/api/codemap", (req: Request, res: Response) => {
   })
 })
 
-// POST /api/sessions/:id/prompt — SSE stream for chat responses
-// TODO: Integrate with OpenCode SDK `client.session.prompt()` for actual streaming
-// Currently mocked for UI development
-app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
-  const { id } = req.params
-  const { text } = req.body
+// ─── Engine lifecycle routes ─────────────────────────────────────────────
 
-  if (!text || typeof text !== "string") {
-    res.status(400).json({ error: "Missing or invalid text parameter" })
-    return
+app.get("/api/engine/status", (_req: Request, res: Response) => {
+  res.json(getRuntimeEngineStatus())
+})
+
+app.post("/api/engine/start", async (req: Request, res: Response) => {
+  const projectDir = req.body?.projectDir || resolveProjectDir(req)
+  const port = Number(
+    req.body?.port
+    ?? process.env.OPENCOD_PORT
+    ?? process.env.OPENCODE_PORT
+    ?? getRuntimeEngineStatus().port
+    ?? 4096,
+  )
+
+  try {
+    await startEngine(projectDir, port)
+    await ensureHealthy()
+    res.json(getRuntimeEngineStatus())
+  } catch (err) {
+    res.status(500).json({ error: `Failed to start engine: ${String(err)}` })
+  }
+})
+
+app.post("/api/engine/stop", async (_req: Request, res: Response) => {
+  try {
+    await stopRuntimeEngine()
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: `Failed to stop engine: ${String(err)}` })
+  }
+})
+
+app.post("/api/engine/restart", async (req: Request, res: Response) => {
+  const projectDir = req.body?.projectDir || resolveProjectDir(req)
+  const port = Number(
+    req.body?.port
+    ?? process.env.OPENCOD_PORT
+    ?? process.env.OPENCODE_PORT
+    ?? getRuntimeEngineStatus().port
+    ?? 4096,
+  )
+
+  try {
+    await stopRuntimeEngine()
+    await startEngine(projectDir, port)
+    await ensureHealthy()
+    res.json(getRuntimeEngineStatus())
+  } catch (err) {
+    res.status(500).json({ error: `Failed to restart engine: ${String(err)}` })
+  }
+})
+
+// ─── Session proxy routes ────────────────────────────────────────────────
+
+app.get("/api/sessions", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    const sessions = await getClient().session.list({ query: sdkQuery(projectDir) })
+    res.json(sessions)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to list sessions: ${String(err)}` })
+  }
+})
+
+app.post("/api/sessions", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  const title = typeof req.body?.title === "string" ? req.body.title : undefined
+
+  try {
+    const session = await getClient().session.create({
+      query: sdkQuery(projectDir),
+      body: title ? { title } : {},
+    })
+    res.status(201).json(session)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to create session: ${String(err)}` })
+  }
+})
+
+app.get("/api/sessions/:id", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    const session = await getClient().session.get({
+      query: sdkQuery(projectDir),
+      path: { id: req.params.id },
+    })
+    res.json(session)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status === 404 ? 404 : 500).json({ error: `Failed to get session: ${String(err)}` })
+  }
+})
+
+app.delete("/api/sessions/:id", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    await getClient().session.delete({
+      query: sdkQuery(projectDir),
+      path: { id: req.params.id },
+    })
+    res.json({ success: true })
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status === 404 ? 404 : 500).json({ error: `Failed to delete session: ${String(err)}` })
+  }
+})
+
+app.get("/api/sessions/:id/messages", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    const messages = await getClient().session.messages({
+      query: sdkQuery(projectDir),
+      path: { id: req.params.id },
+    })
+    res.json(messages)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status === 404 ? 404 : 500).json({ error: `Failed to get messages: ${String(err)}` })
+  }
+})
+
+app.get("/api/sessions/:id/children", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    const children = await getClient().session.children({
+      query: sdkQuery(projectDir),
+      path: { id: req.params.id },
+    })
+    res.json(children)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status === 404 ? 404 : 500).json({ error: `Failed to get child sessions: ${String(err)}` })
+  }
+})
+
+app.post("/api/sessions/:id/abort", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    await getClient().session.abort({
+      query: sdkQuery(projectDir),
+      path: { id: req.params.id },
+    })
+    res.json({ success: true })
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status === 404 ? 404 : 500).json({ error: `Failed to abort session: ${String(err)}` })
+  }
+})
+
+app.get("/api/sessions/:id/status", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  try {
+    const statusMap = await getClient().session.status({
+      query: sdkQuery(projectDir),
+    }) as Record<string, unknown>
+
+    const status = statusMap[req.params.id]
+    if (!status) {
+      res.status(404).json({ error: "Session status not found" })
+      return
+    }
+
+    res.json(status)
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500
+    res.status(status).json({ error: `Failed to get session status: ${String(err)}` })
+  }
+})
+
+// GET /api/events — global SSE relay (client-side session filtering)
+app.get("/api/events", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  const connectionId = randomUUID()
+  const sessionHint = typeof req.query.sessionID === "string" ? req.query.sessionID : undefined
+
+  initSseResponse(res)
+  writeSse(res, {
+    type: "connected",
+    connectionId,
+    note: "OpenCode events are broadcast; use sessionID query hint for client filtering.",
+  })
+
+  sseConnections.set(connectionId, { res, sessionHint })
+  if (eventsShutdownTimer) {
+    clearTimeout(eventsShutdownTimer)
+    eventsShutdownTimer = null
   }
 
   try {
-    res.setHeader("Content-Type", "text/event-stream")
-    res.setHeader("Cache-Control", "no-cache")
-    res.setHeader("Connection", "keep-alive")
+    await startEventsRelay(projectDir)
+  } catch (err) {
+    log.warn("Failed to start events relay", { error: String(err) })
+  }
 
-    // TODO: Replace with actual OpenCode SDK streaming
-    // const client = getClient()
-    // const response = await client.session.prompt({ path: { id }, body: { parts: [...] } })
-    // for await (const chunk of response) { ... }
+  req.on("close", () => {
+    sseConnections.delete(connectionId)
+    scheduleEventsRelayShutdown()
+  })
+})
 
-    // Mock streaming response for UI development
-    const mockParts = [
-      { type: "text", content: "I understand your request. " },
-      { type: "text", content: "Let me process this step by step.\n\n" },
-      { type: "tool", id: "mock-1", name: "mock_tool", content: "Running mock analysis..." },
-      { type: "text", content: "Analysis complete. Here's what I found:\n\n" },
-      { type: "code", name: "typescript", content: "// Mock code block\nconst result = analyze(data)" },
-    ]
+// POST /api/sessions/:id/prompt — streaming prompt with event relay
+app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
+  const projectDir = resolveProjectDir(req)
+  const { id } = req.params
 
-    for (const part of mockParts) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-      res.write(`data: ${JSON.stringify({ type: "part", part })}\n\n`)
+  const inputText = typeof req.body?.text === "string" ? req.body.text : undefined
+  const parts = Array.isArray(req.body?.parts)
+    ? req.body.parts
+    : inputText
+      ? [{ type: "text", text: inputText }]
+      : []
+
+  if (parts.length === 0) {
+    res.status(400).json({ error: "Missing prompt parts. Expected {parts:[{type:\"text\",text:\"...\"}]}" })
+    return
+  }
+
+  initSseResponse(res)
+
+  const abortController = new AbortController()
+  const timeout = setTimeout(() => {
+    abortController.abort()
+  }, 45_000)
+
+  req.on("close", () => {
+    abortController.abort()
+  })
+
+  try {
+    // Subscribe BEFORE prompt to avoid missing early events.
+    const eventStream = await getClient().event.subscribe({
+      query: sdkQuery(projectDir),
+      signal: abortController.signal,
+    })
+
+    await getClient().session.prompt({
+      query: sdkQuery(projectDir),
+      path: { id },
+      body: { parts },
+    })
+
+    let seenSessionEvent = false
+
+    for await (const event of eventStream.stream) {
+      observeCompactionEvent(event)
+      if (!eventBelongsToSession(event, id)) continue
+
+      seenSessionEvent = true
+      writeSse(res, { type: "event", event })
+
+      const status = extractSessionStatusFromEvent(event)
+      if (seenSessionEvent && (status === "idle" || status === "failed" || status === "error")) {
+        break
+      }
     }
 
+    writeSse(res, { type: "done" })
     res.write("data: [DONE]\n\n")
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    log.error("Session prompt failed", { id, error: message })
-    res.write(`data: ${JSON.stringify({ type: "error", message })}\n\n`)
-    res.write("data: [DONE]\n\n")
+    if ((err as Error).name !== "AbortError") {
+      const message = String(err)
+      log.error("Prompt stream failed", { sessionId: id, error: message })
+      writeSse(res, { type: "error", message })
+    }
+  } finally {
+    clearTimeout(timeout)
+    res.end()
   }
 })
 
@@ -710,6 +1138,26 @@ export async function startServer(config: DashboardConfig): Promise<void> {
     adapter = null
   }
 
+  const resolvedOpencodePort = Number(
+    config.opencodePort
+    ?? process.env.OPENCOD_PORT
+    ?? process.env.OPENCODE_PORT
+    ?? 4096,
+  )
+
+  try {
+    await startEngine(config.projectDir, resolvedOpencodePort)
+    await ensureHealthy()
+    const engineStatus = getRuntimeEngineStatus()
+    log.info("OpenCode engine ready", {
+      opencodePort: engineStatus.port ?? resolvedOpencodePort,
+      url: engineStatus.url,
+    })
+  } catch (err) {
+    log.error("Unable to start OpenCode engine", { error: String(err) })
+    throw err
+  }
+
   // ─── Story 12-02: Serve pre-built frontend assets if available ──────
   const frontendDistPath = join(config.projectDir, "src/dashboard/frontend/dist")
   if (existsSync(join(frontendDistPath, "index.html"))) {
@@ -797,6 +1245,16 @@ function tryListenOnPort(config: DashboardConfig, port: number): Promise<void> {
 export async function stopServer(): Promise<void> {
   log.info("Stopping dashboard backend...")
 
+  if (eventsShutdownTimer) {
+    clearTimeout(eventsShutdownTimer)
+    eventsShutdownTimer = null
+  }
+  if (eventsAbortController) {
+    eventsAbortController.abort()
+    eventsAbortController = null
+  }
+  sseConnections.clear()
+
   if (watcher) {
     await watcher.close()
     watcher = null
@@ -810,6 +1268,12 @@ export async function stopServer(): Promise<void> {
   if (wss) {
     wss.close()
     wss = null
+  }
+
+  try {
+    await stopRuntimeEngine()
+  } catch (err) {
+    log.warn("Failed to stop OpenCode engine during shutdown", { error: String(err) })
   }
 
   if (server) {
