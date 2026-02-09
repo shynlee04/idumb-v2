@@ -1,83 +1,44 @@
-/**
- * DashboardPage — Landing page with overview cards.
- *
- * Shows active tasks count, recent conversations count, and project health grade.
- * Fetches real data from engine status and sessions hooks.
- */
-
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { useEngineStatus, useSessions } from "@/hooks/useEngine"
-import { api } from "@/lib/api"
-import { useQuery } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
+import { MessageSquare, Play, CheckSquare } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ActiveTasksCard } from "@/components/dashboard/ActiveTasksCard"
+import { RecentSessionsCard } from "@/components/dashboard/RecentSessionsCard"
+import { ProjectHealthCard } from "@/components/dashboard/ProjectHealthCard"
 
 export function DashboardPage() {
-  const { data: engine } = useEngineStatus()
-  const { data: sessions } = useSessions()
-  const { data: tasks } = useQuery({
-    queryKey: ["governance", "tasks"],
-    queryFn: api.getTasks,
-    retry: 1,
-    meta: { silent: true },
-  })
-
-  const sessionCount = sessions?.length ?? 0
-  const taskCount = tasks?.length ?? 0
-  const engineUp = engine?.running ?? false
+  const navigate = useNavigate()
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Overview of your knowledge work platform
+    <div className="h-full overflow-y-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Welcome to iDumb</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Governed knowledge-work cockpit across chat, task execution, and planning visibility.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Active Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Tasks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{taskCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {taskCount === 0 ? "No active tasks" : `${taskCount} task${taskCount !== 1 ? "s" : ""} tracked`}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <ActiveTasksCard />
+        <RecentSessionsCard />
+        <ProjectHealthCard />
+      </div>
 
-        {/* Recent Conversations */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Conversations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{sessionCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {sessionCount === 0 ? "No sessions yet" : `${sessionCount} session${sessionCount !== 1 ? "s" : ""}`}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Project Health */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Project Health</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {engineUp ? (
-                <span className="text-governance-allow">Online</span>
-              ) : (
-                <span className="text-governance-block">Offline</span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Engine {engineUp ? "connected" : "not reachable"}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="mt-6 rounded-lg border border-border bg-zinc-950/40 p-4">
+        <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Quick Actions</p>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => navigate("/chat")}> 
+            <MessageSquare className="mr-2 h-4 w-4" />
+            New Chat
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate("/tasks")}> 
+            <CheckSquare className="mr-2 h-4 w-4" />
+            View Tasks
+          </Button>
+          <Button size="sm" variant="outline" disabled>
+            <Play className="mr-2 h-4 w-4" />
+            Run Scan
+          </Button>
+        </div>
       </div>
     </div>
   )
