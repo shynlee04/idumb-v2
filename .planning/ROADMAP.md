@@ -9,7 +9,7 @@
 
 | # | Phase | Goal | Requirements | Plans |
 |---|-------|------|--------------|-------|
-| 1 | Engine + Task Bus | Runnable chat UI with OpenCode engine, 3-level task hierarchy, governance hooks | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 | 3 |
+| 1 | Engine + Task Bus | Runnable chat UI with OpenCode engine, 3-level task hierarchy, governance hooks | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 | 6 |
 | 2 | Planning Registry + Commit Governance | Tracked development workflow — planning artifacts, atomic commits, codebase wiki | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 | 2 |
 | 3 | Knowledge Engine | Chain-break governance, tech stack tracking, research agents, knowledge synthesis | REG-03, REG-04, KB-01, KB-02, KB-03, ENG-04 | 2 |
 | 4 | UI Views + Source Synthesis | Specialized UI views for delegation/planning + NotebookLM-style synthesis | UI-01, UI-02, UI-03, ENG-05 | 2 |
@@ -38,12 +38,12 @@
 **Plans:** 6 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Backend Engine: OpenCode Server lifecycle + Session Proxy API + SSE relay
+- [x] 01-01-PLAN.md — Backend Engine: OpenCode Server lifecycle + Session Proxy API + SSE relay ✅
 - [x] 01-02-PLAN.md — Frontend App Shell: React Router + Layout + Sidebar + API hooks ✅
 - [x] 01-03-PLAN.md — Chat Interface: Streaming renderer + Part renderers + Input bar ✅
-- [ ] 01-04-PLAN.md — Task Bus: Task API routes + Task sidebar + Task detail + Rich cards
-- [ ] 01-05-PLAN.md — Multi-Agent Delegation + Governance: Threaded delegation + Governance bar
-- [ ] 01-06-PLAN.md — Dashboard Landing + Integration: Overview page + Human verification checkpoint
+- [x] 01-04-PLAN.md — Task Bus: Task API routes + Task sidebar + Task detail + Rich cards ✅
+- [x] 01-05-PLAN.md — Multi-Agent Delegation + Governance: Threaded delegation + Governance bar ✅
+- [ ] 01-06-PLAN.md — Dashboard Landing + Integration: Overview page + Human verification checkpoint (pending approval)
 
 ---
 

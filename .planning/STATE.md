@@ -2,23 +2,24 @@
 
 **Project:** iDumb — AI Knowledge Work Platform
 **Current Phase:** Phase 1 - Engine + Task Bus
-**Status:** 01-01 Revised with research, ready for execution
+**Status:** Wave 4 checkpoint reached — 01-06 human verification pending
 **Last Updated:** 2026-02-10
 
 ## Recent Activity
 
 | Date | Phase | Activity |
 |-------|-------|----------|
-| 2026-02-10 | 01-01 | Research completed: OpenCode SDK integration patterns validated |
-| 2026-02-10 | 01-01 | Plan revised: Port configuration, SSE filtering, graceful shutdown added |
-| 2026-02-09 | 01-02 | Frontend app shell complete (nav, layout, session list) |
-| 2026-02-09 | 01-03 | Chat interface complete (SSE streaming, tool calls, abort) |
+| 2026-02-10 | 01-01 | Backend engine + session proxy + SSE relay completed |
+| 2026-02-10 | 01-03 / 01-04 | Chat streaming and task bus surfaces completed (wave 2) |
+| 2026-02-10 | 01-05 | Governance bar + event stream + delegation threading completed (wave 3) |
+| 2026-02-10 | 01-06 | Dashboard cards + sidebar polish completed; awaiting human integration verify checkpoint |
+| 2026-02-10 | 01 | Frontend type regressions fixed (`useEventStream`, `useSessionStatus`) |
 
 ## Next Steps
 
-1. Execute 01-01 — Backend engine with configurable OpenCode port
-2. UAT — Verify 01-01 + 01-02 + 01-03 integration
-3. Continue with ENG-02, ENG-03, DEL-01, DEL-04
+1. Run plan `01-06` checkpoint verification (dashboard → chat → tasks → governance flow).
+2. On approval, write `01-06-SUMMARY.md` and phase verification report (`01-VERIFICATION.md`).
+3. Update ROADMAP/STATE to mark Phase 1 complete and handoff to Phase 2 planning.
 
 ## Project Reference
 
@@ -31,18 +32,18 @@ See: .planning/PROJECT.md (updated 2026-02-09)
 
 | # | Phase | Status | Progress | Requirements |
 |---|-------|--------|----------|--------------|
-| 1 | Engine + Task Bus | ○ Pending | 0% | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 |
+| 1 | Engine + Task Bus | ◆ In Progress | 83% (5/6 plans) | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 |
 | 2 | Planning Registry + Commit Governance | ○ Pending | 0% | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 |
 | 3 | Knowledge Engine | ○ Pending | 0% | REG-03, REG-04, KB-01, KB-02, KB-03, ENG-04 |
 | 4 | UI Views + Source Synthesis | ○ Pending | 0% | UI-01, UI-02, UI-03, ENG-05 |
 
 ## Active Work
 
-No active plans.
+Phase 1 `01-06` checkpoint: human verification of end-to-end integration.
 
 ## Blockers
 
-None — Phase 1 has no dependencies. Ready to begin.
+Human verification checkpoint required to close `01-06` and mark Phase 1 complete.
 
 ## Recent Decisions
 
