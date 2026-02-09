@@ -403,7 +403,7 @@ app.get("/api/governance", (req: Request, res: Response) => {
 
 // GET /api/graph — TaskGraph snapshot (v3 WorkPlan→TaskNode)
 app.get("/api/graph", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const state = getGovernanceState(projectDir)
   res.json({
     graph: state.taskGraph,
@@ -412,7 +412,7 @@ app.get("/api/graph", (req: Request, res: Response) => {
 
 // GET /api/brain — BrainStore snapshot
 app.get("/api/brain", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const state = getGovernanceState(projectDir)
 
   res.json({
@@ -423,7 +423,7 @@ app.get("/api/brain", (req: Request, res: Response) => {
 
 // GET /api/delegations — DelegationStore snapshot
 app.get("/api/delegations", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
 
   // Use SQLite adapter when available and project dir matches
   if (adapter && configuredProjectDir === projectDir) {
@@ -447,7 +447,7 @@ app.get("/api/delegations", (req: Request, res: Response) => {
 
 // GET /api/scan — Project scan results
 app.get("/api/scan", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const state = getGovernanceState(projectDir)
 
   res.json({
@@ -753,7 +753,7 @@ app.post("/api/sessions/:id/prompt", async (req: Request, res: Response) => {
 
 // GET /api/artifacts — List planning artifacts
 app.get("/api/artifacts", (req: Request, res: Response) => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const artifacts = getPlanningArtifacts(projectDir)
 
   res.json({ artifacts })
@@ -761,7 +761,7 @@ app.get("/api/artifacts", (req: Request, res: Response) => {
 
 // GET /api/artifacts/:path — Get artifact content
 app.get("/api/artifacts/content", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const path = req.query.path as string
 
   if (!path) {
@@ -791,7 +791,7 @@ app.get("/api/artifacts/content", (req: Request, res: Response): void => {
 
 // PUT /api/artifacts/:path — Save artifact content with backup
 app.put("/api/artifacts/content", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const { path, content } = req.body
 
   if (!path || content === undefined) {
@@ -852,7 +852,7 @@ app.put("/api/artifacts/content", (req: Request, res: Response): void => {
 
 // GET /api/artifacts/metadata — Real file metadata for an artifact (replaces mock)
 app.get("/api/artifacts/metadata", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const path = req.query.path as string
 
   if (!path) {
@@ -949,7 +949,7 @@ function saveCommentsStore(projectDir: string, store: unknown): void {
 
 // GET /api/comments — Get all comments or filter by artifact
 app.get("/api/comments", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const artifactPath = req.query.artifact as string | undefined
 
   const store = loadCommentsStore(projectDir)
@@ -969,7 +969,7 @@ app.get("/api/comments", (req: Request, res: Response): void => {
 
 // POST /api/comments — Create a new comment
 app.post("/api/comments", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const { artifactPath, line, content, author = "user", authorType = "user" } = req.body
 
   if (!artifactPath || !content) {
@@ -1004,7 +1004,7 @@ app.post("/api/comments", (req: Request, res: Response): void => {
 
 // PUT /api/comments/:id — Update a comment (resolve/unresolve)
 app.put("/api/comments/:id", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const commentId = req.params.id
   const { resolved, resolvedBy } = req.body
 
@@ -1037,7 +1037,7 @@ app.put("/api/comments/:id", (req: Request, res: Response): void => {
 
 // DELETE /api/comments/:id — Delete a comment
 app.delete("/api/comments/:id", (req: Request, res: Response): void => {
-  const projectDir = req.header("X-Project-Dir") || process.cwd()
+  const projectDir = resolveProjectDir(req)
   const commentId = req.params.id
 
   const store = loadCommentsStore(projectDir)
