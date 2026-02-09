@@ -1,20 +1,20 @@
-/**
- * AppShell — Root layout wrapping Sidebar + routed content via <Outlet />.
- *
- * Provides the full-viewport shell that all pages render inside.
- * QueryClientProvider is lifted to App.tsx so hooks work in Sidebar too.
- */
-
 import { Outlet } from "react-router-dom"
 import { Sidebar } from "@/components/layout/Sidebar"
+import { GovernanceBar } from "@/components/governance/GovernanceBar"
+import { EventStreamProvider } from "@/hooks/useEventStream"
 
 export function AppShell() {
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
-    </div>
+    <EventStreamProvider>
+      <div className="flex h-screen overflow-hidden bg-background text-foreground">
+        <Sidebar />
+        <main className="flex min-w-0 flex-1 flex-col">
+          <GovernanceBar />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    </EventStreamProvider>
   )
 }
