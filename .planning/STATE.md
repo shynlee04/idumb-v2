@@ -18,6 +18,7 @@
 | 2026-02-10 | 01-08 | UAT gap closure: chat viewport flex layout + agent normalization + 92-field data migration |
 | 2026-02-10 | 01 | Viewport drift-up fix: scroll isolation + overflow containment (5 changes) |
 | 2026-02-10 | 01 | UAT R2 complete: 10/10 tests passed. Phase 1 verified. |
+| 2026-02-10 | 01-09 | Config proxy routes + ModelSelector dropdown (providers, agents, config, app) |
 
 ## Next Steps
 
@@ -35,14 +36,14 @@ See: .planning/PROJECT.md (updated 2026-02-09)
 
 | # | Phase | Status | Progress | Requirements |
 |---|-------|--------|----------|--------------|
-| 1 | Engine + Task Bus | ✓ Complete | 100% (8/8 plans, UAT 10/10) | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 |
+| 1 | Engine + Task Bus | ► In progress | 90% (9/10 plans) | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 |
 | 2 | Planning Registry + Commit Governance | ○ Pending | 0% | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 |
 | 3 | Knowledge Engine | ○ Pending | 0% | REG-03, REG-04, KB-01, KB-02, KB-03, ENG-04 |
 | 4 | UI Views + Source Synthesis | ○ Pending | 0% | UI-01, UI-02, UI-03, ENG-05 |
 
 ## Active Work
 
-None — Phase 1 complete. Ready for Phase 2 planning.
+Plan 01-09 complete. Plan 01-10 pending.
 
 ## Blockers
 
@@ -68,6 +69,9 @@ None.
 | 01-08 agent normalization at source with defensive fallbacks in consumers | 2026-02-10 | Phase 1 |
 | Runtime data files gitignored correctly; migration applied in-place, no git commit for data | 2026-02-10 | Phase 1 |
 | Viewport drift-up: 5 scroll isolation fixes — scrollIntoView→scrollTop, overflow containment | 2026-02-10 | Phase 1 |
+| Model override is per-prompt (SDK SessionPromptData), not per-session (SessionCreateData has no modelID) | 2026-02-10 | 01-09 |
+| App info composed from path.get() + vcs.get() — SDK has no unified app.get() method | 2026-02-10 | 01-09 |
+| Custom dropdown for ModelSelector (no shadcn Select dependency) | 2026-02-10 | 01-09 |
 
 ---
 *State initialized: 2026-02-09*
