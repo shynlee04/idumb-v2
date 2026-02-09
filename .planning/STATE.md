@@ -43,7 +43,7 @@ See: .planning/PROJECT.md (updated 2026-02-09)
 
 ## Active Work
 
-Plan 01-09 complete. Plan 01-10 pending.
+Plan 01-09 gap closure complete. Plan 01-10 (settings page) pending — not a gap_closure plan.
 
 ## Blockers
 

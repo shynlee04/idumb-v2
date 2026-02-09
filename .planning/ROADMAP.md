@@ -46,7 +46,7 @@ Plans:
 - [x] 01-06-PLAN.md — Dashboard Landing + Integration: Overview page + Human verification checkpoint
 - [x] 01-07-PLAN.md — Gap Closure: 16 pre-UAT audit flaws (backend, frontend, docs)
 - [x] 01-08-PLAN.md — Gap Closure: UAT gaps — chat viewport layout + agent object normalization + data migration
-- [ ] 01-09-PLAN.md — Config gap closure: Backend config routes + Model/Agent selectors + ChatPage wiring
+- [x] 01-09-PLAN.md — Config gap closure: Backend config routes + Model/Agent selectors + ChatPage wiring
 - [ ] 01-10-PLAN.md — Config gap closure: Settings page (4 tabs) + Enhanced sidebar connection indicator
 
 ---
