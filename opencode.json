@@ -1,4 +1,10 @@
 {
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "explore": {
+      "model": "zai-coding-plan/glm-4.7"
+    }
+  },
   "plugin": [
     "/Users/apple/Documents/coding-projects/idumb/v2"
   ],
@@ -60,6 +66,5 @@
       ],
       "enabled": true
     }
-  },
-  "$schema": "https://opencode.ai/config.json"
+  }
 }
