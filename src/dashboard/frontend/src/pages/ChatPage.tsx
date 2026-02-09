@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { MessageSquare, Plus, Trash2 } from "lucide-react"
 import { useCreateSession, useDeleteSession, useSessions } from "@/hooks/useEngine"
@@ -7,6 +7,7 @@ import { useStreaming } from "@/hooks/useStreaming"
 import { MessageList } from "@/components/chat/MessageList"
 import { InputBar } from "@/components/chat/InputBar"
 import { DelegationThread } from "@/components/chat/DelegationThread"
+import { ModelSelector, type ModelSelection } from "@/components/chat/ModelSelector"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -29,6 +30,7 @@ export function ChatPage() {
   const createSession = useCreateSession()
   const deleteSession = useDeleteSession()
   const streaming = useStreaming(sessionId)
+  const [selectedModel, setSelectedModel] = useState<ModelSelection | null>(null)
 
   const sortedSessions = useMemo(
     () => [...sessions].sort((a, b) => b.time.updated - a.time.updated),
@@ -36,7 +38,10 @@ export function ChatPage() {
   )
 
   const onSend = async (text: string) => {
-    await streaming.sendPrompt(text)
+    const model = selectedModel
+      ? { providerID: selectedModel.providerID, modelID: selectedModel.modelID }
+      : undefined
+    await streaming.sendPrompt(text, model)
     await refetchMessages()
   }
 
@@ -114,11 +119,18 @@ export function ChatPage() {
       <section className="flex min-w-0 flex-1 flex-col">
         {sessionId ? (
           <>
-            <div className="border-b border-border px-4 py-2">
-              <h1 className="text-sm font-semibold">Session {sessionId.slice(0, 8)}</h1>
-              {streaming.error ? (
-                <p className="mt-1 text-xs text-red-300">{streaming.error}</p>
-              ) : null}
+            <div className="flex items-center justify-between border-b border-border px-4 py-2">
+              <div>
+                <h1 className="text-sm font-semibold">Session {sessionId.slice(0, 8)}</h1>
+                {streaming.error ? (
+                  <p className="mt-1 text-xs text-red-300">{streaming.error}</p>
+                ) : null}
+              </div>
+              <ModelSelector
+                value={selectedModel}
+                onChange={setSelectedModel}
+                disabled={streaming.isStreaming}
+              />
             </div>
 
             <div className="min-h-0 flex-1 flex flex-col">
