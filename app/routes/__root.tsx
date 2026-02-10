@@ -87,11 +87,15 @@ function RootErrorComponent({ error }: { error: Error }) {
 export const Route = createRootRoute({
   // Engine auto-start: ensure OpenCode is running before any route loads.
   // In SPA mode, beforeLoad runs on the server via RPC — perfect for engine init.
-  beforeLoad: async () => {
-    try {
-      await ensureEngineFn()
-    } catch {
-      // Engine may not be available in dev — don't block the app
+  beforeLoad: () => {
+    // Fire-and-forget: engine init is a server RPC that may take time or hang
+    // if OpenCode SDK isn't available. Do NOT await — it blocks the entire router,
+    // preventing any content from rendering (causes black screen).
+    // Components use React Query hooks with their own error handling.
+    if (typeof window !== "undefined") {
+      ensureEngineFn().catch(() => {
+        // Engine init failure is non-fatal — dashboard runs in degraded mode
+      })
     }
   },
   head: () => ({
