@@ -67,5 +67,8 @@ CHANGELOG.md
 .qoder/skills/
 .claude/skills/
 
+# ─── TanStack Router (auto-generated route tree) ───
+app/routeTree.gen.ts
+
 # ─── iDumb runtime modules (regenerated at runtime) ───
 .idumb/modules/
