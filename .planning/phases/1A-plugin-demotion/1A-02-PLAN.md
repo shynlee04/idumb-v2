@@ -8,6 +8,7 @@ files_modified:
   - AGENTS.md
   - README.md
   - CHANGELOG.md
+  - package.json
 autonomous: true
 
 must_haves:
