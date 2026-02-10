@@ -18,5 +18,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "src/dashboard/frontend/**/*", "src/lib/_archived-2026-02-08/**"]
+  "exclude": ["node_modules", "dist", "tests", "src/dashboard/frontend/**/*", "src/lib/_archived-2026-02-08/**", "src/_archived-plugin/**"]
 }

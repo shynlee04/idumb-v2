@@ -14,7 +14,6 @@
 
 import { readFile, readdir, stat } from "node:fs/promises"
 import { join, extname, relative } from "node:path"
-import type { SdkClient } from "./sdk-client.js"
 import type { CodeMapStore, CodeItem, CodeItemType, CodeComment, CommentMarker, FileMapEntry } from "../schemas/codemap.js"
 import { createCodeMapStore } from "../schemas/codemap.js"
 import type { ProjectMap, DirectoryEntry, DocumentEntry, DocumentType } from "../schemas/project-map.js"
@@ -134,7 +133,7 @@ function parseSourceFile(content: string, filePath: string): {
  */
 export async function populateCodeMap(
   dir: string,
-  client?: SdkClient | null,
+  client?: Record<string, unknown> | null,
 ): Promise<CodeMapStore> {
   const startTime = Date.now()
   const store = createCodeMapStore(dir)
@@ -288,7 +287,7 @@ function isSourceDir(dirName: string): boolean {
  */
 export async function populateProjectMap(
   dir: string,
-  _client?: SdkClient | null,
+  _client?: unknown,
 ): Promise<ProjectMap> {
   const startTime = Date.now()
   const map = createProjectMap(dir)

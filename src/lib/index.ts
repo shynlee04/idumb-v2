@@ -1,7 +1,7 @@
 export { createLogger } from "./logging.js"
 export type { Logger, LogLevel } from "./logging.js"
-export { setClient, tryGetClient } from "./sdk-client.js"
-export type { SdkClient } from "./sdk-client.js"
+// ─── Archived: sdk-client.ts (2026-02-10 — Phase 1A plugin demotion) ──
+// setClient, tryGetClient, SdkClient moved to _archived-plugin/lib/sdk-client.ts
 export { scanProject, formatDetectionReport } from "./framework-detector.js"
 export { scaffoldProject, formatScaffoldReport } from "./scaffolder.js"
 export type { ScaffoldResult } from "./scaffolder.js"

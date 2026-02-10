@@ -6,13 +6,13 @@
  *
  * Two write strategies:
  *   - Derived files (agents, commands, module templates): ALWAYS overwritten —
- *     they are regenerated from source templates and should track the latest plugin version.
+ *     they are regenerated from source templates.
  *   - State files (tasks.json, graph.json, registry.json, plan.json): created if missing,
  *     preserved if existing (writeIfNew). These contain user work and must not be clobbered.
  */
 
-import { mkdir, writeFile, stat, readFile, rename } from "node:fs/promises"
-import { join, dirname, resolve } from "node:path"
+import { mkdir, writeFile, stat, rename } from "node:fs/promises"
+import { join, dirname } from "node:path"
 import type { Language, GovernanceMode, ExperienceLevel } from "../schemas/config.js"
 import {
   getCoordinatorAgent,
@@ -51,17 +51,6 @@ export interface DeployResult {
   skipped: string[]
   errors: string[]
   warnings: string[]
-  pluginPath: string
-  pluginMethod: PluginResolutionMethod
-  opencodConfigUpdated: boolean
-}
-
-type PluginResolutionMethod = "npm" | "local-dev" | "npx-fallback"
-
-interface PluginResolution {
-  path: string
-  method: PluginResolutionMethod
-  warning?: string
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -87,115 +76,13 @@ async function writeIfNew(path: string, content: string, force: boolean, result:
  * Write a derived file — ALWAYS overwrites, regardless of force flag.
  *
  * Derived files (agents, commands, module templates) are regenerated from
- * source templates on every init. They should always reflect the latest
- * plugin version. Unlike state files (tasks.json, config.json), losing
- * a derived file's previous content is harmless — it's just a template.
+ * source templates on every init. Unlike state files (tasks.json, config.json),
+ * losing a derived file's previous content is harmless — it's just a template.
  */
 async function writeDerived(path: string, content: string, result: DeployResult): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, content, "utf-8")
   result.deployed.push(path)
-}
-
-// ─── Plugin name constant (single source of truth) ───────────────────
-const PLUGIN_PACKAGE_NAME = "idumb-v2"
-
-/**
- * Resolve the plugin path for opencode.json.
- * 
- * 4-strategy priority chain:
- *   S1: idumb-v2 exists in project's node_modules → "idumb-v2" (npm resolution)
- *   S2: CLI is running from project's node_modules → "idumb-v2"
- *   S3: Running from cloned repo (dev mode) → absolute path
- *   S4: npx cache / global install fallback → absolute path + warning
- * 
- * OpenCode supports: package names, file:// URLs, and relative/absolute paths.
- * Package name ("idumb-v2") is most portable — works with npm, pnpm, yarn, monorepos.
- */
-async function resolvePluginPath(projectDir: string): Promise<PluginResolution> {
-  const thisFile = new URL(import.meta.url).pathname
-
-  // ── S1: Check if idumb-v2 is installed in the PROJECT's node_modules ──
-  // This is the cleanest case — the user did `npm install idumb-v2`
-  const localPkgJson = join(projectDir, "node_modules", PLUGIN_PACKAGE_NAME, "package.json")
-  if (await exists(localPkgJson)) {
-    return { path: PLUGIN_PACKAGE_NAME, method: "npm" }
-  }
-
-  // ── S2: Are we running from inside the project's own node_modules? ──
-  // Handles edge case where S1 check failed but we ARE the local dep
-  const projectNodeModules = join(projectDir, "node_modules") + "/"
-  if (thisFile.startsWith(projectNodeModules)) {
-    return { path: PLUGIN_PACKAGE_NAME, method: "npm" }
-  }
-
-  // ── S3: Local development (cloned repo) ──
-  // Go up from dist/cli/deploy.js → package root
-  const packageRoot = resolve(dirname(thisFile), "..", "..")
-  const packageJsonPath = join(packageRoot, "package.json")
-
-  if (await exists(packageJsonPath)) {
-    try {
-      const raw = await readFile(packageJsonPath, "utf-8")
-      const pkg = JSON.parse(raw) as Record<string, unknown>
-      if (pkg.name === PLUGIN_PACKAGE_NAME) {
-        // Confirmed this is the idumb-v2 repo — dev mode
-        return { path: packageRoot, method: "local-dev" }
-      }
-    } catch {
-      // Ignore parse errors, fall through
-    }
-  }
-
-  // ── S4: npx cache or global install fallback ──
-  // The package is in a transient location (npx cache, global prefix).
-  // Extract the package root and WARN the user — this path may not survive.
-  if (thisFile.includes(`node_modules/${PLUGIN_PACKAGE_NAME}`)) {
-    const marker = `node_modules/${PLUGIN_PACKAGE_NAME}`
-    const idx = thisFile.indexOf(marker)
-    const pkgRoot = thisFile.slice(0, idx + marker.length)
-
-    return {
-      path: pkgRoot,
-      method: "npx-fallback",
-      warning:
-        `Plugin path points to a temporary location (npx cache or global install). ` +
-        `This WILL break when the cache is cleared. ` +
-        `For a stable setup, run: npm install ${PLUGIN_PACKAGE_NAME}`,
-    }
-  }
-
-  // ── Final fallback ──
-  return {
-    path: packageRoot,
-    method: "npx-fallback",
-    warning: `Could not reliably locate ${PLUGIN_PACKAGE_NAME}. Run: npm install ${PLUGIN_PACKAGE_NAME}`,
-  }
-}
-
-/**
- * Clean stale idumb-v2 entries from an existing plugin array.
- * Removes duplicates and paths that reference idumb-v2 in any form.
- * Also removes legacy 'tools-plugin' entries from earlier iDumb versions.
- * Non-idumb plugins are preserved untouched.
- */
-function cleanStalePluginPaths(plugins: string[]): string[] {
-  const seen = new Set<string>()
-  return plugins.filter(p => {
-    // Remove idumb-v2 entries (any form: package name or path)
-    if (p === PLUGIN_PACKAGE_NAME) return false
-    if (p.includes(`/${PLUGIN_PACKAGE_NAME}`)) return false
-    if (p.includes(`\\${PLUGIN_PACKAGE_NAME}`)) return false // Windows
-
-    // Remove legacy tools-plugin entries from earlier iDumb versions
-    if (p.includes("tools-plugin")) return false
-
-    // Deduplicate: if the same resolved path appears twice, skip the duplicate
-    if (seen.has(p)) return false
-    seen.add(p)
-
-    return true
-  })
 }
 
 /**
@@ -216,21 +103,12 @@ function getOpenCodeDir(projectDir: string, scope: "project" | "global"): string
  */
 export async function deployAll(options: DeployOptions): Promise<DeployResult> {
   const { projectDir, language, governance, experience, scope, force } = options
-  const resolution = await resolvePluginPath(projectDir)
 
   const result: DeployResult = {
     deployed: [],
     skipped: [],
     errors: [],
     warnings: [],
-    pluginPath: resolution.path,
-    pluginMethod: resolution.method,
-    opencodConfigUpdated: false,
-  }
-
-  // Surface resolution warnings
-  if (resolution.warning) {
-    result.warnings.push(resolution.warning)
   }
 
   const openCodeDir = getOpenCodeDir(projectDir, scope)
@@ -243,10 +121,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     const agentConfig = { language, governance, experience }
 
     // Coordinator — top-level orchestrator (Level 0)
-    const coordinatorContent = getCoordinatorAgent({
-      ...agentConfig,
-      pluginPath: resolution.path,
-    })
+    const coordinatorContent = getCoordinatorAgent(agentConfig)
     await writeDerived(
       join(agentsDir, "idumb-supreme-coordinator.md"),
       coordinatorContent,
@@ -343,7 +218,6 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
     // ─── Bootstrap Task Provisioning ─────────────────────────────
     // Pre-create an active epic+task so agents can write
     // immediately without needing to call govern_task first.
-    // The tool-gate auto-inherits from the task store on first write.
     const tasksPath = join(projectDir, ".idumb", "brain", "tasks.json")
     const bootstrapStore = createBootstrapStore()
     await writeIfNew(
@@ -389,47 +263,6 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
       force,
       result,
     )
-
-    // ─── Update opencode.json with plugin path ──────────────────
-    try {
-      const configPath = scope === "global"
-        ? join(getOpenCodeDir(projectDir, "global"), "opencode.json")
-        : join(projectDir, "opencode.json")
-
-      let config: Record<string, unknown> = {}
-      if (await exists(configPath)) {
-        const raw = await readFile(configPath, "utf-8")
-        config = JSON.parse(raw) as Record<string, unknown>
-      }
-
-      // Clean stale idumb-v2 entries, then add single plugin entry
-      // All 6 tools + all hooks are registered via the main package entry
-      const existingPlugins = (config.plugin as string[] | undefined) ?? []
-      const cleanedPlugins = cleanStalePluginPaths(existingPlugins)
-      cleanedPlugins.push(resolution.path)
-
-      config.plugin = cleanedPlugins
-
-      // Log stale entries that were removed
-      const removedCount = existingPlugins.length - (cleanedPlugins.length - 1)
-      if (removedCount > 0) {
-        result.warnings.push(
-          `Removed ${removedCount} stale idumb-v2 plugin path(s) from opencode.json`
-        )
-      }
-
-      // Ensure schema is set
-      if (!config["$schema"]) {
-        config["$schema"] = "https://opencode.ai/config.json"
-      }
-
-      await writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
-      result.opencodConfigUpdated = true
-      result.deployed.push(configPath)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      result.errors.push(`opencode.json update failed: ${msg}`)
-    }
 
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

@@ -11,8 +11,7 @@
  * 4. Deploy Supreme Coordinator agent to .opencode/agents/
  * 5. Deploy commands to .opencode/commands/
  * 6. Deploy module templates to .idumb/modules/
- * 7. Update opencode.json with plugin path
- * 8. Print greeting + next steps
+ * 7. Print greeting + next steps
  */
 
 import { createInterface } from "node:readline/promises"
@@ -405,43 +404,16 @@ async function main(): Promise<void> {
   }
   print("")
 
-  const methodLabel = deployResult.pluginMethod === "npm"
-    ? `${C.green}npm (stable)${C.reset}`
-    : deployResult.pluginMethod === "local-dev"
-      ? `${C.cyan}local dev${C.reset}`
-      : `${C.yellow}fallback (unstable)${C.reset}`
-
   if (choices.language === "vi") {
     print(`  ${C.bold}Bước tiếp theo:${C.reset}`)
     print(`  ${C.cyan}1.${C.reset} Khởi động OpenCode: ${C.bold}opencode${C.reset}`)
     print(`  ${C.cyan}2.${C.reset} Chuyển sang Supreme Coordinator agent (nhấn ${C.bold}Tab${C.reset})`)
     print(`  ${C.cyan}3.${C.reset} Hoặc chạy: ${C.bold}/idumb-init${C.reset}`)
-    print("")
-    print(`  ${C.dim}Plugin path: ${deployResult.pluginPath}${C.reset}`)
-    print(`  ${C.dim}Resolution:  ${methodLabel}${C.reset}`)
-    if (deployResult.opencodConfigUpdated) {
-      print(`  ${C.dim}Plugin đã được thêm vào opencode.json${C.reset}`)
-    }
-    if (deployResult.pluginMethod === "npx-fallback") {
-      print(`  ${C.yellow}⚠ Để ổn định, hãy chạy: ${C.bold}npm install idumb-v2${C.reset}`)
-    }
   } else {
     print(`  ${C.bold}Next steps:${C.reset}`)
     print(`  ${C.cyan}1.${C.reset} Start OpenCode: ${C.bold}opencode${C.reset}`)
     print(`  ${C.cyan}2.${C.reset} Switch to the Supreme Coordinator agent (press ${C.bold}Tab${C.reset})`)
     print(`  ${C.cyan}3.${C.reset} Or run: ${C.bold}/idumb-init${C.reset}`)
-    print("")
-    print(`  ${C.dim}Plugin path: ${deployResult.pluginPath}${C.reset}`)
-    print(`  ${C.dim}Resolution:  ${methodLabel}${C.reset}`)
-    if (deployResult.opencodConfigUpdated) {
-      print(`  ${C.dim}Plugin added to opencode.json automatically${C.reset}`)
-    } else {
-      print(`  ${C.dim}Add to opencode.json if not already there:${C.reset}`)
-      print(`  ${C.dim}  "plugin": ["${deployResult.pluginPath}"]${C.reset}`)
-    }
-    if (deployResult.pluginMethod === "npx-fallback") {
-      print(`  ${C.yellow}⚠ For a stable setup, run: ${C.bold}npm install idumb-v2${C.reset}`)
-    }
   }
 
   print("")

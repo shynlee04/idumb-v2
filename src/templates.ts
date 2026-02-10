@@ -23,7 +23,6 @@ export function getCoordinatorAgent(config: {
   language: Language
   governance: GovernanceMode
   experience: ExperienceLevel
-  pluginPath: string
 }): string {
   const langNote = config.language === "vi"
     ? "Giao tiếp bằng Tiếng Việt. Tạo tài liệu bằng ngôn ngữ đã cấu hình."
@@ -156,8 +155,6 @@ Your templates, schemas, and reference materials are in:
 - \`.idumb/config.json\` — current configuration (**read this FIRST on every session**)
 - \`.idumb/modules/skills/delegation-protocol.md\` — delegation rules
 - \`.idumb/modules/skills/governance-protocol.md\` — governance rules
-
-The iDumb plugin hooks are loaded from: \`${config.pluginPath}\`
 
 ---
 
