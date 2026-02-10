@@ -6,7 +6,7 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router"
-import { getClient, getProjectDir, sdkQuery } from "../server/sdk-client.server"
+import { getClient, getProjectDir, sdkQuery } from "../../server/sdk-client.server"
 
 // @ts-ignore — route path will be registered by Vite route tree generator at build time
 export const Route = createFileRoute("/api/events")({

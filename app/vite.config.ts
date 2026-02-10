@@ -23,6 +23,16 @@ export default defineConfig({
   build: {
     outDir: resolve(__dirname, "../dist/app"),
     emptyOutDir: true,
+    rollupOptions: {
+      // Server-only modules leak into client bundle via createServerFn import chains.
+      // TanStack Start's .server.ts stripping doesn't prevent Rollup from resolving
+      // transitive imports (SDK → node:child_process, logging → node:fs/path).
+      // Externalizing prevents "X is not exported by __vite-browser-external" errors.
+      external: [
+        "@opencode-ai/sdk",
+        /^node:/,
+      ],
+    },
   },
   server: {
     port: 5180,
