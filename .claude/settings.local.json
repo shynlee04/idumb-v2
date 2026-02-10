@@ -6,5 +6,6 @@
       "Bash(npx tsc:*)"
     ]
   },
-  "outputStyle": "critical-code-reviewer"
+  "outputStyle": "critical-code-reviewer",
+  "prefersReducedMotion": true
 }
