@@ -26,5 +26,11 @@ export default defineConfig({
   },
   server: {
     port: 5180,
+    fs: {
+      allow: [
+        resolve(__dirname),        // app/ directory (Vite root)
+        resolve(__dirname, ".."),  // project root (covers node_modules/)
+      ],
+    },
   },
 })

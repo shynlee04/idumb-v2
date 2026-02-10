@@ -89,7 +89,6 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPendingComponent: DefaultPendingComponent,
     defaultNotFoundComponent: DefaultNotFoundComponent,
-    defaultPendingMs: 0,
   })
 
   return router

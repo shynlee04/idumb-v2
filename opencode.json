@@ -5,7 +5,9 @@
       "model": "zai-coding-plan/glm-4.7"
     }
   },
-  "plugin": [],
+  "plugin": [
+    "hivemind-context-governance"
+  ],
   "mcp": {
     "context7": {
       "type": "local",

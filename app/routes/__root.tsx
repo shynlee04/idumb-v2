@@ -16,7 +16,7 @@ import {
   Scripts,
 } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { ensureEngineFn } from "../server/engine"
 import { EventStreamProvider } from "../hooks/useEventStream"
 
@@ -49,6 +49,12 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    ensureEngineFn().catch(() => {
+      // Engine init failure is non-fatal — dashboard runs in degraded mode
+    })
+  }, [])
+
   return (
     <RootDocument>
       <QueryClientProvider client={queryClient}>
@@ -85,19 +91,6 @@ function RootErrorComponent({ error }: { error: Error }) {
 }
 
 export const Route = createRootRoute({
-  // Engine auto-start: ensure OpenCode is running before any route loads.
-  // In SPA mode, beforeLoad runs on the server via RPC — perfect for engine init.
-  beforeLoad: () => {
-    // Fire-and-forget: engine init is a server RPC that may take time or hang
-    // if OpenCode SDK isn't available. Do NOT await — it blocks the entire router,
-    // preventing any content from rendering (causes black screen).
-    // Components use React Query hooks with their own error handling.
-    if (typeof window !== "undefined") {
-      ensureEngineFn().catch(() => {
-        // Engine init failure is non-fatal — dashboard runs in degraded mode
-      })
-    }
-  },
   head: () => ({
     meta: [
       { title: "iDumb Dashboard" },
