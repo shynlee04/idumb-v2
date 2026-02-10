@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 5 of 10 (Framework Foundation)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-10 — Roadmap created for v2.0 milestone (Phases 5-10)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-10 — Completed 05-01 TanStack Start SPA scaffold
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 5%
 
 ## Performance Metrics
 
@@ -29,6 +29,7 @@ Progress: [░░░░░░░░░░] 0%
 |-------|-------|-------|----------|
 | 1 (Engine + Task Bus) | 10 | — | — |
 | 1A (Plugin Demotion) | 2 | — | — |
+| 5.01 (TanStack Scaffold) | 8 tasks | 25 min | 3 min |
 
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
@@ -44,6 +45,8 @@ Recent decisions affecting current work:
 
 - [v2.0]: 2-stage validation — Code IDE (Stage 1, Phases 5-8) then governance differentiators (Phase 9) + i18n (Phase 10)
 - [v2.0]: TanStack Start (SPA mode) replaces Express + React Router — highest risk, validated first in Phase 5
+- [05-01]: TanStack Start SPA: spa.enabled=true + getRouter export name (not createRouter) — validated against source types
+- [05-01]: Retained express/cors in root deps until old backend fully replaced
 - [v2.0]: Drizzle ORM replaces Payload CMS — schema-first SQLite
 - [v2.0]: WebSocket only for terminal PTY, everything else via server functions or SSE
 - [v2.0]: Schema budget: max 50 LOC per feature, must have consumer in same phase
@@ -63,7 +66,7 @@ Recent decisions affecting current work:
 
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
-| 5 | Framework Foundation | Pending | 0/3 plans |
+| 5 | Framework Foundation | In Progress | 1/3 plans |
 | 6 | IDE Shell | Pending | 0/3 plans |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
@@ -73,9 +76,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Roadmap created for v2.0 milestone
-Resume file: None — next step is `/gsd-plan-phase 5`
+Stopped at: Completed 05-01-PLAN.md (TanStack Start SPA scaffold)
+Resume file: None — next step is Plan 05-02 (component migration)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-10 — Roadmap created for v2.0 (Phases 5-10, 25 requirements, 19 plans)*
+*Updated: 2026-02-10 — Plan 05-01 complete (TanStack Start SPA scaffold)*

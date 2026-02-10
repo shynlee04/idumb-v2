@@ -66,7 +66,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TanStack Start scaffold + SPA mode + Vite config + Monaco worker plugin
+- [x] 05-01: TanStack Start scaffold + SPA mode + Vite config + file-based routing
 - [ ] 05-02: Server refactor — split server.ts (1427 LOC), migrate routes to server functions + server routes
 - [ ] 05-03: Shared type contracts (ide-types.ts) + Drizzle ORM data layer
 
@@ -201,7 +201,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Engine + Task Bus | v1.0 | 10/10 | Complete | 2026-02-10 |
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
-| 5. Framework Foundation | v2.0 | 0/3 | Not started | — |
+| 5. Framework Foundation | v2.0 | 1/3 | In progress | — |
 | 6. IDE Shell | v2.0 | 0/3 | Not started | — |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | — |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | — |
@@ -210,4 +210,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-10 — v2.0 milestone roadmap (Phases 5-10, 25 requirements, 19 plans)*
+*Updated: 2026-02-10 — Plan 05-01 complete (TanStack Start SPA scaffold)*
