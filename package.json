@@ -27,9 +27,9 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "test": "tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts && tsx tests/work-plan.test.ts && tsx tests/task-graph.test.ts && tsx tests/plan-state.test.ts && tsx tests/smoke-code-quality.ts && tsx tests/sqlite-adapter.test.ts",
-    "prepare": "tsc || true",
-    "prepublishOnly": "npm run typecheck && npm test && npm run build",
-    "user-stories:verify": "npx tsx scripts/verify-user-stories.ts"
+    "dev:app": "vite --config app/vite.config.ts",
+    "build:app": "vite build --config app/vite.config.ts",
+    "preview:app": "vite preview --config app/vite.config.ts"
   },
   "publishConfig": {
     "access": "public"
@@ -54,21 +54,39 @@
   "author": "shynlee04",
   "license": "MIT",
   "dependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-router": "^1.159.5",
+    "@tanstack/react-start": "^1.159.5",
     "better-sqlite3": "^11.10.0",
     "chokidar": "^4.0.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "lucide-react": "^0.474.0",
     "open": "^10.1.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.4.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.5",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
     "@types/ws": "^8.5.10",
+    "@vitejs/plugin-react": "^5.1.4",
+    "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vite": "^7.3.1"
   },
   "engines": {
     "node": ">=18"
