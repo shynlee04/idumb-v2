@@ -89,37 +89,37 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FND-01 | — | Pending |
-| FND-02 | — | Pending |
-| FND-03 | — | Pending |
-| FND-04 | — | Pending |
-| IDE-01 | — | Pending |
-| IDE-02 | — | Pending |
-| IDE-03 | — | Pending |
-| IDE-04 | — | Pending |
-| IDE-05 | — | Pending |
-| CHAT-01 | — | Pending |
-| CHAT-02 | — | Pending |
-| CHAT-03 | — | Pending |
-| CHAT-04 | — | Pending |
-| CHAT-05 | — | Pending |
-| CHAT-06 | — | Pending |
-| DF-01 | — | Pending |
-| DF-02 | — | Pending |
-| DF-03 | — | Pending |
-| DF-04 | — | Pending |
-| DF-05 | — | Pending |
-| DF-06 | — | Pending |
-| DF-07 | — | Pending |
-| I18N-01 | — | Pending |
-| I18N-02 | — | Pending |
-| I18N-03 | — | Pending |
+| FND-01 | Phase 5 | Pending |
+| FND-02 | Phase 5 | Pending |
+| FND-03 | Phase 5 | Pending |
+| FND-04 | Phase 5 | Pending |
+| IDE-01 | Phase 6 | Pending |
+| IDE-02 | Phase 6 | Pending |
+| IDE-03 | Phase 7 | Pending |
+| IDE-04 | Phase 8 | Pending |
+| IDE-05 | Phase 6 | Pending |
+| CHAT-01 | Phase 7 | Pending |
+| CHAT-02 | Phase 7 | Pending |
+| CHAT-03 | Phase 8 | Pending |
+| CHAT-04 | Phase 8 | Pending |
+| CHAT-05 | Phase 7 | Pending |
+| CHAT-06 | Phase 8 | Pending |
+| DF-01 | Phase 8 | Pending |
+| DF-02 | Phase 9 | Pending |
+| DF-03 | Phase 9 | Pending |
+| DF-04 | Phase 9 | Pending |
+| DF-05 | Phase 9 | Pending |
+| DF-06 | Phase 8 | Pending |
+| DF-07 | Phase 9 | Pending |
+| I18N-01 | Phase 10 | Pending |
+| I18N-02 | Phase 10 | Pending |
+| I18N-03 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0
-- Unmapped: 25 (pending roadmap creation)
+- Mapped to phases: 25
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-10*
-*Last updated: 2026-02-10 after milestone v2.0 scoping*
+*Last updated: 2026-02-10 — Phase mappings added after roadmap creation*
