@@ -29,7 +29,8 @@
     "test": "tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts && tsx tests/work-plan.test.ts && tsx tests/task-graph.test.ts && tsx tests/plan-state.test.ts && tsx tests/smoke-code-quality.ts && tsx tests/sqlite-adapter.test.ts",
     "dev:app": "vite --config app/vite.config.ts",
     "build:app": "vite build --config app/vite.config.ts",
-    "preview:app": "vite preview --config app/vite.config.ts"
+    "preview:app": "vite preview --config app/vite.config.ts",
+    "typecheck:app": "tsc --noEmit -p tsconfig.app.json"
   },
   "publishConfig": {
     "access": "public"
