@@ -2,7 +2,7 @@
 
 **Project:** iDumb — AI Knowledge Work Platform
 **Current Phase:** Phase 1A - Plugin Demotion + Architecture Cleanup
-**Status:** Phase 1 done (10/10 plans). Architecture pivot: plugin demoted, SDK-direct. 3 gap closure phases created.
+**Status:** Phase 1A in progress (1/2 plans). Plan 01 (plugin archival) complete.
 **Last Updated:** 2026-02-10
 
 ## Recent Activity
@@ -22,10 +22,11 @@
 | 2026-02-10 | 01-10 | Settings page (4 tabs) + enhanced sidebar engine indicator |
 | 2026-02-10 | PIVOT | **Architecture pivot: plugin demoted, SDK-direct, multi-agent workspace** |
 | 2026-02-10 | AUDIT | Milestone audit: 7 active gaps, 4 deprecated by pivot. 3 gap closure phases created. |
+| 2026-02-10 | 1A-01 | Plugin archival: 16 files archived, @opencode-ai/plugin removed, build + tests clean |
 
 ## Next Steps
 
-1. **Plan Phase 1A:** Plugin demotion — archive plugin code, fix doc drift, clean dependencies
+1. **Execute Phase 1A Plan 02:** Doc drift fix — update AGENTS.md, CLAUDE.md, README.md, MASTER-PLAN.md
 2. **Plan Phase 1B:** Dashboard feature completion — settings save, code quality, interactive inputs
 3. **Plan Phase 1C:** Multi-agent workspace engine — agent spawning, multi-session, workspace controls
 4. Then Phase 2: Planning Registry + Commit Governance
@@ -43,7 +44,7 @@ See: .planning/PROJECT.md (updated 2026-02-09)
 | # | Phase | Status | Progress | Requirements |
 |---|-------|--------|----------|--------------|
 | 1 | Engine + Task Bus | ✓ Done | 100% (10/10 plans) | ENG-01*, ENG-02, ENG-03, DEL-01, DEL-04 |
-| 1A | Plugin Demotion + Cleanup | ○ Pending | 0% | — (architecture) |
+| 1A | Plugin Demotion + Cleanup | ◐ In Progress | 50% (1/2 plans) | — (architecture) |
 | 1B | Dashboard Feature Completion | ○ Pending | 0% | — (quality) |
 | 1C | Multi-Agent Workspace Engine | ○ Pending | 0% | ENG-02 (full) |
 | 2 | Planning Registry + Commit Governance | ○ Pending | 0% | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 |
@@ -54,7 +55,7 @@ See: .planning/PROJECT.md (updated 2026-02-09)
 
 ## Active Work
 
-Phase 1 complete. Gap closure phases 1A/1B/1C created, awaiting planning.
+Phase 1A Plan 01 complete (plugin archival). Plan 02 (doc drift fix) is next.
 
 ## Blockers
 
@@ -93,6 +94,9 @@ See `.planning/v1-MILESTONE-AUDIT.md` for full details.
 | Custom dropdown for ModelSelector (no shadcn Select dependency) | 2026-02-10 | 01-09 |
 | **ARCHITECTURE PIVOT: Plugin system demoted. SDK-direct. Multi-agent workspace.** | 2026-02-10 | Post-Phase 1 |
 | 3 gap closure phases (1A, 1B, 1C) created from milestone audit | 2026-02-10 | Post-Phase 1 |
+| git mv for plugin archival — preserves full file history | 2026-02-10 | 1A-01 |
+| SDK client logging removed from logging.ts — file-only logging is sole mechanism | 2026-02-10 | 1A-01 |
+| opencode.json plugin registration removed entirely from deploy.ts | 2026-02-10 | 1A-01 |
 
 ---
 *State initialized: 2026-02-09*
