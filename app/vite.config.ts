@@ -7,7 +7,10 @@ import { resolve } from "node:path"
 export default defineConfig({
   root: resolve(__dirname),
   plugins: [
-    tanstackStart({ target: "client" }),
+    tanstackStart({
+      srcDirectory: ".",
+      spa: { enabled: true },
+    }),
     react(),
     tailwindcss(),
   ],
