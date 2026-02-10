@@ -1,8 +1,8 @@
 # AGENTS.md — iDumb v2 (Ground Truth)
 
-**Version:** 8.0.0
-**Last Updated:** 2026-02-10
-**Status:** Phase 1A COMPLETE. Plugin archived, SDK-direct architecture. Schemas, CLI, dashboard, and 3-agent system intact. Phase 1B (dashboard features) next.
+**Version:** 9.0.0
+**Last Updated:** 2026-02-11
+**Status:** Phase 5 in progress (gap closure). Express fully purged. TanStack Start app in `app/`. Schemas, CLI, 3-agent system intact.
 
 ---
 
@@ -58,7 +58,7 @@ v2/
 │   ├── cli.ts                      # CLI entry point — npx idumb-v2 init (425 LOC)
 │   ├── cli/
 │   │   ├── deploy.ts               # Deploys 3 agents + 3 profiles + commands + modules (273 LOC)
-│   │   └── dashboard.ts            # Dashboard server launcher (271 LOC)
+│   │   └── dashboard.ts            # Dashboard launcher — starts Vite dev server (146 LOC)
 │   ├── templates.ts                # All deployable templates — coordinator + investigator + executor (1463 LOC)
 │   ├── _archived-plugin/           # ARCHIVED Phase 1A — plugin source code preserved
 │   │   ├── index.ts                # Former plugin entry point (7 hooks + 7 tools)
@@ -87,33 +87,59 @@ v2/
 │   │   ├── brain-indexer.ts        # Code map + project map population (382 LOC)
 │   │   ├── sqlite-adapter.ts       # SQLite storage adapter for persistence (323 LOC)
 │   │   └── storage-adapter.ts      # Storage adapter interface
-│   ├── schemas/
-│   │   ├── index.ts                # Barrel exports
-│   │   ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
-│   │   ├── classification.ts       # Task complexity classification — Type A/B/C routing (168 LOC)
-│   │   ├── config.ts               # IdumbConfig schema, Language, GovernanceMode
-│   │   ├── coherent-knowledge.ts   # Cross-session knowledge linking — action records (235 LOC)
-│   │   ├── task.ts                 # Smart TODO schema — Epic/Task/Subtask + WorkStream (517 LOC)
-│   │   ├── task-graph.ts           # v3 task graph schema — TaskNode, Checkpoint, TaskGraph (605 LOC)
-│   │   ├── wiki.ts                 # Wiki entry schema — code change documentation (153 LOC)
-│   │   ├── work-plan.ts            # v3 work plan schema — WorkPlan lifecycle (291 LOC)
-│   │   ├── delegation.ts           # Delegation schema — 3-agent hierarchy + category routing (363 LOC)
-│   │   ├── planning-registry.ts    # Planning artifact registry — tiers, chains, sections (729 LOC)
-│   │   ├── plan-state.ts           # Plan phase tracking — machine-readable MASTER-PLAN projection (138 LOC)
-│   │   ├── brain.ts                # Brain entry schema — knowledge persistence
-│   │   ├── project-map.ts          # Project map schema — directory/file mapping
-│   │   └── codemap.ts              # Code map schema — symbol extraction (241 LOC)
-│   └── dashboard/
-│       ├── backend/
-│       │   ├── server.ts           # Dashboard backend — Express + WebSocket + SSE (1427 LOC)
-│       │   └── engine.ts           # OpenCode SDK engine bridge (235 LOC)
-│       ├── frontend/
-│       │   └── src/                # React + Vite dashboard app (34 .ts/.tsx files)
-│       └── shared/
-│           └── engine-types.ts     # Shared types between backend/frontend
+│   └── schemas/
+│       ├── index.ts                # Barrel exports
+│       ├── anchor.ts               # Anchor types, scoring, staleness, budget selection
+│       ├── classification.ts       # Task complexity classification — Type A/B/C routing (168 LOC)
+│       ├── config.ts               # IdumbConfig schema, Language, GovernanceMode
+│       ├── coherent-knowledge.ts   # Cross-session knowledge linking — action records (235 LOC)
+│       ├── task.ts                 # Smart TODO schema — Epic/Task/Subtask + WorkStream (517 LOC)
+│       ├── task-graph.ts           # v3 task graph schema — TaskNode, Checkpoint, TaskGraph (605 LOC)
+│       ├── wiki.ts                 # Wiki entry schema — code change documentation (153 LOC)
+│       ├── work-plan.ts            # v3 work plan schema — WorkPlan lifecycle (291 LOC)
+│       ├── delegation.ts           # Delegation schema — 3-agent hierarchy + category routing (363 LOC)
+│       ├── planning-registry.ts    # Planning artifact registry — tiers, chains, sections (729 LOC)
+│       ├── plan-state.ts           # Plan phase tracking — machine-readable MASTER-PLAN projection (138 LOC)
+│       ├── brain.ts                # Brain entry schema — knowledge persistence
+│       ├── project-map.ts          # Project map schema — directory/file mapping
+│       └── codemap.ts              # Code map schema — symbol extraction (241 LOC)
+├── app/                            # TanStack Start SPA — replaces old Express+React dashboard
+│   ├── vite.config.ts              # TanStack Start + Vite config (SPA mode)
+│   ├── router.tsx                  # TanStack Router config
+│   ├── routeTree.gen.ts            # Auto-generated route tree
+│   ├── routes/
+│   │   ├── __root.tsx              # Root layout — CSS, EventStreamProvider
+│   │   ├── index.tsx               # Dashboard landing page
+│   │   ├── tasks.tsx               # Tasks page
+│   │   ├── settings.tsx            # Settings page
+│   │   ├── chat.tsx                # Chat layout
+│   │   ├── chat.$sessionId.tsx     # Chat session page
+│   │   └── api/
+│   │       ├── events.ts           # SSE server route — global event relay
+│   │       └── sessions.$id.prompt.ts # SSE server route — chat streaming
+│   ├── server/
+│   │   ├── sdk-client.server.ts    # OpenCode SDK client singleton (259 LOC)
+│   │   ├── config.ts               # Config server functions (providers, agents, health)
+│   │   ├── sessions.ts             # Session server functions (CRUD, prompt)
+│   │   └── settings.ts             # Settings server functions (Drizzle ORM)
+│   ├── shared/
+│   │   └── engine-types.ts         # Shared types (EngineStatus, ProviderInfo, etc.)
+│   ├── hooks/
+│   │   ├── useEngine.ts            # Engine status + start/stop
+│   │   ├── useSession.ts           # Session management hooks
+│   │   ├── useStreaming.ts          # SSE chat streaming hook
+│   │   └── useEventStream.tsx      # Global SSE event provider
+│   ├── components/
+│   │   ├── chat/                   # Chat UI components
+│   │   └── layout/                 # Layout components (sidebar, engine status)
+│   ├── db/
+│   │   ├── client.ts               # Drizzle ORM client (better-sqlite3)
+│   │   └── schema.ts               # Drizzle schema (settings table)
+│   └── styles/
+│       └── app.css                 # Tailwind + custom styles
 ├── tests/
 │   ├── init.test.ts                # 65 assertions — all pass
-│   ├── persistence.test.ts         # 43 core assertions (+SQLite when native binding available)
+│   ├── persistence.test.ts         # 89 assertions (43 core + SQLite)
 │   ├── task.test.ts                # 54 assertions — all pass
 │   ├── delegation.test.ts          # 44 assertions — all pass
 │   ├── planning-registry.test.ts   # 52 assertions — all pass
@@ -121,7 +147,7 @@ v2/
 │   ├── task-graph.test.ts          # 112 assertions — all pass
 │   ├── plan-state.test.ts          # 40 assertions — all pass
 │   ├── smoke-code-quality.ts       # Smoke test — runs scanner against own codebase
-│   ├── sqlite-adapter.test.ts      # SQLite adapter tests (conditional on native binding)
+│   ├── sqlite-adapter.test.ts      # SQLite adapter tests (79 assertions)
 │   └── _archived-plugin/           # ARCHIVED — 6 plugin-dependent test files
 │       ├── anchor-tool.test.ts
 │       ├── compaction.test.ts
@@ -147,10 +173,10 @@ v2/
 └── tsconfig.json
 ```
 
-**Source LOC:** ~12,000 (backend + schemas + CLI, excluding dashboard frontend and node_modules)
-**Test baseline:** `npm test` → **466 assertions** across **10** test suites (SQLite-dependent assertions run when native binding is available)
+**Source LOC:** ~8,000 (src/ schemas + CLI + app/ server + hooks + components, excluding node_modules)
+**Test baseline:** `npm test` → **512 assertions** across **10** test suites
 **TypeScript:** `tsc --noEmit` clean, zero errors
-**Files above 500 LOC:** `templates.ts` (1463), `dashboard/backend/server.ts` (1427), `lib/persistence.ts` (1082), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (719), `schemas/task-graph.ts` (605), `schemas/task.ts` (517)
+**Files above 500 LOC:** `templates.ts` (1463), `lib/persistence.ts` (1082), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (719), `schemas/task-graph.ts` (605), `schemas/task.ts` (517)
 
 ---
 
@@ -251,11 +277,11 @@ Reference profiles deployed to `.idumb/modules/agents/` as documentation.
 |---|---|
 | SDK-direct governance | **Not implemented.** Plugin hooks archived. Write-blocking, compaction survival, and context pruning will be reimplemented via SDK-direct calls from the dashboard backend. |
 | Runtime tool enforcement | **Archived.** The 7 custom tools (5 lifecycle verbs + anchor + init) existed as `@opencode-ai/plugin/tool()` implementations. They are in `_archived-plugin/tools/`. SDK-direct equivalents not yet built. |
-| Dashboard integration with governance | **Frontend built.** Backend exists. Governance engine bridge (`engine.ts`) exists. Not connected to live governance enforcement. |
+| Dashboard integration with governance | **Frontend built (TanStack Start).** Server functions + SSE routes in `app/`. Not connected to live governance enforcement. |
 | Delegation runtime | **Schema done.** Full runtime delegation enforcement not wired. |
 | Brain / wiki auto-population | **Schema done.** wiki.ts, coherent-knowledge.ts, classification.ts schemas created. Auto-population hooks NOT wired yet. |
 | Multi-agent workspace | **Planned for Phase 1C.** Agent spawning from UI, multi-session management, workspace controls. |
-| Settings persistence | **Read-only.** Settings page exists in dashboard but cannot save changes. Planned for Phase 1B. |
+| Settings persistence | **Drizzle schema exists.** Settings page exists in dashboard, Drizzle ORM + SQLite wired. Write path needs runtime verification. |
 
 ---
 
@@ -334,11 +360,12 @@ The project pivoted from an OpenCode plugin to a standalone multi-agent workplac
 |---|---|---|
 | 1 | Engine + Task Bus (dashboard Phase 1) | DONE |
 | 1A | Plugin Demotion + Architecture Cleanup | DONE |
-| 1B | Dashboard Feature Completion | Pending |
-| 1C | Multi-Agent Workspace Engine | Pending |
-| 2 | Planning Registry + Commit Governance | Pending |
-| 3 | Knowledge Engine | Pending |
-| 4 | UI Views + Source Synthesis | Pending |
+| 5 | Framework Foundation | Gap closure (SSE + Express purge) |
+| 6 | IDE Shell | Pending |
+| 7 | Chat + Terminal | Pending |
+| 8 | Sessions + Diffs + Agents | Pending |
+| 9 | Governance + Quick Wins | Pending |
+| 10 | i18n Validation | Pending |
 
 ### Historical Phases (Completed — Pre-Pivot)
 
@@ -360,7 +387,6 @@ These files need future splitting. Listed in severity order:
 | File | LOC | Recommended Split |
 |---|---|---|
 | `templates.ts` | 1463 | Split into `templates/coordinator.ts`, `templates/investigator.ts`, `templates/executor.ts`, `templates/modules.ts` |
-| `dashboard/backend/server.ts` | 1427 | Extract route handlers into separate modules |
 | `lib/persistence.ts` | 1082 | Extract TaskStore and SQLite concerns into separate modules |
 | `schemas/planning-registry.ts` | 729 | Split schema types from helper functions |
 | `lib/code-quality.ts` | 719 | Extract smell detectors into separate modules |
@@ -397,5 +423,5 @@ When resuming work:
 1. Read `AGENTS.md` (this file) — it reflects what exists in the codebase
 2. Read `.planning/ROADMAP.md` — the active roadmap (post-pivot)
 3. Run `npm run typecheck` — must be zero errors
-4. Run `npm test` — must pass baseline suites (10 suites, 466 assertions)
+4. Run `npm test` — must pass baseline suites (10 suites, 512 assertions)
 5. Check `.planning/STATE.md` for current phase and position
