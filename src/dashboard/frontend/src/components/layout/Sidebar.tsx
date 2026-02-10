@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 import { LayoutDashboard, MessageSquare, CheckSquare, Settings, Plus } from "lucide-react"
-import { useCreateSession, useEngineStatus, useSessions } from "@/hooks/useEngine"
+import { useCreateSession, useEngineStatus, useProviders, useSessions } from "@/hooks/useEngine"
 import { ActivityIndicator } from "@/components/governance/ActivityIndicator"
 import { cn } from "@/lib/utils"
 
@@ -13,12 +13,33 @@ interface NavItem {
 
 function EngineIndicator() {
   const { data, isError } = useEngineStatus()
+  const { data: providers = [] } = useProviders()
+
   const isRunning = Boolean(data?.running) && !isError
+  const providerCount = providers.length
+  const hasProviders = providerCount > 0
+
+  // 3-state health: running + providers = healthy, running but no providers = degraded, not running = offline
+  const health = !isRunning ? "offline" : hasProviders ? "healthy" : "degraded"
+
+  const dotColor =
+    health === "healthy"
+      ? "bg-governance-allow"
+      : health === "degraded"
+        ? "bg-yellow-500"
+        : "bg-governance-block"
+
+  const label =
+    health === "healthy"
+      ? `Engine OK \u00B7 ${providerCount} provider${providerCount !== 1 ? "s" : ""}`
+      : health === "degraded"
+        ? "Engine running \u00B7 no providers"
+        : "Engine offline"
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
-      <span className={cn("h-2 w-2 rounded-full", isRunning ? "bg-governance-allow" : "bg-governance-block")} />
-      <span>{isRunning ? "Engine running" : "Engine offline"}</span>
+      <span className={cn("h-2 w-2 rounded-full", dotColor)} />
+      <span>{label}</span>
     </div>
   )
 }
@@ -90,10 +111,19 @@ export function Sidebar() {
         <EngineIndicator />
         <ActivityIndicator />
 
-        <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+              isActive
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            }`
+          }
+        >
           <Settings className="h-4 w-4" />
           Settings
-        </button>
+        </NavLink>
       </div>
     </aside>
   )

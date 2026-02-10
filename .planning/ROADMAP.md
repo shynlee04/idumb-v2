@@ -1,18 +1,28 @@
 # Roadmap: iDumb — AI Knowledge Work Platform
 
 **Created:** 2026-02-09
-**Phases:** 4
+**Updated:** 2026-02-10 (architecture pivot: plugin demoted, SDK-direct)
+**Phases:** 7 (4 original + 3 gap closure)
 **Requirements:** 22 v1
 **Depth:** Quick
 
+## Architecture Pivot (2026-02-10)
+
+Plugin system demoted. OpenCode is used as **Engine via SDK** directly from dashboard backend — NOT as a plugin host. Tool-gate, compaction hooks, and all plugin-based governance are deprecated. The product is a **standalone multi-agent workspace** that controls agents for various purposes beyond coding.
+
 ## Phase Overview
 
-| # | Phase | Goal | Requirements | Plans |
-|---|-------|------|--------------|-------|
-| 1 | Engine + Task Bus | Runnable chat UI with OpenCode engine, 3-level task hierarchy, governance hooks, config UI | ENG-01, ENG-02, ENG-03, DEL-01, DEL-04 | 10 |
-| 2 | Planning Registry + Commit Governance | Tracked development workflow — planning artifacts, atomic commits, codebase wiki | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 | 2 |
-| 3 | Knowledge Engine | Chain-break governance, tech stack tracking, research agents, knowledge synthesis | REG-03, REG-04, KB-01, KB-02, KB-03, ENG-04 | 2 |
-| 4 | UI Views + Source Synthesis | Specialized UI views for delegation/planning + NotebookLM-style synthesis | UI-01, UI-02, UI-03, ENG-05 | 2 |
+| # | Phase | Goal | Requirements | Plans | Status |
+|---|-------|------|--------------|-------|--------|
+| 1 | Engine + Task Bus | Runnable chat UI with OpenCode engine, task hierarchy, config UI | ENG-01*, ENG-02, ENG-03, DEL-01, DEL-04 | 10 | Done |
+| 1A | Plugin Demotion + Cleanup | Archive plugin code, fix doc drift, remove @opencode-ai/plugin dependency | — (architecture) | 0 | Pending |
+| 1B | Dashboard Feature Completion | Make all UI features functional — settings save, code quality, interactive inputs | — (quality) | 0 | Pending |
+| 1C | Multi-Agent Workspace Engine | Agent spawning from UI, multi-session management, workspace controls | ENG-02 (full) | 0 | Pending |
+| 2 | Planning Registry + Commit Governance | Tracked development workflow — planning artifacts, atomic commits, codebase wiki | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 | 2 | Pending |
+| 3 | Knowledge Engine | Chain-break governance, tech stack tracking, research agents, knowledge synthesis | REG-03, REG-04, KB-01, KB-02, KB-03, ENG-04 | 2 | Pending |
+| 4 | UI Views + Source Synthesis | Specialized UI views for delegation/planning + NotebookLM-style synthesis | UI-01, UI-02, UI-03, ENG-05 | 2 | Pending |
+
+*ENG-01 re-scoped: governance enforcement via SDK-direct calls, not plugin hooks
 
 ---
 
@@ -47,7 +57,69 @@ Plans:
 - [x] 01-07-PLAN.md — Gap Closure: 16 pre-UAT audit flaws (backend, frontend, docs)
 - [x] 01-08-PLAN.md — Gap Closure: UAT gaps — chat viewport layout + agent object normalization + data migration
 - [x] 01-09-PLAN.md — Config gap closure: Backend config routes + Model/Agent selectors + ChatPage wiring
-- [ ] 01-10-PLAN.md — Config gap closure: Settings page (4 tabs) + Enhanced sidebar connection indicator
+- [x] 01-10-PLAN.md — Config gap closure: Settings page (4 tabs) + Enhanced sidebar connection indicator
+
+---
+
+## Phase 1A: Plugin Demotion + Architecture Cleanup
+
+**Goal:** Archive all plugin code (hooks, tools, plugin entry). Fix documentation drift. Remove `@opencode-ai/plugin` dependency. Dashboard backend with `@opencode-ai/sdk` is the sole entry point.
+
+**Gap Closure:** DOC-DRIFT, SDK-CLIENT-UNUSED, DUAL-STATE, PLUGIN-UNVERIFIED
+
+**Success Criteria:**
+1. `src/index.ts`, `src/hooks/*`, `src/tools/*` archived to `src/_archived-plugin/`
+2. AGENTS.md updated — no references to plugin hooks, tool-gate, or deleted files
+3. `@opencode-ai/plugin` removed from package.json — only `@opencode-ai/sdk` remains
+4. Test count and file references accurate in all docs
+5. `npm run typecheck` and `npm test` pass after removal
+
+**Dependencies:** Phase 1 complete.
+
+**Plans:** 0 (to be planned via `/gsd-plan-phase 1A`)
+
+---
+
+## Phase 1B: Dashboard Feature Completion
+
+**Goal:** Make all existing UI features fully functional. No more read-only stubs or disabled buttons. Every feature either works end-to-end or is removed.
+
+**Gap Closure:** SETTINGS-READONLY, HEALTH-STUB, CHAT-STUBS, CONSOLE-ERROR
+
+**Success Criteria:**
+1. Settings page: governance mode readable from config + saveable via API
+2. Settings page: appearance theme persisted beyond localStorage
+3. Code quality: `/api/health` returns real grade, fileCount, LOC, issues from `code-quality.ts` scanner
+4. Code quality: Run Scan button enabled and triggers backend scan
+5. InputBar: basic file attachment upload or button removed
+6. InputBar: basic slash command palette or button removed
+7. ErrorBoundary uses file-based logging, not console.error
+
+**Dependencies:** Phase 1A complete (plugin code archived, clean dependency tree).
+
+**Plans:** 0 (to be planned via `/gsd-plan-phase 1B`)
+
+---
+
+## Phase 1C: Multi-Agent Workspace Engine
+
+**Goal:** Transform the dashboard from a chat UI into a multi-agent workspace. Users spawn agents for various purposes (coding, research, writing, analysis), manage multiple concurrent sessions, and monitor agent activity — all through the browser.
+
+**Gap Closure:** ENG-02-PARTIAL + new multi-agent workspace capability
+
+**Requirements:**
+- **ENG-02** (full): Agent orchestration through OpenCode Server — multiple AI sessions managed programmatically, agents spawned/coordinated for multi-step workflows
+
+**Success Criteria:**
+1. User can spawn a new agent session from the UI with a system prompt / context
+2. Multiple agent sessions run concurrently — sidebar shows all active sessions with status
+3. User can switch between agent sessions, seeing each agent's conversation independently
+4. Workspace controls: stop, restart, or abort any agent session from the UI
+5. Agent activity monitor: live view of what each agent is doing (tools called, files modified)
+
+**Dependencies:** Phase 1B complete (dashboard features work end-to-end).
+
+**Plans:** 0 (to be planned via `/gsd-plan-phase 1C`)
 
 ---
 
@@ -132,32 +204,33 @@ Plans:
 
 ## Coverage Validation
 
-| Requirement | Phase | Verified |
-|-------------|-------|----------|
-| REG-01 | Phase 2 | ✓ |
-| REG-02 | Phase 2 | ✓ |
-| REG-03 | Phase 3 | ✓ |
-| REG-04 | Phase 3 | ✓ |
-| DEL-01 | Phase 1 | ✓ |
-| DEL-02 | Phase 2 | ✓ |
-| DEL-03 | Phase 2 | ✓ |
-| DEL-04 | Phase 1 | ✓ |
-| WIKI-01 | Phase 2 | ✓ |
-| WIKI-02 | Phase 2 | ✓ |
-| WIKI-03 | Phase 2 | ✓ |
-| KB-01 | Phase 3 | ✓ |
-| KB-02 | Phase 3 | ✓ |
-| KB-03 | Phase 3 | ✓ |
-| UI-01 | Phase 4 | ✓ |
-| UI-02 | Phase 4 | ✓ |
-| UI-03 | Phase 4 | ✓ |
-| ENG-01 | Phase 1 | ✓ |
-| ENG-02 | Phase 1 | ✓ |
-| ENG-03 | Phase 1 | ✓ |
-| ENG-04 | Phase 3 | ✓ |
-| ENG-05 | Phase 4 | ✓ |
+| Requirement | Phase | Verified | Note |
+|-------------|-------|----------|------|
+| REG-01 | Phase 2 | ✓ | |
+| REG-02 | Phase 2 | ✓ | |
+| REG-03 | Phase 3 | ✓ | |
+| REG-04 | Phase 3 | ✓ | |
+| DEL-01 | Phase 1 | ✓ | |
+| DEL-02 | Phase 2 | ✓ | |
+| DEL-03 | Phase 2 | ✓ | |
+| DEL-04 | Phase 1 | ✓ | |
+| WIKI-01 | Phase 2 | ✓ | |
+| WIKI-02 | Phase 2 | ✓ | |
+| WIKI-03 | Phase 2 | ✓ | |
+| KB-01 | Phase 3 | ✓ | |
+| KB-02 | Phase 3 | ✓ | |
+| KB-03 | Phase 3 | ✓ | |
+| UI-01 | Phase 4 | ✓ | |
+| UI-02 | Phase 4 | ✓ | |
+| UI-03 | Phase 4 | ✓ | |
+| ENG-01 | Phase 1 → re-scoped | ✓ | Plugin hooks deprecated; governance via SDK-direct in 1C |
+| ENG-02 | Phase 1 + 1C | ✓ | Basic in Phase 1, full multi-agent in 1C |
+| ENG-03 | Phase 1 | ✓ | |
+| ENG-04 | Phase 3 | ✓ | |
+| ENG-05 | Phase 4 | ✓ | |
 
 **Unmapped:** 0
 
 ---
 *Roadmap created: 2026-02-09*
+*Updated: 2026-02-10 — architecture pivot, 3 gap closure phases added*

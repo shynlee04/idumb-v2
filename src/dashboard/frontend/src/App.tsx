@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/layout/ErrorBoundary"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { ChatPage } from "@/pages/ChatPage"
 import { TasksPage } from "@/pages/TasksPage"
+import { SettingsPage } from "@/pages/SettingsPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/chat/:sessionId" element={<ChatPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/tasks/:taskId" element={<TasksPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
