@@ -17,6 +17,8 @@ import {
 } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
+import { ensureEngineFn } from "../server/engine"
+import { EventStreamProvider } from "../hooks/useEventStream"
 
 // @ts-expect-error — Vite ?url import, resolved at build time
 import appCss from "@/styles/app.css?url"
@@ -50,7 +52,9 @@ function RootComponent() {
   return (
     <RootDocument>
       <QueryClientProvider client={queryClient}>
-        <Outlet />
+        <EventStreamProvider>
+          <Outlet />
+        </EventStreamProvider>
       </QueryClientProvider>
     </RootDocument>
   )
@@ -81,6 +85,15 @@ function RootErrorComponent({ error }: { error: Error }) {
 }
 
 export const Route = createRootRoute({
+  // Engine auto-start: ensure OpenCode is running before any route loads.
+  // In SPA mode, beforeLoad runs on the server via RPC — perfect for engine init.
+  beforeLoad: async () => {
+    try {
+      await ensureEngineFn()
+    } catch {
+      // Engine may not be available in dev — don't block the app
+    }
+  },
   head: () => ({
     meta: [
       { title: "iDumb Dashboard" },
