@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 5 of 10 (Framework Foundation)
-Plan: 1 of 3 in current phase
+Plan: 3 of 3 in current phase (05-03 complete, 05-02 in parallel)
 Status: In progress
-Last activity: 2026-02-10 — Completed 05-01 TanStack Start SPA scaffold
+Last activity: 2026-02-10 — Completed 05-03 Shared Types + Drizzle Data Layer
 
-Progress: [███░░░░░░░] 5%
+Progress: [████░░░░░░] 8%
 
 ## Performance Metrics
 
@@ -30,6 +30,7 @@ Progress: [███░░░░░░░] 5%
 | 1 (Engine + Task Bus) | 10 | — | — |
 | 1A (Plugin Demotion) | 2 | — | — |
 | 5.01 (TanStack Scaffold) | 8 tasks | 25 min | 3 min |
+| 5.03 (Drizzle Data Layer) | 2 tasks | ~15 min | ~7 min |
 
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
@@ -47,6 +48,10 @@ Recent decisions affecting current work:
 - [v2.0]: TanStack Start (SPA mode) replaces Express + React Router — highest risk, validated first in Phase 5
 - [05-01]: TanStack Start SPA: spa.enabled=true + getRouter export name (not createRouter) — validated against source types
 - [05-01]: Retained express/cors in root deps until old backend fully replaced
+- [05-03]: Standalone SDK types — @opencode-ai/sdk not installed, created app/shared/engine-types.ts
+- [05-03]: .server.ts suffix for database client — prevents Vite/client bundling of native modules
+- [05-03]: .inputValidator() not .validator() for TanStack Start v1.159.5 server functions
+- [05-03]: WAL journal mode for better-sqlite3 concurrent read performance
 - [v2.0]: Drizzle ORM replaces Payload CMS — schema-first SQLite
 - [v2.0]: WebSocket only for terminal PTY, everything else via server functions or SSE
 - [v2.0]: Schema budget: max 50 LOC per feature, must have consumer in same phase
@@ -66,7 +71,7 @@ Recent decisions affecting current work:
 
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
-| 5 | Framework Foundation | In Progress | 1/3 plans |
+| 5 | Framework Foundation | In Progress | 2/3 plans (05-01 ✓, 05-03 ✓, 05-02 in progress) |
 | 6 | IDE Shell | Pending | 0/3 plans |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
@@ -76,9 +81,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Completed 05-01-PLAN.md (TanStack Start SPA scaffold)
-Resume file: None — next step is Plan 05-02 (component migration)
+Stopped at: Completed 05-03-PLAN.md (Shared Types + Drizzle Data Layer)
+Resume file: None — 05-02 (server functions + SSE) still in progress in parallel
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-10 — Plan 05-01 complete (TanStack Start SPA scaffold)*
+*Updated: 2026-02-10 — Plan 05-03 complete (Shared Types + Drizzle Data Layer)*
