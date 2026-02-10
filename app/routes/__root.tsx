@@ -2,15 +2,24 @@
  * __root.tsx — Root route for TanStack Router.
  *
  * Provides:
+ * - CSS injection via route links
  * - QueryClientProvider (React Query)
  * - Global error boundary
  * - HTML document shell (SPA mode)
  * - Outlet for child routes
  */
 
-import { createRootRoute, Outlet } from "@tanstack/react-router"
+import {
+  createRootRoute,
+  HeadContent,
+  Outlet,
+  Scripts,
+} from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
+
+// @ts-expect-error — Vite ?url import, resolved at build time
+import appCss from "@/styles/app.css?url"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,10 +36,11 @@ function RootDocument({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>iDumb Dashboard</title>
+        <HeadContent />
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         {children}
+        <Scripts />
       </body>
     </html>
   )
@@ -71,6 +81,15 @@ function RootErrorComponent({ error }: { error: Error }) {
 }
 
 export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { title: "iDumb Dashboard" },
+      { name: "description", content: "Intelligent Delegation Using Managed Boundaries" },
+    ],
+    links: [
+      { rel: "stylesheet", href: appCss },
+    ],
+  }),
   component: RootComponent,
   errorComponent: RootErrorComponent,
 })
