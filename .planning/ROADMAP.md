@@ -15,7 +15,7 @@ Plugin system demoted. OpenCode is used as **Engine via SDK** directly from dash
 | # | Phase | Goal | Requirements | Plans | Status |
 |---|-------|------|--------------|-------|--------|
 | 1 | Engine + Task Bus | Runnable chat UI with OpenCode engine, task hierarchy, config UI | ENG-01*, ENG-02, ENG-03, DEL-01, DEL-04 | 10 | Done |
-| 1A | Plugin Demotion + Cleanup | Archive plugin code, fix doc drift, remove @opencode-ai/plugin dependency | — (architecture) | 0 | Pending |
+| 1A | Plugin Demotion + Cleanup | Archive plugin code, fix doc drift, remove @opencode-ai/plugin dependency | — (architecture) | 2 | Planned |
 | 1B | Dashboard Feature Completion | Make all UI features functional — settings save, code quality, interactive inputs | — (quality) | 0 | Pending |
 | 1C | Multi-Agent Workspace Engine | Agent spawning from UI, multi-session management, workspace controls | ENG-02 (full) | 0 | Pending |
 | 2 | Planning Registry + Commit Governance | Tracked development workflow — planning artifacts, atomic commits, codebase wiki | REG-01, REG-02, DEL-02, DEL-03, WIKI-01, WIKI-02, WIKI-03 | 2 | Pending |
@@ -76,7 +76,11 @@ Plans:
 
 **Dependencies:** Phase 1 complete.
 
-**Plans:** 0 (to be planned via `/gsd-plan-phase 1A`)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 1A-01-PLAN.md — Archive plugin source (hooks, tools, entry) + fix build chain
+- [ ] 1A-02-PLAN.md — Fix documentation drift (AGENTS.md, README.md, CHANGELOG.md)
 
 ---
 
