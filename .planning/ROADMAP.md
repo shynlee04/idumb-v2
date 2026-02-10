@@ -84,9 +84,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: Resizable panel layout + FileService backend (server functions)
-- [ ] 06-02: File tree component + Zustand store + context menu
-- [ ] 06-03: Monaco editor integration with multi-tab + disposal patterns
+- [ ] 06-01-PLAN.md — Resizable panel layout + Zustand IDE store + file server functions (wave 1)
+- [ ] 06-02-PLAN.md — File tree with react-arborist + Radix context menu + React Query hooks (wave 2)
+- [ ] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
 
 ### Phase 7: Chat + Terminal
 **Goal**: Users interact with AI through rich rendered chat and run commands in integrated terminal
