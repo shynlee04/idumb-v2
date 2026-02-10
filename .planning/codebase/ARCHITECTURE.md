@@ -1,6 +1,9 @@
 # Architecture
 
 **Analysis Date:** 2026-02-09
+**Status:** ⚠️ **DEPRECATED** — Describes old plugin architecture. Current architecture is **SDK-direct standalone platform** (see `ARCHITECTURE-DECISION-2026-02-10.md`)
+
+> **NOTE:** This document describes the pre-pivot plugin architecture. Plugin system is **deprecated** as of 2026-02-10. The platform now uses OpenCode SDK directly from the dashboard backend.
 
 ## Pattern Overview
 

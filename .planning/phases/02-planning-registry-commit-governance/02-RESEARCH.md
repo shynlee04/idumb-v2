@@ -8,7 +8,7 @@
 
 Phase 2 builds the governance data layer on top of Phase 1's running application. It has two tracks: (A) a traversable JSON graph for planning artifacts with staleness tracking, and (B) atomic commit enforcement that links every code change to its originating task with structured diff tracking and rationale.
 
-The critical insight is that **most of the data models already exist** in the v2 plugin codebase. `planning-registry.ts` (729 LOC, 52 tests) has full Chain → Artifact → Section hierarchy with timestamps, staleness detection, and outlier scanning. `wiki.ts` (153 LOC) has WikiEntry with commitHash, taskId, filesChanged, and rationale fields. `work-plan.ts` (291 LOC, 56 tests) has TaskResult with filesModified and evidence. Phase 2's job is to **adapt these schemas for the dashboard backend**, build CRUD services, API routes, git integration, and frontend pages.
+The critical insight is that **most of the data models already exist** in iDumb v2 schemas. `planning-registry.ts` (729 LOC, 52 tests) has full Chain → Artifact → Section hierarchy with timestamps, staleness detection, and outlier scanning. `wiki.ts` (153 LOC) has WikiEntry with commitHash, taskId, filesChanged, and rationale fields. `work-plan.ts` (291 LOC, 56 tests) has TaskResult with filesModified and evidence. Phase 2's job is to **adapt these schemas for the dashboard backend**, build CRUD services, API routes, git integration, and frontend pages.
 
 For git operations, **simple-git** is the standard choice — it wraps the native `git` binary, has full TypeScript types, and handles all operations needed (status, diff, add, commit, log). The OpenCode SDK provides `app.path.cwd` and `app.git` for CWD detection, which is essential for pointing simple-git at the correct project directory.
 
@@ -282,7 +282,7 @@ export async function enforceCommitOnCompletion(
 - **Global git instance without CWD:** simple-git MUST be initialized with the project's CWD from `app.path.cwd`, not the dashboard's directory
 - **Polling for git status:** Use event-driven approach (chokidar watching `.git/index`) instead of polling
 - **Monolithic server.ts:** Route handlers MUST be in separate files under `routes/`. The existing server.ts is already 721 LOC
-- **Direct schema import from plugin:** Dashboard backend should use adapted types, not directly import from `src/schemas/` (different compilation target)
+- **Direct schema import from src/:** Dashboard backend should use adapted types, not directly import from `src/schemas/` (different compilation target)
 - **Synchronous git operations:** All simple-git calls are async. Never use sync alternatives
 
 ## Don't Hand-Roll
@@ -333,7 +333,7 @@ export async function enforceCommitOnCompletion(
 
 ### Pitfall 6: Planning Registry Schema Migration
 **What goes wrong:** Directly importing `src/schemas/planning-registry.ts` fails because the dashboard backend has a different TypeScript compilation target
-**Why it happens:** The plugin schemas are compiled for ESM + Node, the dashboard might have different settings
+**Why it happens:** The src/schemas are compiled for ESM + Node, the dashboard might have different settings
 **How to avoid:** Create a `registry-types.ts` in the dashboard's types directory that re-exports or adapts the interfaces. Use the schema interfaces as contracts, implement CRUD in the service layer.
 **Warning signs:** TypeScript compilation errors, circular imports, module resolution failures
 

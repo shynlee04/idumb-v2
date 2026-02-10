@@ -1,0 +1,222 @@
+{
+  "name": "Context Governance Plugin for OpenCode",
+  "branchName": "ralph/context-governance-plugin",
+  "description": "A lightweight OpenCode plugin that provides context-aware governance for AI agents through shadow tracking - silently monitoring activity without blocking workflow",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Plugin Bootstrap and Shadow Mode Initialization",
+      "description": "As an AI agent, I want the plugin to start tracking my activity automatically so that my work is recorded without any action on my part.",
+      "acceptanceCriteria": [
+        "Plugin initializes on OpenCode startup",
+        "Creates .opencode/plugin/context-governance/ directory structure",
+        "Initializes empty brain.json with default state",
+        "Shadow mode activates automatically (no blocking)",
+        "State includes: session_id, start_time, files_touched[], tool_count, mode=shadow",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "",
+      "dependsOn": []
+    },
+    {
+      "id": "US-002",
+      "title": "Tool Usage Tracking Hook",
+      "description": "As an AI agent, I want all my tool usage tracked silently so that my activity history is preserved.",
+      "acceptanceCriteria": [
+        "Implement tool.execute.after hook",
+        "Track: tool_name, timestamp, success/failure, file paths (if applicable)",
+        "Update files_touched[] array in brain.json (unique entries only)",
+        "Increment tool_count counter",
+        "Log to console only (never chat): [Shadow] {tool_name} executed",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-003",
+      "title": "Complexity Detection and Soft Nudges",
+      "description": "As an AI agent, I want to be notified when my session complexity grows so that I can choose to organize my work better.",
+      "acceptanceCriteria": [
+        "Check thresholds after each tool execution",
+        "Default thresholds: 3 files OR 5 tool calls",
+        "Configurable via config.json (thresholds.file_count, thresholds.tool_count)",
+        "Console-only message: [Suggestion] Complexity detected (X files, Y tools). Consider init_session for better tracking.",
+        "Message appears only once per session (deduplicated)",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-002"]
+    },
+    {
+      "id": "US-004",
+      "title": "init_session Tool (Explicit Mode)",
+      "description": "As an AI agent, I want to activate structured planning mode so that I can organize complex work hierarchically.",
+      "acceptanceCriteria": [
+        "Tool accepts: session_name (string), work_type (enum: quick_fix/feature/refactor/exploration), depth (1 or 3)",
+        "Switches mode from shadow to explicit",
+        "Creates structured session record in .idumb/sessions/explicit-{name}.json",
+        "Injects skill prompt based on work_type (console only)",
+        "Skill prompts: quick_fix=Verify before patching, feature=Plan interfaces first, refactor=Preserve public APIs, exploration=Document findings",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-005",
+      "title": "track_task Tool (Hierarchical Tasks)",
+      "description": "As an AI agent, I want to track my progress through hierarchical tasks so that my work structure is clear.",
+      "acceptanceCriteria": [
+        "Tool accepts: action (add/complete/pivot), content (string), node_id (optional, e.g., 1.2)",
+        "In explicit mode: Updates task hierarchy in session file",
+        "In shadow mode: Auto-creates shadow task entry",
+        "Supports depth=1 (flat) and depth=3 (trajectory/tactic/action)",
+        "Auto-pruning: marking parent complete collapses children",
+        "Console feedback: [Task] {action}: {content}",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-004"]
+    },
+    {
+      "id": "US-006",
+      "title": "save_checkpoint Tool (Manual Persistence)",
+      "description": "As an AI agent, I want to manually save important milestones so that critical progress is preserved.",
+      "acceptanceCriteria": [
+        "Tool accepts: summary (optional string)",
+        "Creates checkpoint entry in session file",
+        "Includes timestamp, current tasks, files touched",
+        "Console feedback: [Checkpoint] Saved: {summary || timestamp}",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-004"]
+    },
+    {
+      "id": "US-007",
+      "title": "Session Auto-Archive on Stop",
+      "description": "As an AI agent, I want my session data preserved when the session ends so that I can resume work later.",
+      "acceptanceCriteria": [
+        "Implement session.stop hook",
+        "Save brain.json to .idumb/sessions/shadow-{timestamp}.json (shadow mode)",
+        "Save explicit session to .idumb/sessions/explicit-{name}-{timestamp}.json (explicit mode)",
+        "Include: full state, metrics, task history, files touched",
+        "Reset brain.json to empty state for next session",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-002", "US-004"]
+    },
+    {
+      "id": "US-008",
+      "title": "Agent Self-Rating Mechanism",
+      "description": "As an AI agent, I want to rate my own performance each turn so that drift and frustration signals are captured.",
+      "acceptanceCriteria": [
+        "Add self_rate tool with parameters: score (1-10), reason (optional)",
+        "Store ratings in brain.json ratings[] array",
+        "Include: score, timestamp, turn_number, reason",
+        "Console feedback: [Rating] Turn {N}: {score}/10",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-009",
+      "title": "Negative Signal Detection",
+      "description": "As a system, I want to detect negative signals in user messages so that context drift can be flagged.",
+      "acceptanceCriteria": [
+        "Monitor user messages for keywords: stop, wrong, no, bad, incorrect",
+        "Detect agent responses indicating failure: I apologize, you are right, I was wrong",
+        "Flag session with negative_signals[] entry",
+        "Include: signal_type, message_snippet, timestamp",
+        "Console log: [Signal] Negative pattern detected: {type}",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-002"]
+    },
+    {
+      "id": "US-010",
+      "title": "Cancel Mechanism Detection",
+      "description": "As a system, I want to detect when the user cancels or interrupts work so that incomplete tasks are flagged.",
+      "acceptanceCriteria": [
+        "Detect cancellation patterns: Ctrl+C, cancel, abort, nevermind",
+        "Flag session with cancelled: true and cancel_reason (if provided)",
+        "Ensure session is archived with cancelled status",
+        "Console log: [Cancel] Session flagged as cancelled",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-007"]
+    },
+    {
+      "id": "US-011",
+      "title": "TUI Dashboard Display",
+      "description": "As an AI agent, I want to see my current session status in the TUI so that I have situational awareness.",
+      "acceptanceCriteria": [
+        "Display compact status bar in console",
+        "Show: mode (shadow/explicit), files touched count, tool count, current task (if any)",
+        "Format: [ContextGov] Mode: {mode} | Files: {N} | Tools: {N} | Task: {task || none}",
+        "Update in real-time (after each tool call)",
+        "Use ANSI colors: green=explicit, gray=shadow, yellow=complexity threshold reached",
+        "npm run typecheck passes",
+        "npm test passes",
+        "Manual verification in OpenCode TUI environment"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-002"]
+    },
+    {
+      "id": "US-012",
+      "title": "Configuration System",
+      "description": "As a user, I want to configure plugin behavior so that it fits my workflow preferences.",
+      "acceptanceCriteria": [
+        "Create config.json in plugin directory",
+        "Configurable: thresholds.file_count (default 3), thresholds.tool_count (default 5)",
+        "Configurable: enable_self_rating (default true), enable_sentiment_detection (default true)",
+        "Configurable: auto_archive (default true)",
+        "Load config on plugin initialization",
+        "npm run typecheck passes",
+        "npm test passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    }
+  ]
+}
