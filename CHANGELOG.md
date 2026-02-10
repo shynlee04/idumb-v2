@@ -60,11 +60,29 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [Unreleased]
+## [Unreleased] — Phase 1A: Plugin Demotion + Architecture Cleanup
 
-### Planned
-- Phase 2B: Live validation in OpenCode + baseline measurement
-- Phase 3: Inner cycle delegation (T2) with pivot for subagent limitation
-- Phase 4: 3-level TODO delegation tool (T7)
-- Phase 5: Message transform experiments (T5/T6) — blocked on A/B data
-- Phase 6: Auto-run + state management (T8)
+### Changed
+- Architecture pivot: OpenCode plugin demoted to SDK-direct. All governance moves to dashboard backend.
+- `@opencode-ai/plugin` removed from dependencies
+- `deploy.ts` no longer writes plugin entries to `opencode.json`
+- Project description updated: "AI knowledge work platform built on OpenCode" (was "OpenCode plugin")
+
+### Archived
+- `src/hooks/` → `src/_archived-plugin/hooks/` (compaction, message-transform, system)
+- `src/tools/` → `src/_archived-plugin/tools/` (anchor, init, tasks)
+- `src/index.ts` → `src/_archived-plugin/index.ts` (plugin entry point)
+- `src/lib/sdk-client.ts` → `src/_archived-plugin/lib/sdk-client.ts`
+- 6 plugin-dependent test files → `tests/_archived-plugin/`
+
+### Fixed
+- DOC-DRIFT: AGENTS.md updated to match actual filesystem and test counts
+- Removed references to deleted `tool-gate.ts` (was deleted in Phase 9 R4, docs never updated)
+- Test baseline corrected from 814 to 466 assertions (10 suites, not 17)
+- Source LOC corrected from ~13,500 to ~12,000
+
+### Preserved
+- All schemas (task-graph, work-plan, delegation, planning-registry, etc.) — no plugin dependency
+- CLI (`npx idumb-v2 init`) — still deploys agents, commands, modules
+- Dashboard frontend + backend — no plugin dependency
+- 10 test files with 466 core assertions still passing

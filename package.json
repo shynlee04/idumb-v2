@@ -1,7 +1,7 @@
 {
   "name": "idumb-v2",
   "version": "2.2.0",
-  "description": "Intelligent Delegation Using Managed Boundaries — an OpenCode plugin that makes AI agents think before they write",
+  "description": "Intelligent Delegation Using Managed Boundaries — an AI knowledge work platform built on OpenCode",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,12 +36,11 @@
   },
   "keywords": [
     "opencode",
-    "plugin",
     "ai-governance",
     "agent",
     "llm",
-    "tool-gate",
-    "compaction",
+    "knowledge-work",
+    "multi-agent",
     "context-management"
   ],
   "repository": {

@@ -6,11 +6,10 @@
 
 <p align="center">
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.7-blue.svg" alt="TypeScript"></a>
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-859%2F859-brightgreen.svg" alt="Tests"></a>
-  <a href="https://opencode.ai/docs/plugins/"><img src="https://img.shields.io/badge/OpenCode-Plugin-green.svg" alt="OpenCode Plugin"></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-466%2F466-brightgreen.svg" alt="Tests"></a>
+  <a href="#"><img src="https://img.shields.io/badge/OpenCode-SDK--Direct-orange.svg" alt="OpenCode SDK"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Platform-Standalone-brightgreen.svg" alt="Standalone Platform"></a>
   <a href="#"><img src="https://img.shields.io/badge/Agents-3-purple.svg" alt="3 Agents"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Hooks-7-orange.svg" alt="7 Hooks"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Tools-6-blue.svg" alt="6 Tools"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
 </p>
 
@@ -100,9 +99,9 @@ Or skip prompts: `idumb-v2 init -y`
 your-project/
 ├── .opencode/
 │   ├── agents/                           # 3 AI agents
-│   │   ├── idumb-supreme-coordinator.md  # 🎯 Orchestrator — delegates, never writes
-│   │   ├── idumb-investigator.md         # 🔬 Research, analysis, planning
-│   │   └── idumb-executor.md             # 🔨 Code writer — the only one that writes
+│   │   ├── idumb-supreme-coordinator.md  # Orchestrator — delegates, never writes
+│   │   ├── idumb-investigator.md         # Research, analysis, planning
+│   │   └── idumb-executor.md             # Code writer — the only one that writes
 │   └── commands/                         # 4 slash commands
 │       ├── idumb-init.md                 # /idumb-init
 │       ├── idumb-settings.md             # /idumb-settings
@@ -120,7 +119,6 @@ your-project/
 │       ├── commands/                     # Command templates
 │       ├── workflows/                    # Workflow templates
 │       └── skills/                       # Governance protocols
-└── opencode.json                         # Plugin auto-configured
 ```
 
 ### 4. Start OpenCode
@@ -235,26 +233,37 @@ In `retard` governance mode (expert only), the scan adds roasts:
 
 ## 🏗️ Architecture
 
-### Single Plugin Design
+### Standalone Platform Design
+
+**⚠️ STRATEGIC PIVOT (2026-02-10):** iDumb is now a **standalone multi-agent workplace platform**, not a plugin. All governance flows through the OpenCode SDK called directly from the dashboard backend.
 
 ```
-idumb (index.ts)
-├── 7 Hooks
-│   ├── event                              # Session lifecycle events
-│   ├── tool.execute.before                # Block write/edit without task + agent scoping
-│   ├── tool.execute.after                 # Defense-in-depth fallback
-│   ├── experimental.session.compacting    # Anchor injection post-compaction
-│   ├── experimental.chat.system.transform # Governance directive in system prompt
-│   ├── experimental.chat.messages.transform # Context pruning (DCP pattern)
-│   └── chat.params                        # Agent identity capture + auto-assignment
+iDumb Platform
+├── Dashboard Backend (Node.js + Express)
+│   ├── SDK Client (OpenCode SDK direct calls)
+│   ├── Governance Engine (task graph, delegation, anchors)
+│   └── WebSocket Server (real-time updates to frontend)
 │
-└── 6 Governance Tools
-    ├── govern_plan      # WorkPlan lifecycle (create, plan_tasks, status, archive)
-    ├── govern_task      # TaskNode lifecycle (start, complete, fail, quick_start)
-    ├── govern_delegate  # Structured delegation (assign, recall, status)
-    ├── govern_shell     # Governed shell execution with classification
-    ├── idumb_anchor     # Context anchors that survive compaction + brain entries
-    └── idumb_init       # Project initialization + brownfield scan + brain population
+├── Dashboard Frontend (React + Vite)
+│   ├── Task Management UI (Smart TODO, WorkPlans)
+│   ├── Agent Control Panel (3-agent delegation interface)
+│   └── Planning Workspace (artifacts, traceability)
+│
+└── Governance System (Schema-driven)
+    ├── Task Graph (WorkPlan → TaskNode → Checkpoint)
+    ├── Delegation (3-agent hierarchy with category routing)
+    ├── Anchors (context survival across sessions)
+    └── Planning Registry (artifact chains, staleness tracking)
+```
+
+### SDK-Direct Governance (Previous Plugin Hooks Deprecated)
+
+```
+Plugin architecture (DEPRECATED) → SDK architecture (CURRENT)
+├── tool.execute.before          → SDK: tool.execute.before hook via SDK client
+├── experimental.chat.system.transform → SDK: governance directive injection
+├── experimental.session.compacting → SDK: anchor injection
+└── chat.params                   → SDK: agent identity capture
 ```
 
 ### 3-Agent Hierarchy
@@ -275,9 +284,11 @@ Each agent has **scoped permissions**:
 | 🔬 **Investigator** | Research, analysis, planning | Brain entries only | ❌ | ❌ |
 | 🔨 **Executor** | Code, builds, tests | ✅ | ❌ | ❌ |
 
-### Plugin Hooks
+### Plugin Hooks (DEPRECATED — Historical Reference)
 
-| Hook | Purpose |
+> **⚠️ ARCHIVED (2026-02-10):** Plugin architecture is deprecated. All governance now flows through OpenCode SDK calls from the dashboard backend. This section is for historical context only.
+
+| Hook | Purpose (DEPRECATED) |
 |------|---------|
 | `event` | Session lifecycle logging |
 | `tool.execute.before` | Blocks write/edit without task + agent-scoped tool gating |
@@ -291,42 +302,26 @@ Each agent has **scoped permissions**:
 
 ```
 src/
-├── index.ts                    # Single plugin — 7 hooks + 6 tools
 ├── cli.ts                      # CLI entry (idumb-v2 init, idumb-v2 dashboard)
 ├── cli/
 │   ├── deploy.ts               # Agent + command + module deployment
-│   └── dashboard.ts            # Dashboard server launcher (dynamic port, production mode)
+│   └── dashboard.ts            # Dashboard server launcher
 ├── templates.ts                # 3 agent templates + commands + modules
-├── hooks/
-│   ├── tool-gate.ts            # Block write/edit + agent scoping + dynamic agent rules
-│   ├── compaction.ts           # Anchor injection post-compaction
-│   ├── message-transform.ts    # Stale output pruning (DCP)
-│   └── system.ts               # Governance system prompt
-├── tools/
-│   ├── govern-plan.ts          # WorkPlan lifecycle (create, plan_tasks, status, archive, abandon)
-│   ├── govern-task.ts          # TaskNode lifecycle (start, complete, fail, quick_start)
-│   ├── govern-delegate.ts      # Structured delegation (assign, recall, status)
-│   ├── govern-shell.ts         # Governed shell execution with classification
-│   ├── anchor.ts               # Context anchors + brain entries (learn action)
-│   └── init.ts                 # Project init + brownfield scan + brain population
+├── _archived-plugin/           # Archived plugin source (Phase 1A)
 ├── schemas/
-│   ├── task.ts                 # Smart TODO (Epic → Task → Subtask, legacy v2)
+│   ├── task.ts                 # Smart TODO (Epic -> Task -> Subtask)
 │   ├── task-graph.ts           # v3 TaskNode + Checkpoint model
 │   ├── work-plan.ts            # v3 WorkPlan lifecycle
 │   ├── anchor.ts               # Anchor scoring & staleness
-│   ├── brain.ts                # Brain entry schema (knowledge persistence)
-│   ├── codemap.ts              # Code map schema (symbol extraction)
-│   ├── project-map.ts          # Project map schema (directory/file mapping)
 │   ├── config.ts               # IdumbConfig schema
 │   ├── delegation.ts           # Delegation chain + agent hierarchy
-│   ├── plan-state.ts           # Plan phase tracking
-│   └── planning-registry.ts    # Artifact registry (tiers, chains, sections)
+│   ├── planning-registry.ts    # Artifact registry (tiers, chains, sections)
+│   └── ...                     # brain, codemap, project-map, plan-state, wiki, etc.
 ├── lib/
 │   ├── logging.ts              # TUI-safe file logger (zero console.log)
 │   ├── persistence.ts          # StateManager — debounced disk I/O + brain stores
-│   ├── paths.ts                # Shared BRAIN_PATHS constant (single source of truth)
-│   ├── brain-indexer.ts         # Code map + project map population
-│   ├── sdk-client.ts           # OpenCode SDK client singleton
+│   ├── paths.ts                # Shared BRAIN_PATHS constant
+│   ├── brain-indexer.ts        # Code map + project map population
 │   ├── state-reader.ts         # State reading utilities
 │   ├── code-quality.ts         # Brownfield code smell scanner + grading
 │   ├── framework-detector.ts   # Read-only project scanner
@@ -334,7 +329,8 @@ src/
 │   ├── sqlite-adapter.ts       # SQLite storage adapter (optional)
 │   └── storage-adapter.ts      # Storage adapter interface
 └── dashboard/
-    ├── backend/server.ts       # Express + WebSocket + chokidar + static serving
+    ├── backend/server.ts       # Express + WebSocket + SSE + static serving
+    ├── backend/engine.ts       # OpenCode SDK engine bridge
     ├── frontend/               # React 18 + Vite + Tailwind v4 + TanStack Query
     └── shared/                 # Shared types between backend/frontend
 ```
@@ -362,45 +358,30 @@ src/
 | `governance_mode` | `balanced`, `strict`, `autonomous` | `balanced` |
 | `force` | `true`, `false` | `false` |
 
-### v3 Governance Tools
+### Governance Tools (Archived)
 
-| Tool | Actions | Purpose |
-|------|---------|---------|
-| `govern_plan` | `create`, `plan_tasks`, `status`, `archive`, `abandon` | WorkPlan lifecycle management |
-| `govern_task` | `start`, `complete`, `fail`, `status`, `review`, `quick_start` | TaskNode lifecycle (quick_start = 1-call ceremony) |
-| `govern_delegate` | `assign`, `recall`, `status` | Structured delegation between agents |
-| `govern_shell` | _(direct execution)_ | Shell command execution with classification + audit |
+> Plugin-based governance tools were archived in Phase 1A. SDK-direct equivalents planned.
 
 ---
 
-## 🧪 Tests
+## Tests
 
 ```bash
-npm test    # 859/859 assertions across 20 suites
+npm test    # 466/466 assertions across 10 suites
 ```
 
 | Suite | Assertions | Coverage |
 |-------|-----------|----------|
-| `tool-gate.test.ts` | 94 | Block, allow, retry, fallback, agent scoping |
-| `compaction.test.ts` | 16 | Injection, budget caps, staleness, critical anchors |
-| `message-transform.test.ts` | 13 | Pruning, exempt tools, edge cases |
-| `system.test.ts` | 43 | Config-aware governance context |
-| `init.test.ts` | 66 | Config, detection, scaffold, bilingual reports |
-| `persistence.test.ts` | 47 | Round-trip, debounce, degradation, brain stores |
+| `init.test.ts` | 65 | Config, detection, scaffold, bilingual reports |
+| `persistence.test.ts` | 43 | Round-trip, debounce, degradation, brain stores |
 | `task.test.ts` | 54 | Epic/task CRUD, WorkStream v2, migration |
 | `delegation.test.ts` | 44 | Delegation chains, expiry, hierarchy |
 | `planning-registry.test.ts` | 52 | Artifact tracking, lifecycle, queries |
 | `work-plan.test.ts` | 56 | WorkPlan lifecycle, task planning |
 | `task-graph.test.ts` | 112 | v3 TaskNode, Checkpoint, migration |
 | `plan-state.test.ts` | 40 | Plan phase tracking, projections |
-| `govern-plan.test.ts` | 52 | govern_plan tool integration |
-| `govern-task.test.ts` | 58 | govern_task tool integration |
-| `govern-delegate.test.ts` | 17 | govern_delegate tool integration |
-| `govern-shell.test.ts` | 31 | Command classification, execution, audit |
-| `anchor-tool.test.ts` | 32 | Anchor CRUD + brain entries via tool |
-| `init-tool.test.ts` | 32 | Scan, initialize, report actions via tool |
-| `smoke-code-quality.ts` | — | Smoke test against own codebase |
-| `sqlite-adapter.test.ts` | 46+ | SQLite storage (conditional on native binding) |
+| `smoke-code-quality.ts` | -- | Smoke test against own codebase |
+| `sqlite-adapter.test.ts` | conditional | SQLite storage (when native binding available) |
 
 ---
 
@@ -417,11 +398,11 @@ npm test    # 859/859 assertions across 20 suites
 
 ---
 
-## ⚠️ Known Limitations
+## Known Limitations
 
-- **Subagent hook gap** — `tool.execute.before` does not fire for subagent tool calls in OpenCode
-- **Experimental hooks** — `system.transform` and `messages.transform` are registered but unverified in live OpenCode runtime
-- **Not on npm** — Requires `npm link` for now (publish coming soon™)
+- **Plugin archived** — Governance hooks and tools archived in Phase 1A; SDK-direct reimplementation planned
+- **Not on npm** — Requires `npm link` for now (publish coming soon)
+- **Dashboard** — Frontend built but not fully integrated with governance enforcement
 
 ---
 
@@ -429,7 +410,7 @@ npm test    # 859/859 assertions across 20 suites
 
 ```bash
 npm run typecheck    # tsc --noEmit — zero errors
-npm test             # 859/859 — all must pass
+npm test             # 466/466 — all must pass
 npm run build        # tsc → dist/ — clean compile
 ```
 
@@ -519,22 +500,21 @@ Hoặc bỏ qua hỏi đáp: `idumb-v2 init -y`
 ### 3. Deploy những gì?
 
 ```
-project-của-bạn/
+project-cua-ban/
 ├── .opencode/
 │   ├── agents/                           # 3 agent AI
-│   │   ├── idumb-supreme-coordinator.md  # 🎯 Điều phối — chỉ delegate, không viết code
-│   │   ├── idumb-investigator.md         # 🔬 Nghiên cứu, phân tích, lập kế hoạch
-│   │   └── idumb-executor.md             # 🔨 Viết code — agent duy nhất được viết
-│   └── commands/                         # 4 lệnh
+│   │   ├── idumb-supreme-coordinator.md  # Dieu phoi — chi delegate, khong viet code
+│   │   ├── idumb-investigator.md         # Nghien cuu, phan tich, lap ke hoach
+│   │   └── idumb-executor.md             # Viet code — agent duy nhat duoc viet
+│   └── commands/                         # 4 lenh
 │       ├── idumb-init.md                 # /idumb-init
 │       ├── idumb-settings.md             # /idumb-settings
 │       ├── idumb-status.md               # /idumb-status
 │       └── idumb-delegate.md             # /idumb-delegate
-├── .idumb/                               # Dữ liệu quản trị
-│   ├── config.json                       # Cài đặt của bạn
-│   ├── brain/                            # Trạng thái bền vững
+├── .idumb/                               # Du lieu quan tri
+│   ├── config.json                       # Cai dat cua ban
+│   ├── brain/                            # Trang thai ben vung
 │   └── idumb-modules/                    # Template & schema
-└── opencode.json                         # Plugin tự cấu hình
 ```
 
 ### 4. Chạy OpenCode
@@ -656,7 +636,7 @@ Kết quả là điểm sức khỏe A–F (0–100):
 ## 🧪 Tests
 
 ```bash
-npm test    # 859/859 assertions — 20 suite — xanh lè hết 💚
+npm test    # 466/466 assertions — 10 suite
 ```
 
 ---
