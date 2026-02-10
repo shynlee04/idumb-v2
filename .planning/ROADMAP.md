@@ -45,7 +45,7 @@ Plans:
 **Stage 1 timebox:** 3 weeks (Phases 5-8)
 **Total requirements:** 25 (FND-01..04, IDE-01..05, CHAT-01..06, DF-01..07, I18N-01..03)
 
-- [ ] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
+- [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
 - [ ] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
@@ -63,13 +63,15 @@ Plans:
   2. Server functions return typed data — no new Express route handlers (existing ones migrated or wrapped)
   3. SSE streaming works through server routes for OpenCode SDK chat events
   4. Drizzle ORM reads/writes SQLite tables for settings and workspace config with auto-generated migrations
-**Plans**: 4 plans
+**Plans**: 6 plans (incl. 1 early Phase 7 bonus)
 
 Plans:
 - [x] 05-01: TanStack Start scaffold + SPA mode + Vite config + file-based routing
 - [x] 05-02: Server refactor — split server.ts (1427 LOC), migrate routes to server functions + server routes
 - [x] 05-03: Shared type contracts (ide-types.ts) + Drizzle ORM data layer
-- [ ] 05-04: Gap closure — SPA hydration fix (startTransition + dead file cleanup + engine init refactor)
+- [x] 05-04: Gap closure — SPA hydration fix (startTransition + dead file cleanup + engine init refactor)
+- [x] 05-05: *(early Phase 7 bonus)* Chat UI scaffold — messages, input, sidebar, engine status (CHAT-01/CHAT-03 scope, not FND)
+- [x] 05-06: Gap closure — SSE architecture fix + Express purge (runtime verified 2026-02-11)
 
 ### Phase 6: IDE Shell
 **Goal**: Users can browse project files and edit code in a resizable IDE workspace
@@ -202,7 +204,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Engine + Task Bus | v1.0 | 10/10 | Complete | 2026-02-10 |
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
-| 5. Framework Foundation | v2.0 | 3/4 | Gap closure | -- |
+| 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
 | 6. IDE Shell | v2.0 | 0/3 | Not started | -- |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
@@ -211,4 +213,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-11 -- Phase 5 gap closure plan added (05-04: SPA hydration fix)*
+*Updated: 2026-02-11 -- Phase 5: 05-04 complete, 05-05 reclassified as early Phase 7 bonus, 05-06 SSE gap closure plan added*

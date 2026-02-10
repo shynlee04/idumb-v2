@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 5 — Framework Foundation (gap closure — runtime verification)
+**Current focus:** Phase 5 COMPLETE — ready for Phase 6
 
 ## Current Position
 
 Phase: 5 of 10 (Framework Foundation)
-Plan: 6 of 6 in current phase (05-01 ✓, 05-02 ✓, 05-03 ✓, 05-04 ✓, 05-05 ✓ bonus, 05-06 ◆ in progress)
-Status: Express fully purged. SSE engine init fixed. Awaiting human runtime verification.
-Last activity: 2026-02-11 — Express backend deleted (9069 lines), SSE ensureEngine() added, CLI updated to Vite
+Plan: 6 of 6 in current phase (05-01 ✓, 05-02 ✓, 05-03 ✓, 05-04 ✓, 05-05 ✓ bonus, 05-06 ✓)
+Status: Phase 5 COMPLETE — all 4 success criteria runtime-verified
+Last activity: 2026-02-11 — 05-06 complete, Express purged, SSE verified at runtime
 
 Progress: [████░░░░░░] 8%
 
@@ -79,7 +79,7 @@ Recent decisions affecting current work:
 
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
-| 5 | Framework Foundation | Gap Closure (runtime verify pending) | 5/6 plans complete, 05-06 in progress |
+| 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
 | 6 | IDE Shell | Pending | 0/3 plans |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
@@ -89,9 +89,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: 05-06 Express purge + SSE fix committed. Awaiting human runtime verification of all 4 Phase 5 criteria.
-Resume file: .planning/phases/05-framework-foundation/05-06-PLAN.md
+Stopped at: Phase 5 COMPLETE. All 6 plans done, 4 success criteria runtime-verified. Ready for Phase 6: IDE Shell.
+Resume file: .planning/ROADMAP.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Express fully purged (50 files, +62/-9069). SSE ensureEngine() fix. CLI updated. Awaiting runtime verification.*
+*Updated: 2026-02-11 — Phase 5 COMPLETE. 6/6 plans, runtime verified. Express fully purged.*
