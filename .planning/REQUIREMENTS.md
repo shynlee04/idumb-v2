@@ -1,127 +1,125 @@
-# Requirements: iDumb — AI Knowledge Work Platform
+# Requirements: iDumb v2.0 — AI Code IDE + Workspace Foundation
 
-**Defined:** 2026-02-09
-**Core Value:** OpenCode powers a multi-persona knowledge work UI where planning, research, delegation, and implementation flow through one governed system with full traceability.
+**Defined:** 2026-02-10
+**Core Value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
 
 ## v1 Requirements
 
-### Planning Registry
+Requirements for milestone v2.0. Each maps to roadmap phases.
 
-- [ ] **REG-01**: Planning artifacts stored as JSON nodes in a hierarchical graph (Chain → Artifact → Section → Task), not flat markdown files
-- [ ] **REG-02**: Every artifact node carries a timestamp (created, modified) used for staleness detection and temporal ordering
-- [ ] **REG-03**: Chain-break detection hook: when a parent-child link breaks (orphan, missing dependency, stale reference), the system auto-detects and triggers governance re-consumption of the affected subtree
-- [ ] **REG-04**: Auto-decision hook: when a chain break is detected, the governance system automatically evaluates the break severity and either flags for human attention or auto-heals (e.g., re-links to nearest valid parent)
+### Foundation
 
-### Smart Delegation
+- [ ] **FND-01**: TanStack Start project scaffold with SPA mode, file-based routing, server functions, Vite plugin configured with Monaco worker support
+- [ ] **FND-02**: Server refactor — split 1427 LOC server.ts, migrate Express routes to TanStack Start server functions + server routes for SSE, standalone WebSocket for terminal PTY
+- [ ] **FND-03**: Shared type contracts — ide-types.ts defining File, Terminal, Editor, Session, Agent types shared between server functions and frontend
+- [ ] **FND-04**: Schema-first data layer — Drizzle ORM + SQLite for persistent state (settings, sessions metadata, workspace config), auto-generated migrations from TypeScript schemas
 
-- [ ] **DEL-01**: 3-level task hierarchy — Epic (Coordinator) → Task (Investigator/Executor) → Subtask (Executor) — replacing the innate TODO list
-- [ ] **DEL-02**: Atomic commit enforcement — when a task moves to `completed`, the system checks `git diff`; if diff exists, forces a commit with task ID reference in the message
-- [ ] **DEL-03**: Empty diff blocks completion — task cannot complete if `git diff` is empty (no changes = no evidence of work)
-- [ ] **DEL-04**: Schema-regulated metadata — agents must emit structured delegation data: which agent delegated, to whom, doing what, expected output, and downstream agents must emit which tools executed, for which plan, and last assistant message
+### Code IDE
 
-### Codebase Wiki
+- [ ] **IDE-01**: User can edit code files in Monaco editor with syntax highlighting, multi-tab management, save with dirty indicators, auto-language detection from file extension
+- [ ] **IDE-02**: User can navigate project files in a recursive file explorer tree with expand/collapse, file type icons, right-click context menu (rename, delete, new file/folder), and open-in-editor behavior
+- [ ] **IDE-03**: User can execute commands in an integrated terminal (xterm.js + node-pty + WebSocket) with multi-tab support, ANSI color rendering, resize handling, and automatic process cleanup on disconnect
+- [ ] **IDE-04**: User can review code changes in a diff viewer (Monaco DiffEditor) with inline and side-by-side modes, file change list from SDK file.status(), and click-to-open-diff
+- [ ] **IDE-05**: User can arrange workspace panels (sidebar, editor, terminal, chat) in a resizable layout with draggable dividers, collapsible panels, and persisted layout state
 
-- [ ] **WIKI-01**: Every git commit is linked to its originating task ID — the commit message or metadata contains a machine-readable task reference
-- [ ] **WIKI-02**: Diff tracking per commit — file changes with hashes and brief descriptions recorded as structured data, not just git log
-- [ ] **WIKI-03**: Rationale embedded in actions — every code change action carries a "why" field that aids AI agent reasoning when traversing context
+### Chat & AI
 
-### Knowledge Base
+- [ ] **CHAT-01**: User sees rich chat rendering — markdown with syntax-highlighted code blocks (marked + shiki), tool call cards with status indicators, file previews, image rendering, and collapsible thinking/reasoning sections for all SDK Part types
+- [ ] **CHAT-02**: User sees multi-step AI operations grouped into collapsible step clusters with count badges, overall status (running/complete/failed), auto-expand for current step, auto-collapse for completed
+- [ ] **CHAT-03**: User can create, switch between, delete, search, and rename AI sessions with auto-generated titles via SDK session.summarize()
+- [ ] **CHAT-04**: User can revert a session to any previous message (SDK session.revert) and restore (session.unrevert) with visual checkpoint indicators in the conversation
+- [ ] **CHAT-05**: User can access all OpenCode configuration through the UI — model selection dropdown, provider connection management, app settings (scrollback, theme, keybindings), with changes persisted via SDK config/app APIs
+- [ ] **CHAT-06**: User sees multi-agent operations displayed with thinking blocks, tool use cards, and clear visualization of sequential agent runs (vertical flow) and parallel agent runs (side-by-side split) with status indicators per agent
 
-- [ ] **KB-01**: TechStackNode with status lifecycle (proposed → approved → deprecated) — tech decisions are tracked as stateful entities, not static docs
-- [ ] **KB-02**: Research-to-feature linking — implementation features are explicitly linked to research artifacts; the link is bidirectional and queryable
-- [ ] **KB-03**: Knowledge synthesis — raw research notes compiled into single-source-of-truth entries that agents consume instead of re-reading scattered research docs
+### Differentiators
 
-### UI & Interaction
+- [ ] **DF-01**: User sees which agent (coordinator, investigator, executor) authored each message via badges/avatars, with delegation flow annotations showing routing decisions
+- [ ] **DF-02**: User sees governance state in the task sidebar — status badges (blocked/needs-review/stale), chain health indicators, delegation routing display showing which agent is assigned to each task
+- [ ] **DF-03**: User can track which files the AI modified, when, as part of which task, with linked conversation context — click a change to see the conversation where the AI decided to make it
+- [ ] **DF-04**: User sees code quality indicators in the editor — Monaco decorations for detected smells (wavy underlines), status bar grade display (A-F), scan-current-file command, roast commentary in chat
+- [ ] **DF-05**: User can navigate long conversations via a minimap — narrow vertical strip showing message blocks colored by role, current viewport indicator, click-to-scroll
+- [ ] **DF-06**: User can view parallel agent runs in split-pane layout and sequential agent runs in vertical flow, with easy switching between agents and clear visual separation of each agent's work
+- [ ] **DF-07**: User can export agent messages and scripts — copy individual agent responses, export full agent run as script/markdown, import/share agent conversation segments
 
-- [ ] **UI-01**: Delegation task view — interactive task list showing the 3-level hierarchy, who delegated to whom, what they're doing, current status, and agent assignments
-- [ ] **UI-02**: Trajectory visualization — only the active/winning planning path is shown; abandoned branches are hidden from default views (preventing context poisoning)
-- [ ] **UI-03**: Interactive planning artifacts — planning documents rendered as markdown with metadata hierarchy, commentable by users, showing related upstream and cross-section artifacts
+### Internationalization
 
-### OpenCode Engine
-
-- [ ] **ENG-01**: Governance hooks wired through OpenCode SDK — tool-gate (blocks writes without active task), compaction (anchor injection), context injection (system.transform with active trajectory only)
-- [ ] **ENG-02**: Agent orchestration through OpenCode Server — multiple AI sessions managed programmatically, agents spawned/coordinated for multi-step workflows
-- [ ] **ENG-03**: Chat completion through the Web UI — user sends messages, OpenCode processes them, streaming responses rendered in the browser
-- [ ] **ENG-04**: Research agents — AI agents that investigate topics, search the web, read documentation, and write structured findings to the knowledge base
-- [ ] **ENG-05**: Source synthesis — user uploads documents/sources, AI synthesizes across them (NotebookLM-style cross-source reasoning and Q&A)
+- [ ] **I18N-01**: i18n infrastructure with react-i18next — client-side only (no server routing for vi), namespace-per-feature pattern, language persistence in localStorage, language switcher visible in UI
+- [ ] **I18N-02**: All UI strings extracted into namespaced JSON translation files (common, editor, terminal, chat, tasks) with English as source language, structured for auto-translation to Vietnamese
+- [ ] **I18N-03**: Vietnamese localization validated — NFC Unicode normalization on string comparisons, Intl.DateTimeFormat('vi-VN') for dates, Vietnamese-safe fonts (JetBrains Mono, Inter), Telex IME tested in Monaco and terminal, 20% text expansion budget in UI containers
 
 ## v2 Requirements
 
-### Planning Registry
+Deferred to Stage 2. Tracked but not in current roadmap scope.
 
-- **REG-05**: Full lifecycle state machine (draft → review → active → implemented → archived → abandoned) with transition rules and guards
-- **REG-06**: Context purging — abandoned artifacts actively filtered from LLM context injection hooks
-- **REG-07**: Upstream propagation — child artifact changes recursively trigger parent artifact updates
-- **REG-08**: Drift detection — content hashing to detect manual edits vs governed edits
-- **REG-09**: Rationale tracking — every section carries a mandatory "why this exists" field
+### Experimental Features
 
-### Smart Delegation
+- **EXP-01**: Tiptap-based Notion-like block editor for knowledge documents — custom block types (code with Shiki, task list, callout), markdown import/export
+- **EXP-02**: Governance schemas wired to runtime — planning registry, delegation, wiki, knowledge base connected via SDK-direct patterns with live data flowing through UI
 
-- **DEL-05**: Write-gate enforcement — Executor blocked from `write_file` without a claimed Subtask (separate from the current tool-gate which checks for any active task)
-- **DEL-06**: Property watching with temporal gates — timestamp-based rules enforcing "X cannot happen before Y" with stop hooks on downstream tools
+### Carried Forward (from previous milestone, absorbed into v2 requirements or deferred)
 
-### Codebase Wiki
-
-- **WIKI-04**: Upstream auto-update — wiki auto-updates when downstream implementation artifacts change
-
-### Knowledge Base
-
-- **KB-04**: Gap Gate blocking — system blocks creation of implementation Epics when supporting research is unresolved
-
-### UI & Interaction
-
-- **UI-04**: Trace queries — input file path → output Plan → Task → Rationale chain
-- **UI-05**: Registry graph visualization — Mermaid graph of current active trajectory
-- **UI-06**: Prune suggestions — flag artifacts untouched for N turns
-
-### OpenCode Engine
-
-- **ENG-06**: Multi-agent RAG — multi-agent retrieval-augmented generation for office/non-coding workflows
+- **REG-01 through REG-04**: Planning registry — absorbed into EXP-02 (Stage 2)
+- **DEL-01 through DEL-04**: Smart delegation — partially absorbed into DF-01/DF-02/DF-06 (agent visibility), rest deferred to EXP-02
+- **WIKI-01 through WIKI-03**: Codebase wiki — absorbed into DF-03 (AI file change tracking)
+- **KB-01 through KB-03**: Knowledge base — deferred to Stage 2+ (post-validation)
+- **UI-01 through UI-07**: Previous UI requirements — replaced by IDE-01 through IDE-05, DF-01 through DF-07, and EXP-01
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Graph database (Neo4j, ArangoDB) | JSON files + in-memory traversal sufficient at this scale (~1000 nodes) |
-| Mobile app | Web-first, localhost for now |
-| Multi-tenant auth | Single-user local tool initially |
-| NLP graph queries | Structured traversal and search, not conversational |
-| Bi-directional git sync | Read git state, don't manage git history |
-| Full graph database with Cypher queries | Over-engineering for the data volume |
-| Custom LLM backend | OpenCode is the engine — no competing AI integration |
+| Vercel AI SDK integration | OpenCode SDK covers all AI needs — dual pipeline creates maintenance nightmare |
+| Full LSP integration (IntelliSense) | VS Code-level complexity, weeks of work. AI agent IS the IntelliSense for now |
+| Separate chat tabs per agent | UX research shows single-thread-with-attribution is superior for developer workflows |
+| Real-time collaboration (multi-user) | Single-developer tool. CRDT/Yjs complexity for zero current value |
+| Plugin/extension system | Already archived one plugin system. Build features directly |
+| SDK-direct governance (write gates) | Deferred — validate Stage 1 IDE and Stage 2 schemas first |
+| Cloud deployment | Self-hosted first. Cloud pivot is future milestone |
+| Mobile app | Web-first, localhost. Mobile is a different product |
+| OAuth / multi-tenant auth | Single-user local tool. Auth adds complexity without value |
+| Git UI integration | Users have git CLI and VS Code. Git UI is a Stage 3+ feature |
+| Payload CMS | Next.js-coupled, wrong paradigm for IDE. Drizzle ORM replaces it |
+| tRPC | Redundant with TanStack Start server functions |
+| Server-side i18n routing | Client-side language switching only — no /vi/ routes |
+| Graph database | JSON files + in-memory traversal sufficient at ~1000 node scale |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REG-01 | Phase 2 | Pending |
-| REG-02 | Phase 2 | Pending |
-| REG-03 | Phase 3 | Pending |
-| REG-04 | Phase 3 | Pending |
-| DEL-01 | Phase 1 | Pending |
-| DEL-02 | Phase 2 | Pending |
-| DEL-03 | Phase 2 | Pending |
-| DEL-04 | Phase 1 | Pending |
-| WIKI-01 | Phase 2 | Pending |
-| WIKI-02 | Phase 2 | Pending |
-| WIKI-03 | Phase 2 | Pending |
-| KB-01 | Phase 3 | Pending |
-| KB-02 | Phase 3 | Pending |
-| KB-03 | Phase 3 | Pending |
-| UI-01 | Phase 4 | Pending |
-| UI-02 | Phase 4 | Pending |
-| UI-03 | Phase 4 | Pending |
-| ENG-01 | Phase 1 | Pending |
-| ENG-02 | Phase 1 | Pending |
-| ENG-03 | Phase 1 | Pending |
-| ENG-04 | Phase 3 | Pending |
-| ENG-05 | Phase 4 | Pending |
+| FND-01 | — | Pending |
+| FND-02 | — | Pending |
+| FND-03 | — | Pending |
+| FND-04 | — | Pending |
+| IDE-01 | — | Pending |
+| IDE-02 | — | Pending |
+| IDE-03 | — | Pending |
+| IDE-04 | — | Pending |
+| IDE-05 | — | Pending |
+| CHAT-01 | — | Pending |
+| CHAT-02 | — | Pending |
+| CHAT-03 | — | Pending |
+| CHAT-04 | — | Pending |
+| CHAT-05 | — | Pending |
+| CHAT-06 | — | Pending |
+| DF-01 | — | Pending |
+| DF-02 | — | Pending |
+| DF-03 | — | Pending |
+| DF-04 | — | Pending |
+| DF-05 | — | Pending |
+| DF-06 | — | Pending |
+| DF-07 | — | Pending |
+| I18N-01 | — | Pending |
+| I18N-02 | — | Pending |
+| I18N-03 | — | Pending |
 
 **Coverage:**
-- v1 requirements: 22 total
-- Mapped to phases: 22
-- Unmapped: 0
+- v1 requirements: 25 total
+- Mapped to phases: 0
+- Unmapped: 25 (pending roadmap creation)
 
 ---
-*Requirements defined: 2026-02-09*
-*Last updated: 2026-02-09 — traceability table populated from ROADMAP.md phasing*
+*Requirements defined: 2026-02-10*
+*Last updated: 2026-02-10 after milestone v2.0 scoping*
