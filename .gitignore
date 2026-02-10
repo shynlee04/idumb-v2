@@ -36,6 +36,7 @@ session-*.md
 .idumb/brain/
 .idumb/sessions/
 .idumb/logs/
+.idumb/data/
 # Keep .idumb/config.json tracked (user configuration)
 # Keep .idumb/idumb-modules/ tracked (module templates for this repo)
 
