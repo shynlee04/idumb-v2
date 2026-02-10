@@ -16,7 +16,7 @@
 
 import { createOpencode, createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk"
 import { createLogger, type Logger } from "../../src/lib/logging"
-import type { EngineStatus } from "../../src/dashboard/shared/engine-types"
+import type { EngineStatus } from "../shared/engine-types"
 
 // ─── Module State ─────────────────────────────────────────────────────────
 

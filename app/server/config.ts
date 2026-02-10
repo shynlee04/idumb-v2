@@ -11,7 +11,7 @@
 
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, unwrapSdkResult } from "./sdk-client.server"
-import type { ProviderInfo, AgentInfo, AppInfo } from "../../src/dashboard/shared/engine-types"
+import type { ProviderInfo, AgentInfo, AppInfo } from "../shared/engine-types"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
 

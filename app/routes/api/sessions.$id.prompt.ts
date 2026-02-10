@@ -9,7 +9,7 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router"
-import { getClient, getProjectDir, sdkQuery } from "../../server/sdk-client.server"
+import { getClient, getProjectDir, ensureEngine, sdkQuery } from "../../server/sdk-client.server"
 
 // @ts-ignore — route path will be registered by Vite route tree generator at build time
 export const Route = createFileRoute("/api/sessions/$id/prompt")({
@@ -33,6 +33,7 @@ export const Route = createFileRoute("/api/sessions/$id/prompt")({
           }
 
           const projectDir = getProjectDir()
+          await ensureEngine()
           const client = getClient()
           const abortController = new AbortController()
 
