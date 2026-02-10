@@ -63,12 +63,13 @@ Plans:
   2. Server functions return typed data — no new Express route handlers (existing ones migrated or wrapped)
   3. SSE streaming works through server routes for OpenCode SDK chat events
   4. Drizzle ORM reads/writes SQLite tables for settings and workspace config with auto-generated migrations
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 05-01: TanStack Start scaffold + SPA mode + Vite config + file-based routing
-- [ ] 05-02: Server refactor — split server.ts (1427 LOC), migrate routes to server functions + server routes
-- [ ] 05-03: Shared type contracts (ide-types.ts) + Drizzle ORM data layer
+- [x] 05-02: Server refactor — split server.ts (1427 LOC), migrate routes to server functions + server routes
+- [x] 05-03: Shared type contracts (ide-types.ts) + Drizzle ORM data layer
+- [ ] 05-04: Gap closure — SPA hydration fix (startTransition + dead file cleanup + engine init refactor)
 
 ### Phase 6: IDE Shell
 **Goal**: Users can browse project files and edit code in a resizable IDE workspace
@@ -181,33 +182,33 @@ Plans:
 | I18N-02 | Phase 10 | i18n |
 | I18N-03 | Phase 10 | i18n |
 
-**Mapped: 25/25 ✓ — No orphaned requirements**
+**Mapped: 25/25 -- No orphaned requirements**
 
 ## Dependency Constraints Verified
 
 | Constraint | Satisfied |
 |-----------|-----------|
-| DF-06 depends on CHAT-06 (same or later phase) | ✓ Both Phase 8 |
-| DF-07 depends on DF-01 (same or later phase) | ✓ DF-01 Phase 8, DF-07 Phase 9 |
-| IDE-04 diff needs Monaco from IDE-01 | ✓ IDE-01 Phase 6, IDE-04 Phase 8 |
-| CHAT-06 agent viz needs CHAT-01 rendering | ✓ CHAT-01 Phase 7, CHAT-06 Phase 8 |
-| Stage 1 timebox covers Phases 5-8 (~3 weeks) | ✓ Research estimate: 16-22 days |
+| DF-06 depends on CHAT-06 (same or later phase) | Phase 8 |
+| DF-07 depends on DF-01 (same or later phase) | DF-01 Phase 8, DF-07 Phase 9 |
+| IDE-04 diff needs Monaco from IDE-01 | IDE-01 Phase 6, IDE-04 Phase 8 |
+| CHAT-06 agent viz needs CHAT-01 rendering | CHAT-01 Phase 7, CHAT-06 Phase 8 |
+| Stage 1 timebox covers Phases 5-8 (~3 weeks) | Research estimate: 16-22 days |
 
 ## Progress
 
-**Execution Order:** 5 → 6 → 7 → 8 → 9 → 10
+**Execution Order:** 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Engine + Task Bus | v1.0 | 10/10 | Complete | 2026-02-10 |
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
-| 5. Framework Foundation | v2.0 | 1/3 | In progress | — |
-| 6. IDE Shell | v2.0 | 0/3 | Not started | — |
-| 7. Chat + Terminal | v2.0 | 0/4 | Not started | — |
-| 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | — |
-| 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | — |
-| 10. i18n Validation | v2.0 | 0/3 | Not started | — |
+| 5. Framework Foundation | v2.0 | 3/4 | Gap closure | -- |
+| 6. IDE Shell | v2.0 | 0/3 | Not started | -- |
+| 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
+| 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
+| 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
+| 10. i18n Validation | v2.0 | 0/3 | Not started | -- |
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-10 — Plan 05-01 complete (TanStack Start SPA scaffold)*
+*Updated: 2026-02-11 -- Phase 5 gap closure plan added (05-04: SPA hydration fix)*
