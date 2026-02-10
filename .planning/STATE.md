@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 5 of 10 (Framework Foundation)
-Plan: 3 of 3 in current phase (05-03 complete, 05-02 in parallel)
-Status: In progress
-Last activity: 2026-02-10 — Completed 05-03 Shared Types + Drizzle Data Layer
+Plan: 3 of 3 in current phase (05-01 ✓, 05-02 ✓, 05-03 ✓)
+Status: Phase 5 complete — awaiting human verification checkpoint
+Last activity: 2026-02-10 — Completed 05-02 Express→Server Functions Migration
 
 Progress: [████░░░░░░] 8%
 
@@ -30,6 +30,7 @@ Progress: [████░░░░░░] 8%
 | 1 (Engine + Task Bus) | 10 | — | — |
 | 1A (Plugin Demotion) | 2 | — | — |
 | 5.01 (TanStack Scaffold) | 8 tasks | 25 min | 3 min |
+| 5.02 (Server Functions) | 3 tasks | ~26 min | ~9 min |
 | 5.03 (Drizzle Data Layer) | 2 tasks | ~15 min | ~7 min |
 
 **Recent Trend:**
@@ -52,6 +53,11 @@ Recent decisions affecting current work:
 - [05-03]: .server.ts suffix for database client — prevents Vite/client bundling of native modules
 - [05-03]: .inputValidator() not .validator() for TanStack Start v1.159.5 server functions
 - [05-03]: WAL journal mode for better-sqlite3 concurrent read performance
+- [05-02]: Installed @opencode-ai/sdk (was missing from deps) — needed for server function layer
+- [05-02]: .inputValidator() confirmed for TanStack Start v1.159.5 (not .validator())
+- [05-02]: JSON roundtrip for SDK types with unknown index sigs — TanStack serializer needs {}
+- [05-02]: SSE via server route handlers (as any spread) — server functions use NDJSON breaking SSE
+- [05-02]: EventStreamProvider wraps app at __root.tsx level for global SSE access
 - [v2.0]: Drizzle ORM replaces Payload CMS — schema-first SQLite
 - [v2.0]: WebSocket only for terminal PTY, everything else via server functions or SSE
 - [v2.0]: Schema budget: max 50 LOC per feature, must have consumer in same phase
@@ -71,7 +77,7 @@ Recent decisions affecting current work:
 
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
-| 5 | Framework Foundation | In Progress | 2/3 plans (05-01 ✓, 05-03 ✓, 05-02 in progress) |
+| 5 | Framework Foundation | Awaiting Verification | 3/3 plans complete (05-01 ✓, 05-02 ✓, 05-03 ✓) |
 | 6 | IDE Shell | Pending | 0/3 plans |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
@@ -81,9 +87,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Completed 05-03-PLAN.md (Shared Types + Drizzle Data Layer)
-Resume file: None — 05-02 (server functions + SSE) still in progress in parallel
+Stopped at: Completed 05-02-PLAN.md — Phase 5 fully implemented, checkpoint verification pending
+Resume file: None — all 3 plans complete
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-10 — Plan 05-03 complete (Shared Types + Drizzle Data Layer)*
+*Updated: 2026-02-10 — Plan 05-02 complete (Express→Server Functions Migration). Phase 5 fully implemented.*
