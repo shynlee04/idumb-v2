@@ -32,6 +32,12 @@ export default defineConfig({
         "@opencode-ai/sdk",
         /^node:/,
       ],
+      output: {
+        // Monaco editor is ~4MB — isolate into its own chunk for on-demand loading
+        manualChunks: {
+          'monaco-editor': ['monaco-editor'],
+        },
+      },
     },
   },
   server: {

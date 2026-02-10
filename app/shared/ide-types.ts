@@ -45,3 +45,31 @@ export interface WorkspaceConfig {
   lastOpened: Date | null
   config: Record<string, unknown> | null
 }
+
+// Phase 6 additions — IDE Shell layout types
+
+/** Identifies one of the three main IDE panels */
+export type PanelId = 'sidebar' | 'editor' | 'terminal'
+
+/** Position of the panel within the IDE shell */
+export type PanelPosition = 'left' | 'center' | 'bottom'
+
+/** Configuration for a single panel's sizing constraints (percentages) */
+export interface PanelConfig {
+  id: PanelId
+  defaultSize: number
+  minSize: number
+  maxSize: number
+  collapsible: boolean
+  position: PanelPosition
+}
+
+/** Full IDE layout state snapshot (panel sizes as percentages) */
+export interface IDELayout {
+  /** Panel sizes as { panelId: percentage } */
+  panelSizes: Record<PanelId, number>
+  /** Set of collapsed panel IDs */
+  collapsed: PanelId[]
+  /** Currently focused panel */
+  activePanel: PanelId
+}
