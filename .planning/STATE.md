@@ -50,7 +50,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+1. **Support OpenCode ecosystem plugins and custom tools in SDK migration** (planning) — Ensure SDK-direct reimplementation composes with third-party OpenCode plugins and custom tools rather than creating a closed system. [2026-02-10]
 
 ### Blockers/Concerns
 
