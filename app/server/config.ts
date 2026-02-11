@@ -13,7 +13,7 @@
 
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, unwrapSdkResult } from "./sdk-client.server"
-import type { ProviderInfo, AgentInfo, AppInfo } from "../shared/engine-types"
+import type { ProviderInfo, AgentInfo } from "../shared/engine-types"
 import type { Provider, Agent, Path, VcsInfo } from "@opencode-ai/sdk"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
@@ -32,8 +32,12 @@ export const getProvidersFn = createServerFn({ method: "GET" })
       // SDK returns { providers: Provider[], default: Record<string, string> }
       const response = unwrapSdkResult(result) as { providers: Provider[]; default: Record<string, string> }
 
-      // Extract providers array from response object
-      const providerList = response?.providers ?? []
+      // Runtime shape-check: ensure providers is an array
+      const providerList = response?.providers
+      if (!Array.isArray(providerList)) {
+        console.warn("[config] SDK providers response missing providers array — returning empty list")
+        return [] as ProviderInfo[]
+      }
 
       // Map SDK Provider to our ProviderInfo (models is a record, not array)
       const normalized: ProviderInfo[] = providerList.map((p: Provider) => ({
@@ -59,13 +63,17 @@ export const getAgentsFn = createServerFn({ method: "GET" })
       // SDK returns Agent[] directly (Agent has name but no id field)
       const agents = unwrapSdkResult(result) as Agent[]
 
-      const normalized: AgentInfo[] = Array.isArray(agents)
-        ? agents.map((a: Agent) => ({
+      // Runtime shape-check: ensure agents is an array
+      if (!Array.isArray(agents)) {
+        console.warn("[config] SDK agents response not an array — returning empty list")
+        return [] as AgentInfo[]
+      }
+
+      const normalized: AgentInfo[] = agents.map((a: Agent) => ({
             id: a.name, // Agent has no id — name IS the identifier
             name: a.name,
             ...(a.description ? { description: a.description } : {}),
           }))
-        : []
 
       return normalized
     } catch (err) {

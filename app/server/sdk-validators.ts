@@ -270,64 +270,60 @@ export const SessionSchema = z.object({
  * Validate an array of sessions from SDK.
  * On failure: logs warning, returns data unchanged.
  */
-export function validateSessionList(data: unknown): unknown {
+export function validateSessionList<T>(data: T): T {
   const result = z.array(SessionSchema).safeParse(data)
   if (!result.success) {
     console.warn(
       "[sdk-validators] Session list validation failed — returning raw data.",
       result.error.issues.slice(0, 3),
     )
-    return data
   }
-  return result.data
+  return data
 }
 
 /**
  * Validate a single session from SDK.
  * On failure: logs warning, returns data unchanged.
  */
-export function validateSession(data: unknown): unknown {
+export function validateSession<T>(data: T): T {
   const result = SessionSchema.safeParse(data)
   if (!result.success) {
     console.warn(
       "[sdk-validators] Session validation failed — returning raw data.",
       result.error.issues.slice(0, 3),
     )
-    return data
   }
-  return result.data
+  return data
 }
 
 /**
  * Validate an array of messages from SDK.
  * On failure: logs warning, returns data unchanged.
  */
-export function validateMessages(data: unknown): unknown {
+export function validateMessages<T>(data: T): T {
   const result = z.array(MessageSchema).safeParse(data)
   if (!result.success) {
     console.warn(
       "[sdk-validators] Message list validation failed — returning raw data.",
       result.error.issues.slice(0, 3),
     )
-    return data
   }
-  return result.data
+  return data
 }
 
 /**
  * Validate a SessionStatus from SDK.
  * On failure: logs warning, returns data unchanged.
  */
-export function validateSessionStatus(data: unknown): unknown {
+export function validateSessionStatus<T>(data: T): T {
   const result = SessionStatusSchema.safeParse(data)
   if (!result.success) {
     console.warn(
       "[sdk-validators] SessionStatus validation failed — returning raw data.",
       result.error.issues.slice(0, 3),
     )
-    return data
   }
-  return result.data
+  return data
 }
 
 /**

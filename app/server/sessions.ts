@@ -15,7 +15,12 @@
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, sdkQuery, unwrapSdkResult } from "./sdk-client.server"
 import { SessionIdSchema, CreateSessionSchema } from "./validators"
-import type { Message, SessionStatus } from "../shared/engine-types"
+import {
+  validateSessionList,
+  validateSession,
+  validateMessages,
+  validateSessionStatus,
+} from "./sdk-validators"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
 
@@ -25,7 +30,8 @@ export const getSessionsFn = createServerFn({ method: "GET" })
     try {
       const projectDir = getProjectDir()
       const result = await getClient().session.list({ query: sdkQuery(projectDir) })
-      return unwrapSdkResult(result)
+      const sessions = unwrapSdkResult(result)
+      return validateSessionList(sessions)
     } catch (err) {
       throw new Error(`Failed to list sessions: ${err instanceof Error ? err.message : String(err)}`)
     }
@@ -41,7 +47,7 @@ export const createSessionFn = createServerFn({ method: "POST" })
         query: sdkQuery(projectDir),
         body: data.title ? { title: data.title } : {},
       })
-      return unwrapSdkResult(result)
+      return validateSession(unwrapSdkResult(result))
     } catch (err) {
       throw new Error(`Failed to create session: ${err instanceof Error ? err.message : String(err)}`)
     }
@@ -57,7 +63,7 @@ export const getSessionFn = createServerFn({ method: "GET" })
         query: sdkQuery(projectDir),
         path: { id: data.id },
       })
-      return unwrapSdkResult(result)
+      return validateSession(unwrapSdkResult(result))
     } catch (err) {
       throw new Error(`Failed to get session: ${err instanceof Error ? err.message : String(err)}`)
     }
@@ -97,8 +103,8 @@ export const getSessionMessagesFn = createServerFn({ method: "GET" })
         path: { id: data.id },
       })
       const messages = unwrapSdkResult(result)
-      // JSON roundtrip strips `unknown` index-sig incompatibility
-      // Semantic type: Message[] (SDK) — cast omitted for TanStack Start serialization compat
+      // Validate shape at boundary, then JSON roundtrip for serialization compat
+      validateMessages(messages)
       return JSON.parse(JSON.stringify(messages))
     } catch (err) {
       throw new Error(`Failed to get messages: ${err instanceof Error ? err.message : String(err)}`)
@@ -139,7 +145,8 @@ export const getSessionStatusFn = createServerFn({ method: "GET" })
       if (!status) {
         throw new Error("Session status not found")
       }
-      // Semantic type: SessionStatus — cast omitted for TanStack Start serialization compat
+      // Validate shape at boundary, then JSON roundtrip for serialization compat
+      validateSessionStatus(status)
       return JSON.parse(JSON.stringify(status))
     } catch (err) {
       throw new Error(`Failed to get session status: ${err instanceof Error ? err.message : String(err)}`)
@@ -156,7 +163,7 @@ export const getSessionChildrenFn = createServerFn({ method: "GET" })
         query: sdkQuery(projectDir),
         path: { id: data.id },
       })
-      return unwrapSdkResult(result)
+      return validateSessionList(unwrapSdkResult(result))
     } catch (err) {
       throw new Error(`Failed to get child sessions: ${err instanceof Error ? err.message : String(err)}`)
     }
