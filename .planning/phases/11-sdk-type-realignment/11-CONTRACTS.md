@@ -594,39 +594,217 @@ type Path = {
 
 ---
 
-## 9. Consumer Map
+## 9. Consumer Map — Detailed Cross-Reference
 
-| Consumer File | SDK Types Used | Access Pattern |
-|--------------|---------------|----------------|
-| `app/shared/engine-types.ts` | Session, Message, Part, SessionStatus | **Re-export** (type-only) |
-| `app/server/sdk-client.server.ts` | `OpenCodeClient`, `EventNotification` | **Direct SDK import** (allowed — singleton) |
-| `app/server/sessions.ts` | Session, Message | **Inferred** from SDK client return types |
-| `app/server/config.ts` | Provider, Agent | **Inferred** from SDK client return types |
-| `app/hooks/useStreaming.ts` | Message, Part | **Explicit import** from `engine-types.ts` |
-| `app/hooks/useSession.ts` | Session, Message | **Inferred** from server function return types |
-| `app/hooks/useEngine.ts` | EngineStatus (app type) | No SDK types directly |
-| `app/components/chat/ChatMessage.tsx` | Message, Part | **Explicit import** from `engine-types.ts`, narrows Part by `type` discriminant |
-| `app/routes/chat.$sessionId.tsx` | Session, Message | **Explicit import** from `engine-types.ts` |
-| `app/routes/api/events.ts` | Event types (all session/message events) | **Inferred** from `sdk.client.event.subscribe()` |
-| `app/routes/api/sessions.$id.prompt.ts` | EventMessagePartUpdated | **Inferred** from `sdk.client.event.subscribe()` |
+### Summary Table
+
+| File | SDK Types Used | Properties Accessed | Issues |
+|------|---------------|---------------------|--------|
+| `engine-types.ts` | Session, Message, Part, SessionStatus, UserMessage, AssistantMessage, TextPart, ToolPart, FilePart, ReasoningPart, StepStartPart, StepFinishPart, SnapshotPart, PatchPart, AgentPart, RetryPart, CompactionPart | N/A (re-export gateway) | ToolState/Error types not re-exported |
+| `sdk-client.server.ts` | OpenCodeClient, EventNotification | `client.session.*`, `client.event.subscribe()`, `result.data`, `result.error` | Direct SDK import (allowed — singleton) |
+| `sessions.ts` | Session, Message, Part, SessionStatus | `session.id`, `session.title`, `session.time.updated`, `message.id`, `message.parts` | `JSON.parse(JSON.stringify())` workaround for TanStack Start serialization |
+| `config.ts` | Provider, Agent | `provider.id`, `provider.name`, `provider.models`, `agent.name`, `agent.description` | Types inferred, not imported — if SDK changes shapes, no compile-time error |
+| `useStreaming.ts` | Message, Part | `m.id`, `m.parts`, `part.messageID`, `part.id`, `data.message`, `data.part` | SSE `JSON.parse()` returns untyped data (`any`). Part/Message narrowing happens implicitly. |
+| `useSession.ts` | Session, Message | Inferred from server function return types | No direct SDK type imports — safe |
+| `useEngine.ts` | EngineStatus (app type only) | N/A | No SDK type dependency |
+| `ChatMessage.tsx` | Message, Part | `message.role`, `message.id`, `part.type`, `part.text` (after narrowing) | Narrows Part by `type` discriminant in switch/if. Could benefit from ToolState narrowing for tool output rendering. |
+| `chat.$sessionId.tsx` | Session, Message | `session.id`, `session.title`, `messages[].info.id`, `messages[].parts` | Explicit import from engine-types |
+| `api/events.ts` | All session/message event types (inferred) | `event.type`, `event.properties.info`, `event.properties.sessionID`, `event.properties.status` | Event type narrowing via string literal — no imported event types |
+| `api/sessions.$id.prompt.ts` | EventMessagePartUpdated (inferred) | `event.type`, `event.properties.part`, `event.properties.delta`, `event.properties.part.messageID` | Same SSE string narrowing pattern |
+
+### Per-File Detail
+
+#### 1. `app/server/sdk-client.server.ts` (259 LOC)
+
+**SDK import:** `import { OpenCodeClient } from '@opencode-ai/sdk'` (ALLOWED — sole instantiation point)
+
+**SDK methods called:**
+| Method | Return Shape | Used Properties |
+|--------|-------------|-----------------|
+| `client.session.list()` | `{ data: Session[] }` | `.data` → Session array |
+| `client.session.create()` | `{ data: Session }` | `.data` → single Session |
+| `client.session.get()` | `{ data: Session }` | `.data.id`, `.data.title` |
+| `client.session.delete()` | `{ data: void }` | success/error only |
+| `client.session.chat()` | `{ data: Message[] }` | `.data` → Message array |
+| `client.session.abort()` | `{ data: void }` | success/error only |
+| `client.session.status()` | `{ data: SessionStatus }` | `.data.type` |
+| `client.session.children()` | `{ data: Session[] }` | `.data` → Session array |
+| `client.provider.list()` | `{ data: Record<string, Provider> }` | Provider values |
+| `client.agent.list()` | `{ data: Record<string, Agent> }` | Agent values |
+| `client.event.subscribe()` | `EventNotification` (SSE) | `.type`, `.properties` |
+
+**Pattern:** `unwrapSdkResult<T>(result)` helper extracts `.data` and throws on `.error`. This generic function preserves SDK type fidelity.
+
+**Violations:** None
+
+#### 2. `app/server/sessions.ts` (~230 LOC)
+
+**SDK types used:** Session, Message, Part, SessionStatus (all inferred from `unwrapSdkResult<T>` returns)
+
+**Properties accessed:**
+- `session.id`, `session.title`, `session.time`
+- `message.id`, `message.parts`, `message.role`
+- `status.type` (SessionStatus discriminant)
+
+**Serialization workaround:** Uses `JSON.parse(JSON.stringify(data))` to satisfy TanStack Start server function return constraints (`JsonValue` type). This erases type information at the serialization boundary.
+
+**Issues:**
+- ⚠️ `JSON.parse(JSON.stringify())` bridge loses runtime type narrowing
+- ⚠️ Return types from server functions are inferred as the JSON-serialized shape, not the SDK type directly
+
+#### 3. `app/hooks/useStreaming.ts` (~163 LOC)
+
+**SDK types imported:** `Message`, `Part` from `engine-types.ts`
+
+**Properties accessed on SSE data (untyped `JSON.parse` result):**
+- `data.message` → used as `Message` (no validation)
+- `data.message.id` → string access
+- `data.part` → used as `Part` (no validation)
+- `data.part.messageID` → string for message matching
+- `data.part.id` → string for part matching
+- `m.parts` → `Part[]` array
+
+**Type narrowing:** Message array state typed as `Message[]`. SSE data parsed via `JSON.parse()` without Zod validation — **untyped boundary**.
+
+**Issues:**
+- ⚠️ SSE JSON.parse returns `any` — SDK types assumed, not validated
+- ⚠️ Part replacement logic (`m.parts.map(p => p.id === data.part.id ? data.part : p)`) assumes all Parts have `id` field (true per SDK types)
+
+#### 4. `app/components/chat/ChatMessage.tsx` (~120 LOC)
+
+**SDK types imported:** `Message`, `Part` from `engine-types.ts`
+
+**Properties accessed:**
+- `message.role` → discriminant for user/assistant styling
+- `message.id` → key prop
+- `message.parts` → iterated for rendering
+- `part.type` → discriminant switch: `"text"`, `"tool"`, `"reasoning"`, `"file"`, `"step-start"`, `"step-finish"`, `"agent"`, `"compaction"`, `"retry"`
+- `part.text` → after `part.type === "text"` narrowing
+- `part.tool` → after `part.type === "tool"` narrowing
+- `part.state.status` → nested ToolState discriminant
+- `part.name` → after `part.type === "agent"` narrowing
+
+**Type narrowing patterns:**
+```typescript
+// Part narrowing (correct pattern)
+if (part.type === 'text') { /* part.text accessible */ }
+if (part.type === 'tool') { /* part.tool, part.state accessible */ }
+```
+
+**Issues:**
+- ⚠️ ToolState not narrowed beyond `part.state.status` check — `state.output` (only on ToolStateCompleted) accessed without status narrowing in some render paths
+- ⚠️ No exhaustive Part handling — unknown part types silently ignored (acceptable but fragile)
+
+#### 5. `app/routes/chat.$sessionId.tsx` (~190 LOC)
+
+**SDK types imported:** `Session`, `Message` from `engine-types.ts`
+
+**Properties accessed:**
+- `session.id`, `session.title` (display)
+- `messages` typed as `Array<{ info: Message; parts: Part[] }>` from `SessionMessagesResponse`
+
+**Issues:** None — clean import pattern
+
+#### 6. `app/routes/api/events.ts` (~100 LOC)
+
+**SDK types used:** All event types (inferred from `sdk.client.event.subscribe()`)
+
+**Event type narrowing:**
+```typescript
+// String literal checks on event.type:
+event.type === 'session.created'  // → EventSessionCreated
+event.type === 'session.updated'  // → EventSessionUpdated
+event.type === 'session.deleted'  // → EventSessionDeleted
+event.type === 'message.updated'  // → EventMessageUpdated
+event.type === 'message.part.updated' // → EventMessagePartUpdated
+// etc.
+```
+
+**Properties accessed after narrowing:**
+- `event.properties` → forwarded as JSON to SSE stream
+- No individual property access — entire `properties` object serialized
+
+**Issues:**
+- ⚠️ Event type narrowing uses string literals, not imported event types — no compile-time exhaustiveness checking
+- ⚠️ `event.properties` typed as `any` after `JSON.stringify()` — consumer (client-side useStreaming) gets untyped data
+
+#### 7. `app/server/config.ts` (~170 LOC)
+
+**SDK types used:** Provider, Agent (inferred from SDK client returns)
+
+**Properties accessed:**
+- `providers` iterated → `provider.id`, `provider.name`, `provider.models`
+- `agents` iterated → `agent.name`, `agent.description`
+- Models extracted from `provider.models` → `model.id`, `model.name`
+
+**Issues:**
+- Types are inferred only — no explicit SDK type annotation on return values
+- If SDK changes Provider/Agent shapes, compile error would only appear in sdk-client.server.ts, not in config.ts
+
+### Issue Priority for Future Plans
+
+| Priority | Issue | Affected Files | Planned Fix |
+|----------|-------|---------------|-------------|
+| **High** | SSE boundary untyped (`JSON.parse → any`) | useStreaming.ts, api/events.ts | Plan 11-03: Zod validators at parse boundary |
+| **High** | ToolState not narrowed in render | ChatMessage.tsx | Plan 11-04: Type-safe Part rendering |
+| **Medium** | Event types not imported for narrowing | api/events.ts, api/sessions.$id.prompt.ts | Plan 11-03: Event type re-exports |
+| **Medium** | JSON.parse(JSON.stringify()) serialization | sessions.ts | Plan 11-02: Investigate TanStack Start constraints |
+| **Low** | Config types inferred, not explicit | config.ts | Defer — compile errors still caught upstream |
+
+---
+
+## Gotchas & Drift Risks
+
+Known SDK type behaviors that deviate from common assumptions:
+
+1. **`time.created` is `number` (epoch ms), not `Date` or ISO string.** All time fields in Session, Message, and Part use numeric epoch timestamps. Client-side rendering must convert: `new Date(time.created)`. If SDK ever changes to ISO strings, all time formatting breaks silently.
+
+2. **`Message.parts` is `Part[]` (required), but may be empty array at runtime.** The SDK type marks `parts` as non-optional, but a freshly created message may have `parts: []` before any content arrives. UI code should handle empty arrays gracefully.
+
+3. **`Session.title` may be empty string `""`, not `null` or `undefined`.** The SDK type is `title: string` (required, non-optional). But newly created sessions have `title: ""` until the first message generates a summary. Falsy checks (`if (!session.title)`) work correctly but `session.title ?? 'Untitled'` does NOT (empty string is not nullish).
+
+4. **`AssistantMessage.error` is a 5-member discriminated union on `name`.** NOT a simple `string`. The `name` field is a string literal union (`"ProviderAuthError" | "UnknownError" | "MessageOutputLengthError" | "MessageAbortedError" | "APIError"`). Direct `error.message` access without narrowing will fail — the message is inside `error.data.message`.
+
+5. **`Part` union has an anonymous inline member for `type: "subtask"`.** Unlike all other Part subtypes which have named exports (TextPart, ToolPart, etc.), the subtask member is inline. There is no `SubtaskPart` export — you must use the full Part union and narrow by `type === "subtask"`.
+
+6. **`ToolState.input` is `{ [key: string]: unknown }`, not typed per-tool.** Tool input shapes vary by tool (different tools have different parameters). The SDK cannot type them specifically — consumers must cast or validate at runtime.
+
+7. **`ToolStateCompleted.metadata` is required, but `ToolStateRunning.metadata` is optional.** The `metadata` field changes nullability based on the ToolState discriminant — don't assume it's always present without narrowing `status`.
+
+8. **`SessionStatus` only has 3 members: `"idle" | "retry" | "busy"`.** There is NO `"error"` or `"completed"` status. Session errors come through `AssistantMessage.error` or `EventSessionError`, not through SessionStatus.
+
+9. **SSE events use `properties` not `data`.** The event payload is at `event.properties`, NOT `event.data`. This differs from standard SSE convention. The `EventNotification` wrapper type enforces this but if consuming raw SSE without the SDK client, this would be a silent bug.
+
+10. **`Provider.models` is `{ [key: string]: Model }`, not `Model[]`.** Models are keyed by model ID string, not stored as an array. Consumer code must use `Object.values(provider.models)` to iterate.
 
 ---
 
 ## 10. Gap Analysis
 
-### Currently Re-exported (4 types)
+### Currently Re-exported (17 types)
 
 - `Session` ✅
-- `Message` ✅
-- `Part` ✅
 - `SessionStatus` ✅
+- `Message` ✅
+- `UserMessage` ✅
+- `AssistantMessage` ✅
+- `Part` ✅
+- `TextPart` ✅
+- `ToolPart` ✅
+- `FilePart` ✅
+- `ReasoningPart` ✅
+- `StepStartPart` ✅
+- `StepFinishPart` ✅
+- `SnapshotPart` ✅
+- `PatchPart` ✅
+- `AgentPart` ✅
+- `RetryPart` ✅
+- `CompactionPart` ✅
 
 ### Missing — Required for Type-Safe Narrowing
 
 | Category | Types | Why Needed |
 |----------|-------|------------|
-| **Part subtypes** | TextPart, ToolPart, FilePart, ReasoningPart, StepStartPart, StepFinishPart, SnapshotPart, PatchPart, AgentPart, RetryPart, CompactionPart | ChatMessage.tsx narrows Part by `type` discriminant. Without explicit subtypes, consumers can't annotate narrowed variables or create typed helpers. |
-| **Message subtypes** | UserMessage, AssistantMessage | ChatMessage.tsx narrows by `role`. AssistantMessage has unique fields (error, cost, tokens) only accessible after narrowing. Explicit types enable typed guards. |
 | **Tool state** | ToolState, ToolStatePending, ToolStateRunning, ToolStateCompleted, ToolStateError | ToolPart.state is a discriminated union on `status`. Rendering tool output requires narrowing to ToolStateCompleted for `output`, ToolStateError for `error`. |
 | **Error types** | ProviderAuthError, UnknownError, MessageOutputLengthError, MessageAbortedError, ApiError | AssistantMessage.error is a 5-member union on `name`. Error display requires narrowing. |
 
