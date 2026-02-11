@@ -48,7 +48,7 @@ Plans:
 - [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
 - [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout + gap closure *(completed 2026-02-11)*
 - [x] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration *(completed 2026-02-11)*
-- [ ] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(gap closure)*
+- [x] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(completed 2026-02-12)*
 - [ ] **Phase 11.2: Contamination & Dead Code Purge** — Remove plugin-era docs, dead code, stale references *(gap closure)*
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
@@ -125,7 +125,7 @@ Plans:
 **Plans**: 1 plan (all fixes are small, targeted, same-session)
 
 Plans:
-- [ ] 11.1-01-PLAN.md — Fix 7 build/config/type blockers
+- [x] 11.1-01-PLAN.md — Fix 7 build/config/type blockers
 
 ### Phase 11.2: Contamination & Dead Code Purge
 **Goal**: Remove all plugin-era context pollution — no stale docs misleading agents, no dead code inflating LOC
@@ -265,7 +265,7 @@ Plans:
 | 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
 | 6. IDE Shell | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
-| 11.1. Build & Config Blockers | v2.0 | 0/1 | Not started | -- |
+| 11.1. Build & Config Blockers | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 11.2. Contamination Purge | v2.0 | 0/1 | Not started | -- |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
@@ -274,4 +274,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-11 -- Gap closure phases 11.1, 11.2 added from v2.0-MILESTONE-AUDIT.md. Phase 7 blocked until gap phases complete.*
+*Updated: 2026-02-12 -- Phase 11.1 (Build & Config Blockers) complete. Phase 11.2 next.*
