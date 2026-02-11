@@ -84,7 +84,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Resizable panel layout + Zustand IDE store + file server functions (wave 1)
+- [x] 06-01-PLAN.md — Resizable panel layout + Zustand IDE store + file server functions (wave 1)
 - [ ] 06-02-PLAN.md — File tree with react-arborist + Radix context menu + React Query hooks (wave 2)
 - [ ] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
 
@@ -205,7 +205,7 @@ Plans:
 | 1. Engine + Task Bus | v1.0 | 10/10 | Complete | 2026-02-10 |
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
 | 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
-| 6. IDE Shell | v2.0 | 0/3 | Not started | -- |
+| 6. IDE Shell | v2.0 | 1/3 | In progress | -- |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
@@ -213,4 +213,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-11 -- Phase 5: 05-04 complete, 05-05 reclassified as early Phase 7 bonus, 05-06 SSE gap closure plan added*
+*Updated: 2026-02-11 -- Phase 6: 06-01 complete (IDE shell layout + Zustand store + deps)*

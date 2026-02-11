@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 5 COMPLETE — ready for Phase 6
+**Current focus:** Phase 6 IN PROGRESS — IDE Shell foundation
 
 ## Current Position
 
-Phase: 5 of 10 (Framework Foundation)
-Plan: 6 of 6 in current phase (05-01 ✓, 05-02 ✓, 05-03 ✓, 05-04 ✓, 05-05 ✓ bonus, 05-06 ✓)
-Status: Phase 5 COMPLETE — all 4 success criteria runtime-verified
-Last activity: 2026-02-11 — 05-06 complete, Express purged, SSE verified at runtime
+Phase: 6 of 10 (IDE Shell)
+Plan: 1 of 3 in current phase (06-01 ✓)
+Status: Plan 06-01 complete — resizable 3-panel IDE layout with Zustand persistence
+Last activity: 2026-02-11 — 06-01 complete, IDE shell layout with react-resizable-panels v4
 
-Progress: [████░░░░░░] 8%
+Progress: [██████░░░░] 12%
 
 ## Performance Metrics
 
@@ -34,6 +34,7 @@ Progress: [████░░░░░░] 8%
 | 5.03 (Drizzle Data Layer) | 2 tasks | ~15 min | ~7 min |
 | 5.04 (SPA Hydration Fix) | 3 tasks | ~20 min | ~7 min |
 | 5.05 (Chat UI - Phase 7 bonus) | 6 tasks | ~15 min | ~3 min |
+| 6.01 (IDE Shell Foundation) | 3 tasks | 19 min | ~6 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -46,6 +47,9 @@ Progress: [████░░░░░░] 8%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [06-01]: Zustand v5 persist+immer for panel state — flat interface (no extends) for WritableDraft compat
+- [06-01]: Nested Group pattern — horizontal (sidebar|editor-area) wraps vertical (editor|terminal)
+- [06-01]: manualChunks for monaco-editor — isolate 4MB bundle into separate chunk
 - [v2.0]: 2-stage validation — Code IDE (Stage 1, Phases 5-8) then governance differentiators (Phase 9) + i18n (Phase 10)
 - [v2.0]: TanStack Start (SPA mode) replaces Express + React Router — highest risk, validated first in Phase 5
 - [05-01]: TanStack Start SPA: spa.enabled=true + getRouter export name (not createRouter) — validated against source types
@@ -80,7 +84,7 @@ Recent decisions affecting current work:
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
 | 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
-| 6 | IDE Shell | Pending | 0/3 plans |
+| 6 | IDE Shell | In Progress | 1/3 plans (06-01 ✓) |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -89,9 +93,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Phase 5 COMPLETE. All 6 plans done, 4 success criteria runtime-verified. Ready for Phase 6: IDE Shell.
-Resume file: .planning/ROADMAP.md
+Stopped at: Completed 06-01-PLAN.md — IDE Shell Foundation. 3 tasks, 3 commits.
+Resume file: .planning/phases/06-ide-shell/06-01-SUMMARY.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Phase 5 COMPLETE. 6/6 plans, runtime verified. Express fully purged.*
+*Updated: 2026-02-11 — Phase 6 Plan 01 complete. IDE Shell foundation with resizable panels.*
