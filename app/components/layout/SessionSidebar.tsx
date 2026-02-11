@@ -6,7 +6,7 @@
  */
 
 import { Link, useNavigate, useParams } from "@tanstack/react-router"
-import { MessageCircle, Plus, Trash2, Loader2 } from "lucide-react"
+import { Code2, MessageCircle, Plus, Trash2, Loader2 } from "lucide-react"
 import { useSessions, useCreateSession, useDeleteSession } from "@/hooks/useSession"
 import { cn } from "@/lib/utils"
 
@@ -62,6 +62,20 @@ export function SessionSidebar() {
             <Plus className="w-4 h-4" />
           )}
         </button>
+      </div>
+
+      {/* IDE Shell navigation link */}
+      <div className="px-2 pt-2">
+        <Link
+          to="/ide"
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+            "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+          )}
+        >
+          <Code2 className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="flex-1 truncate">IDE Shell</span>
+        </Link>
       </div>
 
       {/* Session list */}
