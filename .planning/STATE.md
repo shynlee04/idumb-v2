@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 
 Phase: 11 of 10 (SDK Type Architecture)
 Plan: 2 of 4 in current phase (11-01 ✓, 11-02 ✓)
-Status: Plan 11-02 complete — AGENTS.md governance rules + false alarm registry
-Last activity: 2026-02-11 — 11-02 governance rules committed
+Status: Plan 11-01 complete — SDK type contract registry (11-CONTRACTS.md, 862 lines)
+Last activity: 2026-02-11 — 11-01 contract registry committed
 
 Progress: [██████░░░░] 25%
 
@@ -38,6 +38,7 @@ Progress: [██████░░░░] 25%
 | 6.02 (File Tree Explorer) | 2 tasks | ~15 min | ~7 min |
 | 6.03 (Monaco Editor) | 2 tasks | 11 min | ~6 min |
 | 6.04 (Gap Closure) | 2 tasks | 7 min | ~4 min |
+| 11.01 (Contract Registry) | 2 tasks | 8 min | ~4 min |
 | 11.02 (AGENTS.md Governance) | 3 tasks | 3 min | ~1 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
@@ -52,6 +53,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - [06-04]: Zustand persist onFinishHydration + hasHydrated dual-path for reliable panel restore
+- [11-01]: 17 SDK types re-exported — ToolState and Error unions are remaining gaps for type-safe narrowing
+- [11-01]: SSE boundary (JSON.parse → any) is highest-priority type safety issue for Plans 11-03/04
+- [11-01]: 10 SDK gotchas documented (epoch timestamps, empty parts, anonymous subtask type, etc.)
 - [11-02]: SDK types are LAW (never redefine), app types are INTERNAL (freely modifiable) — two-tier taxonomy
 - [11-02]: All SDK imports centralized through engine-types.ts — single upgrade point
 - [11-02]: 4 known false alarms documented with workarounds (JsonValue, implicit any, Part.content, Part union)
@@ -116,9 +120,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 11-02-PLAN.md — SDK Type Governance rules in AGENTS.md
+Stopped at: Completed 11-01-PLAN.md — SDK Type Contract Registry (11-CONTRACTS.md)
 Resume file: .planning/phases/11-sdk-type-realignment/11-03-PLAN.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Plan 11-02 complete: SDK Type Governance + false alarm registry in AGENTS.md. 2/4 plans done.*
+*Updated: 2026-02-11 — Plan 11-01 complete: 862-line SDK type contract registry with consumer cross-reference, gap analysis, and 10 gotchas. 2/4 plans done.*
