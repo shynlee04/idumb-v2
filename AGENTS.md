@@ -475,6 +475,23 @@ Current: `@opencode-ai/sdk@^1.1.53`. When upgrading:
 3. Verify `tsc --noEmit` passes
 4. Update Zod schemas in `sdk-validators.ts` if shapes changed
 
+### Known Type Alarms (False Alarm Registry)
+
+Expected type issues that are NOT bugs — they have documented workarounds.
+
+| Alarm | Affected Files | Phase | Workaround | Status |
+|-------|---------------|-------|------------|--------|
+| `Type 'unknown' is not assignable to type 'JsonValue'` | `app/server/sessions.ts` | 7+ | `JSON.parse(JSON.stringify(data))` serialization bridge | Active — required by TanStack Start server function return constraint |
+| `Parameter 'data' implicitly has an 'any' type` | `app/hooks/useStreaming.ts` SSE parsing | 11-04 | Zod validation at parse boundary (`sdk-validators.ts`) | Resolving in 11-03/11-04 |
+| `Property 'content' does not exist on type 'Part'` | ChatMessage.tsx | 11-04 | Narrow on `part.type === 'text'` before accessing `.content` | Resolving in 11-04 |
+| SDK Part union has 11 members — exhaustive switch is verbose | Any Part renderer | 7+ | Group by category: text parts, tool parts, meta parts. Handle unknown types with fallback. | Ongoing — acceptable |
+
+**Protocol:** When encountering a tsc error on SDK types:
+1. Check this table first — it may be a known alarm
+2. If known: apply documented workaround, do NOT create a new type
+3. If unknown: add to this table with workaround, then fix
+4. NEVER suppress with `@ts-ignore` or `as any`
+
 ---
 
 ## Development Commands
