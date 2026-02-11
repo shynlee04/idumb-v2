@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 6 IN PROGRESS — IDE Shell foundation
+**Current focus:** Phase 6 IN PROGRESS — File tree + Monaco editor
 
 ## Current Position
 
 Phase: 6 of 10 (IDE Shell)
-Plan: 1 of 3 in current phase (06-01 ✓)
-Status: Plan 06-01 complete — resizable 3-panel IDE layout with Zustand persistence
-Last activity: 2026-02-11 — 06-01 complete, IDE shell layout with react-resizable-panels v4
+Plan: 2 of 3 in current phase (06-01 ✓, 06-02 ✓)
+Status: Plan 06-02 complete — file tree explorer with server functions, IDE store, and context menu
+Last activity: 2026-02-11 — 06-02 complete, file tree wired into IDEShell sidebar
 
-Progress: [██████░░░░] 12%
+Progress: [██████░░░░] 15%
 
 ## Performance Metrics
 
@@ -35,6 +35,7 @@ Progress: [██████░░░░] 12%
 | 5.04 (SPA Hydration Fix) | 3 tasks | ~20 min | ~7 min |
 | 5.05 (Chat UI - Phase 7 bonus) | 6 tasks | ~15 min | ~3 min |
 | 6.01 (IDE Shell Foundation) | 3 tasks | 19 min | ~6 min |
+| 6.02 (File Tree Explorer) | 2 tasks | ~15 min | ~7 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -47,6 +48,9 @@ Progress: [██████░░░░] 12%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [06-02]: Separate ide-store.ts for tab/file management, layout-store.ts for panel layout — separation of concerns
+- [06-02]: window.prompt() for file name input in context menu (MVP — inline editing deferred)
+- [06-02]: Broad query invalidation on delete/rename (fileKeys.all) since parent dir unknown
 - [06-01]: Zustand v5 persist+immer for panel state — flat interface (no extends) for WritableDraft compat
 - [06-01]: Nested Group pattern — horizontal (sidebar|editor-area) wraps vertical (editor|terminal)
 - [06-01]: manualChunks for monaco-editor — isolate 4MB bundle into separate chunk
@@ -84,7 +88,7 @@ Recent decisions affecting current work:
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
 | 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
-| 6 | IDE Shell | In Progress | 1/3 plans (06-01 ✓) |
+| 6 | IDE Shell | In Progress | 2/3 plans (06-01 ✓, 06-02 ✓) |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -93,9 +97,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 06-01-PLAN.md — IDE Shell Foundation. 3 tasks, 3 commits.
-Resume file: .planning/phases/06-ide-shell/06-01-SUMMARY.md
+Stopped at: Completed 06-02-PLAN.md — File Tree Explorer. 2 tasks, 2 commits. Proceeding to 06-03.
+Resume file: .planning/phases/06-ide-shell/06-02-SUMMARY.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Phase 6 Plan 01 complete. IDE Shell foundation with resizable panels.*
+*Updated: 2026-02-11 — Phase 6 Plan 02 complete. File tree with server functions, IDE store, context menu.*
