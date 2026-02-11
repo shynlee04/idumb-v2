@@ -45,6 +45,7 @@ Progress: [████████░░] 84% (5/5 gap-closure + 07-01 + 07-03 
 | 11.1-01 (Build/Config Blockers) | 3 tasks | 11 min | ~4 min |
 | 11.2-01 (Contamination Purge) | 2 tasks | 8 min | ~4 min |
 | 7.04 (Settings + Model Picker) | 2 tasks | 7 min | ~4 min |
+| 7.01 (Rich Part Renderers) | 2 tasks | 12 min | ~6 min |
 | 7.03 (Terminal Integration) | 2 tasks | 10 min | ~5 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
@@ -58,6 +59,9 @@ Progress: [████████░░] 84% (5/5 gap-closure + 07-01 + 07-03 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [07-01]: CodeBlock uses highlight.js directly instead of rehype-highlight -- prevents line-number/highlighting conflict when splitting React elements
+- [07-01]: Small role indicators (dot + text) replace circular avatar badges for balanced message density
+- [07-01]: Part renderers in app/components/chat/parts/ -- one component per SDK Part type
 - [07-04]: Custom dropdown for ModelPicker (not native select) — better styling and provider group headers
 - [07-03]: .validator() fixed to .inputValidator() in pty.server.ts — TanStack Start v1.159.5 compat
 - [07-03]: Dynamic import for xterm.js via React.lazy — SSR-safe without typeof window guard
