@@ -19,6 +19,7 @@ import { ChatMessages } from "../components/chat/ChatMessages"
 import { ChatInput } from "../components/chat/ChatInput"
 import { useSessionMessages, useCreateSession } from "../hooks/useSession"
 import { useStreaming, type StreamEvent } from "../hooks/useStreaming"
+import { useSetting } from "../hooks/useSettings"
 import type { Message, Part } from "../shared/engine-types"
 import type { ChatMessageData } from "../components/chat/ChatMessage"
 
@@ -69,6 +70,21 @@ function ChatPage() {
 function ChatSession({ sessionId }: { sessionId: string }) {
   const { data: serverMessages } = useSessionMessages(sessionId)
   const { isStreaming, events, sendPrompt, abort } = useStreaming()
+  const { data: defaultModelSetting } = useSetting("default-model")
+
+  // Parse the default model selection
+  const defaultModel = useMemo(() => {
+    if (!defaultModelSetting?.value) return null
+    try {
+      const parsed = JSON.parse(defaultModelSetting.value)
+      if (parsed && typeof parsed.providerID === "string" && typeof parsed.modelID === "string") {
+        return parsed as { providerID: string; modelID: string }
+      }
+    } catch {
+      // Invalid JSON
+    }
+    return null
+  }, [defaultModelSetting])
 
   // Convert server messages to ChatMessageData format
   // SDK returns Array<{ info: Message; parts: Part[] }> — message and parts are separate
@@ -110,7 +126,10 @@ function ChatSession({ sessionId }: { sessionId: string }) {
   }, [historyMessages, streamingMessage])
 
   const handleSend = (text: string) => {
-    sendPrompt(sessionId, text)
+    sendPrompt(sessionId, text, defaultModel ? {
+      modelID: defaultModel.modelID,
+      providerID: defaultModel.providerID,
+    } : undefined)
   }
 
   return (
