@@ -81,12 +81,13 @@ Plans:
   1. User navigates project files in a recursive tree with expand/collapse, file icons, and context menu (rename, delete, new file/folder)
   2. User edits code in Monaco with syntax highlighting, multi-tab, save with dirty indicators, and auto-language detection
   3. User arranges workspace panels (sidebar, editor, chat) with draggable dividers, collapsible panels, and layout persisted across sessions
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 06-01-PLAN.md — Resizable panel layout + Zustand IDE store + file server functions (wave 1)
 - [x] 06-02-PLAN.md — File tree with react-arborist + Radix context menu + React Query hooks (wave 2)
 - [x] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
+- [ ] 06-04-PLAN.md — Gap closure: layout persistence wiring + IDE nav link (wave 1)
 
 ### Phase 7: Chat + Terminal
 **Goal**: Users interact with AI through rich rendered chat and run commands in integrated terminal
@@ -205,7 +206,7 @@ Plans:
 | 1. Engine + Task Bus | v1.0 | 10/10 | Complete | 2026-02-10 |
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
 | 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
-| 6. IDE Shell | v2.0 | 1/3 | In progress | -- |
+| 6. IDE Shell | v2.0 | 3/4 | Gap closure | -- |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
