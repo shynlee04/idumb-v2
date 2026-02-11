@@ -2,7 +2,7 @@
  * Zod validators for server function inputs.
  *
  * Shared between session, engine, and config server functions.
- * TanStack Start's `.validator()` accepts Zod schemas directly.
+ * TanStack Start's `.inputValidator()` accepts Zod schemas directly.
  */
 
 import { z } from "zod"
@@ -69,4 +69,24 @@ export const DeleteFileSchema = z.object({
 export const RenameFileSchema = z.object({
   oldPath: z.string().min(1, "Old path is required"),
   newName: z.string().min(1, "New name is required"),
+})
+
+// ─── PTY Server Function Validators ─────────────────────────────────────────
+
+/** Validate PTY creation input. */
+export const PtyCreateSchema = z.object({
+  command: z.string().optional(),
+  cwd: z.string().optional(),
+})
+
+/** Validate PTY ID parameter. */
+export const PtyIdSchema = z.object({
+  id: z.string().min(1, "PTY ID is required"),
+})
+
+/** Validate PTY resize input. */
+export const PtyResizeSchema = z.object({
+  id: z.string().min(1, "PTY ID is required"),
+  rows: z.number().int().positive(),
+  cols: z.number().int().positive(),
 })
