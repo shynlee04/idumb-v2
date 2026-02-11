@@ -19,6 +19,7 @@ import { ChatMessages } from "../components/chat/ChatMessages"
 import { ChatInput } from "../components/chat/ChatInput"
 import { useSessionMessages, useCreateSession } from "../hooks/useSession"
 import { useStreaming, type StreamEvent } from "../hooks/useStreaming"
+import type { Message, Part } from "../shared/engine-types"
 import type { ChatMessageData } from "../components/chat/ChatMessage"
 
 export const Route = createFileRoute("/chat/$sessionId")({
@@ -70,14 +71,13 @@ function ChatSession({ sessionId }: { sessionId: string }) {
   const { isStreaming, events, sendPrompt, abort } = useStreaming()
 
   // Convert server messages to ChatMessageData format
+  // SDK returns Array<{ info: Message; parts: Part[] }> — message and parts are separate
   const historyMessages = useMemo<ChatMessageData[]>(() => {
     if (!serverMessages) return []
-    // serverMessages can be an array of message objects
-    const msgs = Array.isArray(serverMessages) ? serverMessages : []
-    return msgs.map((msg: Record<string, unknown>) => ({
-      role: (msg.role as string) || "assistant",
-      content: msg.content as string | undefined,
-      parts: msg.parts as ChatMessageData["parts"],
+    const items = Array.isArray(serverMessages) ? serverMessages : []
+    return (items as Array<{ info: Message; parts: Part[] }>).map((item) => ({
+      role: item.info.role,
+      parts: item.parts,
     }))
   }, [serverMessages])
 
@@ -128,11 +128,12 @@ function ChatSession({ sessionId }: { sessionId: string }) {
 /**
  * Extract text content from a streaming SSE event.
  *
- * The SSE handler emits events with various shapes depending on the
- * OpenCode SDK response. Common patterns:
- * - { type: "message.delta", data: { content: "..." } }
+ * SSE events from the OpenCode SDK relay have various shapes. Key patterns:
+ * - { type: "message.part.updated", properties: { part: Part, delta?: string } }
  * - { type: "text", data: { text: "..." } }
  * - { type: "content", data: { content: "..." } }
+ *
+ * All data fields are `unknown` (from parseSSEEvent) so runtime checks are used.
  */
 function extractTextFromEvent(event: StreamEvent): string | null {
   const { data } = event
@@ -141,15 +142,24 @@ function extractTextFromEvent(event: StreamEvent): string | null {
   if (typeof data.content === "string") return data.content
   // Text field
   if (typeof data.text === "string") return data.text
-  // Delta with content
-  if (data.delta && typeof (data.delta as Record<string, unknown>).content === "string") {
-    return (data.delta as Record<string, unknown>).content as string
+
+  // SDK part delta: { properties: { delta: "..." } }
+  if (typeof data.properties === "object" && data.properties !== null) {
+    const props = data.properties as Record<string, unknown>
+    if (typeof props.delta === "string") return props.delta
   }
-  // Parts array with text
+
+  // Delta with content (non-SDK fallback)
+  if (typeof data.delta === "object" && data.delta !== null) {
+    const delta = data.delta as Record<string, unknown>
+    if (typeof delta.content === "string") return delta.content
+  }
+
+  // Parts array with text parts
   if (Array.isArray(data.parts)) {
-    const texts = data.parts
-      .filter((p: Record<string, unknown>) => p.type === "text" && typeof p.text === "string")
-      .map((p: Record<string, unknown>) => p.text as string)
+    const texts = (data.parts as Array<Record<string, unknown>>)
+      .filter((p) => p.type === "text" && typeof p.text === "string")
+      .map((p) => p.text as string)
     if (texts.length > 0) return texts.join("")
   }
 
