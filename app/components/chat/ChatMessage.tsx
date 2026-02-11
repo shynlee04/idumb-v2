@@ -1,28 +1,21 @@
 /**
  * ChatMessage — renders a single chat message with role badge and markdown content.
  *
- * Handles both `content` (string) and `parts` (array) message formats from
- * the OpenCode SDK event bus. Falls back to JSON for unknown part types.
+ * Uses SDK Part discriminated union narrowing for type-safe rendering.
+ * Handles both `content` (string, for streaming) and `parts` (SDK Part[], for
+ * server messages) formats. Falls back gracefully for unknown part types.
  */
 
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Bot, User } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-export interface MessagePart {
-  type: string
-  text?: string
-  toolName?: string
-  args?: Record<string, unknown>
-  result?: unknown
-  [key: string]: unknown
-}
+import type { Part, TextPart, ToolPart } from "../../shared/engine-types"
 
 export interface ChatMessageData {
-  role: string
+  role: "user" | "assistant"
   content?: string
-  parts?: MessagePart[]
+  parts?: Part[]
 }
 
 interface ChatMessageProps {
@@ -63,13 +56,13 @@ function MessageBody({ message }: { message: ChatMessageData }) {
     return (
       <>
         {message.parts.map((part, i) => (
-          <PartRenderer key={i} part={part} />
+          <PartRenderer key={part.id ?? i} part={part} />
         ))}
       </>
     )
   }
 
-  // If message has content string, render as markdown
+  // If message has content string (streaming fallback), render as markdown
   if (message.content) {
     return <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
   }
@@ -77,38 +70,127 @@ function MessageBody({ message }: { message: ChatMessageData }) {
   return <span className="text-muted-foreground italic">Empty message</span>
 }
 
-function PartRenderer({ part }: { part: MessagePart }) {
+/**
+ * Extract text content from a message's parts array.
+ * Used to get the plain text content from SDK Part[] for display purposes.
+ */
+export function getTextContent(parts: Part[]): string {
+  return parts
+    .filter((p): p is TextPart => p.type === "text")
+    .map((p) => p.text)
+    .join("\n")
+}
+
+/**
+ * Renders a single SDK Part using discriminated union narrowing on `part.type`.
+ *
+ * Part types by rendering priority:
+ * - text: Render as markdown
+ * - tool: Render tool name + state (pending/running/completed/error)
+ * - reasoning: Render in collapsible thinking section
+ * - file: Render filename
+ * - step-start/step-finish, snapshot, patch, agent, retry, compaction, subtask: Skip (internal)
+ * - unknown: Render nothing (SDK may add new Part types)
+ */
+function PartRenderer({ part }: { part: Part }) {
   switch (part.type) {
     case "text":
+      // TypeScript narrows to TextPart — access .text directly
       return part.text ? (
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.text}</ReactMarkdown>
       ) : null
 
-    case "tool-call":
+    case "tool":
+      // TypeScript narrows to ToolPart — access .tool (name), .state, .callID
+      return <ToolPartRenderer part={part} />
+
+    case "reasoning":
+      // TypeScript narrows to ReasoningPart — access .text
       return (
-        <div className="my-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono">
-          <span className="text-muted-foreground">Tool: </span>
-          <span className="font-semibold">{part.toolName || "unknown"}</span>
-          {part.args && (
-            <pre className="mt-1 text-muted-foreground overflow-x-auto">
-              {JSON.stringify(part.args, null, 2)}
-            </pre>
-          )}
+        <details className="my-2">
+          <summary className="text-xs text-muted-foreground cursor-pointer">
+            Thinking...
+          </summary>
+          <div className="mt-1 text-sm text-muted-foreground italic whitespace-pre-wrap">
+            {part.text}
+          </div>
+        </details>
+      )
+
+    case "file":
+      // TypeScript narrows to FilePart — access .filename, .url, .mime
+      return (
+        <div className="my-1 text-xs text-muted-foreground">
+          <span>File: </span>
+          <span className="font-mono">{part.filename || part.url}</span>
         </div>
       )
 
-    case "tool-result":
-      return (
-        <div className="my-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs font-mono text-muted-foreground overflow-x-auto">
-          {typeof part.result === "string" ? part.result : JSON.stringify(part.result, null, 2)}
-        </div>
-      )
+    // Meta/internal SDK parts — not user-facing content
+    case "step-start":
+    case "step-finish":
+    case "snapshot":
+    case "patch":
+    case "agent":
+    case "retry":
+    case "compaction":
+    case "subtask":
+      return null
 
     default:
-      return (
-        <pre className="my-2 text-xs text-muted-foreground overflow-x-auto">
-          {JSON.stringify(part, null, 2)}
-        </pre>
-      )
+      // Unknown part type — don't crash on future SDK additions
+      return null
   }
+}
+
+/**
+ * Renders a ToolPart with state-aware display.
+ * ToolState is a discriminated union on `status`: pending | running | completed | error
+ */
+function ToolPartRenderer({ part }: { part: ToolPart }) {
+  const { state } = part
+
+  return (
+    <div className="my-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono">
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">Tool: </span>
+        <span className="font-semibold">{part.tool}</span>
+        <ToolStatusBadge status={state.status} />
+      </div>
+
+      {/* Show title for running/completed states */}
+      {(state.status === "running" || state.status === "completed") && state.title && (
+        <p className="mt-1 text-muted-foreground">{state.title}</p>
+      )}
+
+      {/* Show output for completed state */}
+      {state.status === "completed" && state.output && (
+        <pre className="mt-1 text-muted-foreground overflow-x-auto max-h-40 overflow-y-auto">
+          {state.output}
+        </pre>
+      )}
+
+      {/* Show error for error state */}
+      {state.status === "error" && (
+        <pre className="mt-1 text-red-500 overflow-x-auto">
+          {state.error}
+        </pre>
+      )}
+    </div>
+  )
+}
+
+function ToolStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    pending: "text-yellow-500",
+    running: "text-blue-500",
+    completed: "text-green-500",
+    error: "text-red-500",
+  }
+
+  return (
+    <span className={cn("text-[10px] uppercase", styles[status] || "text-muted-foreground")}>
+      {status}
+    </span>
+  )
 }
