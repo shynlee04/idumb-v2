@@ -405,6 +405,78 @@ These files need future splitting. Listed in severity order:
 
 ---
 
+## SDK Type Governance
+
+Rules for handling SDK types vs app types. **Binding for all executors (human and AI).**
+
+### Type Taxonomy
+
+Two-tier type system:
+
+| Tier | Source of Truth | Examples | Rule |
+|------|----------------|----------|------|
+| **SDK types** | `@opencode-ai/sdk` | Session, Message, Part, SessionStatus, all Part subtypes (TextPart, ToolPart, etc.) | **LAW.** Never redefine, never approximate, never hand-roll. |
+| **App types** | `app/shared/*.ts` | EngineStatus, ProviderInfo, AgentInfo, DashboardConfig, PortConfig | **INTERNAL.** Can be freely modified. |
+
+`engine-types.ts` re-exports SDK types via `import type` / `export type` (type-only, no runtime). Consumers import from `engine-types.ts`, NEVER directly from `@opencode-ai/sdk`.
+
+### Import Path Rules
+
+```
+✅ import type { Message, Part } from '../shared/engine-types'
+✅ import type { Session } from '../shared/engine-types'
+❌ import { Message } from '@opencode-ai/sdk'         // Direct SDK import in app/
+❌ import type { Message } from '@opencode-ai/sdk'     // Even type-only direct
+```
+
+**Reason:** Centralizing through `engine-types.ts` creates a single point where SDK upgrades are handled. If the SDK changes a type name, only `engine-types.ts` needs updating.
+
+### Banned Patterns
+
+1. **`as any` on SDK types** — Never cast SDK data to `any`. Use discriminated union narrowing instead.
+   ```ts
+   // ❌ BANNED
+   const content = (part as any).content
+   // ✅ CORRECT
+   if (part.type === 'text') { const content = part.content }
+   ```
+
+2. **Hand-rolling SDK shapes** — Never create an interface that duplicates an SDK type.
+   ```ts
+   // ❌ BANNED — duplicates SDK Session
+   interface ChatSession { id: string; title: string; ... }
+   // ✅ CORRECT — use SDK type directly
+   import type { Session } from '../shared/engine-types'
+   ```
+
+3. **Wrapper types that shadow SDK types** — Response wrapper types (SessionListResponse, etc.) are acceptable only when they ADD information not in the SDK type. They must reference SDK types, not redefine fields.
+   ```ts
+   // ❌ BANNED — redefines Session fields
+   interface SessionListResponse { sessions: Array<{ id: string; title: string }> }
+   // ✅ CORRECT — references SDK Session
+   interface SessionListResponse { sessions: Session[] }
+   ```
+
+4. **Untyped JSON.parse on SDK data** — SSE events carrying SDK data must be validated at the boundary, not left as `any` after JSON.parse.
+   ```ts
+   // ❌ BANNED
+   const data = JSON.parse(line.slice(6))  // data is 'any'
+   // ✅ CORRECT (after Plan 11-03)
+   const data = parseSSEEvent(line.slice(6))  // returns typed union
+   ```
+
+5. **Optional chaining to hide type uncertainty** — If you need `msg?.parts?.map(...)`, the types are wrong. Fix the types, don't add `?.`.
+
+### SDK Version Contract
+
+Current: `@opencode-ai/sdk@^1.1.53`. When upgrading:
+1. Read the SDK changelog for type changes
+2. Update `11-CONTRACTS.md` with new shapes
+3. Verify `tsc --noEmit` passes
+4. Update Zod schemas in `sdk-validators.ts` if shapes changed
+
+---
+
 ## Development Commands
 
 ```bash
