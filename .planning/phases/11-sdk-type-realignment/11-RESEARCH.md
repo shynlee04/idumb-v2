@@ -1,157 +1,219 @@
-# Phase 11: SDK Type Realignment — Research
+# Phase 11: SDK Type Realignment — Research (Integrity Audit 2026-02-11)
 
 ## SDK Type Audit (@opencode-ai/sdk@1.1.54)
 
-Types exported from `node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts`:
+Types exported from `node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts` (3380 lines).
+Client re-exports via `dist/client.d.ts`: `export * from "./gen/types.gen.js"`.
+**Import path:** `import type { Session, Message, Part, SessionStatus, ... } from '@opencode-ai/sdk'`
 
-### Core Data Types
-| SDK Type | Shape | Notes |
-|----------|-------|-------|
-| `Session` | `{id, projectID, directory, parentID?, title, version, time: {created: number, updated: number, compacting?}, summary?, share?, revert?}` | Rich — timestamps are numbers, not ISO strings |
-| `Message` | `UserMessage \| AssistantMessage` | Discriminated union on `role` |
-| `UserMessage` | `{id, sessionID, role:"user", time:{created}, summary?, agent, model:{providerID, modelID}, system?, tools?}` | No `parts` field — parts are separate entities |
-| `AssistantMessage` | `{id, sessionID, role:"assistant", time:{created, completed?}, error?, parentID, modelID, providerID, mode, path, cost, tokens:{input,output,reasoning,cache:{read,write}}, finish?}` | Rich with cost/token data |
-| `Part` | Union of 12 types: `TextPart \| SubtaskPart \| ReasoningPart \| FilePart \| ToolPart \| StepStartPart \| StepFinishPart \| SnapshotPart \| PatchPart \| AgentPart \| RetryPart \| CompactionPart` | Proper discriminated union on `type` field |
-| `Event` | Union of 30+ event types | Discriminated union on `type` field (e.g. `"message.updated"`, `"message.part.updated"`) |
-| `SessionStatus` | `{type:"idle"} \| {type:"retry", attempt, message, next} \| {type:"busy"}` | **BREAKING**: Not a string union |
-| `Provider` | `{id, name, source, env, key?, options, models: Record<string, Model>}` | `models` is Record, not Array |
-| `Model` | `{id, providerID, api, name, capabilities, cost, limit, status, options, headers}` | Very rich |
-| `Agent` | `{name, description?, mode, builtIn, topP?, temperature?, color?, permission, model?, prompt?, tools, options, maxSteps?}` | Full config |
-| `Pty` | `{id, title, command, args, cwd, status:"running"\|"exited", pid}` | Terminal session |
-| `GlobalEvent` | `{directory: string, payload: Event}` | Wrapper for event bus |
+---
 
-### Key Part Types
-| Part Type | Key Fields |
-|-----------|------------|
-| `TextPart` | `{id, sessionID, messageID, type:"text", text, synthetic?, ignored?, time?, metadata?}` |
-| `ToolPart` | `{id, sessionID, messageID, type:"tool", callID, tool, state: ToolState, metadata?}` |
-| `ReasoningPart` | `{id, sessionID, messageID, type:"reasoning", text, metadata?, time}` |
-| `StepStartPart` | `{id, sessionID, messageID, type:"step-start", snapshot?}` |
-| `StepFinishPart` | `{id, sessionID, messageID, type:"step-finish", reason, snapshot?, cost, tokens}` |
-| `AgentPart` | `{id, sessionID, messageID, type:"agent", name, source?}` |
-| `CompactionPart` | `{id, sessionID, messageID, type:"compaction", auto}` |
+## Critical Shape Differences (Hand-Rolled vs SDK)
 
-### Key Event Types
-| Event Type | Properties |
-|------------|------------|
-| `EventMessageUpdated` | `{type:"message.updated", properties:{info: Message}}` |
-| `EventMessagePartUpdated` | `{type:"message.part.updated", properties:{part: Part, delta?: string}}` |
-| `EventSessionCreated` | `{type:"session.created", properties:{info: Session}}` |
-| `EventSessionUpdated` | `{type:"session.updated", properties:{info: Session}}` |
-| `EventSessionStatus` | `{type:"session.status", properties:{sessionID, status: SessionStatus}}` |
-| `EventSessionError` | `{type:"session.error", properties:{sessionID?, error?}}` |
-| `EventPtyCreated` | `{type:"pty.created", properties:{info: Pty}}` |
+### 1. SessionStatus — BREAKING CHANGE
 
-## Hand-Rolled Types (engine-types.ts) — 121 LOC
+**Hand-rolled (engine-types.ts:40):**
+```ts
+type SessionStatus = 'pending' | 'running' | 'completed' | 'error'
+```
 
-### Types That Map to SDK (must replace)
-| Hand-Rolled | SDK Equivalent | Drift |
-|-------------|---------------|-------|
-| `Session` | `Session` | MAJOR — our: `{createdAt: string, updatedAt: string, status: SessionStatus}`, SDK: `{time: {created: number, updated: number}, no status}` |
-| `SessionStatus` | `SessionStatus` | BREAKING — our: `'pending'\|'running'\|'completed'\|'error'`, SDK: `{type:"idle"}\|{type:"retry",...}\|{type:"busy"}` |
-| `Message` | `Message` | MAJOR — our: `{role:'user'\|'assistant'\|'system', parts: Part[], createdAt: string}`, SDK: discriminated `UserMessage\|AssistantMessage`, parts are separate |
-| `Part` | `Part` | MAJOR — our: `{type: string, [key]: unknown}`, SDK: rich discriminated union |
-| `Event` | `Event` | MAJOR — our: `{type: string, [key]: unknown}`, SDK: rich discriminated union |
-| `ProviderInfo` | Derived from `Provider` | SDK `Provider` is much richer, `models` is Record not Array |
-| `AgentInfo` | Derived from `Agent` | SDK `Agent` is much richer |
-| `ModelInfo` | Derived from `Model` | SDK `Model` is much richer |
+**SDK (types.gen.d.ts:396-405):**
+```ts
+type SessionStatus = { type: "idle" } | { type: "retry"; attempt: number } | { type: "answering" } | { type: "running" }
+```
 
-### Types That Are App-Level (keep as-is)
-| Type | Reason |
-|------|--------|
-| `EngineStatus` | App-level concept — tracks OpenCode server process lifecycle |
-| `DashboardConfig` | App-level — dashboard launch config |
-| `PortConfig` | App-level — port detection config |
-| `EngineErrorResponse` | App-level error wrapper |
+**Impact:** String comparison `status === 'running'` must become `status.type === 'running'`. Values differ too: SDK has `idle` / `answering` (no `pending` / `completed` / `error`). Frontend must handle object shape.
 
-### Types That Are Response Wrappers (delete — SDK returns raw)
-| Wrapper | SDK Returns |
-|---------|-------------|
-| `SessionListResponse` | `Session[]` directly |
-| `SessionCreateResponse` | `Session` directly |
-| `SessionMessagesResponse` | Messages + Parts in SDK methods |
-| `SessionStatusResponse` | `Record<string, SessionStatus>` |
-| `SessionChildrenResponse` | `Session[]` directly |
-| `SessionPromptRequest` | SDK has `TextPartInput`, `FilePartInput` etc. |
+### 2. Session — Field Shape Changes
 
-## Consumer Map
+**Hand-rolled (engine-types.ts:42-49):**
+```ts
+interface Session {
+  id: string; title?: string; createdAt: string; updatedAt: string;
+  status: SessionStatus; parentId?: string;
+}
+```
 
-### Direct importers of `engine-types.ts` (3 files)
-1. **`app/shared/ide-types.ts`** (line 30) — re-exports ModelInfo, ProviderInfo, AgentInfo, AppInfo, SessionStatus, EngineStatus, SessionStatusResponse
-2. **`app/server/config.ts`** (line 14) — uses ProviderInfo, AgentInfo, AppInfo
-3. **`app/server/sdk-client.server.ts`** (line 19) — uses EngineStatus
+**SDK (types.gen.d.ts:465-485):**
+```ts
+type Session = {
+  id: string; projectID: string; directory: string; parentID?: string;
+  title: string; description: string; createdAt: number; updatedAt: number;
+  status: SessionStatus;  // the object union above
+  modelID?: string; agentID?: string; providerID?: string;
+  cost: { input: number; output: number; total: number };
+  tokens: { input: number; output: number };
+  share?: { id: string; url: string; version: number };
+}
+```
 
-### Importers of `ide-types.ts` (8 files)
-1. `app/components/ide/IDEShell.tsx` — PanelId (IDE-specific, not SDK)
-2. `app/hooks/useEngine.ts` — via config server functions
-3. `app/routes/settings.tsx`
-4. `app/routes/index.tsx`
-5. `app/routes/tasks.tsx`
-6. `app/components/layout/SidebarNav.tsx`
-7. `app/server/settings.ts`
-8. `app/components/chat/SessionSidebar.tsx`
+**Key differences:**
+- `createdAt` / `updatedAt`: `string` → `number` (Unix timestamp seconds)
+- `parentId` → `parentID` (casing)
+- `status`: string union → object discriminated union
+- Many new fields: `projectID`, `cost`, `tokens`, `modelID`, etc.
 
-### Local type definitions in components (NOT from engine-types)
-1. **`ChatMessage.tsx`** — `MessagePart {type, text?, toolName?, args?, result?, [key]}` and `ChatMessageData {role, content?, parts?}` — should use SDK `Part` union
-2. **`useStreaming.ts`** — `StreamEvent {type, data: Record<string, unknown>, timestamp}` — should use SDK `Event` union
+### 3. Message — Discriminated Union
 
-## Gap Analysis
+**Hand-rolled (engine-types.ts:56-61):**
+```ts
+interface Message { id: string; role: 'user' | 'assistant' | 'system'; parts: Part[]; createdAt: string; }
+```
 
-### BREAKING: SessionStatus semantics changed
-- **Our code**: `'pending' | 'running' | 'completed' | 'error'` — used as string comparison
-- **SDK**: `{type: "idle"} | {type: "retry", ...} | {type: "busy"}` — different semantics entirely
-- **Impact**: `EngineStatus.running` boolean may be better indicator; SessionStatus used in session cards, session lists
-- **Solution**: Keep app-level `AppSessionStatus` type for UI display, derive from SDK `SessionStatus` with mapper function
+**SDK (types.gen.d.ts:78-128):**
+```ts
+type UserMessage = {
+  id: string; sessionID: string; role: "user";
+  parts: Part[];
+  time: { created: number; completed: number };
+  system: boolean;
+}
+type AssistantMessage = {
+  id: string; sessionID: string; role: "assistant";
+  parts: Part[];
+  time: { created: number; completed: number };
+  cost: { input: number; output: number; total: number };
+  tokens: { input: number; output: number };
+  modelID: string; providerID: string;
+}
+type Message = UserMessage | AssistantMessage;
+```
 
-### BREAKING: Session timestamps and shape
-- **Our code**: `createdAt: string`, `updatedAt: string` (ISO strings)
-- **SDK**: `time: {created: number, updated: number}` (Unix timestamps)
-- **Impact**: All date displays need `new Date(session.time.created)` instead of `new Date(session.createdAt)`
-- **Solution**: Use SDK Session directly, update display code
+**Key differences:**
+- No flat interface — discriminated union by `role` field
+- No `createdAt` field — uses `time.created` (number, not string)
+- No `system` role — UserMessage has `system: boolean` flag
+- AssistantMessage has `cost`, `tokens`, `modelID`, `providerID`
 
-### BREAKING: Message is discriminated union
-- **Our code**: `{id, role: 'user'|'assistant'|'system', parts: Part[], createdAt}`
-- **SDK**: `UserMessage | AssistantMessage` with different fields per role, parts are separate
-- **Impact**: ChatMessage component iterates `message.parts` — SDK messages don't have inline parts
-- **Solution**: Adapt chat rendering to fetch parts separately or compose from events
+### 4. Part — Rich Discriminated Union
 
-### SIGNIFICANT: Part discriminated union
-- **Our code**: `{type: string, [key]: unknown}` — uses switch on `type`
-- **SDK**: Rich union with specific fields per type (TextPart, ToolPart, etc.)
-- **Impact**: ChatMessage.PartRenderer handles "text", "tool-call", "tool-result" — SDK has "text", "tool", "reasoning", etc.
-- **Solution**: Update PartRenderer to handle all SDK Part types with proper type narrowing
+**Hand-rolled (engine-types.ts:51-54):**
+```ts
+interface Part { type: string; [key: string]: unknown; }
+```
+
+**SDK (types.gen.d.ts:345-394):**
+```ts
+type Part = TextPart | { type: "subtask" } | ReasoningPart | FilePart | ToolPart
+  | StepStartPart | StepFinishPart | SnapshotPart | PatchPart | AgentPart
+  | RetryPart | CompactionPart
+```
+
+Where `TextPart` = `{ id, sessionID, messageID, type: "text", content: string }`, etc.
+
+**Key differences:**
+- Proper discriminated union instead of bag type
+- Each part has `id`, `sessionID`, `messageID` fields
+- TextPart has `content: string` (not arbitrary key)
+- ToolPart has `name`, `input`, `output`, `state`, `duration`
+
+### 5. Event — Similar Discriminated Pattern
+
+**Hand-rolled:** `{ type: string; [key: string]: unknown }`
+**SDK:** Named event types: `EventSessionUpdated`, `EventMessageUpdated`, `EventPartUpdated`, etc.
+
+---
+
+## Data Flow Analysis — Where Types Actually Matter
+
+### Server Functions (app/server/)
+
+| File | Imports engine-types? | What it returns |
+|---|---|---|
+| `sessions.ts` | **NO** | Raw SDK data via `unwrapSdkResult()` — SDK types flow through |
+| `config.ts` | **YES** (ProviderInfo, AgentInfo) | Manually normalized app-specific shapes |
+| `engine.ts` | **NO** | Imports from `sdk-client.server` directly |
+| `validators.ts` | **NO** | Zod schemas only |
+
+**Critical finding:** `sessions.ts` already returns SDK-shaped data at runtime. The hand-rolled types in `engine-types.ts` are NEVER used for mapping — they only exist as incorrect TypeScript annotations consumed by hooks/components.
+
+### Hooks (app/hooks/)
+
+| File | Imports engine-types? | What it consumes |
+|---|---|---|
+| `useSession.ts` | **NO** | Calls `getSessionsFn()` / `getSessionMessagesFn()` — receives SDK data |
+| `useEngine.ts` | **NO** | Calls `getEngineStatusFn()` etc. |
+| `useStreaming.ts` | **YES** (Message, Part) | SSE stream parsing — constructs local message objects |
+| `useEventStream.tsx` | **NO** | Generic SSE event handling |
+
+**Critical finding:** `useStreaming.ts` constructs Message objects locally from SSE events using the hand-rolled shape. This is the MOST impacted consumer — it builds fake Message objects that won't match SDK types.
+
+### Components (app/components/)
+
+| File | Imports engine-types? | What it uses |
+|---|---|---|
+| `chat/ChatMessage.tsx` | **YES** (Message, Part) | Renders messages — accesses `msg.role`, `msg.parts`, part types |
+| `chat/ChatInput.tsx` | **NO** | Text input only |
+| `layout/SessionSidebar.tsx` | **NO** | Session list rendering |
+
+### Routes (app/routes/)
+
+| File | Imports engine-types? | What it uses |
+|---|---|---|
+| `chat.$sessionId.tsx` | **YES** (Message) | Receives messages from hook, passes to ChatMessage |
+
+---
+
+## File Existence Verification
+
+| Path | Exists? | Notes |
+|---|---|---|
+| `app/shared/engine-types.ts` | ✓ | 121 LOC, hand-rolled types |
+| `app/shared/ide-types.ts` | ✓ | 107 LOC, re-exports + Phase 5/6 types |
+| `app/server/sessions.ts` | ✓ | 156 LOC |
+| `app/server/config.ts` | ✓ | 112 LOC |
+| `app/server/engine.ts` | ✓ | 82 LOC |
+| `app/server/validators.ts` | ✓ | 54 LOC |
+| `app/hooks/useSession.ts` | ✓ | Uses getSessionsFn |
+| `app/hooks/useStreaming.ts` | ✓ | Constructs Message/Part objects |
+| `app/hooks/useEngine.ts` | ✓ | Engine lifecycle hooks |
+| `app/hooks/useEventStream.tsx` | ✓ | SSE provider |
+| `app/components/chat/ChatMessage.tsx` | ✓ | Renders messages |
+| `app/components/chat/ChatInput.tsx` | ✓ | Text input |
+| `app/components/layout/SessionSidebar.tsx` | ✓ | Session list |
+| `app/routes/chat.$sessionId.tsx` | ✓ | Chat page |
+| ~~`app/components/chat/SessionSidebar.tsx`~~ | ✗ | **DOES NOT EXIST** |
+| ~~`app/components/layout/SidebarNav.tsx`~~ | ✗ | **DOES NOT EXIST** |
+
+---
+
+## Types to Keep as App-Specific (No SDK Equivalent)
+
+These types have no SDK counterpart and should remain in `engine-types.ts`:
+
+- `ProviderInfo`, `ModelInfo` — normalized provider shape (config.ts maps into these)
+- `AgentInfo` — normalized agent shape
+- `AppInfo` — composed from path + vcs SDK calls
+- `EngineStatus` — engine lifecycle tracking
+- `DashboardConfig`, `PortConfig` — dashboard configuration
+- `SessionPromptRequest` — prompt input shape
+- `SessionListResponse`, `SessionCreateResponse`, etc. — app response wrappers (may become obsolete if we use SDK types directly)
+
+---
 
 ## Migration Strategy
 
-### Phase: engine-types.ts transformation
-1. **Re-export SDK types directly**: `export type { Session, Part, Event, Pty } from '@opencode-ai/sdk'`
-2. **Keep app-level types**: `EngineStatus`, `DashboardConfig`, `PortConfig`
-3. **Create derived helper types**: `ProviderInfo` and `AgentInfo` as pick/mapped types from SDK
-4. **Delete response wrappers**: `SessionListResponse`, `SessionCreateResponse`, etc.
-5. **Add mapper utilities**: `toDisplayDate(timestamp: number)`, `sessionStatusLabel(status: SessionStatus)`
+### Plan 01 — Type Foundation (Wave 1)
+1. Rewrite `engine-types.ts`: Replace hand-rolled Session, Message, Part, SessionStatus, Event with SDK re-exports. Keep app-specific types.
+2. Update `ide-types.ts`: Adjust re-exports to include new SDK types (UserMessage, AssistantMessage, TextPart, etc.)
+3. Add SDK type annotations to `sessions.ts` return types for type safety across server function boundary.
 
-### Phase: Server function updates
-1. Update `config.ts` to use SDK `Provider` and `Agent` types in normalization
-2. Update `sessions.ts` return types to match SDK shapes
-3. Remove JSON roundtrips that lose type safety
+### Plan 02 — Consumer Migration (Wave 2)
+1. Update `useStreaming.ts`: The most impacted file — must construct SDK-shaped Message objects from SSE events.
+2. Update `ChatMessage.tsx`: Handle `Message` as union type, access `time.created` instead of `createdAt`, handle Part discriminated union.
+3. Update `chat.$sessionId.tsx`: Adjust message handling for SDK types.
+4. Remove or update response wrapper types that duplicate SDK types.
 
-### Phase: Component updates
-1. Update `ChatMessage.tsx` to use SDK `Part` union with proper type guards
-2. Update `useStreaming.ts` to use SDK `Event` union
-3. Update all date displays from ISO strings to Unix timestamps
+### Risk: TanStack Start Serialization
+SDK types use `unknown` in index signatures which conflicts with TanStack Start's `JsonValue` constraint. `sessions.ts` already works around this with `JSON.parse(JSON.stringify())`. This workaround must be preserved.
 
-## Risk Assessment
+---
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| SessionStatus semantic change breaks UI | High | Create mapper function, test session cards |
-| Part type names differ (tool-call → tool) | Medium | Update switch cases in PartRenderer |
-| Timestamp format change (string → number) | Low | Straightforward Date constructor change |
-| Server functions return different shapes | Medium | Update return types, test with SDK client |
-| `tsc --noEmit` cascade failures | Low | Fix bottom-up (types → server → components) |
+## Typecheck Baseline
 
-## Recommended Plan Structure
+```
+npm run typecheck → tsc --noEmit → CLEAN (zero errors)
+npm test → 10 suites, 512 assertions → ALL PASS
+```
 
-1. **Plan 01** (Wave 1): Foundation — Transform engine-types.ts (re-exports + adapters + helpers), update server functions
-2. **Plan 02** (Wave 2): Consumers — Update all chat components, hooks, and remaining consumers to use new types
-3. Both plans verify with `tsc --noEmit` as gate
+Phase 11 must maintain this baseline.
