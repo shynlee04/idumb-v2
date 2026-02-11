@@ -7,10 +7,14 @@
  * Otherwise, loads messages from the server and enables streaming chat.
  *
  * Wires together:
- * - useSessionMessages(id) → load history
- * - useStreaming() → SSE streaming for live responses
- * - useCreateSession() → create session on "new"
+ * - useSessionMessages(id) -> load history (parts-based, enables step clustering)
+ * - useStreaming() -> SSE streaming with Part accumulation
+ * - useCreateSession() -> create session on "new"
  * - ChatMessages + ChatInput components
+ *
+ * Streaming messages use two paths:
+ * - Primary: streamingParts (Part[]) -> enables step clustering during streaming
+ * - Fallback: extractTextFromEvent -> plain text (backward compat for non-Part events)
  */
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -69,7 +73,7 @@ function ChatPage() {
 /** Actual chat session — only rendered for real session IDs */
 function ChatSession({ sessionId }: { sessionId: string }) {
   const { data: serverMessages } = useSessionMessages(sessionId)
-  const { isStreaming, events, sendPrompt, abort } = useStreaming()
+  const { isStreaming, events, streamingParts, sendPrompt, abort } = useStreaming()
   const { data: defaultModelSetting } = useSetting("default-model")
 
   // Parse the default model selection
@@ -97,24 +101,42 @@ function ChatSession({ sessionId }: { sessionId: string }) {
     }))
   }, [serverMessages])
 
-  // Convert streaming events to a live assistant message
+  // Convert streaming state to a live assistant message
+  // Primary path: use accumulated Part objects (enables step clustering during streaming)
+  // Fallback: use text extraction from events (backward compat for non-Part SSE events)
   const streamingMessage = useMemo<ChatMessageData | null>(() => {
-    if (!isStreaming || events.length === 0) return null
+    if (!isStreaming) return null
 
-    // Collect text from streaming events
-    const textParts: string[] = []
-    for (const event of events) {
-      const text = extractTextFromEvent(event)
-      if (text) textParts.push(text)
+    // Primary: streaming parts available — use them for step-aware rendering
+    if (streamingParts.length > 0) {
+      return {
+        role: "assistant",
+        parts: streamingParts,
+      }
     }
 
-    if (textParts.length === 0) return null
+    // Fallback: extract text from raw events
+    if (events.length > 0) {
+      const textParts: string[] = []
+      for (const event of events) {
+        const text = extractTextFromEvent(event)
+        if (text) textParts.push(text)
+      }
 
+      if (textParts.length > 0) {
+        return {
+          role: "assistant",
+          content: textParts.join(""),
+        }
+      }
+    }
+
+    // Streaming started but no content yet — show placeholder
     return {
       role: "assistant",
-      content: textParts.join(""),
+      content: "",
     }
-  }, [isStreaming, events])
+  }, [isStreaming, events, streamingParts])
 
   // Combine history + streaming
   const allMessages = useMemo<ChatMessageData[]>(() => {
@@ -153,6 +175,9 @@ function ChatSession({ sessionId }: { sessionId: string }) {
  * - { type: "content", data: { content: "..." } }
  *
  * All data fields are `unknown` (from parseSSEEvent) so runtime checks are used.
+ *
+ * NOTE: When streamingParts are available (primary path), this function serves as
+ * backward compatibility for non-Part SSE events only.
  */
 function extractTextFromEvent(event: StreamEvent): string | null {
   const { data } = event

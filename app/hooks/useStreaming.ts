@@ -1,17 +1,25 @@
 /**
  * useStreaming — SSE streaming hook for chat prompts.
  *
- * Migrated from src/dashboard/frontend/src/hooks/useStreaming.ts
- * Connects to /api/sessions/$id/prompt server route via EventSource-like fetch.
+ * Connects to /api/sessions/$id/prompt server route via fetch-based SSE.
+ * Accumulates both raw events and typed Part objects from the stream.
+ *
+ * Part accumulation enables step clustering during streaming:
+ * - step-start/step-finish Parts create step boundaries
+ * - Tool Parts render inside step clusters
+ * - Text Parts render as markdown
+ *
+ * Parts are matched by id for updates (e.g. tool status transitions).
  *
  * Usage:
- *   const { sendPrompt, isStreaming, events, error, abort } = useStreaming()
+ *   const { sendPrompt, isStreaming, events, streamingParts, error, abort } = useStreaming()
  */
 
 import { useCallback, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { sessionKeys } from "./useSession"
 import { parseSSEEvent } from "../server/sdk-validators"
+import type { Part } from "../shared/engine-types"
 
 /** A single SSE event from the prompt stream. */
 export interface StreamEvent {
@@ -23,6 +31,8 @@ export interface StreamEvent {
 export interface StreamingState {
   isStreaming: boolean
   events: StreamEvent[]
+  /** Accumulated Part objects from streaming — enables step clustering */
+  streamingParts: Part[]
   error: string | null
 }
 
@@ -37,10 +47,36 @@ interface PromptOptions {
   providerID?: string
 }
 
+/**
+ * Validate that a raw object looks like a valid SDK Part.
+ * Checks for required fields: id, type (string).
+ */
+function isValidPart(obj: unknown): obj is Part {
+  if (typeof obj !== "object" || obj === null) return false
+  const p = obj as Record<string, unknown>
+  return typeof p.id === "string" && typeof p.type === "string"
+}
+
+/**
+ * Update the streamingParts array: replace if same id exists, append otherwise.
+ * Uses functional update to avoid stale closure issues.
+ */
+function upsertPart(parts: Part[], newPart: Part): Part[] {
+  const idx = parts.findIndex((p) => p.id === newPart.id)
+  if (idx >= 0) {
+    // Replace existing part (e.g. tool status transition)
+    const updated = [...parts]
+    updated[idx] = newPart
+    return updated
+  }
+  return [...parts, newPart]
+}
+
 export function useStreaming(): UseStreamingReturn {
   const [state, setState] = useState<StreamingState>({
     isStreaming: false,
     events: [],
+    streamingParts: [],
     error: null,
   })
 
@@ -56,7 +92,7 @@ export function useStreaming(): UseStreamingReturn {
   }, [])
 
   const clearEvents = useCallback(() => {
-    setState((prev) => ({ ...prev, events: [], error: null }))
+    setState((prev) => ({ ...prev, events: [], streamingParts: [], error: null }))
   }, [])
 
   const sendPrompt = useCallback(
@@ -67,7 +103,7 @@ export function useStreaming(): UseStreamingReturn {
       const controller = new AbortController()
       abortRef.current = controller
 
-      setState({ isStreaming: true, events: [], error: null })
+      setState({ isStreaming: true, events: [], streamingParts: [], error: null })
 
       // POST to SSE server route
       fetch(`/api/sessions/${sessionId}/prompt`, {
@@ -108,16 +144,34 @@ export function useStreaming(): UseStreamingReturn {
               } else if (line.startsWith("data: ")) {
                 const data = parseSSEEvent(line.slice(6))
                 if (data) {
+                  const eventType = currentEvent || data.type || "message"
                   const streamEvent: StreamEvent = {
-                    type: currentEvent || data.type || "message",
+                    type: eventType,
                     data,
                     timestamp: Date.now(),
                   }
 
-                  setState((prev) => ({
-                    ...prev,
-                    events: [...prev.events, streamEvent],
-                  }))
+                  setState((prev) => {
+                    let nextParts = prev.streamingParts
+
+                    // Accumulate Part objects from message.part.updated events
+                    if (
+                      eventType === "message.part.updated" &&
+                      typeof data.properties === "object" &&
+                      data.properties !== null
+                    ) {
+                      const props = data.properties as Record<string, unknown>
+                      if (isValidPart(props.part)) {
+                        nextParts = upsertPart(prev.streamingParts, props.part)
+                      }
+                    }
+
+                    return {
+                      ...prev,
+                      events: [...prev.events, streamEvent],
+                      streamingParts: nextParts,
+                    }
+                  })
 
                   // Check for terminal event
                   if (data.error) {
