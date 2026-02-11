@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 6 COMPLETE — IDE Shell (layout + file tree + Monaco editor)
+**Current focus:** Phase 6 COMPLETE — IDE Shell (layout + file tree + Monaco editor + gap closure)
 
 ## Current Position
 
 Phase: 6 of 10 (IDE Shell)
-Plan: 3 of 3 in current phase (06-01 ✓, 06-02 ✓, 06-03 ✓)
-Status: Phase 6 complete — Monaco editor with model-swapping tabs wired to file tree
-Last activity: 2026-02-11 — 06-03 complete, all 3 plans done
+Plan: 4 of 4 in current phase (06-01 ✓, 06-02 ✓, 06-03 ✓, 06-04 ✓)
+Status: Phase 6 fully complete — layout persistence, collapse sync, IDE nav link
+Last activity: 2026-02-11 — 06-04 gap closure complete
 
 Progress: [██████░░░░] 20%
 
@@ -37,6 +37,7 @@ Progress: [██████░░░░] 20%
 | 6.01 (IDE Shell Foundation) | 3 tasks | 19 min | ~6 min |
 | 6.02 (File Tree Explorer) | 2 tasks | ~15 min | ~7 min |
 | 6.03 (Monaco Editor) | 2 tasks | 11 min | ~6 min |
+| 6.04 (Gap Closure) | 2 tasks | 7 min | ~4 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -49,6 +50,9 @@ Progress: [██████░░░░] 20%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [06-04]: Zustand persist onFinishHydration + hasHydrated dual-path for reliable panel restore
+- [06-04]: PanelSize.asPercentage <= 0.1 threshold for drag-based collapse detection
+- [06-04]: Code2 lucide icon for IDE Shell navigation link
 - [06-03]: Used readFileFn/writeFileFn (actual exports) instead of readFile/writeFile — plan had wrong names
 - [06-03]: 20-model LRU cap for Monaco memory management
 - [06-03]: SSR-safe lazy wrapper for Monaco (typeof window guard + React.lazy)
@@ -92,7 +96,7 @@ Recent decisions affecting current work:
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
 | 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
-| 6 | IDE Shell | COMPLETE | 3/3 plans ✓ |
+| 6 | IDE Shell | COMPLETE | 4/4 plans ✓ |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -101,9 +105,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 06-03-PLAN.md — Monaco Editor Integration. Phase 6 fully complete.
-Resume file: .planning/phases/06-ide-shell/06-03-SUMMARY.md
+Stopped at: Completed 06-04-PLAN.md — Gap Closure (layout persistence + IDE nav link). Phase 6 fully complete.
+Resume file: .planning/phases/06-ide-shell/06-04-SUMMARY.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Phase 6 complete. IDE Shell with 3-panel layout, file tree, Monaco editor.*
+*Updated: 2026-02-11 — Phase 6 complete. IDE Shell with 3-panel layout, file tree, Monaco editor, layout persistence, IDE nav link.*
