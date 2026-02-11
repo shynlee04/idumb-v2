@@ -11,6 +11,7 @@
 import { useCallback, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { sessionKeys } from "./useSession"
+import { parseSSEEvent } from "../server/sdk-validators"
 
 /** A single SSE event from the prompt stream. */
 export interface StreamEvent {
@@ -105,10 +106,10 @@ export function useStreaming(): UseStreamingReturn {
               if (line.startsWith("event: ")) {
                 currentEvent = line.slice(7)
               } else if (line.startsWith("data: ")) {
-                try {
-                  const data = JSON.parse(line.slice(6))
+                const data = parseSSEEvent(line.slice(6))
+                if (data) {
                   const streamEvent: StreamEvent = {
-                    type: currentEvent || "message",
+                    type: currentEvent || data.type || "message",
                     data,
                     timestamp: Date.now(),
                   }
@@ -123,8 +124,6 @@ export function useStreaming(): UseStreamingReturn {
                     setState((prev) => ({ ...prev, error: String(data.error), isStreaming: false }))
                     return
                   }
-                } catch {
-                  // Non-JSON data line, skip
                 }
               }
             }

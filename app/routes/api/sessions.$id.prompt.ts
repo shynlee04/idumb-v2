@@ -88,17 +88,19 @@ export const Route = createFileRoute("/api/sessions/$id/prompt")({
                 }
 
                 // Relay events filtered by session ID via AsyncGenerator stream
+                // SDK stream yields typed Event objects (discriminated on `type`)
                 for await (const event of eventResult.stream) {
                   if (abortController.signal.aborted) break
 
-                  const eventData = event as Record<string, unknown>
-                  const props = eventData.properties as Record<string, unknown> | undefined
+                  // All SDK Event types have `properties` with varying shapes
+                  // Use type assertion to access sessionID which most event types carry
+                  const props = (event as { properties?: Record<string, unknown> }).properties
                   const eventSessionId = props?.sessionID ?? props?.session_id
 
                   // Filter events to this session
                   if (eventSessionId && eventSessionId !== id) continue
 
-                  sendEvent(String(eventData.type ?? "message"), eventData)
+                  sendEvent(event.type, event)
 
                   // Break on terminal status
                   const status = props?.status

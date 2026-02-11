@@ -44,11 +44,11 @@ export const Route = createFileRoute("/api/events")({
                 sendEvent("connected", { timestamp: Date.now() })
 
                 // Relay events via AsyncGenerator stream
+                // SDK stream yields typed Event objects (discriminated on `type`)
                 for await (const event of eventResult.stream) {
                   if (abortController.signal.aborted) break
 
-                  const eventData = event as Record<string, unknown>
-                  sendEvent(String(eventData.type ?? "message"), eventData)
+                  sendEvent(event.type, event)
                 }
               } catch (err) {
                 if (!abortController.signal.aborted) {

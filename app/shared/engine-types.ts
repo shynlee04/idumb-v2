@@ -30,6 +30,7 @@ import type {
   AgentPart,
   RetryPart,
   CompactionPart,
+  Event,
 } from '@opencode-ai/sdk'
 
 export type {
@@ -50,6 +51,7 @@ export type {
   AgentPart,
   RetryPart,
   CompactionPart,
+  Event,
 }
 
 // --- App-specific types (no SDK equivalent) ---

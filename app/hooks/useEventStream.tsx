@@ -22,6 +22,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { parseSSEEvent } from "../server/sdk-validators"
 
 /** A global event from the OpenCode engine. */
 export interface EngineEvent {
@@ -73,14 +74,12 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
       })
 
       es.addEventListener("message", (e) => {
-        try {
-          const data = JSON.parse(e.data)
+        const data = parseSSEEvent(e.data)
+        if (data) {
           setEvents((prev) => {
-            const next = [...prev, { type: "message", data, timestamp: Date.now() }]
+            const next = [...prev, { type: data.type || "message", data, timestamp: Date.now() }]
             return next.length > MAX_EVENTS ? next.slice(-MAX_EVENTS) : next
           })
-        } catch {
-          // Invalid JSON — skip
         }
       })
 
@@ -97,14 +96,12 @@ export function EventStreamProvider({ children }: { children: ReactNode }) {
 
       // For typed events forwarded from the server
       es.onmessage = (e) => {
-        try {
-          const data = JSON.parse(e.data)
+        const data = parseSSEEvent(e.data)
+        if (data) {
           setEvents((prev) => {
-            const next = [...prev, { type: data.type ?? "event", data, timestamp: Date.now() }]
+            const next = [...prev, { type: data.type || "event", data, timestamp: Date.now() }]
             return next.length > MAX_EVENTS ? next.slice(-MAX_EVENTS) : next
           })
-        } catch {
-          // Non-JSON — skip
         }
       }
     }
