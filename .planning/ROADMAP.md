@@ -47,7 +47,7 @@ Plans:
 
 - [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
 - [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout + gap closure *(completed 2026-02-11)*
-- [ ] **Phase 11: SDK Type Realignment** — Replace hand-rolled types with SDK re-exports, fix drift from Phase 5-6
+- [ ] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
@@ -90,24 +90,27 @@ Plans:
 - [x] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
 - [x] 06-04-PLAN.md — Gap closure: layout persistence wiring + IDE nav link (wave 1)
 
-### Phase 11: SDK Type Realignment
-**Goal**: Replace all hand-rolled SDK types with re-exports from `@opencode-ai/sdk`, fix type drift that accumulated in Phases 5-6 before SDK was installed, and prevent context poisoning in downstream phases
-**Depends on**: Phase 6 (types are consumed by IDE Shell components and server functions)
-**Requirements**: FND-02 (updated — remove WebSocket for PTY, use SDK PTY API instead)
+### Phase 11: SDK Type Architecture + Boundary Validation
+**Goal**: Establish validated, research-backed SDK type contracts at all app boundaries, govern executor behavior around type safety, document expected type alarms for downstream phases, and migrate all consumers to SDK-native shapes with Zod-guarded boundaries
+**Depends on**: Phase 6 (types consumed by IDE Shell components and server functions). Committed starting point: `c585f48` (SDK re-exports in engine-types.ts already done)
+**Requirements**: FND-02 (updated — SDK types = law for engine contracts, app types = internal state only, Zod at boundaries)
 **Success Criteria** (what must be TRUE):
-  1. `engine-types.ts` re-exports Session, Message, Part, Event types directly from `@opencode-ai/sdk` — zero hand-rolled SDK type definitions remain
-  2. All server functions (`sessions.ts`, `config.ts`) return properly typed SDK responses — no `Record<string, NonNullable<unknown>>` or JSON roundtrips losing type safety
-  3. All chat components (`ChatMessage.tsx`, `useStreaming.ts`) use SDK Part/Event discriminated unions — no custom `MessagePart` or `StreamEvent` interfaces
-  4. `tsc --noEmit` passes with zero errors after type migration
-**Plans**: 2 plans
+  1. SDK type contract registry (`11-CONTRACTS.md`) documents every SDK type shape consumed by this app — field types, nullable fields, discriminant values — as the single executor reference
+  2. AGENTS.md contains type governance rules: SDK type taxonomy (SDK = law, app = internal only), banned patterns (`as any` on SDK types, hand-rolling SDK shapes), per-phase false alarm table
+  3. Zod schemas exist at server function boundaries validating SDK data shape before it reaches hooks/components — runtime validation, not just compile-time
+  4. All consumers (`useStreaming.ts`, `ChatMessage.tsx`, `chat.$sessionId.tsx`) use SDK Part/Event discriminated unions with proper narrowing — zero `as any` casts on SDK types
+  5. `tsc --noEmit` passes with zero errors after full migration
+**Plans**: 4 plans (archived: `_archived-2026-02-11/11-01-PLAN.md`, `_archived-2026-02-11/11-02-PLAN.md`)
 
 Plans:
-- [ ] 11-01-PLAN.md — SDK type re-exports + server function type alignment (wave 1)
-- [ ] 11-02-PLAN.md — Chat component + streaming hook type alignment (wave 2)
+- [ ] 11-01-PLAN.md — SDK type contract registry + full audit (wave 1, research)
+- [ ] 11-02-PLAN.md — AGENTS.md type governance + false alarm registry (wave 1, docs)
+- [ ] 11-03-PLAN.md — Zod boundary schemas + server function guards (wave 2, code)
+- [ ] 11-04-PLAN.md — Consumer migration with type guards (wave 3, code)
 
 ### Phase 7: Chat + Terminal
 **Goal**: Users interact with AI through rich rendered chat and run commands in integrated terminal
-**Depends on**: Phase 11 (correct SDK types), Phase 5 (server functions for streaming), Phase 6 (layout panels host chat + terminal)
+**Depends on**: Phase 11 (validated SDK types + Zod boundaries), Phase 5 (server functions for streaming), Phase 6 (layout panels host chat + terminal)
 **Requirements**: CHAT-01, CHAT-02, IDE-03, CHAT-05
 **Success Criteria** (what must be TRUE):
   1. User sees rich chat messages — markdown with syntax-highlighted code blocks, tool call cards with status, file previews, image rendering, collapsible thinking sections
@@ -207,7 +210,7 @@ Plans:
 
 | Constraint | Satisfied |
 |-----------|-----------|
-| Phase 11 SDK types must exist before Phase 7 builds on them | Phase 11 → Phase 7 |
+| Phase 11 SDK types + Zod validation must exist before Phase 7 builds on them | Phase 11 → Phase 7 |
 | DF-06 depends on CHAT-06 (same or later phase) | Phase 8 |
 | DF-07 depends on DF-01 (same or later phase) | DF-01 Phase 8, DF-07 Phase 9 |
 | IDE-04 diff needs Monaco from IDE-01 | IDE-01 Phase 6, IDE-04 Phase 8 |
@@ -224,7 +227,7 @@ Plans:
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
 | 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
 | 6. IDE Shell | v2.0 | 4/4 | Complete | 2026-02-11 |
-| 11. SDK Type Realignment | v2.0 | 0/2 | Planned | -- |
+| 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
@@ -232,4 +235,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-11 -- Phase 11 (SDK Type Realignment) added between Phase 6 and 7 to fix SDK type drift from Phases 5-6*
+*Updated: 2026-02-11 -- Phase 11 complete: SDK Type Architecture + Boundary Validation (4/4 plans). End-to-end type chain established.*
