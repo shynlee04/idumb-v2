@@ -8,13 +8,12 @@
  * - GET /api/config     → getConfigFn
  * - GET /api/app        → getAppInfoFn
  *
- * SDK types imported directly from @opencode-ai/sdk — no Record<string, unknown> casts.
+ * SDK types imported via engine-types.ts gateway — no direct @opencode-ai/sdk imports.
  */
 
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, unwrapSdkResult } from "./sdk-client.server"
-import type { ProviderInfo, AgentInfo } from "../shared/engine-types"
-import type { Provider, Agent, Path, VcsInfo } from "@opencode-ai/sdk"
+import type { ProviderInfo, AgentInfo, Provider, Agent, Path, VcsInfo } from "../shared/engine-types"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
 

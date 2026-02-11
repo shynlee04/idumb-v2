@@ -21,6 +21,7 @@ import {
   validateMessages,
   validateSessionStatus,
 } from "./sdk-validators"
+import type { SessionStatus } from "../shared/engine-types"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
 
@@ -140,14 +141,14 @@ export const getSessionStatusFn = createServerFn({ method: "GET" })
       const result = await getClient().session.status({
         query: sdkQuery(projectDir),
       })
-      const statusMap = unwrapSdkResult(result) as Record<string, unknown>
+      const statusMap = unwrapSdkResult(result) as Record<string, SessionStatus>
       const status = statusMap[data.id]
       if (!status) {
         throw new Error("Session status not found")
       }
       // Validate shape at boundary, then JSON roundtrip for serialization compat
       validateSessionStatus(status)
-      return JSON.parse(JSON.stringify(status))
+      return JSON.parse(JSON.stringify(status)) as SessionStatus
     } catch (err) {
       throw new Error(`Failed to get session status: ${err instanceof Error ? err.message : String(err)}`)
     }
