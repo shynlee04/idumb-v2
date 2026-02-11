@@ -50,7 +50,7 @@ Plans:
 - [x] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration *(completed 2026-02-11)*
 - [x] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(completed 2026-02-12)*
 - [x] **Phase 11.2: Contamination & Dead Code Purge** — Remove plugin-era docs, dead code, stale references *(completed 2026-02-12)*
-- [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
+- [x] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI *(completed 2026-02-12)*
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
 - [ ] **Phase 10: i18n Validation** — Translation infrastructure + string extraction + Vietnamese validation
@@ -155,10 +155,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Rich chat Part renderers: CodeBlock + ToolCallAccordion + ReasoningCollapse + FilePartRenderer (wave 1)
-- [ ] 07-02-PLAN.md — Step clustering: StepCluster component + part grouping + streaming step awareness (wave 2)
-- [ ] 07-03-PLAN.md — Integrated terminal: xterm.js + SDK PTY API + IDEShell integration + standalone route (wave 1)
-- [ ] 07-04-PLAN.md — Settings & model picker: 3-tab settings page + chat header ModelPicker + theme toggle (wave 1)
+- [x] 07-01-PLAN.md — Rich chat Part renderers: CodeBlock + ToolCallAccordion + ReasoningCollapse + FilePartRenderer (wave 1)
+- [x] 07-02-PLAN.md — Step clustering: StepCluster component + part grouping + streaming step awareness (wave 2)
+- [x] 07-03-PLAN.md — Integrated terminal: xterm.js + SDK PTY API + IDEShell integration + standalone route (wave 1)
+- [x] 07-04-PLAN.md — Settings & model picker: 3-tab settings page + chat header ModelPicker + theme toggle (wave 1)
 
 ### Phase 8: Sessions + Diffs + Agents
 **Goal**: Users manage AI sessions, review code changes, and see multi-agent operations with clear attribution
@@ -267,7 +267,7 @@ Plans:
 | 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 11.1. Build & Config Blockers | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 11.2. Contamination Purge | v2.0 | 1/1 | Complete | 2026-02-12 |
-| 7. Chat + Terminal | v2.0 | 0/4 | Planned | -- |
+| 7. Chat + Terminal | v2.0 | 4/4 | Complete | 2026-02-12 |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
 | 10. i18n Validation | v2.0 | 0/3 | Not started | -- |
