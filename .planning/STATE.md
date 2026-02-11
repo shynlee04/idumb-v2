@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 
 Phase: 6 of 10 (IDE Shell)
 Plan: 4 of 4 in current phase (06-01 ✓, 06-02 ✓, 06-03 ✓, 06-04 ✓)
-Status: Phase 6 fully complete — layout persistence, collapse sync, IDE nav link
-Last activity: 2026-02-11 — 06-04 gap closure complete
+Status: Phase 6 verified complete — 3/3 must-haves passed, 3 items for human verification
+Last activity: 2026-02-11 — 06-04 gap closure complete, verification passed
 
 Progress: [██████░░░░] 20%
 

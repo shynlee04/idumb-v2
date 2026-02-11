@@ -46,7 +46,7 @@ Plans:
 **Total requirements:** 25 (FND-01..04, IDE-01..05, CHAT-01..06, DF-01..07, I18N-01..03)
 
 - [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
-- [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout *(completed 2026-02-11)*
+- [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout + gap closure *(completed 2026-02-11)*
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
@@ -87,7 +87,7 @@ Plans:
 - [x] 06-01-PLAN.md — Resizable panel layout + Zustand IDE store + file server functions (wave 1)
 - [x] 06-02-PLAN.md — File tree with react-arborist + Radix context menu + React Query hooks (wave 2)
 - [x] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
-- [ ] 06-04-PLAN.md — Gap closure: layout persistence wiring + IDE nav link (wave 1)
+- [x] 06-04-PLAN.md — Gap closure: layout persistence wiring + IDE nav link (wave 1)
 
 ### Phase 7: Chat + Terminal
 **Goal**: Users interact with AI through rich rendered chat and run commands in integrated terminal
@@ -206,7 +206,7 @@ Plans:
 | 1. Engine + Task Bus | v1.0 | 10/10 | Complete | 2026-02-10 |
 | 1A. Plugin Demotion | v1.0 | 2/2 | Complete | 2026-02-10 |
 | 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
-| 6. IDE Shell | v2.0 | 3/4 | Gap closure | -- |
+| 6. IDE Shell | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
@@ -214,4 +214,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-11 -- Phase 6: 06-01 complete (IDE shell layout + Zustand store + deps)*
+*Updated: 2026-02-11 -- Phase 6 complete (all 4 plans: shell layout, file tree, Monaco editor, gap closure)*
