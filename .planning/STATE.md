@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 11 REPLANNED — SDK Type Architecture + Boundary Validation (old plans archived, 4 new plans)
+**Current focus:** Phase 11 COMPLETE — SDK Type Architecture + Boundary Validation. Ready for Phase 7.
 
 ## Current Position
 
 Phase: 11 of 10 (SDK Type Architecture)
-Plan: 3 of 4 in current phase (11-01 ✓, 11-02 ✓, 11-03 ✓)
-Status: Plan 11-03 complete — Zod boundary schemas + server function validation + typed SSE parsing
-Last activity: 2026-02-11 — 11-03 SDK validators committed
+Plan: 4 of 4 in current phase (11-01 ✓, 11-02 ✓, 11-03 ✓, 11-04 ✓)
+Status: Phase 11 COMPLETE — all 4 plans done, end-to-end SDK type chain verified
+Last activity: 2026-02-11 — 11-04 consumer migration committed
 
-Progress: [███████░░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -41,6 +41,7 @@ Progress: [███████░░░] 75%
 | 11.01 (Contract Registry) | 2 tasks | 8 min | ~4 min |
 | 11.02 (AGENTS.md Governance) | 3 tasks | 3 min | ~1 min |
 | 11.03 (SDK Boundary Validators) | 4 tasks | 17 min | ~4 min |
+| 11.04 (Consumer Migration) | 2 tasks | 13 min | ~7 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -59,6 +60,10 @@ Recent decisions affecting current work:
 - [11-01]: 10 SDK gotchas documented (epoch timestamps, empty parts, anonymous subtask type, etc.)
 - [11-02]: SDK types are LAW (never redefine), app types are INTERNAL (freely modifiable) — two-tier taxonomy
 - [11-02]: All SDK imports centralized through engine-types.ts — single upgrade point
+- [11-04]: SDK session.messages() returns Array<{ info: Message; parts: Part[] }>, not flat Message[] -- route mapping fixed
+- [11-04]: ChatMessageData dual-path: content string for streaming, Part[] for server messages
+- [11-04]: ToolPart rendered with ToolState discriminated union (not old tool-call/tool-result split)
+- [11-04]: Meta Part types (step/snapshot/patch/agent/retry/compaction/subtask) render as null
 - [11-03]: Generic validator signatures (T->T) preserve TanStack Start type flow
 - [11-03]: Graceful degradation: validators log warnings but never throw
 - [11-03]: 12-member Part union matches SDK contract (not plan's 11)
@@ -103,7 +108,7 @@ Recent decisions affecting current work:
 - Monaco DiffEditor memory leak (#4659) — disposal patterns required from Phase 6 onward
 - Vietnamese Telex IME Monaco bug (#4805) — must be tested in Phase 10
 - 3-week timebox for Stage 1 (Phases 5-8) — monitor velocity after Phase 5
-- **SDK type drift from Phase 5-6** — engine-types.ts re-exports done (`c585f48`), but Zod boundary validation, governance rules, and consumer migration still pending. Phase 11 replanned with architecture-first approach.
+- **SDK type drift from Phase 5-6** — RESOLVED. Phase 11 complete: engine-types.ts re-exports, 11-CONTRACTS.md governance, Zod boundary validation, consumer migration all done.
 
 ### Roadmap Evolution
 
@@ -116,7 +121,7 @@ Recent decisions affecting current work:
 |---|-------|--------|----------|
 | 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
 | 6 | IDE Shell | COMPLETE | 4/4 plans ✓ |
-| 11 | SDK Type Architecture | In Progress | 3/4 plans ✓ (11-01, 11-02, 11-03) |
+| 11 | SDK Type Architecture | COMPLETE | 4/4 plans ✓ (11-01, 11-02, 11-03, 11-04) |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -125,9 +130,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 11-03-PLAN.md — SDK Boundary Validators
-Resume file: .planning/phases/11-sdk-type-realignment/11-04-PLAN.md
+Stopped at: Completed 11-04-PLAN.md — Phase 11 COMPLETE (SDK Consumer Migration)
+Resume file: .planning/phases/07-chat-terminal/ (next phase)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Plan 11-03 complete: Zod boundary schemas (347 LOC), server function validation, typed SSE parsing. 3/4 plans done.*
+*Updated: 2026-02-11 — Phase 11 complete: all 4 plans done. End-to-end SDK type chain: contracts -> governance -> Zod boundaries -> consumer migration.*
