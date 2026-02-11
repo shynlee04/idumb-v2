@@ -24,10 +24,12 @@ import {
 } from 'react-resizable-panels'
 import { useLayoutStore, IDE_PANELS } from '@/stores/layout-store'
 import type { PanelId } from '@/shared/ide-types'
+import { FileTree } from '../file-tree/FileTree'
+import { FileTreeContextMenu } from '../file-tree/FileTreeContextMenu'
 
 // --- Placeholder panels (replaced in Plan 02/03) ---
 
-function SidebarPlaceholder() {
+function SidebarPanel() {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-10 items-center border-b border-border px-3">
@@ -35,8 +37,10 @@ function SidebarPlaceholder() {
           Explorer
         </span>
       </div>
-      <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">
-        File tree (Plan 02)
+      <div className="flex-1 overflow-hidden">
+        <FileTreeContextMenu>
+          <FileTree rootPath="." />
+        </FileTreeContextMenu>
       </div>
     </div>
   )
@@ -173,7 +177,7 @@ export function IDEShell() {
           collapsedSize={0}
           onResize={() => setActivePanel('sidebar')}
         >
-          <SidebarPlaceholder />
+          <SidebarPanel />
         </Panel>
 
         {/* Horizontal separator */}
