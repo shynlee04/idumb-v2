@@ -15,7 +15,7 @@
  * Panels are collapsible via keyboard shortcuts or UI controls.
  */
 
-import { useCallback, useEffect, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react'
 import {
   Group,
   Panel,
@@ -29,7 +29,27 @@ import { FileTree } from '../file-tree/FileTree'
 import { FileTreeContextMenu } from '../file-tree/FileTreeContextMenu'
 import { EditorArea } from '../editor/EditorArea'
 
-// --- Placeholder panels (replaced in Plan 02/03) ---
+// Lazy-load TerminalPanel to avoid SSR issues with xterm.js DOM APIs
+const LazyTerminalPanel = lazy(() =>
+  import('../terminal/TerminalPanel').then(m => ({ default: m.TerminalPanel }))
+)
+
+// --- Loading fallback for terminal panel ---
+
+function TerminalLoadingFallback() {
+  return (
+    <div className="flex h-full flex-col bg-terminal text-terminal-foreground">
+      <div className="flex h-8 items-center border-t border-border px-3">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Terminal
+        </span>
+      </div>
+      <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">
+        Loading terminal...
+      </div>
+    </div>
+  )
+}
 
 function SidebarPanel() {
   return (
@@ -48,22 +68,7 @@ function SidebarPanel() {
   )
 }
 
-// EditorPlaceholder removed — replaced by EditorArea (Plan 03)
-
-function TerminalPlaceholder() {
-  return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-8 items-center border-t border-border px-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Terminal
-        </span>
-      </div>
-      <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">
-        Chat / Terminal (Plan 02)
-      </div>
-    </div>
-  )
-}
+// TerminalPlaceholder removed — replaced by LazyTerminalPanel (Plan 03)
 
 // --- Separator handle styling ---
 
@@ -293,7 +298,9 @@ export function IDEShell() {
               collapsedSize={0}
               onResize={handleTerminalResize}
             >
-              <TerminalPlaceholder />
+              <Suspense fallback={<TerminalLoadingFallback />}>
+                <LazyTerminalPanel />
+              </Suspense>
             </Panel>
           </Group>
         </Panel>
