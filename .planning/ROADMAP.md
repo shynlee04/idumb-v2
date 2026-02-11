@@ -150,15 +150,15 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User sees rich chat messages — markdown with syntax-highlighted code blocks, tool call cards with status, file previews, image rendering, collapsible thinking sections
   2. User sees multi-step AI operations grouped into collapsible step clusters with count badges and running/complete/failed status
-  3. User executes commands in integrated terminal with ANSI colors, resize handling, multi-tab, and automatic process cleanup on disconnect
+  3. User executes commands in integrated terminal with ANSI colors, resize handling, and automatic process cleanup on disconnect
   4. User changes AI model, manages providers, and adjusts settings through UI with changes persisted via SDK
 **Plans**: 4 plans
 
 Plans:
-- [ ] 07-01: Chat rendering upgrade — PartView + marked + shiki + DOMPurify
-- [ ] 07-02: Step clustering component (collapsible groups, status indicators)
-- [ ] 07-03: Terminal — xterm.js + node-pty + WebSocket + PTYManager
-- [ ] 07-04: Config/settings UI with SDK persistence
+- [ ] 07-01-PLAN.md — Rich chat Part renderers: CodeBlock + ToolCallAccordion + ReasoningCollapse + FilePartRenderer (wave 1)
+- [ ] 07-02-PLAN.md — Step clustering: StepCluster component + part grouping + streaming step awareness (wave 2)
+- [ ] 07-03-PLAN.md — Integrated terminal: xterm.js + SDK PTY API + IDEShell integration + standalone route (wave 1)
+- [ ] 07-04-PLAN.md — Settings & model picker: 3-tab settings page + chat header ModelPicker + theme toggle (wave 1)
 
 ### Phase 8: Sessions + Diffs + Agents
 **Goal**: Users manage AI sessions, review code changes, and see multi-agent operations with clear attribution
@@ -267,11 +267,11 @@ Plans:
 | 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 11.1. Build & Config Blockers | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 11.2. Contamination Purge | v2.0 | 1/1 | Complete | 2026-02-12 |
-| 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
+| 7. Chat + Terminal | v2.0 | 0/4 | Planned | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
 | 10. i18n Validation | v2.0 | 0/3 | Not started | -- |
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 11.2 (Contamination Purge) complete. Phase 7 next.*
+*Updated: 2026-02-12 -- Phase 7 plans created (4 plans, 2 waves). Corrected plan descriptions to match research decisions (react-markdown not marked, SDK PTY not node-pty, single terminal not multi-tab).*
