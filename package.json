@@ -3,16 +3,8 @@
   "version": "2.2.0",
   "description": "Intelligent Delegation Using Managed Boundaries — an AI knowledge work platform built on OpenCode",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": {
     "idumb-v2": "./bin/cli.mjs"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
   },
   "files": [
     "dist",

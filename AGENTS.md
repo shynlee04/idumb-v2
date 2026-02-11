@@ -174,7 +174,7 @@ v2/
 ```
 
 **Source LOC:** ~8,000 (src/ schemas + CLI + app/ server + hooks + components, excluding node_modules)
-**Test baseline:** `npm test` → **512 assertions** across **10** test suites
+**Test baseline:** `npm test` → **591 assertions** across **10** test suites
 **TypeScript:** `tsc --noEmit` clean, zero errors
 **Files above 500 LOC:** `templates.ts` (1463), `lib/persistence.ts` (1082), `schemas/planning-registry.ts` (729), `lib/code-quality.ts` (719), `schemas/task-graph.ts` (605), `schemas/task.ts` (517)
 
@@ -500,7 +500,7 @@ Expected type issues that are NOT bugs — they have documented workarounds.
 npm run build        # tsc
 npm run dev          # tsc --watch
 npm run typecheck    # tsc --noEmit
-npm test             # 10 test suites via tsx (466 core assertions; SQLite-dependent assertions are conditional)
+npm test             # 10 test suites via tsx (591 assertions; SQLite-dependent assertions are conditional)
 ```
 
 ---
@@ -512,5 +512,5 @@ When resuming work:
 1. Read `AGENTS.md` (this file) — it reflects what exists in the codebase
 2. Read `.planning/ROADMAP.md` — the active roadmap (post-pivot)
 3. Run `npm run typecheck` — must be zero errors
-4. Run `npm test` — must pass baseline suites (10 suites, 512 assertions)
+4. Run `npm test` — must pass baseline suites (10 suites, 591 assertions)
 5. Check `.planning/STATE.md` for current phase and position
