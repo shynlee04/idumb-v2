@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 7 in progress. Plans 01, 03, 04 complete.
+**Current focus:** Phase 7 COMPLETE. All 4 plans done. Phase 8 next.
 
 ## Current Position
 
-Phase: 7 of 10+ (Chat + Terminal -- in progress)
-Plan: 3 of 4 in current phase (plans 01, 03, 04 complete)
-Status: Phase 7 Plan 03 complete -- terminal integration done
-Last activity: 2026-02-12 -- Phase 7 Plan 03 executed (PTY server functions, useTerminal hook, TerminalPanel, /terminal route)
+Phase: 7 of 10+ (Chat + Terminal -- COMPLETE)
+Plan: 4 of 4 in current phase (all plans complete)
+Status: Phase 7 COMPLETE -- all 4 plans executed (01 Rich Part Renderers, 02 Step Clustering, 03 Terminal, 04 Settings)
+Last activity: 2026-02-12 -- Phase 7 Plan 02 executed (StepCluster, groupPartsIntoClusters, streaming Part accumulation)
 
-Progress: [████████░░] 84% (5/5 gap-closure + 07-01 + 07-03 + 07-04 done)
+Progress: [█████████░] 88% (5/5 gap-closure + 07 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 + 07-03 + 07-04)
+- Total plans completed: 17 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 + 07-02 + 07-03 + 07-04)
 - Average duration: —
 - Total execution time: —
 
@@ -47,6 +47,7 @@ Progress: [████████░░] 84% (5/5 gap-closure + 07-01 + 07-03 
 | 7.04 (Settings + Model Picker) | 2 tasks | 7 min | ~4 min |
 | 7.01 (Rich Part Renderers) | 2 tasks | 12 min | ~6 min |
 | 7.03 (Terminal Integration) | 2 tasks | 10 min | ~5 min |
+| 7.02 (Step Clustering) | 2 tasks | 8 min | ~4 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -59,6 +60,11 @@ Progress: [████████░░] 84% (5/5 gap-closure + 07-01 + 07-03 
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [07-02]: PartRenderer exported from ChatMessage.tsx for reuse by StepCluster -- avoids duplication
+- [07-02]: ClusteredMessage in ChatMessages.tsx (not chat.$sessionId.tsx) -- keeps route file focused on data
+- [07-02]: Duration computed from tool time data (time.start/time.end) -- StepStartPart has no timestamp field
+- [07-02]: upsertPart matches by part.id for streaming Part updates (tool status transitions)
+- [07-02]: Dual-path streaming: streamingParts primary, extractTextFromEvent fallback for non-Part events
 - [07-01]: CodeBlock uses highlight.js directly instead of rehype-highlight -- prevents line-number/highlighting conflict when splitting React elements
 - [07-01]: Small role indicators (dot + text) replace circular avatar badges for balanced message density
 - [07-01]: Part renderers in app/components/chat/parts/ -- one component per SDK Part type
@@ -144,7 +150,7 @@ Recent decisions affecting current work:
 | 11 | SDK Type Architecture | COMPLETE | 4/4 plans |
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
-| 7 | Chat + Terminal | In Progress | 3/4 plans |
+| 7 | Chat + Terminal | COMPLETE | 4/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -152,9 +158,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 07-03-PLAN.md -- Terminal integration done (Plans 01, 03, 04 complete; Plan 02 remaining)
-Resume file: .planning/phases/07-chat-terminal/ (remaining plan: 02)
+Stopped at: Completed 07-02-PLAN.md -- Phase 7 COMPLETE (all 4 plans done: 01, 02, 03, 04)
+Resume file: .planning/phases/08-sessions-diffs/ (next phase)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 7 Plan 03 (Terminal Integration) completed: PTY server functions, useTerminal hook, TerminalPanel, /terminal route. Fixed .validator() bug and useTheme.tsx extension.*
+*Updated: 2026-02-12 -- Phase 7 COMPLETE. Plan 02 (Step Clustering) executed: StepCluster component, groupPartsIntoClusters algorithm, streaming Part accumulation, dual-path streaming message construction.*
