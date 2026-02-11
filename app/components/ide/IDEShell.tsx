@@ -26,6 +26,7 @@ import { useLayoutStore, IDE_PANELS } from '@/stores/layout-store'
 import type { PanelId } from '@/shared/ide-types'
 import { FileTree } from '../file-tree/FileTree'
 import { FileTreeContextMenu } from '../file-tree/FileTreeContextMenu'
+import { EditorArea } from '../editor/EditorArea'
 
 // --- Placeholder panels (replaced in Plan 02/03) ---
 
@@ -46,20 +47,7 @@ function SidebarPanel() {
   )
 }
 
-function EditorPlaceholder() {
-  return (
-    <div className="flex h-full flex-col bg-background text-foreground">
-      <div className="flex h-10 items-center border-b border-border px-3">
-        <span className="text-xs text-muted-foreground">
-          No file open
-        </span>
-      </div>
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        Monaco Editor (Plan 03)
-      </div>
-    </div>
-  )
-}
+// EditorPlaceholder removed — replaced by EditorArea (Plan 03)
 
 function TerminalPlaceholder() {
   return (
@@ -203,7 +191,7 @@ export function IDEShell() {
               minSize={IDE_PANELS.editor.minSize}
               onResize={() => setActivePanel('editor')}
             >
-              <EditorPlaceholder />
+              <EditorArea />
             </Panel>
 
             {/* Vertical separator */}

@@ -53,6 +53,13 @@ function RootComponent() {
     ensureEngineFn().catch(() => {
       // Engine init failure is non-fatal — dashboard runs in degraded mode
     })
+
+    // Initialize Monaco web workers (browser-only, lazy)
+    if (typeof window !== 'undefined') {
+      import('../lib/monaco-workers').catch(() => {
+        // Monaco worker init failure is non-fatal
+      })
+    }
   }, [])
 
   return (
