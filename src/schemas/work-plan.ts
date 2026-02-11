@@ -12,9 +12,8 @@
  * - Plan-ahead visibility (future tasks shown before they start)
  * - Two-tier purge (scan-based + immediate for chain-breakers)
  *
- * Consumers: govern_plan tool, govern_task tool, govern_delegate tool,
- *            tool-gate hook (enforcement), system hook (injection),
- *            compaction hook (context preservation)
+ * Consumers: lifecycle verb tools (tasks_start, tasks_done, tasks_add),
+ *            dashboard server functions, persistence
  */
 
 import type { WorkStreamCategory, GovernanceLevel } from "./task.js"
@@ -221,7 +220,7 @@ export function createEmptyTaskGraph(): TaskGraph {
 /**
  * Bootstrap task graph for first-time init.
  * Creates an active WorkPlan + TaskNode so the executor can write
- * immediately without hitting the tool-gate block.
+ * immediately without hitting the governance block.
  */
 export function createBootstrapTaskGraph(
     coordinatorAgent: string = "idumb-supreme-coordinator",
@@ -249,7 +248,7 @@ export function createBootstrapTaskGraph(
                 status: "active",
                 delegatedBy: coordinatorAgent,
                 assignedTo: "idumb-executor",
-                allowedTools: ["write", "edit", "bash", "govern_task", "anchor"],
+                allowedTools: ["write", "edit", "bash", "tasks_start", "tasks_done", "tasks_check", "tasks_fail", "anchor"],
                 dependsOn: [],
                 temporalGate: null,
                 checkpoints: [],
@@ -277,14 +276,14 @@ export function isBashCheckpointWorthy(command: string): boolean {
 
 /**
  * Check if a tool invocation should create a checkpoint.
- * Only write, edit, and significant bash/govern_shell commands.
+ * Only write, edit, and significant bash commands.
  */
 export function shouldCreateCheckpoint(
     tool: string,
     args?: Record<string, unknown>,
 ): boolean {
     if (CHECKPOINT_TOOLS.has(tool)) return true
-    if ((tool === "bash" || tool === "govern_shell") && typeof args?.command === "string") {
+    if (tool === "bash" && typeof args?.command === "string") {
         return isBashCheckpointWorthy(args.command)
     }
     return false

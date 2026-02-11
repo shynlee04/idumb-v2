@@ -2,7 +2,7 @@
  * Coherent Knowledge — cross-session knowledge linking.
  *
  * When a task completes, a CoherentKnowledgeEntry is auto-created
- * by the tool-gate after hook. This links:
+ * by the lifecycle verb tools. This links:
  * - WHAT was done (action, code changes)
  * - WHO did it (agent, delegation depth)
  * - WHERE it happened (session, workflow, phase)

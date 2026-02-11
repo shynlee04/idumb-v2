@@ -388,7 +388,7 @@ assert(triggers2.length === 0, "archiveChainBreakers: no triggers for draft plan
 // Empty graph message
 const emptyFormat = formatTaskGraph(makeGraph([]))
 assert(emptyFormat.includes("No work plans"), "formatTaskGraph: empty graph has 'No work plans' message")
-assert(emptyFormat.includes("govern_plan"), "formatTaskGraph: empty graph has create hint")
+assert(emptyFormat.includes("tasks_add"), "formatTaskGraph: empty graph has create hint")
 
 // Shows plan names
 const tnF = makeTaskNode({ id: "tn-f1", workPlanId: "wp-fmt", name: "Format Task", status: "active", assignedTo: "executor" })

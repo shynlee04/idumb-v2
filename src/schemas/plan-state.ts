@@ -4,9 +4,8 @@
  * Plain TypeScript interfaces (DON'T #9: no Zod for internal state).
  *
  * Consumed by:
- * - system.ts hook (every turn — phase + next action in system prompt)
- * - compaction.ts hook (survives compaction — phase awareness preserved)
- * - govern_plan tool (phase transitions via `action=phase`)
+ * - lifecycle verb tools (tasks_start, tasks_done, tasks_add)
+ * - dashboard server functions (phase awareness)
  *
  * The plan state is a simplified projection: which phase, what status,
  * what's the next action. It does NOT duplicate the full plan — MASTER-PLAN.md

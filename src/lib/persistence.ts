@@ -1,7 +1,7 @@
 /**
  * StateManager — disk persistence for hook state.
  *
- * Wraps the in-memory Maps from tool-gate.ts and compaction.ts.
+ * Wraps the in-memory Maps for session and anchor state.
  * Adds load/save to `.idumb/brain/state.json`.
  *
  * Design:
@@ -12,7 +12,7 @@
  * - Never blocks hot path — save is async fire-and-forget
  * - Migration: reads old filenames (hook-state.json, task-graph.json, etc.) if new names don't exist
  *
- * Consumers: tool-gate.ts, compaction.ts, index.ts
+ * Consumers: dashboard server functions, CLI deploy, state-reader.ts
  */
 
 import { readFile, writeFile, mkdir } from "node:fs/promises"
@@ -168,7 +168,7 @@ async function readWithLegacyFallback(
 
 /**
  * Unified governance snapshot — eliminates 4x-duplicated call pattern.
- * Used by: tasks_check, system.ts hook, compaction.ts hook.
+ * Used by: tasks_check, dashboard server functions.
  */
 export interface GovernanceStatus {
   activeTask: { id: string; name: string } | null
@@ -444,7 +444,7 @@ export class StateManager {
     this.initialized = true
   }
 
-  // ─── Session State (tool-gate) ───────────────────────────────────
+  // ─── Session State ───────────────────────────────────
 
   getSession(sessionID: string): SessionState {
     if (this.useSqlite && this.sqliteAdapter) {
@@ -689,7 +689,7 @@ export class StateManager {
     this.scheduleProjectMapSave()
   }
 
-  // ─── Anchor State (compaction) ───────────────────────────────────
+  // ─── Anchor State ───────────────────────────────────
 
   addAnchor(sessionID: string, anchor: Anchor): void {
     if (this.useSqlite && this.sqliteAdapter) {

@@ -6,7 +6,7 @@
  * Responsibility: Define anchor structure, timestamp enforcement,
  * priority scoring, and budget-aware selection.
  * 
- * Consumers: compaction hook (scoring/selection), anchor tool (CRUD)
+ * Consumers: dashboard server functions (scoring/selection), anchor tool (CRUD)
  */
 
 /** Anchor types — what kind of context this preserves */

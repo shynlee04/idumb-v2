@@ -6,7 +6,7 @@
  *
  * This module reads the persisted JSON files directly from disk.
  * It's READ-ONLY — tools never modify governance state files.
- * (The govern_task tool handles all task mutations.)
+ * (The lifecycle verb tools handle all task mutations: tasks_start, tasks_done, tasks_add, tasks_check, tasks_fail.)
  *
  * Files read:
  * - .idumb/brain/tasks.json     → TaskStore (active task, epics, hierarchy)

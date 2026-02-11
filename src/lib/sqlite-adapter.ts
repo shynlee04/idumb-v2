@@ -2,7 +2,7 @@
  * SqliteAdapter -- StorageAdapter backed by better-sqlite3.
  *
  * WAL mode for concurrent reads (dashboard) + writes (hooks).
- * Synchronous reads (critical for tool-gate hot path).
+ * Synchronous reads for fast state lookups.
  * DB file: .idumb/brain/governance.db
  *
  * Tables: sessions, anchors, task_store (JSON blob), delegation_store (JSON blob), schema_version

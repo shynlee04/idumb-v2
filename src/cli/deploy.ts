@@ -217,7 +217,7 @@ export async function deployAll(options: DeployOptions): Promise<DeployResult> {
 
     // ─── Bootstrap Task Provisioning ─────────────────────────────
     // Pre-create an active epic+task so agents can write
-    // immediately without needing to call govern_task first.
+    // immediately without needing to call tasks_start first.
     const tasksPath = join(projectDir, ".idumb", "brain", "tasks.json")
     const bootstrapStore = createBootstrapStore()
     await writeIfNew(

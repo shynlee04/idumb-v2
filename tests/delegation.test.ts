@@ -321,7 +321,7 @@ function assert(name: string, condition: boolean): void {
         category: "development",
         createdBy: "idumb-supreme-coordinator",
     })
-    wp1.status = "active" // govern_plan sets this when plan is activated
+    wp1.status = "active" // tasks_start sets this when plan is activated
     const tn1 = createTaskNode({
         workPlanId: wp1.id,
         name: "Build login form",

@@ -4,8 +4,8 @@
  * Operates on TaskGraph from work-plan.ts.
  * Pure functions — no side effects, no disk I/O.
  *
- * Consumers: govern_plan tool, govern_task tool, tool-gate hook,
- *            system hook (injection), compaction hook (context)
+ * Consumers: lifecycle verb tools (tasks_start, tasks_done, tasks_add),
+ *            dashboard server functions, persistence
  */
 
 import type {
@@ -183,7 +183,7 @@ export function validateTaskCompletion(
                 `BLOCKED: Cannot complete without evidence.`,
                 `Expected output: ${node.expectedOutput}`,
                 `Checkpoints recorded: ${node.checkpoints.length}`,
-                `Provide evidence: govern_task action=complete target_id=${node.id} evidence="..."`,
+                `Provide evidence: tasks_done with evidence="..."`,
             ].join("\n"),
         }
     }
@@ -219,7 +219,7 @@ export function detectGraphBreaks(graph: TaskGraph): GraphWarning[] {
                 workPlanId: wp.id,
                 message: `WorkPlan "${wp.name}" is active but has no active tasks. ${
                     startable.length > 0
-                        ? `${startable.length} task(s) ready to start. Next: govern_task action=start target_id=${startable[0].id}`
+                        ? `${startable.length} task(s) ready to start. Next: tasks_start`
                         : planned.length > 0
                             ? `${planned.length} planned task(s) but all blocked by dependencies.`
                             : "No planned tasks remaining."
@@ -347,7 +347,7 @@ export function formatTaskGraph(graph: TaskGraph): string {
             "=== Task Graph ===",
             "",
             "No work plans created yet.",
-            "Start with: govern_plan action=create name='Your plan name' acceptance='criteria1,criteria2'",
+            "Start with: tasks_add name='Your plan name' acceptance='criteria1,criteria2'",
         ].join("\n")
     }
 
@@ -455,7 +455,7 @@ export function formatWorkPlanDetail(_graph: TaskGraph, wp: WorkPlan): string {
 export function buildGraphReminder(graph: TaskGraph): string {
     const chain = getActiveWorkChain(graph)
     if (!chain.workPlan) {
-        return "--- Governance Reminder ---\nNo active work plan. Create one with: govern_plan action=create name='...'"
+        return "--- Governance Reminder ---\nNo active work plan. Create one with: tasks_add name='...'"
     }
 
     const completedTasks = chain.workPlan.tasks.filter(t => t.status === "completed").length
@@ -475,9 +475,9 @@ export function buildGraphReminder(graph: TaskGraph): string {
     } else {
         const planned = chain.workPlan.tasks.filter(t => t.status === "planned")
         if (planned.length > 0) {
-            lines.push(`Next: Start task "${planned[0].name}" with: govern_task action=start target_id=${planned[0].id}`)
+            lines.push(`Next: Start task "${planned[0].name}" with: tasks_start`)
         } else {
-            lines.push("Next: Create a task with: govern_plan action=plan_tasks")
+            lines.push("Next: Create a task with: tasks_add")
         }
     }
 
