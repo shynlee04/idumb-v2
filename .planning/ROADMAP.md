@@ -46,7 +46,7 @@ Plans:
 **Total requirements:** 25 (FND-01..04, IDE-01..05, CHAT-01..06, DF-01..07, I18N-01..03)
 
 - [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
-- [ ] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout
+- [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout *(completed 2026-02-11)*
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
@@ -85,8 +85,8 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md — Resizable panel layout + Zustand IDE store + file server functions (wave 1)
-- [ ] 06-02-PLAN.md — File tree with react-arborist + Radix context menu + React Query hooks (wave 2)
-- [ ] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
+- [x] 06-02-PLAN.md — File tree with react-arborist + Radix context menu + React Query hooks (wave 2)
+- [x] 06-03-PLAN.md — Monaco editor with model-swapping + multi-tab + save + SSR safety (wave 3)
 
 ### Phase 7: Chat + Terminal
 **Goal**: Users interact with AI through rich rendered chat and run commands in integrated terminal
