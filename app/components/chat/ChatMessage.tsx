@@ -112,7 +112,7 @@ export function getTextContent(parts: Part[]): string {
  * - step-start/step-finish, snapshot, patch, agent, retry, compaction, subtask: Skip (internal)
  * - unknown: Render nothing (SDK may add new Part types)
  */
-function PartRenderer({ part }: { part: Part }) {
+export function PartRenderer({ part }: { part: Part }) {
   switch (part.type) {
     case "text":
       // TypeScript narrows to TextPart — access .text directly
