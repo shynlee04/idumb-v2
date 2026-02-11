@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 11.1 next — Build & Config Blockers (gap closure from milestone audit). Then 11.2, then Phase 7.
+**Current focus:** Phase 11.2 next — Contamination Purge. Then Phase 7.
 
 ## Current Position
 
-Phase: 11.1 of 10+ (Build & Config Blockers — gap closure)
+Phase: 11.2 of 10+ (Contamination Purge — gap closure)
 Plan: 0 of 1 in current phase
-Status: Not started — gap closure phases 11.1 + 11.2 added from v2.0-MILESTONE-AUDIT.md
-Last activity: 2026-02-11 — milestone audit completed, gap phases created
+Status: Phase 11.1 complete — advancing to 11.2
+Last activity: 2026-02-12 — Phase 11.1 Plan 01 executed (7 gaps closed)
 
-Progress: [██████░░░░] 60% (3/5 phases before Phase 7)
+Progress: [███████░░░] 70% (4/5 phases before Phase 7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12 (Phases 1 + 1A from previous milestone)
+- Total plans completed: 13 (Phases 1 + 1A from previous milestone + 11.1)
 - Average duration: —
 - Total execution time: —
 
@@ -42,6 +42,7 @@ Progress: [██████░░░░] 60% (3/5 phases before Phase 7)
 | 11.02 (AGENTS.md Governance) | 3 tasks | 3 min | ~1 min |
 | 11.03 (SDK Boundary Validators) | 4 tasks | 17 min | ~4 min |
 | 11.04 (Consumer Migration) | 2 tasks | 13 min | ~7 min |
+| 11.1-01 (Build/Config Blockers) | 3 tasks | 11 min | ~4 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -54,6 +55,8 @@ Progress: [██████░░░░] 60% (3/5 phases before Phase 7)
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [11.1-01]: GOV-3 messages assertion skipped — TanStack Start rejects SDK Message type's `unknown` index signatures in explicit return types
+- [11.1-01]: manualChunks removed from vite.config.ts — Monaco code splitting handled by lazy import, manualChunks conflicted with SSR externals
 - [06-04]: Zustand persist onFinishHydration + hasHydrated dual-path for reliable panel restore
 - [11-01]: 17 SDK types re-exported — ToolState and Error unions are remaining gaps for type-safe narrowing
 - [11-01]: SSE boundary (JSON.parse → any) is highest-priority type safety issue for Plans 11-03/04
@@ -122,7 +125,7 @@ Recent decisions affecting current work:
 | 5 | Framework Foundation | COMPLETE | 6/6 plans |
 | 6 | IDE Shell | COMPLETE | 4/4 plans |
 | 11 | SDK Type Architecture | COMPLETE | 4/4 plans |
-| 11.1 | Build & Config Blockers | NOT STARTED | 0/1 plans |
+| 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | NOT STARTED | 0/1 plans |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
@@ -131,10 +134,10 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-11
-Stopped at: Milestone audit completed, gap closure phases 11.1 + 11.2 created
-Resume file: .planning/phases/11.1-build-config-blockers/ (next phase)
+Last session: 2026-02-12
+Stopped at: Completed 11.1-01-PLAN.md — Phase 11.1 done, advancing to 11.2
+Resume file: .planning/phases/11.2-contamination-purge/ (next phase)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Gap closure phases 11.1 (build/config blockers) and 11.2 (contamination purge) added from v2.0-MILESTONE-AUDIT.md. Phase 7 blocked until both complete.*
+*Updated: 2026-02-12 — Phase 11.1 (Build & Config Blockers) completed: 7 gaps closed (GAP-1, GAP-2, GOV-1, GOV-2, GOV-3 partial, DRIFT-1, DRIFT-2, CONFIG-1). Phase 11.2 next.*
