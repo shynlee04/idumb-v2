@@ -15,12 +15,13 @@
  * Panels are collapsible via keyboard shortcuts or UI controls.
  */
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import {
   Group,
   Panel,
   Separator,
   type PanelImperativeHandle,
+  type PanelSize,
 } from 'react-resizable-panels'
 import { useLayoutStore, IDE_PANELS } from '@/stores/layout-store'
 import type { PanelId } from '@/shared/ide-types'
@@ -101,11 +102,92 @@ export function IDEShell() {
     collapsed,
     setPanelSizes,
     setActivePanel,
+    togglePanel,
   } = useLayoutStore()
 
-  // Refs for imperative collapse/expand
+  // Refs for imperative collapse/expand/resize
   const sidebarRef = useRef<PanelImperativeHandle>(null)
+  const editorRef = useRef<PanelImperativeHandle>(null)
   const terminalRef = useRef<PanelImperativeHandle>(null)
+
+  // --- Hydration: restore persisted sizes + collapse state on mount ---
+  useEffect(() => {
+    const unsub = useLayoutStore.persist.onFinishHydration((state) => {
+      // Restore sizes via imperative resize (percentage values)
+      sidebarRef.current?.resize(state.panelSizes.sidebar)
+      editorRef.current?.resize(state.panelSizes.editor)
+      terminalRef.current?.resize(state.panelSizes.terminal)
+
+      // Restore collapsed panels
+      if (state.collapsed.includes('sidebar')) {
+        sidebarRef.current?.collapse()
+      }
+      if (state.collapsed.includes('terminal')) {
+        terminalRef.current?.collapse()
+      }
+    })
+
+    // If hydration already completed (sync localStorage), apply immediately
+    if (useLayoutStore.persist.hasHydrated()) {
+      const state = useLayoutStore.getState()
+      sidebarRef.current?.resize(state.panelSizes.sidebar)
+      editorRef.current?.resize(state.panelSizes.editor)
+      terminalRef.current?.resize(state.panelSizes.terminal)
+
+      if (state.collapsed.includes('sidebar')) {
+        sidebarRef.current?.collapse()
+      }
+      if (state.collapsed.includes('terminal')) {
+        terminalRef.current?.collapse()
+      }
+    }
+
+    return unsub
+  }, [])
+
+  // --- Keyboard shortcut: Cmd+B toggles sidebar ---
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault()
+        const panel = sidebarRef.current
+        if (!panel) return
+        if (panel.isCollapsed()) {
+          panel.expand()
+        } else {
+          panel.collapse()
+        }
+        togglePanel('sidebar')
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [togglePanel])
+
+  // --- Collapse state sync: detect collapse/expand from drag interactions ---
+  const handleSidebarResize = useCallback(
+    (panelSize: PanelSize) => {
+      setActivePanel('sidebar')
+      const isNowCollapsed = panelSize.asPercentage <= 0.1
+      const wasCollapsed = collapsed.includes('sidebar')
+      if (isNowCollapsed !== wasCollapsed) {
+        togglePanel('sidebar')
+      }
+    },
+    [collapsed, togglePanel, setActivePanel],
+  )
+
+  const handleTerminalResize = useCallback(
+    (panelSize: PanelSize) => {
+      setActivePanel('terminal')
+      const isNowCollapsed = panelSize.asPercentage <= 0.1
+      const wasCollapsed = collapsed.includes('terminal')
+      if (isNowCollapsed !== wasCollapsed) {
+        togglePanel('terminal')
+      }
+    },
+    [collapsed, togglePanel, setActivePanel],
+  )
 
   // Sync horizontal group layout changes to store
   const handleHorizontalLayoutChange = useCallback(
@@ -163,7 +245,7 @@ export function IDEShell() {
           maxSize={IDE_PANELS.sidebar.maxSize}
           collapsible={IDE_PANELS.sidebar.collapsible}
           collapsedSize={0}
-          onResize={() => setActivePanel('sidebar')}
+          onResize={handleSidebarResize}
         >
           <SidebarPanel />
         </Panel>
@@ -187,6 +269,7 @@ export function IDEShell() {
             {/* Editor panel */}
             <Panel
               id="editor"
+              panelRef={editorRef}
               defaultSize={IDE_PANELS.editor.defaultSize}
               minSize={IDE_PANELS.editor.minSize}
               onResize={() => setActivePanel('editor')}
@@ -208,7 +291,7 @@ export function IDEShell() {
               maxSize={IDE_PANELS.terminal.maxSize}
               collapsible={IDE_PANELS.terminal.collapsible}
               collapsedSize={0}
-              onResize={() => setActivePanel('terminal')}
+              onResize={handleTerminalResize}
             >
               <TerminalPlaceholder />
             </Panel>
