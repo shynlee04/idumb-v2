@@ -47,7 +47,9 @@ Plans:
 
 - [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
 - [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout + gap closure *(completed 2026-02-11)*
-- [ ] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration
+- [x] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration *(completed 2026-02-11)*
+- [ ] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(gap closure)*
+- [ ] **Phase 11.2: Contamination & Dead Code Purge** — Remove plugin-era docs, dead code, stale references *(gap closure)*
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
@@ -103,10 +105,43 @@ Plans:
 **Plans**: 4 plans (archived: `_archived-2026-02-11/11-01-PLAN.md`, `_archived-2026-02-11/11-02-PLAN.md`)
 
 Plans:
-- [ ] 11-01-PLAN.md — SDK type contract registry + full audit (wave 1, research)
-- [ ] 11-02-PLAN.md — AGENTS.md type governance + false alarm registry (wave 1, docs)
-- [ ] 11-03-PLAN.md — Zod boundary schemas + server function guards (wave 2, code)
-- [ ] 11-04-PLAN.md — Consumer migration with type guards (wave 3, code)
+- [x] 11-01-PLAN.md — SDK type contract registry + full audit (wave 1, research)
+- [x] 11-02-PLAN.md — AGENTS.md type governance + false alarm registry (wave 1, docs)
+- [x] 11-03-PLAN.md — Zod boundary schemas + server function guards (wave 2, code)
+- [x] 11-04-PLAN.md — Consumer migration with type guards (wave 3, code)
+
+### Phase 11.1: Build & Config Blockers
+**Goal**: Unblock Phase 7 — production build works, typecheck passes, type governance clean, config accurate
+**Depends on**: Phase 11 (audit revealed gaps in completed phases)
+**Requirements**: FND-02 (type governance hardening)
+**Gap Closure**: Closes GAP-1, GAP-2, GOV-1, DRIFT-1, DRIFT-2, CONFIG-1, CONFIG-2 from v2.0-MILESTONE-AUDIT.md
+**Success Criteria** (what must be TRUE):
+  1. `npm run build:app` succeeds (both client and SSR builds)
+  2. `npm run typecheck:app` passes with zero errors
+  3. All `app/` SDK type imports go through `engine-types.ts` — zero direct `@opencode-ai/sdk` imports except gateway and sdk-client.server.ts
+  4. No dead path aliases in tsconfig.app.json or vite.config.ts
+  5. `package.json` entry point valid, `package-lock.json` has no phantom `@opencode-ai/plugin`
+  6. CLAUDE.md test baseline matches actual (`npm test` output)
+**Plans**: 1 plan (all fixes are small, targeted, same-session)
+
+Plans:
+- [ ] 11.1-01-PLAN.md — Fix 7 build/config/type blockers
+
+### Phase 11.2: Contamination & Dead Code Purge
+**Goal**: Remove all plugin-era context pollution — no stale docs misleading agents, no dead code inflating LOC
+**Depends on**: Phase 11.1 (config fixes first, then cleanup)
+**Requirements**: None (documentation + dead code — no functional requirements)
+**Gap Closure**: Closes DOC-1..DOC-3, CODE-1..CODE-2 from contamination audit
+**Success Criteria** (what must be TRUE):
+  1. No root-level CLAUDE-*.md files exist except CLAUDE.md (the active project instructions)
+  2. `.planning/codebase/` files archived to `_archived-2026-02-11/` or deleted
+  3. `brain-indexer.ts` deleted (383 LOC dead code, imported by nobody)
+  4. `persistence.ts` header comments reference current consumers (not archived tool-gate.ts, compaction.ts)
+  5. Stale root .md files (GAP-ANALYSIS, TRIAL-1-RESULTS, fix-delegation-system, conversation, n-3-2-1e, analysis-agent-system, TEST-CASES) archived or deleted
+**Plans**: 1 plan (bulk archive/delete operations)
+
+Plans:
+- [ ] 11.2-01-PLAN.md — Archive stale docs + delete dead code
 
 ### Phase 7: Chat + Terminal
 **Goal**: Users interact with AI through rich rendered chat and run commands in integrated terminal
@@ -211,6 +246,8 @@ Plans:
 | Constraint | Satisfied |
 |-----------|-----------|
 | Phase 11 SDK types + Zod validation must exist before Phase 7 builds on them | Phase 11 → Phase 7 |
+| Phase 11.1 build/config blockers must be fixed before Phase 7 | Phase 11.1 → Phase 7 |
+| Phase 11.2 contamination cleanup before Phase 7 (prevent context poisoning) | Phase 11.2 → Phase 7 |
 | DF-06 depends on CHAT-06 (same or later phase) | Phase 8 |
 | DF-07 depends on DF-01 (same or later phase) | DF-01 Phase 8, DF-07 Phase 9 |
 | IDE-04 diff needs Monaco from IDE-01 | IDE-01 Phase 6, IDE-04 Phase 8 |
@@ -219,7 +256,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 5 -> 6 -> 11 -> 7 -> 8 -> 9 -> 10
+**Execution Order:** 5 -> 6 -> 11 -> 11.1 -> 11.2 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -228,6 +265,8 @@ Plans:
 | 5. Framework Foundation | v2.0 | 6/6 | Complete | 2026-02-11 |
 | 6. IDE Shell | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
+| 11.1. Build & Config Blockers | v2.0 | 0/1 | Not started | -- |
+| 11.2. Contamination Purge | v2.0 | 0/1 | Not started | -- |
 | 7. Chat + Terminal | v2.0 | 0/4 | Not started | -- |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
@@ -235,4 +274,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-11 -- Phase 11 complete: SDK Type Architecture + Boundary Validation (4/4 plans). End-to-end type chain established.*
+*Updated: 2026-02-11 -- Gap closure phases 11.1, 11.2 added from v2.0-MILESTONE-AUDIT.md. Phase 7 blocked until gap phases complete.*

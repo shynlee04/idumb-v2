@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 11 COMPLETE — SDK Type Architecture + Boundary Validation. Ready for Phase 7.
+**Current focus:** Phase 11.1 next — Build & Config Blockers (gap closure from milestone audit). Then 11.2, then Phase 7.
 
 ## Current Position
 
-Phase: 11 of 10 (SDK Type Architecture)
-Plan: 4 of 4 in current phase (11-01 ✓, 11-02 ✓, 11-03 ✓, 11-04 ✓)
-Status: Phase 11 COMPLETE — all 4 plans done, end-to-end SDK type chain verified
-Last activity: 2026-02-11 — 11-04 consumer migration committed
+Phase: 11.1 of 10+ (Build & Config Blockers — gap closure)
+Plan: 0 of 1 in current phase
+Status: Not started — gap closure phases 11.1 + 11.2 added from v2.0-MILESTONE-AUDIT.md
+Last activity: 2026-02-11 — milestone audit completed, gap phases created
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 60% (3/5 phases before Phase 7)
 
 ## Performance Metrics
 
@@ -119,9 +119,11 @@ Recent decisions affecting current work:
 
 | # | Phase | Status | Progress |
 |---|-------|--------|----------|
-| 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
-| 6 | IDE Shell | COMPLETE | 4/4 plans ✓ |
-| 11 | SDK Type Architecture | COMPLETE | 4/4 plans ✓ (11-01, 11-02, 11-03, 11-04) |
+| 5 | Framework Foundation | COMPLETE | 6/6 plans |
+| 6 | IDE Shell | COMPLETE | 4/4 plans |
+| 11 | SDK Type Architecture | COMPLETE | 4/4 plans |
+| 11.1 | Build & Config Blockers | NOT STARTED | 0/1 plans |
+| 11.2 | Contamination Purge | NOT STARTED | 0/1 plans |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -130,9 +132,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 11-04-PLAN.md — Phase 11 COMPLETE (SDK Consumer Migration)
-Resume file: .planning/phases/07-chat-terminal/ (next phase)
+Stopped at: Milestone audit completed, gap closure phases 11.1 + 11.2 created
+Resume file: .planning/phases/11.1-build-config-blockers/ (next phase)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Phase 11 complete: all 4 plans done. End-to-end SDK type chain: contracts -> governance -> Zod boundaries -> consumer migration.*
+*Updated: 2026-02-11 — Gap closure phases 11.1 (build/config blockers) and 11.2 (contamination purge) added from v2.0-MILESTONE-AUDIT.md. Phase 7 blocked until both complete.*
