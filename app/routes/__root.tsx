@@ -20,7 +20,6 @@ import { useEffect, type ReactNode } from "react"
 import { ensureEngineFn } from "../server/engine"
 import { EventStreamProvider } from "../hooks/useEventStream"
 
-// @ts-expect-error — Vite ?url import, resolved at build time
 import appCss from "@/styles/app.css?url"
 
 const queryClient = new QueryClient({
