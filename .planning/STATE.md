@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 11 of 10 (SDK Type Architecture)
-Plan: 2 of 4 in current phase (11-01 ✓, 11-02 ✓)
-Status: Plan 11-01 complete — SDK type contract registry (11-CONTRACTS.md, 862 lines)
-Last activity: 2026-02-11 — 11-01 contract registry committed
+Plan: 3 of 4 in current phase (11-01 ✓, 11-02 ✓, 11-03 ✓)
+Status: Plan 11-03 complete — Zod boundary schemas + server function validation + typed SSE parsing
+Last activity: 2026-02-11 — 11-03 SDK validators committed
 
-Progress: [██████░░░░] 25%
+Progress: [███████░░░] 75%
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Progress: [██████░░░░] 25%
 | 6.04 (Gap Closure) | 2 tasks | 7 min | ~4 min |
 | 11.01 (Contract Registry) | 2 tasks | 8 min | ~4 min |
 | 11.02 (AGENTS.md Governance) | 3 tasks | 3 min | ~1 min |
+| 11.03 (SDK Boundary Validators) | 4 tasks | 17 min | ~4 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -58,6 +59,10 @@ Recent decisions affecting current work:
 - [11-01]: 10 SDK gotchas documented (epoch timestamps, empty parts, anonymous subtask type, etc.)
 - [11-02]: SDK types are LAW (never redefine), app types are INTERNAL (freely modifiable) — two-tier taxonomy
 - [11-02]: All SDK imports centralized through engine-types.ts — single upgrade point
+- [11-03]: Generic validator signatures (T->T) preserve TanStack Start type flow
+- [11-03]: Graceful degradation: validators log warnings but never throw
+- [11-03]: 12-member Part union matches SDK contract (not plan's 11)
+- [11-03]: parseSSEEvent replaces raw JSON.parse for typed event parsing
 - [11-02]: 4 known false alarms documented with workarounds (JsonValue, implicit any, Part.content, Part union)
 - [06-04]: PanelSize.asPercentage <= 0.1 threshold for drag-based collapse detection
 - [06-04]: Code2 lucide icon for IDE Shell navigation link
@@ -111,7 +116,7 @@ Recent decisions affecting current work:
 |---|-------|--------|----------|
 | 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
 | 6 | IDE Shell | COMPLETE | 4/4 plans ✓ |
-| 11 | SDK Type Architecture | In Progress | 2/4 plans ✓ (11-01, 11-02) |
+| 11 | SDK Type Architecture | In Progress | 3/4 plans ✓ (11-01, 11-02, 11-03) |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -120,9 +125,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 11-01-PLAN.md — SDK Type Contract Registry (11-CONTRACTS.md)
-Resume file: .planning/phases/11-sdk-type-realignment/11-03-PLAN.md
+Stopped at: Completed 11-03-PLAN.md — SDK Boundary Validators
+Resume file: .planning/phases/11-sdk-type-realignment/11-04-PLAN.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Plan 11-01 complete: 862-line SDK type contract registry with consumer cross-reference, gap analysis, and 10 gotchas. 2/4 plans done.*
+*Updated: 2026-02-11 — Plan 11-03 complete: Zod boundary schemas (347 LOC), server function validation, typed SSE parsing. 3/4 plans done.*
