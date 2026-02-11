@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 7 in progress. Plan 04 complete.
+**Current focus:** Phase 7 in progress. Plans 01, 03, 04 complete.
 
 ## Current Position
 
-Phase: 7 of 10+ (Chat + Terminal — in progress)
-Plan: 4 of 4 in current phase (plan 04 complete)
-Status: Phase 7 Plan 04 complete — settings page, model picker, theme system done
-Last activity: 2026-02-12 — Phase 7 Plan 04 executed (settings tabs, model picker, theme toggle)
+Phase: 7 of 10+ (Chat + Terminal -- in progress)
+Plan: 3 of 4 in current phase (plans 01, 03, 04 complete)
+Status: Phase 7 Plan 03 complete -- terminal integration done
+Last activity: 2026-02-12 -- Phase 7 Plan 03 executed (PTY server functions, useTerminal hook, TerminalPanel, /terminal route)
 
-Progress: [████████░░] 82% (5/5 gap-closure + 07-04 done)
+Progress: [████████░░] 84% (5/5 gap-closure + 07-01 + 07-03 + 07-04 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-04)
+- Total plans completed: 16 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 + 07-03 + 07-04)
 - Average duration: —
 - Total execution time: —
 
@@ -45,6 +45,7 @@ Progress: [████████░░] 82% (5/5 gap-closure + 07-04 done)
 | 11.1-01 (Build/Config Blockers) | 3 tasks | 11 min | ~4 min |
 | 11.2-01 (Contamination Purge) | 2 tasks | 8 min | ~4 min |
 | 7.04 (Settings + Model Picker) | 2 tasks | 7 min | ~4 min |
+| 7.03 (Terminal Integration) | 2 tasks | 10 min | ~5 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -58,6 +59,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - [07-04]: Custom dropdown for ModelPicker (not native select) — better styling and provider group headers
+- [07-03]: .validator() fixed to .inputValidator() in pty.server.ts — TanStack Start v1.159.5 compat
+- [07-03]: Dynamic import for xterm.js via React.lazy — SSR-safe without typeof window guard
+- [07-03]: Catppuccin Mocha ANSI colors for terminal theme — matches dark mode aesthetic
+- [07-03]: ResizeObserver + 100ms debounce for terminal resize sync — prevents SDK flooding
 - [07-04]: SettingsExport in GeneralTab (not separate tab) — keeps tab count at 3
 - [07-04]: Default model stored as JSON string in SQLite settings under key "default-model"
 - [07-04]: useProviders re-exported from useEngine via useSettings for convenience imports
@@ -135,7 +140,7 @@ Recent decisions affecting current work:
 | 11 | SDK Type Architecture | COMPLETE | 4/4 plans |
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
-| 7 | Chat + Terminal | In Progress | 1/4 plans |
+| 7 | Chat + Terminal | In Progress | 3/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -143,9 +148,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 07-04-PLAN.md — Settings, model picker, theme done
-Resume file: .planning/phases/07-chat-terminal/ (remaining plans: 01, 02, 03)
+Stopped at: Completed 07-03-PLAN.md -- Terminal integration done (Plans 01, 03, 04 complete; Plan 02 remaining)
+Resume file: .planning/phases/07-chat-terminal/ (remaining plan: 02)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 — Phase 7 Plan 04 (Settings + Model Picker) completed: 5 components created (GeneralTab, ProvidersTab, AppearanceTab, SettingsExport, ModelPicker), model selection wired into chat.*
+*Updated: 2026-02-12 -- Phase 7 Plan 03 (Terminal Integration) completed: PTY server functions, useTerminal hook, TerminalPanel, /terminal route. Fixed .validator() bug and useTheme.tsx extension.*
