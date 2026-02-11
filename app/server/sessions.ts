@@ -15,6 +15,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, sdkQuery, unwrapSdkResult } from "./sdk-client.server"
 import { SessionIdSchema, CreateSessionSchema } from "./validators"
+import type { Message, SessionStatus } from "../shared/engine-types"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
 
@@ -82,11 +83,13 @@ export const deleteSessionFn = createServerFn({ method: "POST" })
 /** Get messages for a session.
  * Note: SDK Message types use `unknown` in index signatures which doesn't
  * satisfy TanStack Start's serialization constraint (`{}`). We cast through
- * JSON to produce a plain serializable type.
+ * JSON to produce a plain serializable type. Return type left inferred so
+ * TanStack can apply its own serialization-safe variant.
+ * Semantic return: Message[] (from @opencode-ai/sdk)
  */
 export const getSessionMessagesFn = createServerFn({ method: "GET" })
   .inputValidator(SessionIdSchema)
-  .handler(async ({ data }): Promise<Array<Record<string, NonNullable<unknown>>>> => {
+  .handler(async ({ data }) => {
     try {
       const projectDir = getProjectDir()
       const result = await getClient().session.messages({
@@ -95,6 +98,7 @@ export const getSessionMessagesFn = createServerFn({ method: "GET" })
       })
       const messages = unwrapSdkResult(result)
       // JSON roundtrip strips `unknown` index-sig incompatibility
+      // Semantic type: Message[] (SDK) — cast omitted for TanStack Start serialization compat
       return JSON.parse(JSON.stringify(messages))
     } catch (err) {
       throw new Error(`Failed to get messages: ${err instanceof Error ? err.message : String(err)}`)
@@ -118,10 +122,13 @@ export const abortSessionFn = createServerFn({ method: "POST" })
     }
   })
 
-/** Get session status map, return status for specific session. */
+/** Get session status map, return status for specific session.
+ * Semantic return: SessionStatus (from @opencode-ai/sdk)
+ * — discriminated union: {type:"idle"} | {type:"busy"} | {type:"retry"; ...}
+ */
 export const getSessionStatusFn = createServerFn({ method: "GET" })
   .inputValidator(SessionIdSchema)
-  .handler(async ({ data }): Promise<NonNullable<unknown>> => {
+  .handler(async ({ data }) => {
     try {
       const projectDir = getProjectDir()
       const result = await getClient().session.status({
@@ -132,6 +139,7 @@ export const getSessionStatusFn = createServerFn({ method: "GET" })
       if (!status) {
         throw new Error("Session status not found")
       }
+      // Semantic type: SessionStatus — cast omitted for TanStack Start serialization compat
       return JSON.parse(JSON.stringify(status))
     } catch (err) {
       throw new Error(`Failed to get session status: ${err instanceof Error ? err.message : String(err)}`)

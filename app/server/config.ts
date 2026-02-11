@@ -7,11 +7,14 @@
  * - GET /api/agents     → getAgentsFn
  * - GET /api/config     → getConfigFn
  * - GET /api/app        → getAppInfoFn
+ *
+ * SDK types imported directly from @opencode-ai/sdk — no Record<string, unknown> casts.
  */
 
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, unwrapSdkResult } from "./sdk-client.server"
 import type { ProviderInfo, AgentInfo, AppInfo } from "../shared/engine-types"
+import type { Provider, Agent, Path, VcsInfo } from "@opencode-ai/sdk"
 
 // ─── Server Functions ─────────────────────────────────────────────────────
 
@@ -26,21 +29,21 @@ export const getProvidersFn = createServerFn({ method: "GET" })
   .handler(async () => {
     try {
       const result = await getClient().config.providers()
-      const providers = unwrapSdkResult(result)
+      // SDK returns { providers: Provider[], default: Record<string, string> }
+      const response = unwrapSdkResult(result) as { providers: Provider[]; default: Record<string, string> }
 
-      // Normalize into ProviderInfo[] shape
-      const normalized: ProviderInfo[] = Array.isArray(providers)
-        ? providers.map((p: Record<string, unknown>) => ({
-            id: String(p.id ?? ""),
-            name: String(p.name ?? p.id ?? ""),
-            models: Array.isArray(p.models)
-              ? (p.models as Record<string, unknown>[]).map((m) => ({
-                  id: String(m.id ?? ""),
-                  name: String(m.name ?? m.id ?? ""),
-                }))
-              : [],
-          }))
-        : []
+      // Extract providers array from response object
+      const providerList = response?.providers ?? []
+
+      // Map SDK Provider to our ProviderInfo (models is a record, not array)
+      const normalized: ProviderInfo[] = providerList.map((p: Provider) => ({
+        id: p.id,
+        name: p.name || p.id,
+        models: Object.entries(p.models ?? {}).map(([modelId, model]) => ({
+          id: model.id || modelId,
+          name: model.name || model.id || modelId,
+        })),
+      }))
 
       return normalized
     } catch (err) {
@@ -53,13 +56,14 @@ export const getAgentsFn = createServerFn({ method: "GET" })
   .handler(async () => {
     try {
       const result = await getClient().app.agents()
-      const agents = unwrapSdkResult(result)
+      // SDK returns Agent[] directly (Agent has name but no id field)
+      const agents = unwrapSdkResult(result) as Agent[]
 
       const normalized: AgentInfo[] = Array.isArray(agents)
-        ? agents.map((a: Record<string, unknown>) => ({
-            id: String(a.id ?? ""),
-            name: String(a.name ?? a.id ?? ""),
-            ...(a.description ? { description: String(a.description) } : {}),
+        ? agents.map((a: Agent) => ({
+            id: a.name, // Agent has no id — name IS the identifier
+            name: a.name,
+            ...(a.description ? { description: a.description } : {}),
           }))
         : []
 
@@ -86,22 +90,25 @@ export const getAppInfoFn = createServerFn({ method: "GET" })
   .handler(async () => {
     try {
       const pathResult = await getClient().path.get()
-      const pathInfo = unwrapSdkResult(pathResult) as Record<string, NonNullable<unknown>> | undefined
+      // SDK returns Path = { state, config, worktree, directory }
+      const pathInfo = unwrapSdkResult(pathResult) as Path | undefined
 
       let gitInfo: Record<string, NonNullable<unknown>> | undefined
       try {
         const vcsResult = await getClient().vcs.get()
-        const raw = unwrapSdkResult(vcsResult) as Record<string, unknown> | undefined
-        if (raw) gitInfo = JSON.parse(JSON.stringify(raw))
+        // SDK returns VcsInfo = { branch: string }
+        const vcsData = unwrapSdkResult(vcsResult) as VcsInfo | undefined
+        if (vcsData) gitInfo = JSON.parse(JSON.stringify(vcsData))
       } catch {
         // vcs may not be available — graceful degradation
       }
 
+      // Map SDK Path to our AppInfo shape
       return {
         path: {
-          cwd: String(pathInfo?.cwd ?? ""),
-          config: String(pathInfo?.config ?? ""),
-          data: String(pathInfo?.data ?? ""),
+          cwd: pathInfo?.directory ?? "",     // SDK: directory, AppInfo: cwd
+          config: pathInfo?.config ?? "",
+          data: pathInfo?.state ?? "",        // SDK: state, AppInfo: data
         },
         ...(gitInfo ? { git: gitInfo } : {}),
       }

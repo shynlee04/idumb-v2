@@ -8,15 +8,22 @@
 
 // Re-export all existing engine types for backward compatibility
 export type {
+  // SDK types (re-exported from @opencode-ai/sdk via engine-types)
+  Session,
+  SessionStatus,
+  Message,
+  UserMessage,
+  AssistantMessage,
+  Part,
+  TextPart,
+  ToolPart,
+  FilePart,
+  ReasoningPart,
+  // App-specific types
   ModelInfo,
   ProviderInfo,
   AgentInfo,
   AppInfo,
-  Session,
-  Message,
-  Part,
-  Event,
-  SessionStatus,
   EngineStatus,
   DashboardConfig,
   PortConfig,
