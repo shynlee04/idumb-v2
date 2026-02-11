@@ -34,3 +34,39 @@ export const PromptRequestSchema = z.object({
   modelID: z.string().optional(),
   providerID: z.string().optional(),
 })
+
+// ─── File Server Function Validators ───────────────────────────────────────
+
+/** Validate directory listing input. */
+export const DirPathSchema = z.object({
+  dirPath: z.string().min(1, "Directory path is required"),
+})
+
+/** Validate file read input. */
+export const FilePathSchema = z.object({
+  filePath: z.string().min(1, "File path is required"),
+})
+
+/** Validate file write input. */
+export const WriteFileSchema = z.object({
+  filePath: z.string().min(1, "File path is required"),
+  content: z.string(),
+})
+
+/** Validate file/folder creation input. */
+export const CreateFileSchema = z.object({
+  parentPath: z.string().min(1, "Parent path is required"),
+  name: z.string().min(1, "Name is required"),
+  type: z.enum(["file", "folder"]),
+})
+
+/** Validate file/folder deletion input. */
+export const DeleteFileSchema = z.object({
+  targetPath: z.string().min(1, "Target path is required"),
+})
+
+/** Validate file/folder rename input. */
+export const RenameFileSchema = z.object({
+  oldPath: z.string().min(1, "Old path is required"),
+  newName: z.string().min(1, "New name is required"),
+})

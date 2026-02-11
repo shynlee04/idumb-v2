@@ -73,3 +73,34 @@ export interface IDELayout {
   /** Currently focused panel */
   activePanel: PanelId
 }
+
+// Phase 6 additions — File tree + tab types
+
+/** A node in the file tree (file or directory) */
+export interface FileNode {
+  /** Unique ID — the full relative path (e.g., "src/lib/utils.ts") */
+  id: string
+  /** Display name (e.g., "utils.ts") */
+  name: string
+  /** True if directory */
+  isFolder: boolean
+  /** Children — null means not loaded yet (lazy), [] means empty dir */
+  children?: FileNode[] | null
+}
+
+/** An open file tab in the editor */
+export interface Tab {
+  /** File path (unique key) */
+  path: string
+  /** Display name */
+  name: string
+  /** Has unsaved changes */
+  isDirty: boolean
+}
+
+/** Context menu target info */
+export interface ContextTarget {
+  path: string
+  name: string
+  isFolder: boolean
+}
