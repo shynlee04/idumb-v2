@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 11.2 complete. Phase 7 next.
+**Current focus:** Phase 7 in progress. Plan 04 complete.
 
 ## Current Position
 
-Phase: 11.2 of 10+ (Contamination Purge — complete)
-Plan: 1 of 1 in current phase
-Status: Phase 11.2 complete — advancing to Phase 7
-Last activity: 2026-02-12 — Phase 11.2 Plan 01 executed (22 docs archived, 14 source files purged)
+Phase: 7 of 10+ (Chat + Terminal — in progress)
+Plan: 4 of 4 in current phase (plan 04 complete)
+Status: Phase 7 Plan 04 complete — settings page, model picker, theme system done
+Last activity: 2026-02-12 — Phase 7 Plan 04 executed (settings tabs, model picker, theme toggle)
 
-Progress: [████████░░] 80% (5/5 gap-closure phases done, Phase 7 next)
+Progress: [████████░░] 82% (5/5 gap-closure + 07-04 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14 (Phases 1 + 1A from previous milestone + 11.1 + 11.2)
+- Total plans completed: 15 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-04)
 - Average duration: —
 - Total execution time: —
 
@@ -44,6 +44,7 @@ Progress: [████████░░] 80% (5/5 gap-closure phases done, Pha
 | 11.04 (Consumer Migration) | 2 tasks | 13 min | ~7 min |
 | 11.1-01 (Build/Config Blockers) | 3 tasks | 11 min | ~4 min |
 | 11.2-01 (Contamination Purge) | 2 tasks | 8 min | ~4 min |
+| 7.04 (Settings + Model Picker) | 2 tasks | 7 min | ~4 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -56,6 +57,10 @@ Progress: [████████░░] 80% (5/5 gap-closure phases done, Pha
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [07-04]: Custom dropdown for ModelPicker (not native select) — better styling and provider group headers
+- [07-04]: SettingsExport in GeneralTab (not separate tab) — keeps tab count at 3
+- [07-04]: Default model stored as JSON string in SQLite settings under key "default-model"
+- [07-04]: useProviders re-exported from useEngine via useSettings for convenience imports
 - [11.2-01]: Excluded templates.ts from purge (20 stale refs remain) — dedicated rewrite plan needed for 1464 LOC file
 - [11.2-01]: Lifecycle verb names used directly in display strings (tasks_start, tasks_done, tasks_add, tasks_fail)
 - [11.1-01]: GOV-3 messages assertion skipped — TanStack Start rejects SDK Message type's `unknown` index signatures in explicit return types
@@ -130,7 +135,7 @@ Recent decisions affecting current work:
 | 11 | SDK Type Architecture | COMPLETE | 4/4 plans |
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
-| 7 | Chat + Terminal | Pending | 0/4 plans |
+| 7 | Chat + Terminal | In Progress | 1/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -138,9 +143,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 11.2-01-PLAN.md — Phase 11.2 done, Phase 7 next
-Resume file: .planning/phases/07-chat-terminal/ (next phase)
+Stopped at: Completed 07-04-PLAN.md — Settings, model picker, theme done
+Resume file: .planning/phases/07-chat-terminal/ (remaining plans: 01, 02, 03)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 — Phase 11.2 (Contamination Purge) completed: 22 stale docs archived, 14 source files purged of govern_*/tool-gate references, brain-indexer.ts deleted. Phase 7 next.*
+*Updated: 2026-02-12 — Phase 7 Plan 04 (Settings + Model Picker) completed: 5 components created (GeneralTab, ProvidersTab, AppearanceTab, SettingsExport, ModelPicker), model selection wired into chat.*
