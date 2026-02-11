@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 6 COMPLETE — IDE Shell (layout + file tree + Monaco editor + gap closure)
+**Current focus:** Phase 11 REPLANNED — SDK Type Architecture + Boundary Validation (old plans archived, 4 new plans)
 
 ## Current Position
 
-Phase: 6 of 10 (IDE Shell)
-Plan: 4 of 4 in current phase (06-01 ✓, 06-02 ✓, 06-03 ✓, 06-04 ✓)
-Status: Phase 6 verified complete — 3/3 must-haves passed, 3 items for human verification
-Last activity: 2026-02-11 — 06-04 gap closure complete, verification passed
+Phase: 11 of 10 (SDK Type Architecture)
+Plan: 2 of 4 in current phase (11-01 ✓, 11-02 ✓)
+Status: Plan 11-02 complete — AGENTS.md governance rules + false alarm registry
+Last activity: 2026-02-11 — 11-02 governance rules committed
 
-Progress: [██████░░░░] 20%
+Progress: [██████░░░░] 25%
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [██████░░░░] 20%
 | 6.02 (File Tree Explorer) | 2 tasks | ~15 min | ~7 min |
 | 6.03 (Monaco Editor) | 2 tasks | 11 min | ~6 min |
 | 6.04 (Gap Closure) | 2 tasks | 7 min | ~4 min |
+| 11.02 (AGENTS.md Governance) | 3 tasks | 3 min | ~1 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -51,6 +52,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - [06-04]: Zustand persist onFinishHydration + hasHydrated dual-path for reliable panel restore
+- [11-02]: SDK types are LAW (never redefine), app types are INTERNAL (freely modifiable) — two-tier taxonomy
+- [11-02]: All SDK imports centralized through engine-types.ts — single upgrade point
+- [11-02]: 4 known false alarms documented with workarounds (JsonValue, implicit any, Part.content, Part union)
 - [06-04]: PanelSize.asPercentage <= 0.1 threshold for drag-based collapse detection
 - [06-04]: Code2 lucide icon for IDE Shell navigation link
 - [06-03]: Used readFileFn/writeFileFn (actual exports) instead of readFile/writeFile — plan had wrong names
@@ -90,6 +94,12 @@ Recent decisions affecting current work:
 - Monaco DiffEditor memory leak (#4659) — disposal patterns required from Phase 6 onward
 - Vietnamese Telex IME Monaco bug (#4805) — must be tested in Phase 10
 - 3-week timebox for Stage 1 (Phases 5-8) — monitor velocity after Phase 5
+- **SDK type drift from Phase 5-6** — engine-types.ts re-exports done (`c585f48`), but Zod boundary validation, governance rules, and consumer migration still pending. Phase 11 replanned with architecture-first approach.
+
+### Roadmap Evolution
+
+- Phase 11 added: SDK Type Realignment — Replace hand-rolled types with SDK re-exports, fix context drift from Phase 5-6. Inserted between Phase 6 and 7 (execution order: 6 → 11 → 7). [2026-02-11]
+- Phase 11 redefined: SDK Type Architecture + Boundary Validation — expanded from 2 mechanical plans to 4 architecture-first plans (contract registry, AGENTS.md governance, Zod boundaries, consumer migration). Old 11-01/11-02 archived to `_archived-2026-02-11/`. Committed SDK re-export work (`c585f48`) preserved as starting point. [2026-02-11]
 
 ## Phase Status (v2.0 Milestone)
 
@@ -97,6 +107,7 @@ Recent decisions affecting current work:
 |---|-------|--------|----------|
 | 5 | Framework Foundation | COMPLETE | 6/6 plans ✓ |
 | 6 | IDE Shell | COMPLETE | 4/4 plans ✓ |
+| 11 | SDK Type Architecture | In Progress | 2/4 plans ✓ (11-01, 11-02) |
 | 7 | Chat + Terminal | Pending | 0/4 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
@@ -105,9 +116,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 06-04-PLAN.md — Gap Closure (layout persistence + IDE nav link). Phase 6 fully complete.
-Resume file: .planning/phases/06-ide-shell/06-04-SUMMARY.md
+Stopped at: Completed 11-02-PLAN.md — SDK Type Governance rules in AGENTS.md
+Resume file: .planning/phases/11-sdk-type-realignment/11-03-PLAN.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-11 — Phase 6 complete. IDE Shell with 3-panel layout, file tree, Monaco editor, layout persistence, IDE nav link.*
+*Updated: 2026-02-11 — Plan 11-02 complete: SDK Type Governance + false alarm registry in AGENTS.md. 2/4 plans done.*
