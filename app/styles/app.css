@@ -2,7 +2,7 @@
 @import "@xterm/xterm/css/xterm.css";
 @import "highlight.js/styles/github-dark.css";
 
-@theme inline {
+@theme {
   --color-background: oklch(0.145 0.013 260);
   --color-foreground: oklch(0.95 0.01 260);
   --color-card: oklch(0.18 0.013 260);
