@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 7 complete. Phase 8 (Sessions + Diffs + Agents) next.
+**Current focus:** Phase 8 in progress. Plan 08-01 (Session Lifecycle) complete.
 
 ## Current Position
 
-Phase: 7 of 11 (Chat + Terminal -- COMPLETE)
-Plan: 6 of 6 in current phase (all plans complete, verification passed)
-Status: Phase 7 complete — 6/6 plans, 4/4 success criteria verified, 21/21 observable truths
-Last activity: 2026-02-12 -- Phase 7 execution + verification complete
+Phase: 8 of 11 (Sessions + Diffs + Agents -- IN PROGRESS)
+Plan: 1 of 3 in current phase (08-01 complete)
+Status: 08-01 complete — session search, rename, auto-title, revert, unrevert
+Last activity: 2026-02-12 -- Plan 08-01 executed (2 tasks, 7 files)
 
-Progress: [██████████] 100%
+Progress: [███-------] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06)
+- Total plans completed: 20 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06 + 08-01)
 - Average duration: —
 - Total execution time: —
 
@@ -50,6 +50,7 @@ Progress: [██████████] 100%
 | 7.02 (Step Clustering) | 2 tasks | 8 min | ~4 min |
 | 7.05 (Infrastructure Gap Closure) | 2 tasks | 4 min | ~2 min |
 | 7.06 (UI Component Gap Closure) | 3 tasks | 4 min | ~1 min |
+| 8.01 (Session Lifecycle) | 2 tasks | 9 min | ~5 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -62,6 +63,10 @@ Progress: [██████████] 100%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [08-01]: session.revert field accessed via Record<string,unknown> cast -- SDK Session type has revert as passthrough field
+- [08-01]: Search input placed above IDE Shell link in sidebar -- prioritizes session filtering over navigation
+- [08-01]: group/msg nested group class for hover-reveal revert button -- avoids conflict with existing group class
+- [08-01]: Auto-title spinner matches per-session via summarizeSession.variables?.id comparison
 - [07-05]: migrate() call with drizzle-orm/better-sqlite3/migrator — idempotent schema migrations on startup
 - [07-05]: @theme (not @theme inline) for CSS custom property var() references — enables .light class overrides
 - [07-05]: session.status.status is { type: string }, not a plain string — nested object comparison required
@@ -160,7 +165,7 @@ Recent decisions affecting current work:
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
 | 7 | Chat + Terminal | COMPLETE | 6/6 plans |
-| 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
+| 8 | Sessions + Diffs + Agents | In Progress | 1/3 plans |
 | 8.5 | Design System + UX Polish | Pending | 0/4 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -168,9 +173,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Phase 7 complete — verification passed, ready for Phase 8
-Resume file: .planning/ROADMAP.md (Phase 8 planning)
+Stopped at: Completed 08-01-PLAN.md (Session Lifecycle Management)
+Resume file: .planning/phases/08-sessions-diffs-agents/08-02-PLAN.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 7 complete: 6/6 plans, verification passed (4/4 criteria, 21/21 truths). Next: Phase 8.*
+*Updated: 2026-02-12 -- Plan 08-01 complete: session search, rename, auto-title, revert/unrevert with checkpoint UI. Next: 08-02.*
