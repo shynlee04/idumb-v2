@@ -173,9 +173,23 @@ export function useStreaming(): UseStreamingReturn {
                     }
                   })
 
-                  // Check for terminal event
-                  if (data.error) {
-                    setState((prev) => ({ ...prev, error: String(data.error), isStreaming: false }))
+                  // Detect terminal events client-side for robustness
+                  // (server closes stream, but client should also stop if it sees these events)
+                  if (
+                    eventType === "session.idle" ||
+                    eventType === "session.error" ||
+                    (eventType === "error" && data.error)
+                  ) {
+                    setState((prev) => ({
+                      ...prev,
+                      isStreaming: false,
+                      ...(data.error
+                        ? { error: String((data.properties as Record<string, unknown>)?.error ?? data.error) }
+                        : {}),
+                    }))
+                    // Invalidate messages to load final state from server
+                    queryClient.invalidateQueries({ queryKey: sessionKeys.messages(sessionId) })
+                    reader.cancel()
                     return
                   }
                 }

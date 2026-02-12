@@ -9,7 +9,10 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router"
-import { getClient, getProjectDir, ensureEngine, sdkQuery } from "../../server/sdk-client.server"
+
+// NOTE: sdk-client.server imports are dynamic (inside handler) to prevent
+// Node.js modules (node:fs via logging.ts) from leaking into the client bundle.
+// TanStack Start's .server.ts stripping does NOT work for raw server.handlers patterns.
 
 // @ts-ignore — route path will be registered by Vite route tree generator at build time
 export const Route = createFileRoute("/api/sessions/$id/prompt")({
@@ -32,6 +35,7 @@ export const Route = createFileRoute("/api/sessions/$id/prompt")({
             })
           }
 
+          const { getClient, getProjectDir, ensureEngine, sdkQuery } = await import("../../server/sdk-client.server")
           const projectDir = getProjectDir()
           await ensureEngine()
           const client = getClient()
@@ -102,10 +106,15 @@ export const Route = createFileRoute("/api/sessions/$id/prompt")({
 
                   sendEvent(event.type, event)
 
-                  // Break on terminal status
-                  const status = props?.status
-                  if (status === "idle" || status === "failed" || status === "error") {
-                    break
+                  // Break on terminal status — SDK uses discriminated unions:
+                  // - EventSessionIdle: { type: "session.idle", properties: { sessionID } }
+                  // - EventSessionStatus: { type: "session.status", properties: { sessionID, status: { type: "idle"|"busy"|"retry" } } }
+                  // - EventSessionError: { type: "session.error", properties: { sessionID?, error } }
+                  if (event.type === "session.idle") break
+                  if (event.type === "session.error") break
+                  if (event.type === "session.status") {
+                    const statusObj = props?.status as { type?: string } | undefined
+                    if (statusObj?.type === "idle") break
                   }
                 }
               } catch (err) {
