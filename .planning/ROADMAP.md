@@ -50,8 +50,9 @@ Plans:
 - [x] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration *(completed 2026-02-11)*
 - [x] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(completed 2026-02-12)*
 - [x] **Phase 11.2: Contamination & Dead Code Purge** — Remove plugin-era docs, dead code, stale references *(completed 2026-02-12)*
-- [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI + gap closure
+- [x] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI + gap closure *(completed 2026-02-12)*
 - [x] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization *(completed 2026-02-12)*
+- [ ] **Phase 8.1: Cross-Phase Infrastructure Fixes + UAT Gap Closure** — Fix project dir mismatch, DB migration, error handling, revert guards, search UX
 - [ ] **Phase 8.5: Design System + UX Polish** — Shared UI primitives + consistent state patterns + component refinement across all surfaces
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
 - [ ] **Phase 10: i18n Validation** — Translation infrastructure + string extraction + Vietnamese validation
@@ -180,6 +181,24 @@ Plans:
 - [x] 08-02: Diff viewer — Monaco DiffEditor + file change list + disposal
 - [x] 08-03: Multi-agent visualization + agent attribution badges
 
+### Phase 8.1: Cross-Phase Infrastructure Fixes + UAT Gap Closure
+**Goal**: Fix infrastructure defects inherited from Phases 5/7 that cause Phase 8 UAT failures — project directory mismatch (diffs empty), DB migration failure (settings crash cascade), missing error handling (revert crashes silently)
+**Depends on**: Phase 8 (UAT diagnosed these gaps)
+**Requirements**: None (gap closure — no new functional requirements)
+**Gap Closure**: Closes Phase 8 UAT Tests 1, 4, 7 + Phase 7 inherited settings crash + Phase 5 inherited project dir mismatch
+**Success Criteria** (what must be TRUE):
+  1. `getProjectDir()` returns git repository root (not `app/` subdirectory) — `session.diff()` returns actual file changes
+  2. DB migration runs reliably — `settings` table exists, all `settings.ts` server functions succeed without "no such table" errors
+  3. All `settings.ts` server functions have try/catch — return null/empty on failure, never crash consumers
+  4. `useSetting("default-model")` in chat page does not crash the page when DB is unavailable
+  5. Revert/unrevert mutations have `onError` handlers — user sees error feedback, not silent failure
+  6. Revert button is disabled during active streaming — no SDK 400 "session busy" errors
+  7. Session search shows result count ("N of M sessions"), clear/X button, and match highlighting in titles
+**Plans**: 1 plan (7 targeted fixes across 7 files)
+
+Plans:
+- [ ] 08.1-01-PLAN.md — 7 cross-phase infrastructure fixes + UAT gap closure
+
 ### Phase 8.5: Design System + UX Polish
 **Goal**: Users experience a visually consistent, polished IDE — every surface uses shared primitives with coherent loading/error/empty states, proper animations, and refined component design
 **Depends on**: Phase 8 (all UI surfaces must exist before polishing — avoids double work)
@@ -278,7 +297,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 5 -> 6 -> 11 -> 11.1 -> 11.2 -> 7 -> 8 -> 8.5 -> 9 -> 10
+**Execution Order:** 5 -> 6 -> 11 -> 11.1 -> 11.2 -> 7 -> 8 -> 8.1 -> 8.5 -> 9 -> 10
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -291,10 +310,11 @@ Plans:
 | 11.2. Contamination Purge | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 7. Chat + Terminal | v2.0 | 6/6 | Complete | 2026-02-12 |
 | 8. Sessions + Diffs + Agents | v2.0 | 3/3 | Complete | 2026-02-12 |
+| 8.1. Infrastructure Fixes + UAT Gaps | v2.0 | 0/1 | Not started | -- |
 | 8.5. Design System + UX Polish | v2.0 | 0/4 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
 | 10. i18n Validation | v2.0 | 0/3 | Not started | -- |
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 8 complete: 3/3 plans (session lifecycle, diff viewer, agent visualization). Verification passed (5/5 criteria, 19 artifacts, 11 key links). Stage 1 (Phases 5-8) COMPLETE.*
+*Updated: 2026-02-12 -- Phase 8.1 added: Cross-Phase Infrastructure Fixes + UAT Gap Closure (7 tasks, 7 files). Closes Phase 8 UAT Tests 1/4/7 + inherited Phase 5/7 defects.*

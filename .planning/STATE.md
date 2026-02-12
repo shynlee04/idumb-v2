@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 8 COMPLETE. All 3 plans done. Next: Phase 8.5 or 9.
+**Current focus:** Phase 8.1 — Cross-Phase Infrastructure Fixes + UAT Gap Closure (7 tasks, 7 files)
 
 ## Current Position
 
-Phase: 8 of 11 (Sessions + Diffs + Agents -- COMPLETE)
-Plan: 3 of 3 in current phase (08-01, 08-02, 08-03 complete)
-Status: Phase 8 complete — session lifecycle, diff viewer, agent visualization all done
-Last activity: 2026-02-12 -- Plan 08-03 executed (2 tasks, 5 files, 5 min)
+Phase: 8.1 of 11 (Cross-Phase Infrastructure Fixes + UAT Gap Closure)
+Plan: 0 of 1 in current phase (08.1-01-PLAN.md pending)
+Status: Phase created — needs /gsd:plan-phase 8.1 then /gsd:execute-phase 8.1
+Last activity: 2026-02-12 -- Phase 8.1 added to roadmap (gap closure for Phase 8 UAT failures)
 
 Progress: [███████---] 75%
 
@@ -177,6 +177,7 @@ Recent decisions affecting current work:
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
 | 7 | Chat + Terminal | COMPLETE | 6/6 plans |
 | 8 | Sessions + Diffs + Agents | COMPLETE | 3/3 plans |
+| 8.1 | Infrastructure Fixes + UAT Gaps | Pending | 0/1 plans |
 | 8.5 | Design System + UX Polish | Pending | 0/4 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -184,9 +185,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 08-03-PLAN.md (Agent Visualization) — Phase 8 COMPLETE
-Resume file: .planning/phases/08.5-design-ux-polish/ or .planning/phases/09-governance/
+Stopped at: Phase 8.1 created — needs planning then execution
+Resume file: .planning/phases/08.1-infrastructure-uat-gaps/
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 -- Plan 08-03 complete: AgentBadge, SubtaskCard, AgentFlowView for multi-agent visualization. Phase 8 COMPLETE (3/3 plans). Next: Phase 8.5 or 9.*
+*Updated: 2026-02-12 -- Phase 8.1 added: Cross-Phase Infrastructure Fixes + UAT Gap Closure. 7 tasks across 7 files. Closes Phase 8 UAT Tests 1/4/7 + inherited Phase 5/7 defects.*
