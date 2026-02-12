@@ -26,6 +26,7 @@ export interface ChatMessageData {
   role: "user" | "assistant"
   content?: string
   parts?: Part[]
+  messageId?: string    // SDK Message.id — used for revert point matching
 }
 
 interface ChatMessageProps {

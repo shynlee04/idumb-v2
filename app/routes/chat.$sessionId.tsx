@@ -21,7 +21,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef } from "react"
 import { ChatMessages } from "../components/chat/ChatMessages"
 import { ChatInput } from "../components/chat/ChatInput"
-import { useSessionMessages, useCreateSession } from "../hooks/useSession"
+import {
+  useSession,
+  useSessionMessages,
+  useCreateSession,
+  useRevertSession,
+  useUnrevertSession,
+} from "../hooks/useSession"
 import { useStreaming, type StreamEvent } from "../hooks/useStreaming"
 import { useSetting } from "../hooks/useSettings"
 import type { Message, Part } from "../shared/engine-types"
@@ -72,9 +78,27 @@ function ChatPage() {
 
 /** Actual chat session — only rendered for real session IDs */
 function ChatSession({ sessionId }: { sessionId: string }) {
+  const { data: sessionDetail } = useSession(sessionId)
   const { data: serverMessages } = useSessionMessages(sessionId)
   const { isStreaming, events, streamingParts, sendPrompt, abort } = useStreaming()
   const { data: defaultModelSetting } = useSetting("default-model")
+
+  // Revert/unrevert handlers
+  const revertSession = useRevertSession()
+  const unrevertSession = useUnrevertSession()
+
+  const handleRevert = (messageID: string) => revertSession.mutate({ id: sessionId, messageID })
+  const handleUnrevert = () => unrevertSession.mutate(sessionId)
+
+  // Derive revert info from session detail
+  const revertInfo = useMemo(() => {
+    if (!sessionDetail?.revert) return null
+    const revert = sessionDetail.revert as { messageID: string; partID?: string }
+    return {
+      messageID: revert.messageID,
+      partID: revert.partID,
+    }
+  }, [sessionDetail])
 
   // Parse the default model selection
   const defaultModel = useMemo(() => {
@@ -98,6 +122,7 @@ function ChatSession({ sessionId }: { sessionId: string }) {
     return (items as Array<{ info: Message; parts: Part[] }>).map((item) => ({
       role: item.info.role,
       parts: item.parts,
+      messageId: item.info.id,
     }))
   }, [serverMessages])
 
@@ -156,7 +181,13 @@ function ChatSession({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <ChatMessages messages={allMessages} streaming={isStreaming} />
+      <ChatMessages
+        messages={allMessages}
+        streaming={isStreaming}
+        revertInfo={revertInfo}
+        onRevert={handleRevert}
+        onUnrevert={handleUnrevert}
+      />
       <ChatInput
         onSend={handleSend}
         onAbort={abort}
