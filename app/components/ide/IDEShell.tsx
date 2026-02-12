@@ -28,6 +28,7 @@ import type { PanelId } from '@/shared/ide-types'
 import { FileTree } from '../file-tree/FileTree'
 import { FileTreeContextMenu } from '../file-tree/FileTreeContextMenu'
 import { EditorArea } from '../editor/EditorArea'
+import { Terminal as TerminalIcon, ChevronUp } from 'lucide-react'
 
 // Lazy-load TerminalPanel to avoid SSR issues with xterm.js DOM APIs
 const LazyTerminalPanel = lazy(() =>
@@ -169,6 +170,25 @@ export function IDEShell() {
     return () => window.removeEventListener('keydown', handler)
   }, [togglePanel])
 
+  // --- Keyboard shortcut: Cmd+J toggles terminal (VS Code convention) ---
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+        e.preventDefault()
+        const panel = terminalRef.current
+        if (!panel) return
+        if (panel.isCollapsed()) {
+          panel.expand()
+        } else {
+          panel.collapse()
+        }
+        togglePanel('terminal')
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [togglePanel])
+
   // --- Collapse state sync: detect collapse/expand from drag interactions ---
   const handleSidebarResize = useCallback(
     (panelSize: PanelSize) => {
@@ -265,44 +285,63 @@ export function IDEShell() {
           id="editor-area"
           minSize={40}
         >
-          {/* Inner vertical group: editor + terminal */}
-          <Group
-            id="ide-vertical"
-            orientation="vertical"
-            onLayoutChange={handleVerticalLayoutChange}
-          >
-            {/* Editor panel */}
-            <Panel
-              id="editor"
-              panelRef={editorRef}
-              defaultSize={IDE_PANELS.editor.defaultSize}
-              minSize={IDE_PANELS.editor.minSize}
-              onResize={() => setActivePanel('editor')}
+          <div className="flex flex-col h-full">
+            {/* Inner vertical group: editor + terminal */}
+            <Group
+              id="ide-vertical"
+              className="flex-1"
+              orientation="vertical"
+              onLayoutChange={handleVerticalLayoutChange}
             >
-              <EditorArea />
-            </Panel>
+              {/* Editor panel */}
+              <Panel
+                id="editor"
+                panelRef={editorRef}
+                defaultSize={IDE_PANELS.editor.defaultSize}
+                minSize={IDE_PANELS.editor.minSize}
+                onResize={() => setActivePanel('editor')}
+              >
+                <EditorArea />
+              </Panel>
 
-            {/* Vertical separator */}
-            <Separator id="terminal-separator">
-              <ResizeHandle orientation="vertical" />
-            </Separator>
+              {/* Vertical separator */}
+              <Separator id="terminal-separator">
+                <ResizeHandle orientation="vertical" />
+              </Separator>
 
-            {/* Terminal panel */}
-            <Panel
-              id="terminal"
-              panelRef={terminalRef}
-              defaultSize={IDE_PANELS.terminal.defaultSize}
-              minSize={IDE_PANELS.terminal.minSize}
-              maxSize={IDE_PANELS.terminal.maxSize}
-              collapsible={IDE_PANELS.terminal.collapsible}
-              collapsedSize={0}
-              onResize={handleTerminalResize}
-            >
-              <Suspense fallback={<TerminalLoadingFallback />}>
-                <LazyTerminalPanel />
-              </Suspense>
-            </Panel>
-          </Group>
+              {/* Terminal panel */}
+              <Panel
+                id="terminal"
+                panelRef={terminalRef}
+                defaultSize={IDE_PANELS.terminal.defaultSize}
+                minSize={IDE_PANELS.terminal.minSize}
+                maxSize={IDE_PANELS.terminal.maxSize}
+                collapsible={IDE_PANELS.terminal.collapsible}
+                collapsedSize={0}
+                onResize={handleTerminalResize}
+              >
+                <Suspense fallback={<TerminalLoadingFallback />}>
+                  <LazyTerminalPanel />
+                </Suspense>
+              </Panel>
+            </Group>
+
+            {/* Collapsed terminal indicator — outside Group for valid DOM; click or Cmd+J to expand */}
+            {isTerminalCollapsed && (
+              <button
+                onClick={() => {
+                  terminalRef.current?.expand()
+                  togglePanel('terminal')
+                }}
+                className="flex h-7 w-full items-center gap-1.5 border-t border-border bg-terminal px-3 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                title="Toggle terminal (⌘J)"
+              >
+                <TerminalIcon size={12} />
+                <span className="font-medium">Terminal</span>
+                <ChevronUp size={12} className="ml-auto" />
+              </button>
+            )}
+          </div>
         </Panel>
       </Group>
     </div>
