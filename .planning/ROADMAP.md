@@ -40,18 +40,19 @@ Plans:
 
 ### 🚧 v2.0 AI Code IDE + Workspace Foundation
 
-**Milestone Goal:** Build a rich Code IDE (Stage 1, Phases 5-8) then add governance differentiators (Phase 9) and i18n validation (Phase 10). Proves OpenCode SDK can power a self-hosted Cursor/Windsurf alternative.
+**Milestone Goal:** Build a rich Code IDE (Stage 1, Phases 5-8) then polish UX (Phase 8.5), add governance differentiators (Phase 9) and i18n validation (Phase 10). Proves OpenCode SDK can power a self-hosted Cursor/Windsurf alternative.
 
 **Stage 1 timebox:** 3 weeks (Phases 5-8)
-**Total requirements:** 25 (FND-01..04, IDE-01..05, CHAT-01..06, DF-01..07, I18N-01..03)
+**Total requirements:** 25 functional (FND-01..04, IDE-01..05, CHAT-01..06, DF-01..07, I18N-01..03) + Phase 8.5 cross-cutting quality
 
 - [x] **Phase 5: Framework Foundation** — TanStack Start scaffold + server refactor + shared types + data layer
 - [x] **Phase 6: IDE Shell** — File tree + Monaco editor + resizable panel layout + gap closure *(completed 2026-02-11)*
 - [x] **Phase 11: SDK Type Architecture** — SDK contract registry + Zod boundary validation + type governance + consumer migration *(completed 2026-02-11)*
 - [x] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(completed 2026-02-12)*
 - [x] **Phase 11.2: Contamination & Dead Code Purge** — Remove plugin-era docs, dead code, stale references *(completed 2026-02-12)*
-- [x] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI *(completed 2026-02-12)*
+- [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI + gap closure
 - [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
+- [ ] **Phase 8.5: Design System + UX Polish** — Shared UI primitives + consistent state patterns + component refinement across all surfaces
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
 - [ ] **Phase 10: i18n Validation** — Translation infrastructure + string extraction + Vietnamese validation
 
@@ -152,13 +153,15 @@ Plans:
   2. User sees multi-step AI operations grouped into collapsible step clusters with count badges and running/complete/failed status
   3. User executes commands in integrated terminal with ANSI colors, resize handling, and automatic process cleanup on disconnect
   4. User changes AI model, manages providers, and adjusts settings through UI with changes persisted via SDK
-**Plans**: 4 plans
+**Plans**: 6 plans (4 feature + 2 gap closure)
 
 Plans:
 - [x] 07-01-PLAN.md — Rich chat Part renderers: CodeBlock + ToolCallAccordion + ReasoningCollapse + FilePartRenderer (wave 1)
 - [x] 07-02-PLAN.md — Step clustering: StepCluster component + part grouping + streaming step awareness (wave 2)
 - [x] 07-03-PLAN.md — Integrated terminal: xterm.js + SDK PTY API + IDEShell integration + standalone route (wave 1)
 - [x] 07-04-PLAN.md — Settings & model picker: 3-tab settings page + chat header ModelPicker + theme toggle (wave 1)
+- [ ] 07-05-PLAN.md — Gap closure: DB migration + theme CSS + stream termination (wave 1)
+- [ ] 07-06-PLAN.md — Gap closure: terminal visibility + file tree regression + tool copy buttons (wave 1)
 
 ### Phase 8: Sessions + Diffs + Agents
 **Goal**: Users manage AI sessions, review code changes, and see multi-agent operations with clear attribution
@@ -176,6 +179,25 @@ Plans:
 - [ ] 08-01: Session management — CRUD + search + auto-title + revert/unrevert
 - [ ] 08-02: Diff viewer — Monaco DiffEditor + file change list + disposal
 - [ ] 08-03: Multi-agent visualization + agent attribution badges
+
+### Phase 8.5: Design System + UX Polish
+**Goal**: Users experience a visually consistent, polished IDE — every surface uses shared primitives with coherent loading/error/empty states, proper animations, and refined component design
+**Depends on**: Phase 8 (all UI surfaces must exist before polishing — avoids double work)
+**Requirements**: None (no new functional requirements — cross-cutting quality improvement)
+**Success Criteria** (what must be TRUE):
+  1. Shared UI primitive library exists (Button, Card, Input, Badge, Dialog, Tooltip, Tabs, DropdownMenu) — all components migrate from hand-rolled HTML to shared primitives
+  2. Consistent state patterns: single `<LoadingState>` component (spinner + text), single `<ErrorState>` component (icon + message + retry action), single `<EmptyState>` component (icon + title + description) used across all surfaces
+  3. Zero hard-coded color values in components — all colors reference design tokens (bg-background, text-foreground, etc.), light/dark theme works across every component
+  4. Native browser dialogs (window.prompt, window.confirm) replaced with in-app modal dialogs
+  5. All interactive elements have hover/focus/active states with consistent transitions (150ms ease)
+  6. Component visual refinement pass: tool accordions, thinking sections, settings tabs, chat messages, step clusters all meet minimum design quality bar
+**Plans**: 4 plans (estimated)
+
+Plans:
+- [ ] 08.5-01: shadcn/ui primitives installation + shared state components (Loading, Error, Empty)
+- [ ] 08.5-02: Component migration — replace hand-rolled buttons/cards/inputs/tabs/dropdowns with primitives
+- [ ] 08.5-03: Dialog system — replace window.prompt/confirm with Radix Dialog, add confirmation patterns
+- [ ] 08.5-04: Visual refinement pass — spacing, transitions, color consistency, component polish across all surfaces
 
 ### Phase 9: Governance + Quick Wins
 **Goal**: Users see governance state, track AI file changes, get code quality feedback, and navigate conversations efficiently
@@ -256,7 +278,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 5 -> 6 -> 11 -> 11.1 -> 11.2 -> 7 -> 8 -> 9 -> 10
+**Execution Order:** 5 -> 6 -> 11 -> 11.1 -> 11.2 -> 7 -> 8 -> 8.5 -> 9 -> 10
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -267,11 +289,12 @@ Plans:
 | 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 11.1. Build & Config Blockers | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 11.2. Contamination Purge | v2.0 | 1/1 | Complete | 2026-02-12 |
-| 7. Chat + Terminal | v2.0 | 4/4 | Complete | 2026-02-12 |
+| 7. Chat + Terminal | v2.0 | 4/6 | Gap closure | 2026-02-12 |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
+| 8.5. Design System + UX Polish | v2.0 | 0/4 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
 | 10. i18n Validation | v2.0 | 0/3 | Not started | -- |
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 7 plans created (4 plans, 2 waves). Corrected plan descriptions to match research decisions (react-markdown not marked, SDK PTY not node-pty, single terminal not multi-tab).*
+*Updated: 2026-02-12 -- Phase 7 gap closure: 2 plans (07-05, 07-06) added for 6 UAT gaps. Phase 7 status: 4/6 plans complete, 2 gap closure plans pending.*
