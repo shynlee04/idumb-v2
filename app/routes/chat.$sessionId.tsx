@@ -24,6 +24,7 @@ import { ChatInput } from "../components/chat/ChatInput"
 import {
   useSession,
   useSessionMessages,
+  useSessionChildren,
   useCreateSession,
   useRevertSession,
   useUnrevertSession,
@@ -32,6 +33,7 @@ import { useStreaming, type StreamEvent } from "../hooks/useStreaming"
 import { useSetting } from "../hooks/useSettings"
 import type { Message, Part } from "../shared/engine-types"
 import type { ChatMessageData } from "../components/chat/ChatMessage"
+import { AgentFlowView } from "../components/chat/AgentFlowView"
 
 export const Route = createFileRoute("/chat/$sessionId")({
   component: ChatPage,
@@ -80,6 +82,7 @@ function ChatPage() {
 function ChatSession({ sessionId }: { sessionId: string }) {
   const { data: sessionDetail } = useSession(sessionId)
   const { data: serverMessages } = useSessionMessages(sessionId)
+  const { data: childSessions } = useSessionChildren(sessionId)
   const { isStreaming, events, streamingParts, sendPrompt, abort } = useStreaming()
   const { data: defaultModelSetting } = useSetting("default-model")
 
@@ -123,6 +126,10 @@ function ChatSession({ sessionId }: { sessionId: string }) {
       role: item.info.role,
       parts: item.parts,
       messageId: item.info.id,
+      // Agent attribution: UserMessage has an optional 'agent' field at runtime
+      agent: "agent" in item.info
+        ? (item.info as Record<string, unknown>).agent as string | undefined
+        : undefined,
     }))
   }, [serverMessages])
 
@@ -188,6 +195,11 @@ function ChatSession({ sessionId }: { sessionId: string }) {
         onRevert={handleRevert}
         onUnrevert={handleUnrevert}
       />
+      {childSessions && childSessions.length > 0 && (
+        <div className="px-4 pb-2">
+          <AgentFlowView children={childSessions} parentSessionId={sessionId} />
+        </div>
+      )}
       <ChatInput
         onSend={handleSend}
         onAbort={abort}
