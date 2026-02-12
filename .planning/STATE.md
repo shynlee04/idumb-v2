@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 8 in progress. Plan 08-01 (Session Lifecycle) complete.
+**Current focus:** Phase 8 in progress. Plans 08-01 + 08-02 complete, 08-03 next.
 
 ## Current Position
 
 Phase: 8 of 11 (Sessions + Diffs + Agents -- IN PROGRESS)
-Plan: 1 of 3 in current phase (08-01 complete)
-Status: 08-01 complete — session search, rename, auto-title, revert, unrevert
-Last activity: 2026-02-12 -- Plan 08-01 executed (2 tasks, 7 files)
+Plan: 2 of 3 in current phase (08-01, 08-02 complete)
+Status: 08-02 complete — Monaco DiffEditor viewer with file list, inline/side-by-side toggle, Chat/Changes view
+Last activity: 2026-02-12 -- Plan 08-02 executed (2 tasks, 9 files, 9 min)
 
-Progress: [███-------] 33%
+Progress: [██████----] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06 + 08-01)
+- Total plans completed: 21 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06 + 08-01 + 08-02)
 - Average duration: —
 - Total execution time: —
 
@@ -51,6 +51,7 @@ Progress: [███-------] 33%
 | 7.05 (Infrastructure Gap Closure) | 2 tasks | 4 min | ~2 min |
 | 7.06 (UI Component Gap Closure) | 3 tasks | 4 min | ~1 min |
 | 8.01 (Session Lifecycle) | 2 tasks | 9 min | ~5 min |
+| 8.02 (Diff Viewer) | 2 tasks | 9 min | ~5 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -63,6 +64,11 @@ Progress: [███-------] 33%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [08-02]: FileDiff re-exported from SDK (not hand-rolled) -- SDK exports FileDiff via types.gen.d.ts, per SDK Type Governance
+- [08-02]: EXT_TO_LANG duplicated in DiffViewer (not imported from MonacoEditor) -- avoids cross-component coupling
+- [08-02]: 30s staleTime for diff queries -- diffs are relatively stable during a session
+- [08-02]: DiffEditor models explicitly disposed on unmount -- mitigates monaco-editor#4659 memory leak
+- [08-02]: View resets to Chat on session change -- prevents stale diff view when switching sessions
 - [08-01]: session.revert field accessed via Record<string,unknown> cast -- SDK Session type has revert as passthrough field
 - [08-01]: Search input placed above IDE Shell link in sidebar -- prioritizes session filtering over navigation
 - [08-01]: group/msg nested group class for hover-reveal revert button -- avoids conflict with existing group class
@@ -145,7 +151,7 @@ Recent decisions affecting current work:
 ### Blockers/Concerns
 
 - TanStack Start is RC — SSE streaming via server routes must be validated in Phase 5 before features build on it
-- Monaco DiffEditor memory leak (#4659) — disposal patterns required from Phase 6 onward
+- Monaco DiffEditor memory leak (#4659) — MITIGATED in 08-02 with explicit disposal pattern (editor + original/modified models)
 - Vietnamese Telex IME Monaco bug (#4805) — must be tested in Phase 10
 - 3-week timebox for Stage 1 (Phases 5-8) — monitor velocity after Phase 5
 - **SDK type drift from Phase 5-6** — RESOLVED. Phase 11 complete: engine-types.ts re-exports, 11-CONTRACTS.md governance, Zod boundary validation, consumer migration all done.
@@ -165,7 +171,7 @@ Recent decisions affecting current work:
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
 | 7 | Chat + Terminal | COMPLETE | 6/6 plans |
-| 8 | Sessions + Diffs + Agents | In Progress | 1/3 plans |
+| 8 | Sessions + Diffs + Agents | In Progress | 2/3 plans |
 | 8.5 | Design System + UX Polish | Pending | 0/4 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -173,9 +179,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 08-01-PLAN.md (Session Lifecycle Management)
-Resume file: .planning/phases/08-sessions-diffs-agents/08-02-PLAN.md
+Stopped at: Completed 08-02-PLAN.md (Diff Viewer)
+Resume file: .planning/phases/08-sessions-diffs-agents/08-03-PLAN.md
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 -- Plan 08-01 complete: session search, rename, auto-title, revert/unrevert with checkpoint UI. Next: 08-02.*
+*Updated: 2026-02-12 -- Plan 08-02 complete: Monaco DiffEditor viewer with file list, inline/side-by-side toggle, Chat/Changes view. Next: 08-03.*
