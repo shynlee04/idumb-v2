@@ -21,12 +21,15 @@ import { CodeBlock } from "./parts/CodeBlock"
 import { ToolCallAccordion } from "./parts/ToolCallAccordion"
 import { ReasoningCollapse } from "./parts/ReasoningCollapse"
 import { FilePartRenderer } from "./parts/FilePartRenderer"
+import { AgentBadge } from "./parts/AgentBadge"
+import { SubtaskCard } from "./parts/SubtaskCard"
 
 export interface ChatMessageData {
   role: "user" | "assistant"
   content?: string
   parts?: Part[]
   messageId?: string    // SDK Message.id — used for revert point matching
+  agent?: string        // Agent name for attribution (from UserMessage.agent or message context)
 }
 
 interface ChatMessageProps {
@@ -41,7 +44,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   return (
     <div className={cn("py-3 border-b border-border last:border-0 flex gap-3")}>
-      {/* Small role indicator: colored dot + role text */}
+      {/* Small role indicator: colored dot + role text + optional agent badge */}
       <div className="flex-shrink-0 flex items-center gap-1.5 mt-1 min-w-[2.5rem]">
         <span
           className={cn(
@@ -52,6 +55,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <span className="text-xs font-medium text-muted-foreground">
           {isUser ? "You" : "AI"}
         </span>
+        {message.agent && <AgentBadge agentName={message.agent} />}
       </div>
 
       {/* Message content */}
@@ -110,7 +114,9 @@ export function getTextContent(parts: Part[]): string {
  * - tool: Render as ToolCallAccordion (collapsed, expandable)
  * - reasoning: Render as ReasoningCollapse (collapsed by default)
  * - file: Render as FilePartRenderer (image preview or download card)
- * - step-start/step-finish, snapshot, patch, agent, retry, compaction, subtask: Skip (internal)
+ * - agent: Render as AgentBadge divider (agent switch notification)
+ * - subtask: Render as SubtaskCard (expandable delegation card)
+ * - step-start/step-finish, snapshot, patch, retry, compaction: Skip (internal)
  * - unknown: Render nothing (SDK may add new Part types)
  */
 export function PartRenderer({ part }: { part: Part }) {
@@ -144,11 +150,23 @@ export function PartRenderer({ part }: { part: Part }) {
     case "step-finish":
     case "snapshot":
     case "patch":
-    case "agent":
     case "retry":
     case "compaction":
-    case "subtask":
       return null
+
+    case "agent":
+      // Agent switch notification — render as divider badge
+      return <AgentBadge agentName={part.name} variant="divider" />
+
+    case "subtask":
+      // Delegation event — render as expandable card
+      return (
+        <SubtaskCard
+          agent={part.agent}
+          description={part.description}
+          prompt={part.prompt}
+        />
+      )
 
     default:
       // Unknown part type — don't crash on future SDK additions
