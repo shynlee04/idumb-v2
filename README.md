@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.7-blue.svg" alt="TypeScript"></a>
-  <a href="#tests"><img src="https://img.shields.io/badge/Tests-466%2F466-brightgreen.svg" alt="Tests"></a>
+  <a href="#tests"><img src="https://img.shields.io/badge/Tests-591%2F591-brightgreen.svg" alt="Tests"></a>
   <a href="#"><img src="https://img.shields.io/badge/OpenCode-SDK--Direct-orange.svg" alt="OpenCode SDK"></a>
   <a href="#"><img src="https://img.shields.io/badge/Platform-Standalone-brightgreen.svg" alt="Standalone Platform"></a>
   <a href="#"><img src="https://img.shields.io/badge/Agents-3-purple.svg" alt="3 Agents"></a>
@@ -54,7 +54,7 @@ One rule. Zero negotiation. Your codebase stays alive.
 | 🧲 **Compaction Survival** | Critical context anchors persist when LLM context resets |
 | ✂️ **Context Pruning** | Old tool outputs auto-truncated. Fresh context, always. |
 | 💾 **Disk Persistence** | Tasks, anchors, delegations survive across sessions |
-| 📊 **Dashboard** | Real-time governance UI — Express + WebSocket backend, React + Vite frontend |
+| 📊 **Dashboard** | Real-time governance UI — TanStack Start + React + Vite + SSE |
 | 🌏 **Bilingual** | Full English + Vietnamese support |
 | 🎯 **Agent Scoping** | Each agent has specific tool permissions — investigators can't write code, executors can't create epics |
 
@@ -113,7 +113,7 @@ your-project/
 │   │   ├── tasks.json                    # Task hierarchy (Epic → Task → Subtask)
 │   │   ├── hook-state.json               # Session state
 │   │   └── delegations.json              # Delegation chains
-│   └── idumb-modules/                    # Templates & schemas
+│   └── modules/                          # Templates & schemas
 │       ├── agents/                       # Agent profile references
 │       ├── schemas/                      # Contracts
 │       ├── commands/                     # Command templates
@@ -146,7 +146,7 @@ Agent: govern_task start <task_id>
 
 ## 📊 Dashboard
 
-iDumb includes a real-time governance dashboard for visualizing task state, delegation chains, and code quality.
+iDumb includes a real-time governance dashboard built with TanStack Start (SPA mode), React, and Vite.
 
 ### Start the dashboard
 
@@ -154,29 +154,26 @@ iDumb includes a real-time governance dashboard for visualizing task state, dele
 idumb-v2 dashboard
 ```
 
-This starts **two servers**:
+This starts the Vite dev server with TanStack Start:
 
 | Server | Default Port | Stack |
 |--------|-------------|-------|
-| **Backend** | `3001` | Express + WebSocket + chokidar file watcher |
-| **Frontend** | `3000` | React 18 + Vite + Tailwind v4 + TanStack Query |
+| **Dev Server** | `3000` | TanStack Start + Vite + React 19 + Tailwind v4 |
 
-The frontend proxies `/api` and `/ws` requests to the backend automatically.
+The dashboard communicates with the OpenCode SDK via server functions and SSE routes.
 
 ### Dashboard flags
 
 ```bash
 idumb-v2 dashboard                     # Defaults: port 3000, auto-open browser
-idumb-v2 dashboard --port 4000         # Custom frontend port
-idumb-v2 dashboard --backend-port 5000 # Custom backend port
+idumb-v2 dashboard --port 4000         # Custom port
 idumb-v2 dashboard --no-browser        # Don't auto-open browser
 ```
 
 ### Prerequisites
 
 - `.idumb/` must exist — run `idumb-v2 init` first
-- Frontend requires Vite (`npx vite` must work)
-- Backend reads from `.idumb/brain/` for live governance state
+- Requires Vite (`npx vite` must work)
 
 ---
 
@@ -239,31 +236,17 @@ In `retard` governance mode (expert only), the scan adds roasts:
 
 ```
 iDumb Platform
-├── Dashboard Backend (Node.js + Express)
-│   ├── SDK Client (OpenCode SDK direct calls)
-│   ├── Governance Engine (task graph, delegation, anchors)
-│   └── WebSocket Server (real-time updates to frontend)
-│
-├── Dashboard Frontend (React + Vite)
-│   ├── Task Management UI (Smart TODO, WorkPlans)
-│   ├── Agent Control Panel (3-agent delegation interface)
-│   └── Planning Workspace (artifacts, traceability)
+├── Dashboard (TanStack Start SPA)
+│   ├── Server Functions (OpenCode SDK direct calls)
+│   ├── SSE Routes (real-time event streaming)
+│   ├── React Frontend (Task Management, Agent Control)
+│   └── Drizzle ORM + SQLite (settings persistence)
 │
 └── Governance System (Schema-driven)
     ├── Task Graph (WorkPlan → TaskNode → Checkpoint)
     ├── Delegation (3-agent hierarchy with category routing)
     ├── Anchors (context survival across sessions)
     └── Planning Registry (artifact chains, staleness tracking)
-```
-
-### SDK-Direct Governance (Previous Plugin Hooks Deprecated)
-
-```
-Plugin architecture (DEPRECATED) → SDK architecture (CURRENT)
-├── tool.execute.before          → SDK: tool.execute.before hook via SDK client
-├── experimental.chat.system.transform → SDK: governance directive injection
-├── experimental.session.compacting → SDK: anchor injection
-└── chat.params                   → SDK: agent identity capture
 ```
 
 ### 3-Agent Hierarchy
@@ -284,20 +267,6 @@ Each agent has **scoped permissions**:
 | 🔬 **Investigator** | Research, analysis, planning | Brain entries only | ❌ | ❌ |
 | 🔨 **Executor** | Code, builds, tests | ✅ | ❌ | ❌ |
 
-### Plugin Hooks (DEPRECATED — Historical Reference)
-
-> **⚠️ ARCHIVED (2026-02-10):** Plugin architecture is deprecated. All governance now flows through OpenCode SDK calls from the dashboard backend. This section is for historical context only.
-
-| Hook | Purpose (DEPRECATED) |
-|------|---------|
-| `event` | Session lifecycle logging |
-| `tool.execute.before` | Blocks write/edit without task + agent-scoped tool gating |
-| `tool.execute.after` | Defense-in-depth fallback |
-| `experimental.session.compacting` | Injects anchors + active task post-compaction |
-| `experimental.chat.system.transform` | Governance directive in system prompt |
-| `experimental.chat.messages.transform` | Prunes stale tool outputs (DCP pattern) |
-| `chat.params` | Captures agent identity for auto-assignment |
-
 ### Source Structure
 
 ```
@@ -305,7 +274,7 @@ src/
 ├── cli.ts                      # CLI entry (idumb-v2 init, idumb-v2 dashboard)
 ├── cli/
 │   ├── deploy.ts               # Agent + command + module deployment
-│   └── dashboard.ts            # Dashboard server launcher
+│   └── dashboard.ts            # Dashboard launcher
 ├── templates.ts                # 3 agent templates + commands + modules
 ├── _archived-plugin/           # Archived plugin source (Phase 1A)
 ├── schemas/
@@ -328,11 +297,12 @@ src/
 │   ├── scaffolder.ts           # .idumb/ directory creator
 │   ├── sqlite-adapter.ts       # SQLite storage adapter (optional)
 │   └── storage-adapter.ts      # Storage adapter interface
-└── dashboard/
-    ├── backend/server.ts       # Express + WebSocket + SSE + static serving
-    ├── backend/engine.ts       # OpenCode SDK engine bridge
-    ├── frontend/               # React 18 + Vite + Tailwind v4 + TanStack Query
-    └── shared/                 # Shared types between backend/frontend
+└── app/                        # TanStack Start Dashboard
+    ├── routes/                 # File-based routing
+    ├── server/                 # Server functions + SSE
+    ├── components/             # React components
+    ├── db/                     # Drizzle schema + client
+    └── hooks/                  # React hooks (useEngine, useSession, etc.)
 ```
 
 ---
@@ -358,22 +328,18 @@ src/
 | `governance_mode` | `balanced`, `strict`, `autonomous` | `balanced` |
 | `force` | `true`, `false` | `false` |
 
-### Governance Tools (Archived)
-
-> Plugin-based governance tools were archived in Phase 1A. SDK-direct equivalents planned.
-
 ---
 
-## Tests
+## 🧪 Tests
 
 ```bash
-npm test    # 466/466 assertions across 10 suites
+npm test    # 591 assertions across 10 suites
 ```
 
 | Suite | Assertions | Coverage |
 |-------|-----------|----------|
 | `init.test.ts` | 65 | Config, detection, scaffold, bilingual reports |
-| `persistence.test.ts` | 43 | Round-trip, debounce, degradation, brain stores |
+| `persistence.test.ts` | 89 | Round-trip, debounce, degradation, brain stores, SQLite |
 | `task.test.ts` | 54 | Epic/task CRUD, WorkStream v2, migration |
 | `delegation.test.ts` | 44 | Delegation chains, expiry, hierarchy |
 | `planning-registry.test.ts` | 52 | Artifact tracking, lifecycle, queries |
@@ -381,7 +347,7 @@ npm test    # 466/466 assertions across 10 suites
 | `task-graph.test.ts` | 112 | v3 TaskNode, Checkpoint, migration |
 | `plan-state.test.ts` | 40 | Plan phase tracking, projections |
 | `smoke-code-quality.ts` | -- | Smoke test against own codebase |
-| `sqlite-adapter.test.ts` | conditional | SQLite storage (when native binding available) |
+| `sqlite-adapter.test.ts` | 79 | SQLite storage adapter |
 
 ---
 
@@ -400,9 +366,9 @@ npm test    # 466/466 assertions across 10 suites
 
 ## Known Limitations
 
-- **Plugin archived** — Governance hooks and tools archived in Phase 1A; SDK-direct reimplementation planned
+- **SDK-direct governance not yet implemented** — Plugin hooks archived in Phase 1A; SDK-direct reimplementation planned for future phases
 - **Not on npm** — Requires `npm link` for now (publish coming soon)
-- **Dashboard** — Frontend built but not fully integrated with governance enforcement
+- **Dashboard** — Frontend built with TanStack Start but not yet fully connected to live governance enforcement
 
 ---
 
@@ -410,7 +376,7 @@ npm test    # 466/466 assertions across 10 suites
 
 ```bash
 npm run typecheck    # tsc --noEmit — zero errors
-npm test             # 466/466 — all must pass
+npm test             # 591/591 — all must pass
 npm run build        # tsc → dist/ — clean compile
 ```
 
@@ -466,7 +432,7 @@ Một luật. Không thương lượng. Codebase bạn sống sót. 💪
 | 🧲 **Sống Sót Compaction** | Context quan trọng không bị mất khi LLM reset cửa sổ |
 | ✂️ **Dọn Dẹp Context** | Output cũ tự động bị cắt gọn. Context luôn tươi mới. |
 | 💾 **Lưu Trữ** | Task, anchor, delegation sống qua các session |
-| 📊 **Dashboard** | Giao diện quản trị real-time — Express + WebSocket + React + Vite |
+| 📊 **Dashboard** | Giao diện quản trị real-time — TanStack Start + React + Vite + SSE |
 | 🌏 **Song Ngữ** | Hỗ trợ đầy đủ Tiếng Việt + English |
 | 🎯 **Phân Quyền Agent** | Mỗi agent có quyền riêng — investigator không được viết code, executor không được tạo epic |
 
@@ -503,18 +469,18 @@ Hoặc bỏ qua hỏi đáp: `idumb-v2 init -y`
 project-cua-ban/
 ├── .opencode/
 │   ├── agents/                           # 3 agent AI
-│   │   ├── idumb-supreme-coordinator.md  # Dieu phoi — chi delegate, khong viet code
-│   │   ├── idumb-investigator.md         # Nghien cuu, phan tich, lap ke hoach
-│   │   └── idumb-executor.md             # Viet code — agent duy nhat duoc viet
-│   └── commands/                         # 4 lenh
+│   │   ├── idumb-supreme-coordinator.md  # Điều phối — chỉ delegate, không viết code
+│   │   ├── idumb-investigator.md         # Nghiên cứu, phân tích, lập kế hoạch
+│   │   └── idumb-executor.md             # Viết code — agent duy nhất được viết
+│   └── commands/                         # 4 lệnh
 │       ├── idumb-init.md                 # /idumb-init
 │       ├── idumb-settings.md             # /idumb-settings
 │       ├── idumb-status.md               # /idumb-status
 │       └── idumb-delegate.md             # /idumb-delegate
-├── .idumb/                               # Du lieu quan tri
-│   ├── config.json                       # Cai dat cua ban
-│   ├── brain/                            # Trang thai ben vung
-│   └── idumb-modules/                    # Template & schema
+├── .idumb/                               # Dữ liệu quản trị
+│   ├── config.json                       # Cài đặt của bạn
+│   ├── brain/                            # Trạng thái bền vững
+│   └── modules/                          # Template & schema
 ```
 
 ### 4. Chạy OpenCode
@@ -542,7 +508,7 @@ Agent: govern_task start <task_id>
 
 ## 📊 Dashboard
 
-iDumb có giao diện dashboard real-time để xem trạng thái task, delegation chain, và code quality.
+iDumb có giao diện dashboard real-time được xây dựng với TanStack Start (SPA mode), React và Vite.
 
 ### Chạy dashboard
 
@@ -550,25 +516,25 @@ iDumb có giao diện dashboard real-time để xem trạng thái task, delegati
 idumb-v2 dashboard
 ```
 
-Chạy **hai server**:
+Chạy Vite dev server với TanStack Start:
 
 | Server | Port mặc định | Stack |
 |--------|---------------|-------|
-| **Backend** | `3001` | Express + WebSocket + chokidar |
-| **Frontend** | `3000` | React 18 + Vite + Tailwind v4 + TanStack Query |
+| **Dev Server** | `3000` | TanStack Start + Vite + React 19 + Tailwind v4 |
+
+Dashboard giao tiếp với OpenCode SDK qua server functions và SSE routes.
 
 ### Tùy chọn
 
 ```bash
-idumb-v2 dashboard --port 4000         # Đổi port frontend
-idumb-v2 dashboard --backend-port 5000 # Đổi port backend
+idumb-v2 dashboard --port 4000         # Đổi port
 idumb-v2 dashboard --no-browser        # Không mở browser tự động
 ```
 
 ### Yêu cầu
 
 - `.idumb/` phải tồn tại — chạy `idumb-v2 init` trước
-- Frontend cần Vite (`npx vite` phải hoạt động)
+- Cần Vite (`npx vite` phải hoạt động)
 
 ---
 
@@ -636,7 +602,7 @@ Kết quả là điểm sức khỏe A–F (0–100):
 ## 🧪 Tests
 
 ```bash
-npm test    # 466/466 assertions — 10 suite
+npm test    # 591 assertions — 10 suite
 ```
 
 ---
@@ -655,9 +621,9 @@ npm test    # 466/466 assertions — 10 suite
 
 ## ⚠️ Hạn Chế
 
-- **Subagent hook gap** — `tool.execute.before` không fire cho subagent trong OpenCode
-- **Experimental hooks** — `system.transform` và `messages.transform` chưa verified
+- **SDK-direct governance chưa triển khai** — Plugin hooks đã được archived ở Phase 1A; SDK-direct reimplementation dự kiến ở các phase sau
 - **Chưa lên npm** — Cần `npm link` (publish sắp tới™)
+- **Dashboard** — Frontend đã xây dựng với TanStack Start nhưng chưa kết nối hoàn toàn với governance enforcement
 
 ---
 

@@ -15,7 +15,7 @@ import type { PanelId, PanelConfig } from '@/shared/ide-types'
 
 // --- Panel configuration constants ---
 
-/** Default panel configs: sidebar(20%), editor(50%), terminal(30%) */
+/** Default panel configs: sidebar(20%), editor(70%), terminal(30%) */
 export const IDE_PANELS: Record<PanelId, PanelConfig> = {
   sidebar: {
     id: 'sidebar',
@@ -27,9 +27,9 @@ export const IDE_PANELS: Record<PanelId, PanelConfig> = {
   },
   editor: {
     id: 'editor',
-    defaultSize: 50,
+    defaultSize: 70,
     minSize: 30,
-    maxSize: 80,
+    maxSize: 85,
     collapsible: false,
     position: 'center',
   },

@@ -19,6 +19,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useEffect, type ReactNode } from "react"
 import { ensureEngineFn } from "../server/engine"
 import { EventStreamProvider } from "../hooks/useEventStream"
+import { ThemeProvider } from "../hooks/useTheme"
 
 import appCss from "@/styles/app.css?url"
 
@@ -33,7 +34,7 @@ const queryClient = new QueryClient({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -64,9 +65,11 @@ function RootComponent() {
   return (
     <RootDocument>
       <QueryClientProvider client={queryClient}>
-        <EventStreamProvider>
-          <Outlet />
-        </EventStreamProvider>
+        <ThemeProvider>
+          <EventStreamProvider>
+            <Outlet />
+          </EventStreamProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </RootDocument>
   )

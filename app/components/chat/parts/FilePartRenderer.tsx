@@ -26,7 +26,17 @@ export function FilePartRenderer({ part }: FilePartRendererProps) {
           className="max-w-md max-h-64 rounded-md border border-border object-contain"
           loading="lazy"
         />
-        <p className="text-xs text-muted-foreground mt-1">{filename}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <p className="text-xs text-muted-foreground">{filename}</p>
+          <a
+            href={part.url}
+            download={filename}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={`Download ${filename}`}
+          >
+            <Download className="w-3 h-3" />
+          </a>
+        </div>
       </div>
     )
   }

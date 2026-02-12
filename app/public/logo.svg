@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Container: Rounded Square -->
+  <rect x="64" y="64" width="384" height="384" rx="64" fill="#6366f1" stroke="#4f46e5" stroke-width="24"/>
+  
+  <!-- Antenna -->
+  <path d="M256 64 V32" stroke="#4f46e5" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="256" cy="32" r="16" fill="#f59e0b"/>
+  
+  <!-- Face: Mismatched Eyes -->
+  <!-- Left Eye (Large) -->
+  <circle cx="192" cy="224" r="48" fill="white"/>
+  <circle cx="192" cy="224" r="16" fill="#1e1b4b"/> <!-- Pupil -->
+  
+  <!-- Right Eye (Small & Wonky) -->
+  <circle cx="336" cy="224" r="24" fill="white"/>
+  <circle cx="336" cy="224" r="8" fill="#1e1b4b"/> <!-- Pupil -->
+  
+  <!-- Mouth: Slightly Tilted Line -->
+  <path d="M192 320 Q256 336 320 312" stroke="white" stroke-width="24" stroke-linecap="round"/>
+  
+  <!-- Subtle Tech Nodes (Optional, keeping it clean for now) -->
+  <circle cx="128" cy="384" r="12" fill="#818cf8" opacity="0.5"/>
+  <circle cx="384" cy="384" r="12" fill="#818cf8" opacity="0.5"/>
+</svg>

@@ -8,8 +8,8 @@
  * Per user decision: "accordions, not heavy cards — minimal visual weight when collapsed."
  */
 
-import { useState } from "react"
-import { ChevronRight, ChevronDown } from "lucide-react"
+import { useState, useCallback } from "react"
+import { ChevronRight, ChevronDown, Copy, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ToolPart } from "@/shared/engine-types"
 
@@ -29,6 +29,34 @@ function formatDuration(startMs: number, endMs?: number): string {
   if (elapsed < 0.1) return "<0.1s"
   if (elapsed < 60) return `${elapsed.toFixed(1)}s`
   return `${Math.floor(elapsed / 60)}m ${Math.round(elapsed % 60)}s`
+}
+
+/** Inline copy-to-clipboard button for pre blocks */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard API may fail in non-secure contexts — fail silently
+    }
+  }, [text])
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="ml-auto flex-shrink-0 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <Check className="w-3 h-3 text-green-500" />
+      ) : (
+        <Copy className="w-3 h-3" />
+      )}
+    </button>
+  )
 }
 
 export function ToolCallAccordion({ part }: ToolCallAccordionProps) {
@@ -95,7 +123,10 @@ export function ToolCallAccordion({ part }: ToolCallAccordionProps) {
         <div className="border-t border-border px-3 py-2 space-y-2">
           {/* Input */}
           <div>
-            <span className="text-muted-foreground text-[10px] uppercase block mb-1">Input</span>
+            <div className="flex items-center mb-1">
+              <span className="text-muted-foreground text-[10px] uppercase">Input</span>
+              <CopyButton text={JSON.stringify(state.input, null, 2)} />
+            </div>
             <pre className="text-xs bg-muted/30 rounded p-2 overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
               {JSON.stringify(state.input, null, 2)}
             </pre>
@@ -104,7 +135,10 @@ export function ToolCallAccordion({ part }: ToolCallAccordionProps) {
           {/* Output (completed only) */}
           {state.status === "completed" && state.output && (
             <div>
-              <span className="text-muted-foreground text-[10px] uppercase block mb-1">Output</span>
+              <div className="flex items-center mb-1">
+                <span className="text-muted-foreground text-[10px] uppercase">Output</span>
+                <CopyButton text={state.output} />
+              </div>
               <pre className="text-xs bg-muted/30 rounded p-2 overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
                 {state.output}
               </pre>

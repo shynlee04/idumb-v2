@@ -6,7 +6,10 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router"
-import { getClient, getProjectDir, ensureEngine, sdkQuery } from "../../server/sdk-client.server"
+
+// NOTE: sdk-client.server imports are dynamic (inside handler) to prevent
+// Node.js modules (node:fs via logging.ts) from leaking into the client bundle.
+// TanStack Start's .server.ts stripping does NOT work for raw server.handlers patterns.
 
 // @ts-ignore — route path will be registered by Vite route tree generator at build time
 export const Route = createFileRoute("/api/events")({
@@ -16,6 +19,7 @@ export const Route = createFileRoute("/api/events")({
     server: {
       handlers: {
         GET: async ({ request }: { request: Request }) => {
+          const { getClient, getProjectDir, ensureEngine, sdkQuery } = await import("../../server/sdk-client.server")
           const projectDir = getProjectDir()
           await ensureEngine()
           const client = getClient()
