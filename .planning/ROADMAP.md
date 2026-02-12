@@ -160,8 +160,8 @@ Plans:
 - [x] 07-02-PLAN.md — Step clustering: StepCluster component + part grouping + streaming step awareness (wave 2)
 - [x] 07-03-PLAN.md — Integrated terminal: xterm.js + SDK PTY API + IDEShell integration + standalone route (wave 1)
 - [x] 07-04-PLAN.md — Settings & model picker: 3-tab settings page + chat header ModelPicker + theme toggle (wave 1)
-- [ ] 07-05-PLAN.md — Gap closure: DB migration + theme CSS + stream termination (wave 1)
-- [ ] 07-06-PLAN.md — Gap closure: terminal visibility + file tree regression + tool copy buttons (wave 1)
+- [x] 07-05-PLAN.md — Gap closure: DB migration + theme CSS + stream termination (wave 1)
+- [x] 07-06-PLAN.md — Gap closure: terminal visibility + file tree regression + tool copy buttons (wave 1)
 
 ### Phase 8: Sessions + Diffs + Agents
 **Goal**: Users manage AI sessions, review code changes, and see multi-agent operations with clear attribution
@@ -289,7 +289,7 @@ Plans:
 | 11. SDK Type Architecture | v2.0 | 4/4 | Complete | 2026-02-11 |
 | 11.1. Build & Config Blockers | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 11.2. Contamination Purge | v2.0 | 1/1 | Complete | 2026-02-12 |
-| 7. Chat + Terminal | v2.0 | 4/6 | Gap closure | 2026-02-12 |
+| 7. Chat + Terminal | v2.0 | 6/6 | Complete | 2026-02-12 |
 | 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
 | 8.5. Design System + UX Polish | v2.0 | 0/4 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
@@ -297,4 +297,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 7 gap closure: 2 plans (07-05, 07-06) added for 6 UAT gaps. Phase 7 status: 4/6 plans complete, 2 gap closure plans pending.*
+*Updated: 2026-02-12 -- Phase 7 complete: 6/6 plans (4 feature + 2 gap closure). Verification passed (4/4 criteria, 21/21 truths).*

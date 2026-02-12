@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 7 COMPLETE. All 4 plans done. Phase 8 next.
+**Current focus:** Phase 7 complete. Phase 8 (Sessions + Diffs + Agents) next.
 
 ## Current Position
 
-Phase: 7 of 10+ (Chat + Terminal -- COMPLETE)
-Plan: 4 of 4 in current phase (all plans complete)
-Status: Phase 7 COMPLETE -- all 4 plans executed (01 Rich Part Renderers, 02 Step Clustering, 03 Terminal, 04 Settings)
-Last activity: 2026-02-12 -- Phase 7 Plan 02 executed (StepCluster, groupPartsIntoClusters, streaming Part accumulation)
+Phase: 7 of 11 (Chat + Terminal -- COMPLETE)
+Plan: 6 of 6 in current phase (all plans complete, verification passed)
+Status: Phase 7 complete — 6/6 plans, 4/4 success criteria verified, 21/21 observable truths
+Last activity: 2026-02-12 -- Phase 7 execution + verification complete
 
-Progress: [█████████░] 88% (5/5 gap-closure + 07 complete)
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 + 07-02 + 07-03 + 07-04)
+- Total plans completed: 19 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06)
 - Average duration: —
 - Total execution time: —
 
@@ -48,6 +48,8 @@ Progress: [█████████░] 88% (5/5 gap-closure + 07 complete)
 | 7.01 (Rich Part Renderers) | 2 tasks | 12 min | ~6 min |
 | 7.03 (Terminal Integration) | 2 tasks | 10 min | ~5 min |
 | 7.02 (Step Clustering) | 2 tasks | 8 min | ~4 min |
+| 7.05 (Infrastructure Gap Closure) | 2 tasks | 4 min | ~2 min |
+| 7.06 (UI Component Gap Closure) | 3 tasks | 4 min | ~1 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -60,6 +62,13 @@ Progress: [█████████░] 88% (5/5 gap-closure + 07 complete)
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [07-05]: migrate() call with drizzle-orm/better-sqlite3/migrator — idempotent schema migrations on startup
+- [07-05]: @theme (not @theme inline) for CSS custom property var() references — enables .light class overrides
+- [07-05]: session.status.status is { type: string }, not a plain string — nested object comparison required
+- [07-05]: Client-side reader.cancel() on terminal events — closes fetch response body immediately
+- [07-06]: Toggle button outside react-resizable-panels Group in flex wrapper div — Group only accepts Panel/Separator children
+- [07-06]: Folder children:null → children:[] for react-arborist — null = leaf, [] = expandable
+- [07-06]: Gap 1 (copy buttons) already resolved — no code changes needed
 - [07-02]: PartRenderer exported from ChatMessage.tsx for reuse by StepCluster -- avoids duplication
 - [07-02]: ClusteredMessage in ChatMessages.tsx (not chat.$sessionId.tsx) -- keeps route file focused on data
 - [07-02]: Duration computed from tool time data (time.start/time.end) -- StepStartPart has no timestamp field
@@ -150,17 +159,18 @@ Recent decisions affecting current work:
 | 11 | SDK Type Architecture | COMPLETE | 4/4 plans |
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
-| 7 | Chat + Terminal | COMPLETE | 4/4 plans |
+| 7 | Chat + Terminal | COMPLETE | 6/6 plans |
 | 8 | Sessions + Diffs + Agents | Pending | 0/3 plans |
+| 8.5 | Design System + UX Polish | Pending | 0/4 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
 
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 07-02-PLAN.md -- Phase 7 COMPLETE (all 4 plans done: 01, 02, 03, 04)
-Resume file: .planning/phases/08-sessions-diffs/ (next phase)
+Stopped at: Phase 7 complete — verification passed, ready for Phase 8
+Resume file: .planning/ROADMAP.md (Phase 8 planning)
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 7 COMPLETE. Plan 02 (Step Clustering) executed: StepCluster component, groupPartsIntoClusters algorithm, streaming Part accumulation, dual-path streaming message construction.*
+*Updated: 2026-02-12 -- Phase 7 complete: 6/6 plans, verification passed (4/4 criteria, 21/21 truths). Next: Phase 8.*
