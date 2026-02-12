@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-10)
 
 **Core value:** Prove OpenCode SDK can power a full-featured self-hosted Code IDE with governed multi-agent workspace
-**Current focus:** Phase 8 in progress. Plans 08-01 + 08-02 complete, 08-03 next.
+**Current focus:** Phase 8 COMPLETE. All 3 plans done. Next: Phase 8.5 or 9.
 
 ## Current Position
 
-Phase: 8 of 11 (Sessions + Diffs + Agents -- IN PROGRESS)
-Plan: 2 of 3 in current phase (08-01, 08-02 complete)
-Status: 08-02 complete — Monaco DiffEditor viewer with file list, inline/side-by-side toggle, Chat/Changes view
-Last activity: 2026-02-12 -- Plan 08-02 executed (2 tasks, 9 files, 9 min)
+Phase: 8 of 11 (Sessions + Diffs + Agents -- COMPLETE)
+Plan: 3 of 3 in current phase (08-01, 08-02, 08-03 complete)
+Status: Phase 8 complete — session lifecycle, diff viewer, agent visualization all done
+Last activity: 2026-02-12 -- Plan 08-03 executed (2 tasks, 5 files, 5 min)
 
-Progress: [██████----] 67%
+Progress: [███████---] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06 + 08-01 + 08-02)
+- Total plans completed: 22 (Phases 1 + 1A from previous milestone + 11.1 + 11.2 + 07-01 through 07-06 + 08-01 through 08-03)
 - Average duration: —
 - Total execution time: —
 
@@ -52,6 +52,7 @@ Progress: [██████----] 67%
 | 7.06 (UI Component Gap Closure) | 3 tasks | 4 min | ~1 min |
 | 8.01 (Session Lifecycle) | 2 tasks | 9 min | ~5 min |
 | 8.02 (Diff Viewer) | 2 tasks | 9 min | ~5 min |
+| 8.03 (Agent Visualization) | 2 tasks | 5 min | ~3 min |
 **Recent Trend:**
 - New milestone starting. No trend data for v2.0 yet.
 
@@ -64,6 +65,10 @@ Progress: [██████----] 67%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+- [08-03]: AGENT_DISPLAY config record maps known agents to icon/color/label -- extensible, unknown agents use Zap icon fallback
+- [08-03]: Agent attribution extracted via runtime 'agent' in item.info check -- SDK UserMessage may not surface agent in TS types
+- [08-03]: AgentFlowView uses title-based agent inference from child sessions -- no SDK API for child agent name
+- [08-03]: PartRenderer now renders agent parts as dividers and subtask parts as expandable cards (no longer returns null)
 - [08-02]: FileDiff re-exported from SDK (not hand-rolled) -- SDK exports FileDiff via types.gen.d.ts, per SDK Type Governance
 - [08-02]: EXT_TO_LANG duplicated in DiffViewer (not imported from MonacoEditor) -- avoids cross-component coupling
 - [08-02]: 30s staleTime for diff queries -- diffs are relatively stable during a session
@@ -171,7 +176,7 @@ Recent decisions affecting current work:
 | 11.1 | Build & Config Blockers | COMPLETE | 1/1 plans |
 | 11.2 | Contamination Purge | COMPLETE | 1/1 plans |
 | 7 | Chat + Terminal | COMPLETE | 6/6 plans |
-| 8 | Sessions + Diffs + Agents | In Progress | 2/3 plans |
+| 8 | Sessions + Diffs + Agents | COMPLETE | 3/3 plans |
 | 8.5 | Design System + UX Polish | Pending | 0/4 plans |
 | 9 | Governance + Quick Wins | Pending | 0/3 plans |
 | 10 | i18n Validation | Pending | 0/3 plans |
@@ -179,9 +184,9 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 08-02-PLAN.md (Diff Viewer)
-Resume file: .planning/phases/08-sessions-diffs-agents/08-03-PLAN.md
+Stopped at: Completed 08-03-PLAN.md (Agent Visualization) — Phase 8 COMPLETE
+Resume file: .planning/phases/08.5-design-ux-polish/ or .planning/phases/09-governance/
 
 ---
 *State initialized: 2026-02-09*
-*Updated: 2026-02-12 -- Plan 08-02 complete: Monaco DiffEditor viewer with file list, inline/side-by-side toggle, Chat/Changes view. Next: 08-03.*
+*Updated: 2026-02-12 -- Plan 08-03 complete: AgentBadge, SubtaskCard, AgentFlowView for multi-agent visualization. Phase 8 COMPLETE (3/3 plans). Next: Phase 8.5 or 9.*
