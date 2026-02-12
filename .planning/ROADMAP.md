@@ -51,7 +51,7 @@ Plans:
 - [x] **Phase 11.1: Build & Config Blockers** — Fix build failure, typecheck, type governance violations, config drift *(completed 2026-02-12)*
 - [x] **Phase 11.2: Contamination & Dead Code Purge** — Remove plugin-era docs, dead code, stale references *(completed 2026-02-12)*
 - [ ] **Phase 7: Chat + Terminal** — Rich chat rendering + step clustering + integrated terminal + config UI + gap closure
-- [ ] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization
+- [x] **Phase 8: Sessions + Diffs + Agents** — Session management + diff viewer + multi-agent visualization *(completed 2026-02-12)*
 - [ ] **Phase 8.5: Design System + UX Polish** — Shared UI primitives + consistent state patterns + component refinement across all surfaces
 - [ ] **Phase 9: Governance + Quick Wins** — Task sidebar + file tracking + code quality + minimap + export
 - [ ] **Phase 10: i18n Validation** — Translation infrastructure + string extraction + Vietnamese validation
@@ -176,9 +176,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: Session management — CRUD + search + auto-title + revert/unrevert
-- [ ] 08-02: Diff viewer — Monaco DiffEditor + file change list + disposal
-- [ ] 08-03: Multi-agent visualization + agent attribution badges
+- [x] 08-01: Session management — CRUD + search + auto-title + revert/unrevert
+- [x] 08-02: Diff viewer — Monaco DiffEditor + file change list + disposal
+- [x] 08-03: Multi-agent visualization + agent attribution badges
 
 ### Phase 8.5: Design System + UX Polish
 **Goal**: Users experience a visually consistent, polished IDE — every surface uses shared primitives with coherent loading/error/empty states, proper animations, and refined component design
@@ -290,11 +290,11 @@ Plans:
 | 11.1. Build & Config Blockers | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 11.2. Contamination Purge | v2.0 | 1/1 | Complete | 2026-02-12 |
 | 7. Chat + Terminal | v2.0 | 6/6 | Complete | 2026-02-12 |
-| 8. Sessions + Diffs + Agents | v2.0 | 0/3 | Not started | -- |
+| 8. Sessions + Diffs + Agents | v2.0 | 3/3 | Complete | 2026-02-12 |
 | 8.5. Design System + UX Polish | v2.0 | 0/4 | Not started | -- |
 | 9. Governance + Quick Wins | v2.0 | 0/3 | Not started | -- |
 | 10. i18n Validation | v2.0 | 0/3 | Not started | -- |
 
 ---
 *Roadmap created: 2026-02-09*
-*Updated: 2026-02-12 -- Phase 7 complete: 6/6 plans (4 feature + 2 gap closure). Verification passed (4/4 criteria, 21/21 truths).*
+*Updated: 2026-02-12 -- Phase 8 complete: 3/3 plans (session lifecycle, diff viewer, agent visualization). Verification passed (5/5 criteria, 19 artifacts, 11 key links). Stage 1 (Phases 5-8) COMPLETE.*
