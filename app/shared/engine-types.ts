@@ -35,6 +35,7 @@ import type {
   Agent,
   Path,
   VcsInfo,
+  FileDiff,
 } from '@opencode-ai/sdk'
 
 export type {
@@ -60,6 +61,7 @@ export type {
   Agent,
   Path,
   VcsInfo,
+  FileDiff,
 }
 
 // --- App-specific types (no SDK equivalent) ---
