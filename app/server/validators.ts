@@ -17,6 +17,26 @@ export const CreateSessionSchema = z.object({
   title: z.string().optional(),
 })
 
+/** Validate session rename input. */
+export const RenameSessionSchema = z.object({
+  id: z.string().min(1, "Session ID is required"),
+  title: z.string().min(1, "Title is required").max(200, "Title too long"),
+})
+
+/** Validate session summarize (auto-title) input. */
+export const SummarizeSessionSchema = z.object({
+  id: z.string().min(1, "Session ID is required"),
+  providerID: z.string().optional(),
+  modelID: z.string().optional(),
+})
+
+/** Validate session revert input. */
+export const RevertSessionSchema = z.object({
+  id: z.string().min(1, "Session ID is required"),
+  messageID: z.string().min(1, "Message ID is required"),
+  partID: z.string().optional(),
+})
+
 /** Validate engine start/restart input. */
 export const EngineStartSchema = z.object({
   projectDir: z.string().optional(),

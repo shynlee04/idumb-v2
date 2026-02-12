@@ -14,7 +14,13 @@
 
 import { createServerFn } from "@tanstack/react-start"
 import { getClient, getProjectDir, sdkQuery, unwrapSdkResult } from "./sdk-client.server"
-import { SessionIdSchema, CreateSessionSchema } from "./validators"
+import {
+  SessionIdSchema,
+  CreateSessionSchema,
+  RenameSessionSchema,
+  SummarizeSessionSchema,
+  RevertSessionSchema,
+} from "./validators"
 import {
   validateSessionList,
   validateSession,
@@ -167,5 +173,77 @@ export const getSessionChildrenFn = createServerFn({ method: "GET" })
       return validateSessionList(unwrapSdkResult(result))
     } catch (err) {
       throw new Error(`Failed to get child sessions: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  })
+
+// ─── Session Lifecycle Functions ──────────────────────────────────────────
+
+/** Rename a session (update title). */
+export const renameSessionFn = createServerFn({ method: "POST" })
+  .inputValidator(RenameSessionSchema)
+  .handler(async ({ data }) => {
+    try {
+      const projectDir = getProjectDir()
+      const result = await getClient().session.update({
+        query: sdkQuery(projectDir),
+        path: { id: data.id },
+        body: { title: data.title },
+      })
+      return validateSession(unwrapSdkResult(result))
+    } catch (err) {
+      throw new Error(`Failed to rename session: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  })
+
+/** Auto-generate a session title via AI summarization. */
+export const summarizeSessionFn = createServerFn({ method: "POST" })
+  .inputValidator(SummarizeSessionSchema)
+  .handler(async ({ data }) => {
+    try {
+      const projectDir = getProjectDir()
+      const result = await getClient().session.summarize({
+        query: sdkQuery(projectDir),
+        path: { id: data.id },
+        body: data.modelID ? { providerID: data.providerID!, modelID: data.modelID } : undefined,
+      })
+      return unwrapSdkResult(result)
+    } catch (err) {
+      throw new Error(`Failed to summarize session: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  })
+
+/** Revert a session to a specific message. */
+export const revertSessionFn = createServerFn({ method: "POST" })
+  .inputValidator(RevertSessionSchema)
+  .handler(async ({ data }) => {
+    try {
+      const projectDir = getProjectDir()
+      const result = await getClient().session.revert({
+        query: sdkQuery(projectDir),
+        path: { id: data.id },
+        body: {
+          messageID: data.messageID,
+          ...(data.partID ? { partID: data.partID } : {}),
+        },
+      })
+      return validateSession(unwrapSdkResult(result))
+    } catch (err) {
+      throw new Error(`Failed to revert session: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  })
+
+/** Restore all reverted messages (unrevert). */
+export const unrevertSessionFn = createServerFn({ method: "POST" })
+  .inputValidator(SessionIdSchema)
+  .handler(async ({ data }) => {
+    try {
+      const projectDir = getProjectDir()
+      const result = await getClient().session.unrevert({
+        query: sdkQuery(projectDir),
+        path: { id: data.id },
+      })
+      return validateSession(unwrapSdkResult(result))
+    } catch (err) {
+      throw new Error(`Failed to unrevert session: ${err instanceof Error ? err.message : String(err)}`)
     }
   })

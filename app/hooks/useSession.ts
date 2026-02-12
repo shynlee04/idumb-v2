@@ -22,6 +22,10 @@ import {
   getSessionMessagesFn,
   abortSessionFn,
   getSessionChildrenFn,
+  renameSessionFn,
+  summarizeSessionFn,
+  revertSessionFn,
+  unrevertSessionFn,
 } from "../server/sessions"
 
 // ─── Query Keys ───────────────────────────────────────────────────────────
@@ -96,6 +100,55 @@ export function useAbortSession() {
     mutationFn: (id: string) => abortSessionFn({ data: { id } }),
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.detail(id) })
+    },
+  })
+}
+
+// ─── Session Lifecycle Hooks ──────────────────────────────────────────────
+
+export function useRenameSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { id: string; title: string }) =>
+      renameSessionFn({ data: params }),
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: sessionKeys.detail(params.id) })
+      queryClient.invalidateQueries({ queryKey: sessionKeys.lists() })
+    },
+  })
+}
+
+export function useSummarizeSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { id: string; providerID?: string; modelID?: string }) =>
+      summarizeSessionFn({ data: params }),
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: sessionKeys.detail(params.id) })
+      queryClient.invalidateQueries({ queryKey: sessionKeys.lists() })
+    },
+  })
+}
+
+export function useRevertSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { id: string; messageID: string; partID?: string }) =>
+      revertSessionFn({ data: params }),
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: sessionKeys.detail(params.id) })
+      queryClient.invalidateQueries({ queryKey: sessionKeys.messages(params.id) })
+    },
+  })
+}
+
+export function useUnrevertSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => unrevertSessionFn({ data: { id } }),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: sessionKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: sessionKeys.messages(id) })
     },
   })
 }
