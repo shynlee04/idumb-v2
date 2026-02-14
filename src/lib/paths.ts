@@ -22,6 +22,8 @@ export const BRAIN_PATHS = {
   projectMap: ".idumb/brain/project-map.json",
   planningRegistry: ".idumb/brain/registry.json",
   config: ".idumb/config.json",
+  dashboardPort: ".idumb/brain/dashboard-port.json",
+  comments: ".idumb/brain/comments.json",
 
   // ─── Legacy paths (pre-Phase 8 migration) ──────────────────────
   legacy: {
@@ -36,3 +38,21 @@ export const BRAIN_PATHS = {
  * Useful for consumers that need to iterate or type-check path keys.
  */
 export type BrainPaths = typeof BRAIN_PATHS
+
+// ─── Project Paths ──────────────────────────────────────────────────
+
+/**
+ * Project Paths — common directory paths relative to project root.
+ */
+export const PROJECT_PATHS = {
+  root: ".",
+  planning: "planning",
+  brain: ".idumb/brain",
+  frontendDist: "src/dashboard/frontend/dist",
+  backups: ".idumb/backups",
+} as const
+
+/**
+ * Type for the PROJECT_PATHS constant.
+ */
+export type ProjectPaths = typeof PROJECT_PATHS

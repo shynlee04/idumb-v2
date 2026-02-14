@@ -26,6 +26,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSy
 import { randomUUID } from "crypto"
 import { SqliteAdapter } from "../../lib/sqlite-adapter.js"
 import { createLogger, type Logger } from "../../lib/logging.js"
+import { BRAIN_PATHS, PROJECT_PATHS } from "../../lib/paths.js"
 
 // ─── Security ─────────────────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ function getGovernanceState(projectDir: string) {
  * Get planning artifacts list
  */
 function getPlanningArtifacts(projectDir: string) {
-  const planningDir = join(projectDir, "planning")
+  const planningDir = join(projectDir, PROJECT_PATHS.planning)
   const artifacts: Array<{
     path: string
     name: string
@@ -307,7 +308,7 @@ app.put("/api/artifacts/content", (req: Request, res: Response): void => {
 
   try {
     // Create backup before saving
-    const backupDir = join(projectDir, ".idumb/backups")
+    const backupDir = join(projectDir, PROJECT_PATHS.backups)
     if (!existsSync(backupDir)) {
       mkdirSync(backupDir, { recursive: true })
     }
@@ -391,7 +392,7 @@ app.get("/api/artifacts/metadata", (req: Request, res: Response): void => {
  * Get comments store path
  */
 function getCommentsStorePath(projectDir: string): string {
-  return join(projectDir, ".idumb/brain/comments.json")
+  return join(projectDir, BRAIN_PATHS.comments)
 }
 
 /**
@@ -423,7 +424,7 @@ function loadCommentsStore(projectDir: string) {
  */
 function saveCommentsStore(projectDir: string, store: unknown): void {
   const commentsPath = getCommentsStorePath(projectDir)
-  const commentsDir = join(projectDir, ".idumb/brain")
+  const commentsDir = join(projectDir, PROJECT_PATHS.brain)
 
   // Ensure directory exists
   if (!existsSync(commentsDir)) {
@@ -590,8 +591,8 @@ export function broadcastUpdate(type: string, data: unknown) {
 import { watch } from "chokidar"
 
 function setupFileWatcher(projectDir: string) {
-  const brainDir = join(projectDir, ".idumb/brain")
-  const planningDir = join(projectDir, "planning")
+  const brainDir = join(projectDir, PROJECT_PATHS.brain)
+  const planningDir = join(projectDir, PROJECT_PATHS.planning)
 
   const watcher = watch([
     join(brainDir, "*.json"),
@@ -655,7 +656,7 @@ export async function startServer(config: DashboardConfig): Promise<void> {
   }
 
   // ─── Story 12-02: Serve pre-built frontend assets if available ──────
-  const frontendDistPath = join(config.projectDir, "src/dashboard/frontend/dist")
+  const frontendDistPath = join(config.projectDir, PROJECT_PATHS.frontendDist)
   if (existsSync(join(frontendDistPath, "index.html"))) {
     app.use(express.static(frontendDistPath))
     // SPA catch-all: serve index.html for any non-API route
@@ -678,7 +679,7 @@ export async function startServer(config: DashboardConfig): Promise<void> {
 
       // Write actual port to disk for frontend discovery
       try {
-        const portFile = join(config.projectDir, ".idumb", "brain", "dashboard-port.json")
+        const portFile = join(config.projectDir, BRAIN_PATHS.dashboardPort)
         writeFileSync(portFile, JSON.stringify({ port, timestamp: Date.now() }))
       } catch {
         // Best-effort — frontend can fall back to default port
@@ -721,7 +722,7 @@ function tryListenOnPort(config: DashboardConfig, port: number): Promise<void> {
 
         // Setup file watcher
         watcher = setupFileWatcher(config.projectDir)
-        log.info("Watching .idumb/brain/ and planning/")
+        log.info(`Watching ${PROJECT_PATHS.brain}/ and ${PROJECT_PATHS.planning}/`)
 
         resolve()
       })
