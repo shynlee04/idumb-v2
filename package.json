@@ -26,7 +26,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsx tests/tool-gate.test.ts && tsx tests/compaction.test.ts && tsx tests/message-transform.test.ts && tsx tests/system.test.ts && tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts && tsx tests/work-plan.test.ts && tsx tests/task-graph.test.ts && tsx tests/plan-state.test.ts && tsx tests/govern-plan.test.ts && tsx tests/govern-task.test.ts && tsx tests/govern-delegate.test.ts && tsx tests/govern-shell.test.ts && tsx tests/anchor-tool.test.ts && tsx tests/init-tool.test.ts && tsx tests/smoke-code-quality.ts && tsx tests/sqlite-adapter.test.ts",
+    "test": "tsx tests/tool-gate.test.ts && tsx tests/compaction.test.ts && tsx tests/message-transform.test.ts && tsx tests/system.test.ts && tsx tests/init.test.ts && tsx tests/persistence.test.ts && tsx tests/task.test.ts && tsx tests/delegation.test.ts && tsx tests/planning-registry.test.ts && tsx tests/work-plan.test.ts && tsx tests/task-graph.test.ts && tsx tests/plan-state.test.ts && tsx tests/govern-plan.test.ts && tsx tests/govern-task.test.ts && tsx tests/govern-delegate.test.ts && tsx tests/govern-shell.test.ts && tsx tests/anchor-tool.test.ts && tsx tests/init-tool.test.ts && tsx tests/smoke-code-quality.ts && tsx tests/sqlite-adapter.test.ts && tsx tests/state-reader.test.ts",
     "prepare": "tsc || true",
     "prepublishOnly": "npm run typecheck && npm test && npm run build",
     "user-stories:verify": "npx tsx scripts/verify-user-stories.ts"
