@@ -200,62 +200,78 @@ export interface GraphWarning {
     message: string
 }
 
+function checkActivePlanNoTasks(graph: TaskGraph, wp: WorkPlan): GraphWarning | null {
+    const activeTasks = wp.tasks.filter(t => t.status === "active")
+    if (activeTasks.length === 0 && wp.tasks.length > 0) {
+        const planned = wp.tasks.filter(t => t.status === "planned")
+        const startable = planned.filter(t => {
+            const check = validateTaskStart(graph, t)
+            return check.allowed
+        })
+        return {
+            type: "no_active_tasks",
+            workPlanId: wp.id,
+            message: `WorkPlan "${wp.name}" is active but has no active tasks. ${
+                startable.length > 0
+                    ? `${startable.length} task(s) ready to start. Next: govern_task action=start target_id=${startable[0].id}`
+                    : planned.length > 0
+                        ? `${planned.length} planned task(s) but all blocked by dependencies.`
+                        : "No planned tasks remaining."
+            }`,
+        }
+    }
+    return null
+}
+
+function checkStaleTasks(wp: WorkPlan): GraphWarning[] {
+    const warnings: GraphWarning[] = []
+    const now = Date.now()
+    for (const tn of wp.tasks) {
+        if (tn.status === "active") {
+            const elapsed = now - tn.modifiedAt
+            if (elapsed > SESSION_STALE_MS && tn.checkpoints.length === 0) {
+                warnings.push({
+                    type: "stale_task",
+                    workPlanId: wp.id,
+                    taskNodeId: tn.id,
+                    message: `Task "${tn.name}" active for ${Math.round(elapsed / 60000)}min with no checkpoints.`,
+                })
+            }
+        }
+    }
+    return warnings
+}
+
+function checkBrokenDependencies(graph: TaskGraph, wp: WorkPlan): GraphWarning[] {
+    const warnings: GraphWarning[] = []
+    for (const tn of [...wp.tasks, ...wp.planAhead]) {
+        for (const depId of tn.dependsOn) {
+            if (!findTaskNode(graph, depId)) {
+                warnings.push({
+                    type: "broken_dependency",
+                    workPlanId: wp.id,
+                    taskNodeId: tn.id,
+                    message: `Task "${tn.name}" depends on "${depId}" which does not exist. Broken chain.`,
+                })
+            }
+        }
+    }
+    return warnings
+}
+
 export function detectGraphBreaks(graph: TaskGraph): GraphWarning[] {
     const warnings: GraphWarning[] = []
 
     for (const wp of graph.workPlans) {
         if (wp.status !== "active") continue
 
-        // Active plan but no active tasks
-        const activeTasks = wp.tasks.filter(t => t.status === "active")
-        if (activeTasks.length === 0 && wp.tasks.length > 0) {
-            const planned = wp.tasks.filter(t => t.status === "planned")
-            const startable = planned.filter(t => {
-                const check = validateTaskStart(graph, t)
-                return check.allowed
-            })
-            warnings.push({
-                type: "no_active_tasks",
-                workPlanId: wp.id,
-                message: `WorkPlan "${wp.name}" is active but has no active tasks. ${
-                    startable.length > 0
-                        ? `${startable.length} task(s) ready to start. Next: govern_task action=start target_id=${startable[0].id}`
-                        : planned.length > 0
-                            ? `${planned.length} planned task(s) but all blocked by dependencies.`
-                            : "No planned tasks remaining."
-                }`,
-            })
+        const activeWarning = checkActivePlanNoTasks(graph, wp)
+        if (activeWarning) {
+            warnings.push(activeWarning)
         }
 
-        // Stale tasks (active with no checkpoints beyond threshold)
-        const now = Date.now()
-        for (const tn of wp.tasks) {
-            if (tn.status === "active") {
-                const elapsed = now - tn.modifiedAt
-                if (elapsed > SESSION_STALE_MS && tn.checkpoints.length === 0) {
-                    warnings.push({
-                        type: "stale_task",
-                        workPlanId: wp.id,
-                        taskNodeId: tn.id,
-                        message: `Task "${tn.name}" active for ${Math.round(elapsed / 60000)}min with no checkpoints.`,
-                    })
-                }
-            }
-        }
-
-        // Broken dependencies (reference non-existent nodes)
-        for (const tn of [...wp.tasks, ...wp.planAhead]) {
-            for (const depId of tn.dependsOn) {
-                if (!findTaskNode(graph, depId)) {
-                    warnings.push({
-                        type: "broken_dependency",
-                        workPlanId: wp.id,
-                        taskNodeId: tn.id,
-                        message: `Task "${tn.name}" depends on "${depId}" which does not exist. Broken chain.`,
-                    })
-                }
-            }
-        }
+        warnings.push(...checkStaleTasks(wp))
+        warnings.push(...checkBrokenDependencies(graph, wp))
     }
 
     return warnings
